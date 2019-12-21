@@ -12,3 +12,4 @@ sandesh==0.1.dev0
 sandesh_common==0.1.dev0
 simplejson
 stevedore
+xmltodict==0.12.0
