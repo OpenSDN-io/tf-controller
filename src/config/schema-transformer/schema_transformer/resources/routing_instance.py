@@ -542,6 +542,11 @@ class RoutingInstanceST(ResourceBaseST):
                 rt_add_import=all_route_targets - old_route_target_list,
                 rt_del=old_route_target_list - all_route_targets)
 
+        # Remove valid RTs from stale list
+        for rt in all_route_targets:
+            if rt in self.stale_route_targets:
+                self.stale_route_targets.remove(rt)
+
         # update static ip routes
         vn_obj = ResourceBaseST.get_obj_type_map().get(
             'virtual_network').get(self.virtual_network)
