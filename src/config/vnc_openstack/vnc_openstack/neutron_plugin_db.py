@@ -5172,7 +5172,7 @@ class DBInterface(object):
         port_q['id'] = port_id
         port_obj = self._port_neutron_to_vnc(port_q, None, UPDATE)
         net_id = port_obj.get_virtual_network_refs()[0]['uuid']
-        self._network_read(net_id)
+        net_obj = self._network_read(net_id)
         try:
             self._resource_update('virtual_machine_interface', port_obj)
         except BadRequest as e:
@@ -5184,6 +5184,16 @@ class DBInterface(object):
             else:
                 self._raise_contrail_exception(
                     'BadRequest', resource='port', msg=str(e))
+
+        if 'fixed_ips' in port_q:
+            try:
+                self._port_create_instance_ip(net_obj, port_obj, port_q)
+            except RefsExistError as e:
+                self._raise_contrail_exception(
+                    'Conflict', resource='port', msg=str(e))
+            except vnc_exc.HttpError as e:
+                self._raise_contrail_exception(
+                    'IpAddressGenerationFailure', resource='port', msg=str(e))
 
         port_obj = self._virtual_machine_interface_read(port_id=port_id)
         ret_port_q = self._port_vnc_to_neutron(port_obj)
