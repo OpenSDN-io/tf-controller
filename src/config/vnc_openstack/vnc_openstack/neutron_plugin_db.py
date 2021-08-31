@@ -1692,8 +1692,15 @@ class DBInterface(object):
     def _security_group_rule_neutron_to_vnc(self, sgr_q, oper):
         if oper == CREATE:
             # default port values
-            port_min = 0
-            port_max = 65535
+            if sgr_q['protocol'] in (constants.PROTO_NAME_ICMP,
+                                     str(constants.PROTO_NUM_ICMP),
+                                     constants.PROTO_NAME_IPV6_ICMP,
+                                     constants.PROTO_NAME_IPV6_ICMP_LEGACY):
+                port_min = None
+                port_max = None
+            else:
+                port_min = 0
+                port_max = 65535
 
             if sgr_q['port_range_min'] is not None:
                 port_min = sgr_q['port_range_min']
