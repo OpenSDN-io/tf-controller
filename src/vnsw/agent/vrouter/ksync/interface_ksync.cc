@@ -1117,8 +1117,15 @@ int InterfaceKSyncEntry::Encode(sandesh_op::type op, char *buf, int buf_len) {
 
     int error = 0;
     encode_len = encoder.WriteBinary((uint8_t *)buf, buf_len, &error);
-    assert(error == 0);
-    assert(encode_len <= buf_len);
+    if (error != 0) {
+        LOG(ERROR, "Error <" << error << ">: Failed to encode sandesh buffer");
+        return 0;
+    }
+    if (encode_len > buf_len) {
+        LOG(ERROR, "Sandesh buffer exceeds the size limit: " << encode_len
+                   << ". Skipping it.");
+        return 0;
+    }
     return encode_len;
 }
 

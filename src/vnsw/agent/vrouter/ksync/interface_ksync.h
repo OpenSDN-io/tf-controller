@@ -16,6 +16,7 @@
 #include <ksync/ksync_entry.h>
 #include <ksync/ksync_object.h>
 #include <ksync/ksync_netlink.h>
+#include <ksync/ksync_sock.h>
 #include "oper/interface_common.h"
 #include "vrouter/ksync/agent_ksync_types.h"
 #include "vr_types.h"
@@ -34,7 +35,7 @@ class InterfaceKSyncObject;
 
 class InterfaceKSyncEntry : public KSyncNetlinkDBEntry {
 public:
-    static const int kDefaultInterfaceMsgSize = 2048;
+    static const int kDefaultInterfaceMsgSize = KSYNC_DEFAULT_MSG_SIZE;
 
     InterfaceKSyncEntry(InterfaceKSyncObject *obj,
                         const InterfaceKSyncEntry *entry, uint32_t index);
