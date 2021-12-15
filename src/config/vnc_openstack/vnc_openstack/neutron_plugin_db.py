@@ -3347,6 +3347,29 @@ class DBInterface(object):
             port_q_dict['description'] = port_obj.get_id_perms(
             ).get_description()
 
+        # port can be used as trunk parent port
+        if port_obj.get_virtual_port_group_back_refs():
+            trunk_details = {}
+            trunk_port_id = \
+                port_obj.get_virtual_port_group_back_refs()[0].get('uuid')
+            trunk_details['trunk_id'] = trunk_port_id
+            trunk_obj = self._vnc_lib.virtual_port_group_read(id=trunk_port_id)
+            # We need to add this only to trunk parent ports
+            if port_obj.uuid == trunk_obj.virtual_port_group_trunk_port_id:
+                trunk_details.update(
+                    self._trunk_vnc_to_neutron(trunk_obj=trunk_obj,
+                                               fields='sub_ports'))
+                for index in range(len(trunk_details['sub_ports'])):
+                    port_id = trunk_details['sub_ports'][index]['port_id']
+                    port_obj = \
+                        self._vnc_lib.virtual_machine_interface_read(
+                            id=port_id)
+                    mac_addrs = \
+                        port_obj.get_virtual_machine_interface_mac_addresses()
+                    trunk_details['sub_ports'][index]['mac_address'] = \
+                        mac_addrs.get_mac_address()[0]
+                port_q_dict['trunk_details'] = trunk_details
+
         port_q_dict['created_at'] = port_obj.get_id_perms().get_created()
         port_q_dict['updated_at'] = port_obj.get_id_perms().get_last_modified()
 
@@ -6954,7 +6977,7 @@ class DBInterface(object):
                 for sp in trunk_q['sub_ports']:
                     _set_sub_ports(trunk, trunk_port, sp)
 
-            id_perms = IdPermsType(enable=True)
+            id_perms = IdPermsType(enable=trunk_q.get('admin_state_up', True))
             if 'description' in trunk_q:
                 id_perms.description = trunk_q['description']
             trunk.set_id_perms(id_perms)
@@ -6993,7 +7016,9 @@ class DBInterface(object):
 
                 if port_operation == 'ADD_SUBPORTS':
                     sub_vmi_refs = trunk.get_virtual_machine_interface_refs()
-                    sub_vmi_uuids = [ref['uuid'] for ref in sub_vmi_refs]
+                    sub_vmi_uuids = None
+                    if sub_vmi_refs:
+                        sub_vmi_uuids = [ref['uuid'] for ref in sub_vmi_refs]
                     if sub_vmi_uuids:
                         sub_vmis = self._virtual_machine_interface_list(
                             obj_uuids=sub_vmi_uuids,
@@ -7005,12 +7030,37 @@ class DBInterface(object):
                             if prop:
                                 sub_vmi_vlan_tags.append(
                                     prop.get_sub_interface_vlan_tag())
-
+                    # check if 'sub_ports' has correct type
+                    if not isinstance(trunk_q['sub_ports'], list):
+                        msg = "Invalid data format for subports:" \
+                              "'%s' is not a list" % (trunk_q['sub_ports'])
+                        self._raise_contrail_exception('InvalidInput',
+                                                       error_message=msg)
                     for sp in trunk_q['sub_ports']:
                         _set_sub_ports(trunk, trunk_port, sp)
 
                 elif port_operation == 'REMOVE_SUBPORTS':
+                    trunk_subports = trunk.get_virtual_machine_interface_refs()
+                    if trunk_subports:
+                        trunk_subports_ids = \
+                            [port['uuid'] for port in trunk_subports]
+                    else:
+                        # we can raise exception already because there are no
+                        # sub ports
+                        self._raise_contrail_exception(
+                            'SubPortNotFound', trunk_id=id,
+                            port_id=sp['port_id'])
+                    # check if 'sub_ports' has correct type
+                    if not isinstance(trunk_q['sub_ports'], list):
+                        msg = "Invalid data format for subports:" \
+                              "'%s' is not a list" % (trunk_q['sub_ports'])
+                        self._raise_contrail_exception('InvalidInput',
+                                                       error_message=msg)
                     for sp in trunk_q['sub_ports']:
+                        if sp['port_id'] not in trunk_subports_ids:
+                            self._raise_contrail_exception(
+                                'SubPortNotFound', trunk_id=id,
+                                port_id=sp['port_id'])
                         try:
                             sub_port = \
                                 self._vnc_lib.virtual_machine_interface_read(
@@ -7039,8 +7089,14 @@ class DBInterface(object):
                     'PortNotFound',
                     port_id=trunk.virtual_port_group_trunk_port_id)
 
+            # remove all vmi refs before deleting trunk
             if trunk_port.get_virtual_machine_interface_refs():
-                self._raise_contrail_exception('TrunkInUse', trunk_id=id)
+                vmi_list = trunk_port.get_virtual_machine_interface_refs()
+                for vmi in vmi_list:
+                    port_id = vmi.get('uuid')
+                    port = self._vnc_lib.virtual_machine_interface_read(
+                        id=port_id)
+                    trunk.del_virtual_machine_interface(port)
 
             trunk.del_virtual_machine_interface(trunk_port)
             self._vnc_lib.virtual_port_group_update(trunk)
@@ -7052,7 +7108,6 @@ class DBInterface(object):
         trunk_q_dict = {}
 
         port_id = trunk_obj.virtual_port_group_trunk_port_id
-        port_obj = self._vnc_lib.virtual_machine_interface_read(id=port_id)
         sub_ports = []
         if trunk_obj.get_virtual_machine_interface_refs():
             for sub_port in trunk_obj.get_virtual_machine_interface_refs():
@@ -7080,7 +7135,7 @@ class DBInterface(object):
             'updated_at': trunk_obj.get_id_perms().get_last_modified(),
             'port_id': port_id,
             'sub_ports': sub_ports,
-            'status': self._port_get_interface_status(port_obj),
+            'status': constants.ACTIVE,
             'name': trunk_obj.display_name
         }
 
