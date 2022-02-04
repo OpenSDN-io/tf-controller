@@ -79,6 +79,8 @@ _NEUTRON_TAG_TO_SUBNETS = 'neutron_tag_to_subnets'
 # Security group
 _NEUTRON_DEFAULT_SECURITY_GROUP_NAME = 'default'
 
+NEUTRON_LOADBALANCER_DEVICE_OWNER = 'neutron:LOADBALANCER'
+
 
 class FakeVncLibResource(namedtuple('FakeVncLibResource', 'object_type uuid')):
     def get_uuid(self):
@@ -4831,10 +4833,25 @@ class DBInterface(object):
                 if fip_obj.get_project_refs()[0]['uuid'] not in proj_ids:
                     continue
             if filters and 'port_id' in filters:
-                if not fip_obj.get_virtual_machine_interface_refs():
-                    continue
-                if fip_obj.get_virtual_machine_interface_refs(
-                )[0]['uuid'] not in port_ids:
+                vmi_refs = fip_obj.get_virtual_machine_interface_refs()
+                # (gzimin): We need to proceed case with assigned FIP to
+                #           loadbalancer. LB has 3 vmi refs in this case,
+                #           and we need to show only correct one. Correct
+                #           vmi has non empty device_owner field.
+                port_found = False
+                for ref in vmi_refs or []:
+                    if ref['uuid'] not in port_ids:
+                        continue
+                    if len(vmi_refs) == 1:
+                        port_found = True
+                        break
+                    p = memo_req['ports'].get(ref['uuid'])
+                    device_owner = \
+                        p.get_virtual_machine_interface_device_owner()
+                    if device_owner == NEUTRON_LOADBALANCER_DEVICE_OWNER:
+                        port_found = True
+                        break
+                if not port_found:
                     continue
 
             fip_info = self._floatingip_vnc_to_neutron(fip_obj, memo_req,
