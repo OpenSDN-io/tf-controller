@@ -1,7 +1,6 @@
 #
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
-import collections
 import configparser
 from pprint import pformat
 
@@ -151,55 +150,6 @@ class NeutronPluginInterface(object):
             bottle.abort(400, 'Unable to parse request data: {}'.
                          format(str(err)))
 
-    def _filter_subnets_by_tags(self, context, request):
-        filters = request.get('filters', {})
-        supported_filters = {'tags', 'tags-any', 'not-tags', 'not-tags-any'}
-        if not filters or all(fil not in filters for fil in supported_filters):
-            return
-
-        tags = {}
-        for fil in supported_filters:
-            if fil in filters:
-                tags[fil] = filters.pop(fil)
-                if isinstance(tags[fil], str):
-                    tags[fil] = tags[fil].split(',')
-
-        tags_to_fetch = {}
-        for fil in supported_filters:
-            tags_to_fetch[fil] = {'neutron_tag={}'.format(tag) for tag in
-                                  tags.get(fil, [])}
-
-        cfgdb = self._get_user_cfgdb(context)
-        tags_info = cfgdb._subnet_read_tags()
-
-        # create subnet map with tags to match
-        res_map = collections.defaultdict(set)
-        for tag, subnets_ids in tags_info.items():
-            for subnet_id in subnets_ids:
-                res_map[subnet_id].add(tag)
-
-        # filter subnet ids to read
-        res_ids = []
-        for res_uuid, res_tags in res_map.items():
-            to_fetch = []
-            if 'tags' in tags:
-                to_fetch.append(
-                    all(tag in res_tags for tag in tags_to_fetch['tags']))
-            if 'tags-any' in tags:
-                to_fetch.append(
-                    any(tag in res_tags for tag in tags_to_fetch['tags-any']))
-            if 'not-tags' in tags:
-                to_fetch.append(not any(
-                    tag in res_tags for tag in tags_to_fetch['not-tags']))
-            if 'not-tags-any' in tags:
-                to_fetch.append(any(tag not in res_tags for tag in
-                                    tags_to_fetch['not-tags-any']))
-            if all(to_fetch):
-                res_ids.append(res_uuid)
-
-        # update network filters with resource ids
-        request['filters']['id'] = res_ids
-
     def _filter_resources_by_tags(self, res_name, context, request):
         filters = request.get('filters', {})
         supported_filters = {'tags', 'tags-any', 'not-tags',
@@ -207,16 +157,6 @@ class NeutronPluginInterface(object):
         if not filters or all(
                 fil not in filters for fil in supported_filters):
             return
-
-        resource_to_backref = {
-            'floatingip': 'floating_ip_back_refs',
-            'network': 'virtual_network_back_refs',
-            'router': 'logical_router_back_refs',
-            'port': 'virtual_machine_interface_back_refs',
-            'securitygroup': 'security_group_back_refs',
-            'policy': 'network_policy_back_refs',
-            'trunk': 'virtual_port_group_back_refs',
-        }
 
         tags = {}
         for fil in supported_filters:
@@ -226,21 +166,65 @@ class NeutronPluginInterface(object):
                     tags[fil] = tags[fil].split(',')
 
         # fetch all backrefs for given tags
-        backref_field = resource_to_backref[res_name]
-        tag_fields = [backref_field, 'fq_name']
         tags_to_fetch = {}
         for fil in supported_filters:
             tags_to_fetch[fil] = {'neutron_tag={}'.format(tag) for tag in
                                   tags.get(fil, [])}
 
         cfgdb = self._get_user_cfgdb(context)
-        tags_info = cfgdb._vnc_lib.tags_list(fields=tag_fields)['tags']
+
+        # fetch all resources
+        resource_list = []
+        if res_name == 'floatingip':
+            resource_list = \
+                cfgdb._vnc_lib.floating_ips_list(
+                    fields=['tag_refs'])['floating-ips']
+        elif res_name == 'network':
+            resource_list = \
+                cfgdb._vnc_lib.virtual_networks_list(
+                    fields=['tag_refs'])['virtual-networks']
+        elif res_name == 'router':
+            resource_list = \
+                cfgdb._vnc_lib.logical_routers_list(
+                    fields=['tag_refs'])['logical-routers']
+        elif res_name == 'port':
+            resource_list = \
+                cfgdb._vnc_lib.virtual_machine_interfaces_list(
+                    fields=['tag_refs'])['virtual-machine-interfaces']
+        elif res_name == 'securitygroup':
+            resource_list = \
+                cfgdb._vnc_lib.security_groups_list(
+                    fields=['tag_refs'])['security-groups']
+        elif res_name == 'policy':
+            resource_list = \
+                cfgdb._vnc_lib.network_policys_list(
+                    fields=['tag_refs'])['network-policys']
+        elif res_name == 'trunk':
+            resource_list = \
+                cfgdb._vnc_lib.virtual_port_groups_list(
+                    fields=['tag_refs'])['virtual-port-groups']
+        elif res_name == 'subnets':
+            resource_list = \
+                cfgdb.subnets_list(context, filters=None)
 
         # create resource map with tags to match
-        res_map = collections.defaultdict(set)
-        for tag_info in tags_info:
-            for res_backref in tag_info.get(backref_field, []):
-                res_map[res_backref['uuid']].add(tag_info['fq_name'][0])
+        res_map = {}
+        if res_name == 'subnets':
+            for subnet in resource_list:
+                res_map[subnet.get('id')] = \
+                    {'neutron_tag={}'.format(tag) for tag in
+                     subnet.get('tags')}
+        else:
+            for resource in resource_list:
+                tag_list = []
+                resource_tags = resource.get('tag_refs')
+                # (gzimin): we need to proceed resource without tags too
+                if not resource_tags:
+                    res_map[resource.get('uuid')] = []
+                else:
+                    for tag in resource_tags:
+                        tag_list.append(tag.get('to')[0])
+                    res_map[resource.get('uuid')] = tag_list
 
         # filter resource ids to read
         res_ids = []
@@ -248,16 +232,16 @@ class NeutronPluginInterface(object):
             to_fetch = []
             if 'tags' in tags:
                 to_fetch.append(
-                    all(tag in res_tags for tag in tags_to_fetch['tags']))
+                    tags_to_fetch['tags'].issubset(set(res_tags)))
             if 'tags-any' in tags:
                 to_fetch.append(
-                    any(tag in res_tags for tag in tags_to_fetch['tags-any']))
+                    bool(set(res_tags) & tags_to_fetch['tags-any']))
             if 'not-tags' in tags:
-                to_fetch.append(not any(
-                    tag in res_tags for tag in tags_to_fetch['not-tags']))
+                to_fetch.append(
+                    not bool(set(res_tags) & tags_to_fetch['not-tags']))
             if 'not-tags-any' in tags:
-                to_fetch.append(any(tag not in res_tags for tag in
-                                    tags_to_fetch['not-tags-any']))
+                to_fetch.append(
+                    not tags_to_fetch['not-tags-any'].issubset(set(res_tags)))
             if all(to_fetch):
                 res_ids.append(res_uuid)
 
@@ -404,7 +388,7 @@ class NeutronPluginInterface(object):
     def plugin_http_post_subnet(self):
         """Bottle callback for Subnet POST."""
         context, subnet = self._get_requests_data()
-        self._filter_subnets_by_tags(context, subnet)
+        self._filter_resources_by_tags('subnets', context, subnet)
 
         if context['operation'] == 'READ':
             return self.plugin_get_subnet(context, subnet)
