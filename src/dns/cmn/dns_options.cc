@@ -269,7 +269,7 @@ void Options::Process(int argc, char *argv[],
     GetOptValue<string>(var_map, dns_config_file_, "DEFAULT.dns_config_file");
     GetOptValue< vector<string> >(var_map, collector_server_list_,
                                   "DEFAULT.collectors");
-    collectors_configured_ = true;
+    collectors_configured_ = collector_server_list_.size();
     if (collector_server_list_.size() == 1 &&
         !collector_server_list_[0].compare(default_collector_server_list_[0])) {
         collectors_configured_ = false;

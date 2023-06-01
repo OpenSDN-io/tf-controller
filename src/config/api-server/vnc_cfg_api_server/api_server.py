@@ -2170,6 +2170,7 @@ class VncApiServer(object):
                                      'vnc_api_server_context',
                                      int(self._args.http_server_port),
                                      ['cfgm_common', 'vnc_cfg_api_server.sandesh'],
+                                     connect_to_collector=bool(self._args.collectors),
                                      logger_class=self._args.logger_class,
                                      logger_config_file=self._args.logging_conf,
                                      config=self._args.sandesh_config)

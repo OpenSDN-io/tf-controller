@@ -268,17 +268,31 @@ int main(int argc, char *argv[]) {
     ConnectionStateManager::GetInstance();
     NodeType::type node_type =
         g_vns_constants.Module2NodeType.find(module)->second;
-    bool success(Sandesh::InitGenerator(
-                 module_name,
-                 options.hostname(),
-                 g_vns_constants.NodeTypeNames.find(node_type)->second,
-                 g_vns_constants.INSTANCE_ID_DEFAULT,
-                 Dns::GetEventManager(),
-                 options.http_server_port(),
-                 options.randomized_collector_server_list(),
-                 NULL,
-                 Sandesh::DerivedStats(),
-                 options.sandesh_config()));
+    bool success;
+    if (options.collectors_configured()) {
+        success = Sandesh::InitGenerator(
+                    module_name,
+                    options.hostname(),
+                    g_vns_constants.NodeTypeNames.find(node_type)->second,
+                    g_vns_constants.INSTANCE_ID_DEFAULT,
+                    Dns::GetEventManager(),
+                    options.http_server_port(),
+                    options.randomized_collector_server_list(),
+                    NULL,
+                    Sandesh::DerivedStats(),
+                    options.sandesh_config());
+    } else {
+        success = Sandesh::InitGenerator(
+                    g_vns_constants.ModuleNames.find(module)->second,
+                    options.hostname(),
+                    g_vns_constants.NodeTypeNames.find(node_type)->second,
+                    g_vns_constants.INSTANCE_ID_DEFAULT,
+                    Dns::GetEventManager(),
+                    options.http_server_port(),
+                    NULL,
+                    Sandesh::DerivedStats(),
+                    options.sandesh_config());
+    }
     if (!success) {
         LOG(ERROR, "SANDESH: Initialization FAILED ... exiting");
         Sandesh::Uninit();
@@ -363,13 +377,18 @@ int main(int argc, char *argv[]) {
     std::vector<ConnectionTypeName> expected_connections;
     expected_connections = boost::assign::list_of
          (ConnectionTypeName(g_process_info_constants.ConnectionTypeNames.find(
-                             ConnectionType::COLLECTOR)->second, ""))
-         (ConnectionTypeName(g_process_info_constants.ConnectionTypeNames.find(
                              ConnectionType::DATABASE)->second, "Cassandra"))
          (ConnectionTypeName(g_process_info_constants.ConnectionTypeNames.find(
                              ConnectionType::DATABASE)->second, "RabbitMQ"))
+         (ConnectionTypeName(g_process_info_constants.ConnectionTypeNames.find(
+                             ConnectionType::COLLECTOR)->second, ""))
                                  .convert_to_container\
                                   <vector<ConnectionTypeName> >();
+
+    if (!options.collectors_configured()) {
+        LOG(INFO, "DNS: Collectors are not configured!");
+        expected_connections.pop_back();
+    }
 
     ConnectionStateManager::GetInstance()->Init(
         *(Dns::GetEventManager()->io_service()), options.hostname(),

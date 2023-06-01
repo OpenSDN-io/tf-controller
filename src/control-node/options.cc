@@ -282,7 +282,7 @@ bool Options::Process(int argc, char *argv[],
         return false;
     }
 
-    collectors_configured_ = true;
+    collectors_configured_ = collector_server_list_.size();
     if (collector_server_list_.size() == 1 &&
         !collector_server_list_[0].compare(default_collector_server_list_[0])) {
         collectors_configured_ = false;

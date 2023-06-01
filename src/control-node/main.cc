@@ -347,13 +347,19 @@ int main(int argc, char *argv[]) {
     std::vector<ConnectionTypeName> expected_connections;
     expected_connections = boost::assign::list_of
         (ConnectionTypeName(g_process_info_constants.ConnectionTypeNames.find(
-                            ConnectionType::COLLECTOR)->second, ""))
-        (ConnectionTypeName(g_process_info_constants.ConnectionTypeNames.find(
                             ConnectionType::DATABASE)->second, "Cassandra"))
         (ConnectionTypeName(g_process_info_constants.ConnectionTypeNames.find(
                             ConnectionType::DATABASE)->second, "RabbitMQ"))
-                                .convert_to_container<vector<
+        (ConnectionTypeName(g_process_info_constants.ConnectionTypeNames.find(
+                            ConnectionType::COLLECTOR)->second, ""))
+                                .convert_to_container<vector<\
                                  ConnectionTypeName> >();
+
+    if (!options.collectors_configured()) {
+        LOG(INFO, "Collectors are not configured!");
+        expected_connections.pop_back();
+    }
+
     ConnectionStateManager::GetInstance()->Init(
         *evm.io_service(), options.hostname(),
         module_name, g_vns_constants.INSTANCE_ID_DEFAULT,

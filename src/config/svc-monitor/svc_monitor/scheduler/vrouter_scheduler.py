@@ -39,6 +39,8 @@ class VRouterScheduler(metaclass=abc.ABCMeta):
         self.client = self._get_analytics_clients()
 
     def _get_analytics_clients(self):
+        if not self._analytics_servers:
+            return None
         server_port_list = self._analytics_servers.replace(':', ' ').split()
         analytics_server_list = server_port_list[0::2]
         analytics_server_list_in_str = ' '.join(analytics_server_list)
@@ -125,17 +127,19 @@ class VRouterScheduler(metaclass=abc.ABCMeta):
     def vrouters_running(self):
         # get az host list
         az_vrs = self._get_az_vrouter_list()
-
-        try:
-            vrouters_mode = self.query_uve(
-                   self.client, "*?cfilt=VrouterAgent:mode")
-            agents_status = self.query_uve(
-                   self.client, "*?cfilt=NodeStatus:process_status")
-        except Exception as e:
-            error_msg = "no response from analytics servers"
-            self._logger.error(error_msg)
-            self._logger.error(str(e))
-            return
+        agents_status = {}
+        vrouters_mode = {}
+        if self.client:
+            try:
+                vrouters_mode = self.query_uve(
+                    self.client, "*?cfilt=VrouterAgent:mode")
+                agents_status = self.query_uve(
+                    self.client, "*?cfilt=NodeStatus:process_status")
+            except Exception as e:
+                error_msg = "no response from analytics servers"
+                self._logger.error(error_msg)
+                self._logger.error(str(e))
+                return
 
         for vr in list(VirtualRouterSM.values()):
             if az_vrs and vr.name not in az_vrs:
@@ -143,8 +147,9 @@ class VRouterScheduler(metaclass=abc.ABCMeta):
                 continue
 
             if vr.name not in vrouters_mode or vr.name not in agents_status:
-                warn_msg = "analytics has no info about vrouter %s" % vr.name
-                self._logger.warning(warn_msg)
+                if self._analytics_servers:
+                    warn_msg = "analytics has no info about vrouter %s" % vr.name
+                    self._logger.warning(warn_msg)
                 try:
                     vr_vnc = self._vnc_lib.virtual_router_read(vr.fq_name)
                     ic = IntrospectClient(vr_vnc.virtual_router_ip_address,
