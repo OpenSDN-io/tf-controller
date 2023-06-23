@@ -76,9 +76,10 @@ class ServiceMonitorDB(VncObjectDBClient):
             return entry
 
 
-    def _db_insert(self, table, key, entry):
+    def _db_insert(self, table_name, key, entry):
         try:
-            table.insert(key, entry)
+            self._cassandra_driver.insert(key, entry,
+                                          cf_name=table_name)
         except Exception:
             self._db_logger.log("DB: %s %s insert failed" %
                              (inspect.stack()[1][3], key))
@@ -89,9 +90,10 @@ class ServiceMonitorDB(VncObjectDBClient):
     def _db_remove(self, table, key, columns=None):
         try:
             if columns:
-                table.remove(key, columns=columns)
+                self._cassandra_driver.remove(table,
+                                              key, columns=columns)
             else:
-                table.remove(key)
+                self._cassandra_driver.remove(table, key)
         except Exception:
             self._db_logger.log("DB: %s %s remove failed" %
                              (inspect.stack()[1][3], key))
@@ -101,7 +103,7 @@ class ServiceMonitorDB(VncObjectDBClient):
 
     def _db_list(self, table):
         try:
-            entries = list(table.get_range())
+            entries = list(self._cassandra_driver.get_range(table))
         except Exception:
             self._db_logger.log("DB: %s list failed" %
                              (inspect.stack()[1][3]))
@@ -136,46 +138,47 @@ class ServiceMonitorDB(VncObjectDBClient):
         return self._db_get(self._svc_si_cf, si_fq_str)
 
     def service_instance_insert(self, si_fq_str, entry):
-        return self._db_insert(self._svc_si_cf, si_fq_str, entry)
+        return self._db_insert(self._SVC_SI_CF, si_fq_str, entry)
 
     def service_instance_remove(self, si_fq_str, columns=None):
-        return self._db_remove(self._svc_si_cf, si_fq_str, columns)
+        return self._db_remove(self._SVC_SI_CF, si_fq_str, columns)
 
     def service_instance_list(self):
-        return self._db_list(self._svc_si_cf)
+        return self._db_list(self._SVC_SI_CF)
 
     def health_monitor_config_get(self, hm_id):
         return self._db_get(self._hm_cf, hm_id, 'config_info')
 
     def health_monitor_config_insert(self, hm_id, hm_obj):
         entry = json.dumps(hm_obj)
-        return self._db_insert(self._hm_cf, hm_id, {'config_info': entry})
+        return self._db_insert(self._HM_CF, hm_id, {'config_info': entry})
 
     def health_monitor_config_remove(self, hm_id):
-        return self._db_remove(self._hm_cf, hm_id, 'config_info')
+        return self._db_remove(self._HM_CF, hm_id, 'config_info')
 
     def health_monitor_driver_info_get(self, hm_id):
         return self._db_get(self._hm_cf, hm_id, 'driver_info')
 
     def health_monitor_driver_info_insert(self, hm_id, hm_obj):
         entry = json.dumps(hm_obj)
-        return self._db_insert(self._hm_cf, hm_id, {'driver_info': entry})
+        return self._db_insert(self._HM_CF, hm_id, {'driver_info': entry})
 
     def health_monitor_driver_info_remove(self, hm_id):
-        return self._db_remove(self._hm_cf, hm_id, 'driver_info')
+        return self._db_remove(self._HM_CF, hm_id, 'driver_info')
 
     def health_monitor_list(self):
         ret_list = []
-        for each_entry_id, each_entry_data in self._db_list(self._hm_cf) or []:
-            config_info_obj_dict = json.loads(each_entry_data['config_info'])
-            driver_info_obj_dict = None
-            if 'driver_info' in each_entry_data:
-                driver_info_obj_dict = json.loads(each_entry_data['driver_info'])
-            ret_list.append((each_entry_id, config_info_obj_dict, driver_info_obj_dict))
+        for each_entry_id, each_entry_data in self._db_list(self._HM_CF) or []:
+            if len(each_entry_data) > 0:
+                config_info_obj_dict = json.loads(each_entry_data['config_info'])
+                driver_info_obj_dict = None
+                if 'driver_info' in each_entry_data:
+                    driver_info_obj_dict = json.loads(each_entry_data['driver_info'])
+                ret_list.append((each_entry_id, config_info_obj_dict, driver_info_obj_dict))
         return ret_list
 
     def healthmonitor_remove(self, hm_id, columns=None):
-        return self._db_remove(self._hm_cf, hm_id, columns)
+        return self._db_remove(self._HM_CF, hm_id, columns)
 
     def loadbalancer_config_get(self, lb_id):
         return self._db_get(self._lb_cf, lb_id, 'config_info')
@@ -185,23 +188,24 @@ class ServiceMonitorDB(VncObjectDBClient):
 
     def loadbalancer_config_insert(self, lb_id, lb_obj):
         entry = json.dumps(lb_obj)
-        return self._db_insert(self._lb_cf, lb_id, {'config_info': entry})
+        return self._db_insert(self._LB_CF, lb_id, {'config_info': entry})
 
     def loadbalancer_driver_info_insert(self, lb_id, lb_obj):
         entry = json.dumps(lb_obj)
-        return self._db_insert(self._lb_cf, lb_id, {'driver_info': entry})
+        return self._db_insert(self._LB_CF, lb_id, {'driver_info': entry})
 
     def loadbalancer_remove(self, lb_id, columns=None):
-        return self._db_remove(self._lb_cf, lb_id, columns)
+        return self._db_remove(self._LB_CF, lb_id, columns)
 
     def loadbalancer_list(self):
         ret_list = []
-        for each_entry_id, each_entry_data in self._db_list(self._lb_cf) or []:
-            config_info_obj_dict = json.loads(each_entry_data['config_info'])
-            driver_info_obj_dict = None
-            if 'driver_info' in each_entry_data:
-                driver_info_obj_dict = json.loads(each_entry_data['driver_info'])
-            ret_list.append((each_entry_id, config_info_obj_dict, driver_info_obj_dict))
+        for each_entry_id, each_entry_data in self._db_list(self._LB_CF) or []:
+            if len(each_entry_data) > 0:
+                config_info_obj_dict = json.loads(each_entry_data['config_info'])
+                driver_info_obj_dict = None
+                if 'driver_info' in each_entry_data:
+                    driver_info_obj_dict = json.loads(each_entry_data['driver_info'])
+                ret_list.append((each_entry_id, config_info_obj_dict, driver_info_obj_dict))
         return ret_list
 
     def pool_config_get(self, pool_id):
@@ -212,21 +216,22 @@ class ServiceMonitorDB(VncObjectDBClient):
 
     def pool_config_insert(self, pool_id, pool_obj):
         entry = json.dumps(pool_obj)
-        return self._db_insert(self._pool_cf, pool_id, {'config_info': entry})
+        return self._db_insert(self._POOL_CF, pool_id, {'config_info': entry})
 
     def pool_driver_info_insert(self, pool_id, pool_obj):
         entry = json.dumps(pool_obj)
-        return self._db_insert(self._pool_cf, pool_id, {'driver_info': entry})
+        return self._db_insert(self._POOL_CF, pool_id, {'driver_info': entry})
 
     def pool_remove(self, pool_id, columns=None):
-        return self._db_remove(self._pool_cf, pool_id, columns)
+        return self._db_remove(self._POOL_CF, pool_id, columns)
 
     def pool_list(self):
         ret_list = []
-        for each_entry_id, each_entry_data in self._db_list(self._pool_cf) or []:
-            config_info_obj_dict = json.loads(each_entry_data['config_info'])
-            driver_info_obj_dict = None
-            if 'driver_info' in each_entry_data:
-                driver_info_obj_dict = json.loads(each_entry_data['driver_info'])
-            ret_list.append((each_entry_id, config_info_obj_dict, driver_info_obj_dict))
+        for each_entry_id, each_entry_data in self._db_list(self._POOL_CF) or []:
+            if len(each_entry_data) > 0:
+                config_info_obj_dict = json.loads(each_entry_data['config_info'])
+                driver_info_obj_dict = None
+                if 'driver_info' in each_entry_data:
+                    driver_info_obj_dict = json.loads(each_entry_data['driver_info'])
+                ret_list.append((each_entry_id, config_info_obj_dict, driver_info_obj_dict))
         return ret_list
