@@ -641,6 +641,8 @@ def parse_args(args_str):
         'cassandra_user': None,
         'cassandra_password': None,
         'cassandra_drvier': "thrift",
+        'num_workers': None,
+        'num_groups': None,
     }
     zookeeperopts = {
         'zookeeper_ssl_enable': False,

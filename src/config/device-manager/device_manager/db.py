@@ -5517,7 +5517,9 @@ class DMCassandraDB(VncObjectDBClient):
             logger.log, credential=cred,
             ssl_enabled=self._args.cassandra_use_ssl,
             ca_certs=self._args.cassandra_ca_certs,
-            cassandra_driver=self._args.cassandra_driver)
+            cassandra_driver=self._args.cassandra_driver,
+            num_workers=self._args.num_workers,
+            num_groups=self._args.num_groups)
         self.pr_vn_ip_map = {}
         self.pr_fabric_asn_map = {}
         self.fabric_asn_pr_map = {}

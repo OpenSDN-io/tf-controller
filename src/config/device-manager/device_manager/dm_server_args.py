@@ -112,6 +112,8 @@ def default_options():
         'dm_run_mode': None,
         'max_bytes': 5000000,
         'backup_count': 10,
+        'num_workers': None,
+        'num_groups': None,
     }
 # end default_options
 

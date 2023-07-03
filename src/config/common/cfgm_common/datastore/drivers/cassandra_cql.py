@@ -74,10 +74,10 @@ DEFAULT_COLUMN_COUNT = 100000
 DEFAULT_PAGE_SIZE = 2048
 
 # Groups of workers running. THis handle rew in parallel
-DEFAULT_NUM_GROUPS = 4
+DEFAULT_NUM_GROUPS = 2
 
 # Number of workers used to execute SELECT queries
-DEFAULT_NUM_WORKERS = 4
+DEFAULT_NUM_WORKERS = 2
 
 # String will be encoded in UTF-8 if necessary (Python2 support)
 StringType = six.text_type

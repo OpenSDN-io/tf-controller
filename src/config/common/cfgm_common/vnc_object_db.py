@@ -24,7 +24,7 @@ class VncObjectDBClient(object):
                  # svc_monitor, we consider to continue using `thrift`
                  # until we are sure they are compliant with other
                  # drivers.
-                 cassandra_driver=None):
+                 cassandra_driver=None, num_workers=2, num_groups=2):
             if db_engine == 'cassandra':
                 self._object_db = vnc_cassandra.VncCassandraClient(
                     server_list,
@@ -41,7 +41,9 @@ class VncObjectDBClient(object):
                     debug_obj_cache_types=debug_obj_cache_types,
                     ssl_enabled=ssl_enabled,
                     ca_certs=ca_certs,
-                    cassandra_driver=cassandra_driver)
+                    cassandra_driver=cassandra_driver,
+                    num_workers=num_workers,
+                    num_groups=num_groups)
             else:
                 msg = ("Contrail API server does not support database backend "
                        "'%s'" % db_engine)
