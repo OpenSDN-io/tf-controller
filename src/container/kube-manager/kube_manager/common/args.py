@@ -121,6 +121,7 @@ def parse_args(args_str=None):
         'cassandra_server_list': '',
         'cassandra_use_ssl': False,
         'cassandra_ca_certs': None,
+        'cassandra_driver': "thrift",
         'cluster_id': '',
         'vnc_endpoint_ip': '[127.0.0.1]',
         'vnc_endpoint_port': ApiServerPort,

@@ -48,7 +48,8 @@ class ServiceMonitorDB(VncObjectDBClient):
                                                reset_config=args.reset_config,
                                                credential=cred,
                                                ssl_enabled=args.cassandra_use_ssl,
-                                               ca_certs=args.cassandra_ca_certs)
+                                               ca_certs=args.cassandra_ca_certs,
+                                               cassandra_driver=args.cassandra_driver)
 
         self._svc_si_cf = self._cassandra_driver._cf_dict[self._SVC_SI_CF]
         self._pool_cf = self._cassandra_driver._cf_dict[self._POOL_CF]
