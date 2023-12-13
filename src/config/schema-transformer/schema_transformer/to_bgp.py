@@ -17,6 +17,14 @@ from __future__ import print_function
 import argparse
 from builtins import object
 from builtins import str
+
+# Import kazoo.client before monkey patching
+from cfgm_common.zkclient import ZookeeperClient
+import gevent
+from gevent import monkey
+# monkey patch all as early as possible
+monkey.patch_all()
+
 import hashlib
 import os
 import random
@@ -28,10 +36,6 @@ import time
 from cfgm_common import vnc_cgitb
 from cfgm_common.exceptions import NoIdError, ResourceExhaustionError
 from cfgm_common.vnc_db import DBBase
-# Import kazoo.client before monkey patching
-from cfgm_common.zkclient import ZookeeperClient
-import gevent
-from gevent import monkey
 from past.utils import old_div
 from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
@@ -74,7 +78,6 @@ from .resources.virtual_network import VirtualNetworkST
 from .resources.virtual_port_group import VirtualPortGroupST
 from .st_amqp import STAmqpHandle
 
-monkey.patch_all()
 if sys.version_info[0] < 3:
     reload_module(sys)
     sys.setdefaultencoding('UTF8')
