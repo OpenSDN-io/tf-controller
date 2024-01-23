@@ -74,10 +74,10 @@ class VRouterScheduler(metaclass=abc.ABCMeta):
         for az in az_list:
             try:
                 # check:
-                # 1. If az is mentioned in config
+                # 1. If az is the same as in config
                 # 2. If the az is enabled & active
                 # 3. If it has any hosts
-                if az.zoneName not in self._args.netns_availability_zone or \
+                if (az.zoneName != self._args.netns_availability_zone) or \
                    not az.zoneState['available'] or not az.hosts:
                     continue
 
@@ -142,7 +142,8 @@ class VRouterScheduler(metaclass=abc.ABCMeta):
                 return
 
         for vr in list(VirtualRouterSM.values()):
-            if az_vrs and vr.name not in az_vrs:
+            if (az_vrs and vr.name not in az_vrs and
+                vr.name.split('.')[0] not in az_vrs):
                 vr.set_agent_state(False)
                 continue
 
