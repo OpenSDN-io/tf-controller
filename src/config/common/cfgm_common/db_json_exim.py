@@ -33,6 +33,7 @@ import json
 import cgitb
 import gevent
 
+from cassandra import cluster, auth
 from pycassa.connection import default_socket_factory
 from pycassa import ConnectionPool
 from pycassa import ColumnFamily
@@ -44,20 +45,24 @@ import kazoo.exceptions
 from thrift.transport import TSSLSocket, TTransport
 import ssl
 
+from cfgm_common import utils
 from cfgm_common.vnc_cassandra import VncCassandraClient
 
 logger = logging.getLogger(__name__)
 
-class CassandraNotEmptyError(Exception): pass
-class ZookeeperNotEmptyError(Exception): pass
+class NotEmptyError(Exception): pass
 class InvalidArguments(Exception): pass
 class AllServersUnavailable(Exception): pass
 excpetions = (
-    CassandraNotEmptyError,
-    ZookeeperNotEmptyError,
+    NotEmptyError,
     InvalidArguments,
     AllServersUnavailable
 )
+class CassandraConnectionError(Exception):
+    def __init__(self, message):
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
 
 KEYSPACES = ['config_db_uuid',
             'useragent',
@@ -102,12 +107,6 @@ class DatabaseExim(object):
             'vcenter-plugin',
             'vcenter-fabric-manager',
         ])
-
-        self._zookeeper = kazoo.client.KazooClient(
-            self._api_args.zk_server_ip,
-            timeout=400,
-            handler=kazoo.handlers.gevent.SequentialGeventHandler())
-        self._zookeeper.start()
     # end __init__
 
     def init_cassandra(self, ks_cf_info=None):
@@ -123,7 +122,7 @@ class DatabaseExim(object):
                 reset_config=False,
                 ssl_enabled=self._api_args.cassandra_use_ssl,
                 ca_certs=self._api_args.cassandra_ca_certs,
-                cassandra_driver='thrift')
+                cassandra_driver=self._api_args.cassandra_driver)
         except NotFoundException:
             # in certain  multi-node setup, keyspace/CF are not ready yet when
             # we connect to them, retry later
@@ -137,11 +136,9 @@ class DatabaseExim(object):
                 reset_config=False,
                 ssl_enabled=self._api_args.cassandra_use_ssl,
                 ca_certs=self._api_args.cassandra_ca_certs,
-                cassandra_driver='thrift')
-        try:
-            self._get_cf = self._cassandra._cassandra_driver.get_cf
-        except AttributeError:  # backward conpat before R2002
-            self._get_cf = self._cassandra.get_cf
+                cassandra_driver=self._api_args.cassandra_driver)
+        self.driver = self._cassandra._cassandra_driver
+        logger.info("Connected to Cassandra")
 
     def log(self, msg, level):
         logger.debug(msg)
@@ -170,6 +167,10 @@ class DatabaseExim(object):
             "--buffer-size", type=int,
             help="Number of rows fetched at once",
             default=1024)
+        parser.add_argument(
+            "--dump-timeout", type=int,
+            help="Timeout to get db dump",
+            default=3600)
 
         args_obj, remaining_argv = parser.parse_known_args(args_str.split())
         self._args = args_obj
@@ -187,6 +188,8 @@ class DatabaseExim(object):
         stdout.setFormatter(logformat)
         logger.addHandler(stdout)
         logger.setLevel('DEBUG' if self._args.debug else 'INFO')
+        if not getattr(self._api_args, "cassandra_driver"):
+            self._api_args.cassandra_driver = "thrift"
 
         if args_obj.import_from is not None and args_obj.export_to is not None:
             raise InvalidArguments(
@@ -195,11 +198,8 @@ class DatabaseExim(object):
 
     def db_import(self):
         if self._args.import_from.endswith('.gz'):
-            try:
-                f = gzip.open(self._args.import_from, 'rb')
+            with gzip.open(self._args.import_from, 'rb') as f:
                 self.import_data = json.loads(f.read())
-            finally:
-                f.close()
         else:
             with open(self._args.import_from, 'r') as f:
                 self.import_data = json.loads(f.read())
@@ -210,48 +210,63 @@ class DatabaseExim(object):
         self.init_cassandra(ks_cf_info)
 
         # refuse import if db already has data
-        non_empty_errors = []
+        non_empty_errors_cassandra = []
         for ks in list(self.import_data['cassandra'].keys()):
             for cf in list(self.import_data['cassandra'][ks].keys()):
-                if len(list(self._get_cf(cf).get_range(column_count=1))) > 0:
-                    non_empty_errors.append(
+               for i in self.driver.get_range(cf, column_count=1):
+                   if len(i) > 0 and i[0] is not None:
+                    non_empty_errors_cassandra.append(
                         'Keyspace %s CF %s already has entries.' %(ks, cf))
 
-        if non_empty_errors:
-            raise CassandraNotEmptyError('\n'.join(non_empty_errors))
 
-        non_empty_errors = []
+        zookeeper = kazoo.client.KazooClient(
+            self._api_args.zk_server_ip,
+            timeout=400,
+            handler=kazoo.handlers.gevent.SequentialGeventHandler())
+        zookeeper.start()
+
+        non_empty_errors_zookeeper = []
         existing_zk_dirs = set(
-            self._zookeeper.get_children(self._api_args.cluster_id+'/'))
+            zookeeper.get_children(self._api_args.cluster_id + '/'))
         import_zk_dirs = set([p_v_ts[0].split('/')[1]
-            for p_v_ts in json.loads(self.import_data['zookeeper'] or "[]")])
+                              for p_v_ts in json.loads(self.import_data['zookeeper'] or "[]")])
 
         for non_empty in existing_zk_dirs & import_zk_dirs - self._zk_ignore_list:
-            non_empty_errors.append(
+            non_empty_errors_zookeeper.append(
                 'Zookeeper has entries at /%s.' %(non_empty))
 
-        if non_empty_errors:
-            raise ZookeeperNotEmptyError('\n'.join(non_empty_errors))
+        if non_empty_errors_zookeeper and non_empty_errors_cassandra:
+            raise NotEmptyError(
+                '\n'.join(non_empty_errors_cassandra + non_empty_errors_zookeeper))
 
         # seed cassandra
-        for ks_name in list(self.import_data['cassandra'].keys()):
-            for cf_name in list(self.import_data['cassandra'][ks_name].keys()):
-                cf = self._get_cf(cf_name)
-                for row,cols in list(self.import_data['cassandra'][ks_name][cf_name].items()):
-                    for col_name, col_val_ts in list(cols.items()):
-                        cf.insert(row, {col_name: col_val_ts[0]})
-        logger.info("Cassandra DB restored")
+        if not non_empty_errors_cassandra:
+            for ks_name in list(self.import_data['cassandra'].keys()):
+                for cf_name in list(self.import_data['cassandra'][ks_name].keys()):
+                    for row,cols in list(
+                            self.import_data['cassandra'][ks_name][cf_name].items()):
+                        if self._api_args.cassandra_driver == 'thrift':
+                            for col_name, col_val_ts in list(cols.items()):
+                                self.driver.insert(row, {col_name: col_val_ts[0]},
+                                                   cf_name=cf_name)
+                        else:
+                            for element in cols:
+                                self.driver.insert(row, {element[0]: element[1]},
+                                                   cf_name=cf_name)
+            logger.info("Cassandra DB restored")
 
         # seed zookeeper
-        for path_value_ts in json.loads(self.import_data['zookeeper'] or "{}"):
-            path = path_value_ts[0]
-            if path.endswith('/'):
-                path = path[:-1]
-            if path.split('/')[1] in self._zk_ignore_list:
-                continue
-            value = path_value_ts[1][0]
-            self._zookeeper.create(path, native_str(value), makepath=True)
-        logger.info("Zookeeper DB restored")
+        if not non_empty_errors_zookeeper:
+            for path_value_ts in json.loads(self.import_data['zookeeper'] or "{}"):
+                path = path_value_ts[0]
+                if path.endswith('/'):
+                    path = path[:-1]
+                if path.split('/')[1] in self._zk_ignore_list:
+                    continue
+                value = path_value_ts[1][0]
+                zookeeper.create(path, native_str(value), makepath=True)
+            logger.info("Zookeeper DB restored")
+            zookeeper.stop()
 
     def _make_ssl_socket_factory(self, ca_certs, validate=True):
         # copy method from pycassa library because no other method
@@ -261,11 +276,9 @@ class DatabaseExim(object):
             return TSSLSocket.TSSLSocket(host, port, ca_certs=ca_certs, validate=validate)
         return ssl_socket_factory
 
-    def db_export(self):
-        db_contents = {'cassandra': {},
-                       'zookeeper': {}}
-
-        cassandra_contents = db_contents['cassandra']
+    def _cassandra_dump(self):
+        logger.info("Cassandra DB start")
+        cassandra_contents = {}
         creds = None
         if self._api_args.cassandra_user and self._api_args.cassandra_password:
             creds = {'username': self._api_args.cassandra_user,
@@ -291,7 +304,7 @@ class DatabaseExim(object):
         existing_keyspaces = sys_mgr.list_keyspaces()
         for ks_name in set(KEYSPACES) - set(self._args.omit_keyspaces or []):
             if self._api_args.cluster_id:
-                full_ks_name = '%s_%s' %(self._api_args.cluster_id, ks_name)
+                full_ks_name = '%s_%s' % (self._api_args.cluster_id, ks_name)
             else:
                 full_ks_name = ks_name
             if full_ks_name not in existing_keyspaces:
@@ -306,9 +319,73 @@ class DatabaseExim(object):
                 cassandra_contents[ks_name][cf_name] = {}
                 cf = ColumnFamily(pool, cf_name,
                                   buffer_size=self._args.buffer_size)
-                for r,c in cf.get_range(column_count=10000000, include_timestamp=True):
+                for r, c in cf.get_range(column_count=10000000, include_timestamp=True):
                     cassandra_contents[ks_name][cf_name][r] = c
+            pool.dispose()
+        sys_mgr.close()
         logger.info("Cassandra DB dumped")
+        return cassandra_contents
+
+    def _cassandra_dump_cql(self):
+        logger.info("Cassandra DB start")
+
+        cassandra_contents = {}
+        # Addresses, ports related options
+        endpoints, port = [], None
+        for address in self._api_args.cassandra_server_list:
+            try:
+                server, _ = address.split(':', 1)
+                endpoints.append(server)
+            except ValueError:
+                endpoints.append(address)
+        auth_provider = auth.PlainTextAuthProvider(
+            username=self._api_args.cassandra_user,
+            password=self._api_args.cassandra_password)
+        try:
+            cCluster = cluster.Cluster(
+                    endpoints,
+                    auth_provider=auth_provider)
+        except Exception as error:
+            raise CassandraConnectionError("error, {}: {}".format(
+                    error, utils.detailed_traceback()))
+
+        with cCluster.connect() as session:
+            rows = session.execute(
+                'select keyspace_name from system_schema.keyspaces').current_rows
+            existing_keyspaces = [row.keyspace_name for row in rows]
+
+            for ks_name in set(KEYSPACES) - set(self._args.omit_keyspaces or []):
+                if self._api_args.cluster_id:
+                    full_ks_name = '%s_%s' % (self._api_args.cluster_id, ks_name)
+                else:
+                    full_ks_name = ks_name
+                if full_ks_name not in existing_keyspaces:
+                    continue
+                cassandra_contents[ks_name] = {}
+                cql = ("SELECT table_name FROM system_schema.tables "
+                       "WHERE keyspace_name = '%s'") % full_ks_name
+                column_families = [cf[0] for cf in
+                                   session.execute(cql).current_rows]
+                for cf_name in column_families:
+                    cassandra_contents[ks_name][cf_name] = {}
+                    cql = ('SELECT blobAsText(key), blobAsText(column1), '
+                           'value, WRITETIME(value) FROM %s.%s'
+                           ) % (full_ks_name, cf_name)
+                    session.row_factory = lambda c, r: r
+                    range = session.execute(cql).current_rows
+                    for rw in range:
+                        key, row = rw[0], rw[1:]
+                        if key in cassandra_contents[ks_name][cf_name]:
+                            cassandra_contents[ks_name][cf_name][key].append(row)
+                        else:
+                            cassandra_contents[ks_name][cf_name][key] = [row]
+
+        cCluster.shutdown()
+        logger.info("Cassandra DB dumped")
+        return cassandra_contents
+
+    def _zookeeper_dump(self):
+        logger.info("Zookeeper DB start")
 
         def get_nodes(path):
             if path[:-1].rpartition('/')[-1] in self._zk_ignore_list:
@@ -326,18 +403,29 @@ class DatabaseExim(object):
 
             return nodes
 
-        zk = kazoo.client.KazooClient(self._api_args.zk_server_ip)
+        zk = kazoo.client.KazooClient(self._api_args.zk_server_ip,
+                                      read_only=True,
+                                      connection_retry=kazoo.retry.KazooRetry(max_tries=5))
         zk.start()
         nodes = get_nodes(self._api_args.cluster_id+'/')
         zk.stop()
-        db_contents['zookeeper'] = json.dumps(nodes, cls=LongIntEncoder)
         logger.info("Zookeeper DB dumped")
+        return json.dumps(nodes, cls=LongIntEncoder)
 
-        f = open(self._args.export_to, 'w')
-        try:
+    def db_export(self):
+        pool = gevent.get_hub().threadpool
+        if self._api_args.cassandra_driver == 'cql':
+            cass_dump = pool.apply_async(self._cassandra_dump_cql)
+        else:
+            cass_dump = pool.apply_async(self._cassandra_dump)
+        zoo_dump = pool.apply_async(self._zookeeper_dump)
+        db_contents = {
+            'cassandra': cass_dump.get(timeout=self._args.dump_timeout),
+            'zookeeper': zoo_dump.get(timeout=self._args.dump_timeout),
+        }
+
+        with open(self._args.export_to, 'w') as f:
             f.write(json.dumps(db_contents, cls=LongIntEncoder))
-        finally:
-            f.close()
         logger.info("DB dump wrote to file %s" % self._args.export_to)
     # end db_export
 # end class DatabaseExim
