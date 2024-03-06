@@ -39,7 +39,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>14.0</version>
+      <version>14.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.thrift</groupId>
@@ -116,7 +116,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore></ignore>
+                    <ignore/>
                   </action>
                 </pluginExecution>
               </pluginExecutions>
