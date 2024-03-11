@@ -60,18 +60,14 @@ VnIpam::VnIpam(const std::string& ip, uint32_t len, const std::string& gw,
     oper_dhcp_options.set_host_routes(host_routes);
 }
 
-Ip4Address VnIpam::GetSubnetAddress() const {
+IpAddress VnIpam::GetSubnetAddress() const {
     if (ip_prefix.is_v4()) {
         return Address::GetIp4SubnetAddress(ip_prefix.to_v4(), plen);
     }
-    return Ip4Address(0);
-}
-
-Ip6Address VnIpam::GetV6SubnetAddress() const {
     if (ip_prefix.is_v6()) {
         return Address::GetIp6SubnetAddress(ip_prefix.to_v6(), plen);
     }
-    return Ip6Address();
+    return IpAddress();
 }
 
 bool VnIpam::IsSubnetMember(const IpAddress &ip) const {
@@ -589,32 +585,19 @@ void VnEntry::DelHostRoute(const IpAddress &address) {
 
 // Add subnet route for the IPAM
 void VnEntry::AddSubnetRoute(VnIpam *ipam) {
-    if (ipam->IsV4()) {
-        static_cast<InetUnicastAgentRouteTable *>(vrf_->
-            GetInet4UnicastRouteTable())->AddIpamSubnetRoute
-            (vrf_->GetName(), ipam->GetSubnetAddress(), ipam->plen, GetName());
-    } else if (ipam->IsV6()) {
-        static_cast<InetUnicastAgentRouteTable *>(vrf_->
-            GetInet6UnicastRouteTable())->AddIpamSubnetRoute
-            (vrf_->GetName(), ipam->GetV6SubnetAddress(), ipam->plen,
+    static_cast<InetUnicastAgentRouteTable *>(vrf_->
+            GetInetUnicastRouteTable(ipam->ip_prefix))->AddIpamSubnetRoute
+            (vrf_->GetName(), ipam->GetSubnetAddress(), ipam->plen,
              GetName());
-    }
 }
 
 // Del subnet route for the IPAM
 void VnEntry::DelSubnetRoute(VnIpam *ipam) {
     Agent *agent = static_cast<VnTable *>(get_table())->agent();
-    if (ipam->IsV4()) {
-        static_cast<InetUnicastAgentRouteTable *>(vrf_->
-            GetInet4UnicastRouteTable())->DeleteReq
+    static_cast<InetUnicastAgentRouteTable *>(vrf_->
+            GetInetUnicastRouteTable(ipam->ip_prefix))->DeleteReq
             (agent->local_peer(), vrf_->GetName(),
              ipam->GetSubnetAddress(), ipam->plen, NULL);
-    } else if (ipam->IsV6()) {
-        static_cast<InetUnicastAgentRouteTable *>(vrf_->
-            GetInet6UnicastRouteTable())->DeleteReq
-            (agent->local_peer(), vrf_->GetName(),
-             ipam->GetV6SubnetAddress(), ipam->plen, NULL);
-    }
 }
 
 void VnEntry::AllocWalker() {

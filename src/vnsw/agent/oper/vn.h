@@ -56,8 +56,7 @@ struct VnIpam {
 
         return (plen < rhs.plen);
     }
-    Ip4Address GetSubnetAddress() const;
-    Ip6Address GetV6SubnetAddress() const;
+    IpAddress GetSubnetAddress() const;
 
     bool IsSubnetMember(const IpAddress &ip) const;
 };
