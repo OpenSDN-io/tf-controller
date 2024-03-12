@@ -64,8 +64,6 @@ test_evpn_route = AgentEnv.MakeTestCmd(env, 'test_evpn_route', agent_suite)
 test_fip_rt_leaking = AgentEnv.MakeTestCmd(env, 'test_fip_rt_leaking', agent_suite)
 test_forwarding_mode = AgentEnv.MakeTestCmd(env, 'test_forwarding_mode', agent_suite)
 test_route = AgentEnv.MakeTestCmd(env, 'test_route', agent_suite)
-test_route_l3mh = AgentEnv.MakeTestCmd(env, 'test_route_l3mh', agent_suite)
-test_agent_no_gw = AgentEnv.MakeTestCmd(env, 'test_agent_no_gw', agent_suite)
 test_l2route = AgentEnv.MakeTestCmd(env, 'test_l2route', agent_suite)
 test_cfg = AgentEnv.MakeTestCmd(env, 'test_cfg', agent_suite)
 test_path_preference_walker =AgentEnv.MakeTestCmd(env,
@@ -77,9 +75,6 @@ test_dpdk_mpls = AgentEnv.MakeTestCmd(env, 'test_dpdk_mpls', agent_suite)
 test_bgp_service_configuration = AgentEnv.MakeTestCmd(env,
                                                       'test_bgp_service_configuration',
                                                       agent_suite)
-test_fast_convergence = AgentEnv.MakeTestCmd(env,
-                                            'test_fast_convergence',
-                                            agent_suite)
 test_bgp_router_config = AgentEnv.MakeTestCmd(env,
                                               'test_bgp_router_config',
                                               agent_suite)
@@ -118,6 +113,7 @@ service_instance_test = AgentEnv.MakeTestCmd(env, 'service_instance_test',
                                              agent_suite)
 test_vxlan_routing = AgentEnv.MakeTestCmd(env, 'test_vxlan_routing', agent_suite)
 env.Alias('vnsw/agent/test_vxlan_routing', test_vxlan_routing)
+test_vxlan_routing_v6 = AgentEnv.MakeTestCmd(env, 'test_vxlan_routing_v6', agent_suite)
 
 test_xmpp_hv2 = AgentEnv.MakeTestCmd(env, 'test_xmpp_hv2', flaky_agent_suite)
 test_xmpp_non_hv = AgentEnv.MakeTestCmd(env, 'test_xmpp_non_hv', flaky_agent_suite)
@@ -150,6 +146,11 @@ env.Prepend(LIBPATH = [ '../../../db/test'])
 test = env.TestSuite('agent-test', agent_suite)
 env.Alias('agent:agent_test', test)
 env.Alias('controller/src/vnsw/agent:test', test)
+
+md6_arr = [test_vxlan_routing_v6]
+md6_test = env.TestSuite('agent-test-v6', md6_arr)
+env.Alias('agent:agent_test_v6', md6_test)
+env.Alias('controller/src/vnsw/agent:test_v6', md6_test)
 
 Return('agent_suite')
 

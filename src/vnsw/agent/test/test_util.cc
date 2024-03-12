@@ -3933,6 +3933,60 @@ void CreateVmportFIpEnv(struct PortInfo *input, int count, int acl_id,
     }
 }
 
+void CreateVmportFIpV6Env(struct PortInfo *input, int count, int acl_id,
+                        const char *vn, const char *vrf) {
+    char vn_name[MAX_TESTNAME_LEN];
+    char vm_name[MAX_TESTNAME_LEN];
+    char vrf_name[MAX_TESTNAME_LEN];
+    char acl_name[MAX_TESTNAME_LEN];
+    char instance_ip[MAX_TESTNAME_LEN];
+
+    if (acl_id) {
+        sprintf(acl_name, "acl%d", acl_id);
+        AddAcl(acl_name, acl_id);
+    }
+
+    for (int i = 0; i < count; i++) {
+        if (vn)
+            strncpy(vn_name, vn, MAX_TESTNAME_LEN);
+        else
+            sprintf(vn_name, "default-project:vn%d", input[i].vn_id);
+        if (vrf)
+            strncpy(vrf_name, vrf, MAX_TESTNAME_LEN);
+        else
+            sprintf(vrf_name, "default-project:vn%d:vn%d", input[i].vn_id,
+                    input[i].vn_id);
+        sprintf(vm_name, "vm%d", input[i].vm_id);
+        sprintf(instance_ip, "instance6%d", input[i].intf_id);
+        AddVn(vn_name, input[i].vn_id);
+        AddVrf(vrf_name);
+        AddVm(vm_name, input[i].vm_id);
+        AddVmPortVrf(input[i].name, "", 0);
+
+        //AddNode("virtual-machine-interface-routing-instance", input[i].name,
+        //        input[i].intf_id);
+        IntfCfgAddThrift(input, i);
+        AddPort(input[i].name, input[i].intf_id);
+        AddActiveActiveInstanceIp(instance_ip, input[i].intf_id, input[i].ip6addr);
+        AddLink("virtual-network", vn_name, "routing-instance", vrf_name);
+        AddLink("virtual-machine-interface", input[i].name, "virtual-machine", vm_name);
+        AddLink("virtual-machine-interface", input[i].name, "virtual-network",
+                vn_name);
+        AddLink("virtual-machine-interface-routing-instance", input[i].name,
+                "routing-instance", vrf_name, "virtual-machine-interface-routing-instance");
+        AddLink("virtual-machine-interface-routing-instance", input[i].name,
+                "virtual-machine-interface", input[i].name, "virtual-machine-interface-routing-instance");
+        AddLink("virtual-machine-interface", input[i].name,
+                "instance-ip", instance_ip);
+        AddLink("instance-ip", instance_ip, "virtual-machine-interface",
+                input[i].name);
+
+        if (acl_id) {
+            AddLink("virtual-network", vn_name, "access-control-list", acl_name);
+        }
+    }
+}
+
 void CreateVmportEnvInternal(struct PortInfo *input, int count, int acl_id,
                      const char *vn, const char *vrf,
                      const char *vm_interface_attr,

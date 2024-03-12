@@ -441,6 +441,8 @@ void CreateVmportEnv(struct PortInfo *input, int count, int acl_id = 0,
                      bool vn_admin_state = true);
 void CreateVmportFIpEnv(struct PortInfo *input, int count, int acl_id = 0,
                      const char *vn = NULL, const char *vrf = NULL);
+void CreateVmportFIpV6Env(struct PortInfo *input, int count, int acl_id = 0,
+                     const char *vn = NULL, const char *vrf = NULL);
 void CreateVmportWithEcmp(struct PortInfo *input, int count, int acl_id = 0,
                           const char *vn = NULL, const char *vrf = NULL);
 void CreateVmportWithoutNova(struct PortInfo *input, int count, int acl_id = 0,
