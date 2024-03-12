@@ -14,7 +14,7 @@ management functionality.
 from gevent import monkey
 
 import argparse
-from six.moves.configparser import SafeConfigParser, NoOptionError
+from configparser import SafeConfigParser, NoOptionError
 import gevent
 import os
 import socket
@@ -164,7 +164,7 @@ def main(args_str=' '.join(sys.argv[1:])):
     if (os.path.exists(config_file_path) is False):
         sys.stderr.write("config file '" + config_file_path + "' is not present\n")
         sys.exit(1)
-    config = SafeConfigParser()
+    config = SafeConfigParser(strict=False)
     config.read([config_file_path])
     if 'DEFAULTS' in config.sections():
         default.update(dict(config.items('DEFAULTS')))
