@@ -25,13 +25,13 @@ class DockerContainersInterface:
         try:
             # string or stream result works unstable
             # using socket with own read implementation
-            socket = self._client.exec_start(exec_op["Id"], tty=True, socket=True)
+            socket = self._client.exec_start(exec_op["Id"], tty=True, socket=True)._sock
             socket.settimeout(10.0)
             while True:
                 part = socket.recv(1024)
                 if len(part) == 0:
                     break
-                res += part
+                res += str(part)
         finally:
             if socket:
                 # There is cyclic reference there
