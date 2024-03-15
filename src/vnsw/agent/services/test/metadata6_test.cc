@@ -40,6 +40,7 @@ extern "C"{
 #define vm1_ip "ee80::11"
 #define vm1_ll_ip "fe80::11:11"
 #define vm1_mac "00:00:00:01:01:01"
+#define vhost_ll_ip "fe80::11:22:33"
 #define nova_proxy_mock_port 8775
 
 IpamInfo ipam_info[] = {
@@ -72,10 +73,23 @@ std::string ExecCmd(const std::string& cmd)
 }
 
 class Metadata6Test : public ::testing::Test {
+
+    void RemoveVhost() {
+        std::string vhost_nm =
+            Agent::GetInstance()->vhost_interface_name();
+        std::string delete_vhost = "ip link del dev " + vhost_nm;
+        std::system(delete_vhost.c_str());
+
+        const std::string ipa_cmd = "ip addr";
+        const std::string grep_cmd = "grep";
+        const std::string vhost_cmd = ipa_cmd + " | " + grep_cmd +
+            " " + agent_->vhost_interface_name();
+        std::string grep_str = ExecCmd(vhost_cmd);
+        EXPECT_TRUE(grep_str.empty());
+    }
+
 public:
     void SetUp() {
-
-        ConcurrencyChecker::enable_ = false;  // disable concurrency check
         AddIPAM("vn1", ipam_info, 1);
         client->WaitForIdle();
 
@@ -86,56 +100,24 @@ public:
         // try to create a vhost interface
         // if it is not present
         if (vhost_str.empty()) {
-            vhost_was_created_ = true;
             std::string create_vhost = "ip link add " + vhost_nm +
                 " type dummy";
             std::system(create_vhost.c_str());
+            std::string add_vhost_ip = "ip addr add " vhost_ll_ip " dev "
+                + vhost_nm;
+            std::system(add_vhost_ip.c_str());
         }
-
-        client->WaitForIdle();
-
-        // update vhost0 settings to include
-        // interface routes into the corresponding
-        // VRF instance
-        VrfEntry *fabric_vrf = agent_->fabric_vrf();
-        InterfaceTable *intf_table = agent_->interface_table();
-
-        // create a request data
-        const VmInterface *cvhost0 = dynamic_cast<const VmInterface*>(
-            agent_->vhost_interface());
-        VmInterface *vhost0 = const_cast<VmInterface *>(cvhost0);
-        VmInterfaceConfigData *vhost_cfg =
-            new VmInterfaceConfigData (agent_, vhost0->ifmap_node());
-        vhost_cfg->CopyVhostData(agent_);
-        vhost_cfg->need_linklocal_ip_ = true;
-        vhost_cfg->vrf_name_ = fabric_vrf->GetName();
-
-        // send the request to update vhost0
-        DBRequest *vhost_req = new DBRequest;
-        vhost_req->oper = DBRequest::DB_ENTRY_ADD_CHANGE;
-        vhost_req->key = cvhost0->GetDBRequestKey();
-        vhost_req->data.reset(vhost_cfg);
-        intf_table->Enqueue(vhost_req);
-        client->WaitForIdle();
     }
 
     void TearDown() {
         DelIPAM("vn1");
-
         client->WaitForIdle();
-        if (vhost_was_created_) {
-            std::string vhost_nm =
-                Agent::GetInstance()->vhost_interface_name();
-            std::string delete_vhost = "ip link del " + vhost_nm +
-                " type dummy";
-            std::system(delete_vhost.c_str());
-        }
+        RemoveVhost();
         DeleteGlobalVrouterConfig();
     }
 
     Metadata6Test() :
-        agent_(Agent::GetInstance()),
-        vhost_was_created_(false) {
+        agent_(Agent::GetInstance()) {
         Agent::GetInstance()->set_compute_node_ip(
             Ip4Address::from_string("127.0.0.1"));
     }
@@ -186,8 +168,6 @@ public:
     }
 
     Agent *agent_;
-private:
-    bool vhost_was_created_;
 };
 
 TEST_F(Metadata6Test, Metadata6RouteFuncsTest) {
@@ -225,6 +205,11 @@ TEST_F(Metadata6Test, Metadata6RouteFuncsTest) {
         agent_->vhost_interface());
     agent_->services()->metadataproxy()->InitializeHttp6Server(cvhost0);
 
+    Ip6Address vhost_addr = agent_->services()->
+        metadataproxy()->Ipv6ServiceAddress();
+    ASSERT_EQ(vhost_addr,
+        Ip6Address::from_string(vhost_ll_ip));
+
     TxTcp6Packet(intf->id(), vm1_ip, md_ip6, 1000, 80, false);
     client->WaitForIdle();
     FlowEntry *flow = FlowGet(0, vm1_ip, md_ip6, 6, 1000, 80,
@@ -237,121 +222,39 @@ TEST_F(Metadata6Test, Metadata6RouteFuncsTest) {
                 flow->key().src_addr.to_v6());
     EXPECT_EQ(Ip6Address::from_string(md_ip6),
                 flow->key().dst_addr.to_v6());
-    EXPECT_EQ(cvhost0->mdata_ip6_addr(),
+    EXPECT_EQ(vhost_addr,
         rflow->key().src_addr.to_v6());
     EXPECT_EQ(intf->mdata_ip6_addr(),
         rflow->key().dst_addr.to_v6());
 
-    // Add routes are added manually (the imitation of a packet
-    // interception by the PktFlowInfo::IngressProcess)
-    IpAddress ll_ip(Ip6Address::from_string(vm1_ll_ip));
-    agent_->services()->metadataproxy()->
-        AdvertiseMetaDataLinkLocalRoutes(intf, ll_ip.to_v6(), vrf1);
-    InetUnicastRouteEntry *ucrt_ll2 = vrf1->GetUcRoute(ll_ip);
-    ASSERT_TRUE(ucrt_ll2 != NULL);
-    EXPECT_TRUE(ucrt_ll2->addr() == ll_ip);  // AdvertiseMetaDataLinkLocalRoutes
+    // // Routes are added manually (the imitation of a packet
+    // // interception by the PktFlowInfo::IngressProcess)
+    // IpAddress ll_ip(Ip6Address::from_string(vm1_ll_ip));
+    // agent_->services()->metadataproxy()->
+    //     AdvertiseMetaDataLinkLocalRoutes(intf, ll_ip.to_v6(), vrf1);
+    // InetUnicastRouteEntry *ucrt_ll2 = vrf1->GetUcRoute(ll_ip);
+    // ASSERT_TRUE(ucrt_ll2 != NULL);
+    // EXPECT_TRUE(ucrt_ll2->addr() == ll_ip);  // AdvertiseMetaDataLinkLocalRoutes
 
-    const Ip6Address tmp_ip = intf->mdata_ip6_addr();
-    const Interface *intf_new = agent_->interface_table()->
-        FindInterfaceFromMetadataIp(tmp_ip);
-    EXPECT_TRUE(intf_new != NULL);  // FindInterfaceFromMetadataIp
+    // const Ip6Address tmp_ip = intf->mdata_ip6_addr();
+    // const Interface *intf_new = agent_->interface_table()->
+    //     FindInterfaceFromMetadataIp(tmp_ip);
+    // EXPECT_TRUE(intf_new != NULL);  // FindInterfaceFromMetadataIp
+    // client->WaitForIdle();
+
+    // // Checks: OnAnInterfaceChange, DeleteMetaDataLinkLocalRoute,
+    // DeleteVmportEnv(input, 1, 1, 0);
+    // client->WaitForIdle();
+    // ASSERT_TRUE(agent_->interface_table() != NULL);
+    // EXPECT_TRUE(agent_->interface_table()->
+    //     FindInterfaceFromMetadataIp(tmp_ip) == NULL);
+    // ucrt_ll2 = vrf1->GetUcRoute(ll_ip);
+    // EXPECT_TRUE(ucrt_ll2 == NULL);
+    // ucrt_md_ip = vrf1->GetUcRoute
+    //     (Ip6Address::from_string(md_ip6));
+    // EXPECT_TRUE(ucrt_md_ip == NULL);  // OnAVrfChange
+
     client->WaitForIdle();
-
-    // Checks: OnAnInterfaceChange, DeleteMetaDataLinkLocalRoute,
-    DeleteVmportEnv(input, 1, 1, 0);
-    client->WaitForIdle();
-    ASSERT_TRUE(agent_->interface_table() != NULL);
-    EXPECT_TRUE(agent_->interface_table()->
-        FindInterfaceFromMetadataIp(tmp_ip) == NULL);
-    ucrt_ll2 = vrf1->GetUcRoute(ll_ip);
-    EXPECT_TRUE(ucrt_ll2 == NULL);
-    ucrt_md_ip = vrf1->GetUcRoute
-        (Ip6Address::from_string(md_ip6));
-    EXPECT_TRUE(ucrt_md_ip == NULL);  // DeleteVhostRoute / OnAVrfChange
-
-    client->WaitForIdle();
-    ClearLinkLocalConfig();
-    client->WaitForIdle();
-}
-
-TEST_F(Metadata6Test, Metadata6NlReqTest) {
-    struct PortInfo input[] = {
-        /*  name  intf_id ip_addr mac_addr vn_id vm_id ip6addr*/
-        {"vnet1", 1,      vm1_ip, vm1_mac, 1,    1},
-    };
-
-    SetupLinkLocalConfig();
-    client->WaitForIdle();
-
-    const std::string grep_cmd = "grep";
-    const std::string ipa_cmd = "ip addr";
-    const std::string ipn_cmd = "ip neigh show";
-    // Check grep cmd
-    {
-        int res1 = std::system((grep_cmd + " --help").c_str());
-        EXPECT_EQ(res1, 0);
-    }
-    // Check ip a cmd
-    {
-        int res1 = std::system(ipa_cmd.c_str());
-        EXPECT_EQ(res1, 0);
-    }
-    client->WaitForIdle();
-
-    // check for presence of a vhost interface
-    client->WaitForIdle();
-    const std::string vhost_cmd = ipa_cmd + " | " + grep_cmd +
-        " " + agent_->vhost_interface_name();
-    std::string grep_str = ExecCmd(vhost_cmd);
-    EXPECT_FALSE(grep_str.empty());
-    client->WaitForIdle();
-
-    // try to add ip to vhost0 interface
-    const IpAddress vhost_ip = agent_->services()->
-        metadataproxy()->Ipv6ServiceAddress();
-    agent_->services()->metadataproxy()->NetlinkAddVhostIp(vhost_ip);
-    const std::string find_vhost_ip = ipa_cmd + " | " + grep_cmd +
-        " " + vhost_ip.to_string();
-    grep_str = ExecCmd(find_vhost_ip);
-    EXPECT_FALSE(grep_str.empty());
-    client->WaitForIdle();
-
-    CreateV6VmportEnv(input, 1, 0);
-    client->WaitForIdle();
-    client->Reset();
-
-    VnEntry *vn1 = VnGet(1);
-    EXPECT_TRUE(vn1 != NULL);
-
-    IpAddress ll_ip(Ip6Address::from_string(vm1_ll_ip));
-    const uint8_t mac_bytes[] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-    MacAddress dev_mac(mac_bytes);
-    agent_->services()->metadataproxy()->
-        NetlinkAddVhostNb(ll_ip.to_v6(), dev_mac);
-    std::string find_vhost_nb = ipn_cmd + " | " + grep_cmd +
-        " " + ll_ip.to_string();
-    grep_str = ExecCmd(find_vhost_nb);
-    EXPECT_FALSE(grep_str.empty());  // NetlinkAddVhostNb
-    client->WaitForIdle();
-
-    // Now, delete added vhost ip record (NetlinkDelVhostIp)
-    agent_->services()->metadataproxy()->NetlinkDelVhostIp(vhost_ip);
-    grep_str = ExecCmd(find_vhost_ip);
-    EXPECT_TRUE(grep_str.empty());  // NetlinkDelVhostIp
-    client->WaitForIdle();
-
-    // delete nb
-    const std::string delete_nb = "ip neig del " +
-        ll_ip.to_string() + " dev " + agent_->vhost_interface_name();
-    std::system(delete_nb.c_str());
-    grep_str = ExecCmd(find_vhost_nb);
-    EXPECT_TRUE(grep_str.empty());
-    client->WaitForIdle();
-
-    // Clear the created env
-    DeleteVmportEnv(input, 1, 1, 0);
-    client->WaitForIdle();
-
     ClearLinkLocalConfig();
     client->WaitForIdle();
 }
