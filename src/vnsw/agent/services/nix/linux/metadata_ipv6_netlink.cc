@@ -248,7 +248,7 @@ public:
 
     /// @brief Iterates over all response parts
     template <class T>
-    int response_iterate(T handler_func) {
+    int response_iterate(const T& handler_func) {
         for (;
             NLMSG_OK(resp_nh_, n_recv_);
             resp_nh_ = NLMSG_NEXT(resp_nh_, n_recv_)) {
@@ -261,317 +261,117 @@ public:
     }
 };
 
-/// @brief Reads a response (ack/nock) after a Netlink request
-static bool read_ack_response(
-    const msghdr *msg,
-    int send_n,
-    NetlinkSocket& nl_sock,
-    const char* func_name) {
+struct IPv6Reader {
 
-    aux::NetlinkRequest<nlmsgerr> nl_ack;
-    nl_ack.msg_len = NLMSG_LENGTH(sizeof(nl_ack.nl_req_hdr));
-    msghdr *ack = nl_ack.message(nl_sock.netlink_socket());
-    int recv_n = -1;
-    if (msg && send_n > 0 && ack) {
-        recv_n = recvmsg(nl_sock.fd(), ack, MSG_WAITALL);
-        if (recv_n <= 0) {
-            LOG(ERROR, "Recvmsg failed,"<<
-            func_name << ", metadata_ipv6_netlink.cc, "
-            "errno = " << errno << std::endl);
-            return false;
-        }
-        if (nl_ack.nl_message_hdr.nlmsg_type == NLMSG_ERROR) {
-            const int ack_err = -nl_ack.nl_req_hdr.error;
-            if (ack_err == 0
-                || ack_err == EEXIST || ack_err == EADDRNOTAVAIL) {
-                // EEXIST -- address is already present, not an error
-                // EADDRNOTAVAIL -- address is not present, not an error
-                return true;
-            }
-            LOG(ERROR, "Error in the Netlink message, "<<
-            func_name << ", metadata_ipv6_netlink.cc, "
-            "error code = " << ack_err);
-        }
+    explicit IPv6Reader(const unsigned int itf_idx)
+    :
+        vhost_idx_(itf_idx) {
     }
-    return false;
-}
 
-/// @brief Checks whether specified flag is active for the given
-/// interface address (netlink RTM_GETADDR response).
-/// @return 1, if flag is present, 0, if flag is not present, -1
-/// if netlink response doesn't contain requested information
-template<int FLAG>
-static int check_address_flags(const struct nlmsghdr *resp_nh) {
-    struct rtattr *resp_attr = NULL;
-    if (resp_nh->nlmsg_type == RTM_NEWADDR) {
-        ifaddrmsg *ifa_resp =
-            static_cast<struct ifaddrmsg *>(NLMSG_DATA(resp_nh));
+    unsigned int vhost_idx_;
+
+    mutable Ip6Address vhost_addr_;
+
+    int read_ipv6_address(const struct nlmsghdr *resp_nh) const {
+        struct rtattr *resp_attr = NULL;
+        struct ifaddrmsg *ifa_resp = NULL;
+        int attr_len = 0;
+        if (resp_nh->nlmsg_type != RTM_NEWADDR) {
+            return -1;
+        }
+        ifa_resp = static_cast<struct ifaddrmsg *>(NLMSG_DATA(resp_nh));
         if (ifa_resp == NULL) {
             return -1;
         }
-        int attr_len = resp_nh->nlmsg_len - NLMSG_LENGTH(sizeof(*ifa_resp));
+        if (ifa_resp->ifa_index != vhost_idx_) {
+            return -1;
+        }
+        attr_len = resp_nh->nlmsg_len - NLMSG_LENGTH(sizeof(*ifa_resp));
         for (resp_attr = IFA_RTA(ifa_resp);
             RTA_OK(resp_attr, attr_len);
             resp_attr = RTA_NEXT(resp_attr, attr_len)) {
             if (resp_attr->rta_type == IFA_ADDRESS) {
-                if (ifa_resp->ifa_flags & FLAG) {
-                    return 1;
-                } else {
-                    return 0;
+                char addr_str[256];
+                memset(addr_str, 0, 256);
+                inet_ntop(AF_INET6,
+                    RTA_DATA(resp_attr), addr_str, 256);
+                if (addr_str[0] != 0) {
+                    vhost_addr_ = Ip6Address::from_string(addr_str);
+                    if (!vhost_addr_.is_unspecified() &&
+                        vhost_addr_.is_link_local()) {
+                        return 1;
+                    }
                 }
             }
         }
+        return -1;
     }
-    return -1;
-}
+
+    int operator() (const struct nlmsghdr *resp_nh) const {
+        return read_ipv6_address(resp_nh);
+    }
+
+private:
+
+    IPv6Reader();
+
+    IPv6Reader(const IPv6Reader&);
+
+};
 
 } //namespace aux
 
-bool MetadataProxy::NetlinkAddVhostIp(const IpAddress& vhost_ll_ip) {
-    if (!vhost_ll_ip.is_v6()) {
-        return false;
-    }
-
+bool MetadataProxy::NetlinkGetVhostIp(Ip6Address& vhost_ll_ip) {
     // set ip address
-    in6_addr addr6;
-    int addr_res = inet_pton(AF_INET6, vhost_ll_ip.to_string().c_str(), &addr6);
-    if (addr_res < 0) {
-        LOG(ERROR, "An error has occured during address initialization,"
-        "MetadataProxy::NetlinkAddVhostIp, metadata_ipv6_netlink.cc, "
-        "errno = " << errno << std::endl);
-        return false;
-    }
-    if (addr_res == 0) {
-        LOG(ERROR, "A wrong address has been specified,"
-        "MetadataProxy::NetlinkAddVhostIp, metadata_ipv6_netlink.cc, "
-        "address = " << vhost_ll_ip.to_string().c_str() << std::endl);
-        return false;
-    }
+    //
     // set device index
     const int dev_idx =
-        if_nametoindex(services_->agent()->vhost_interface_name().c_str());
-    if (dev_idx <= 0) {
-        LOG(ERROR, "Error while retreiving device index,"
-        "MetadataProxy::NetlinkAddVhostIp, metadata_ipv6_netlink.cc, "
-        "dev_idx = " << dev_idx << std::endl);
-        return false;
-    }
+        VhostIndex(services_->agent()->vhost_interface_name().c_str());
 
     // open a socket
     aux::NetlinkSocket nl_sock;
-
-    // create a request
-    aux::NetlinkRequest<ifaddrmsg> ifa_req;
-
-    // set ifaddrmsg header
-    ifaddrmsg &ifa_message_hdr    = ifa_req.nl_req_hdr;
-    ifa_message_hdr.ifa_family    = AF_INET6;  // AF_INET/AF_INET6/AF_UNSPEC
-    ifa_message_hdr.ifa_prefixlen = 128;
-    ifa_message_hdr.ifa_index     = dev_idx;
-    ifa_message_hdr.ifa_scope     = RT_SCOPE_UNIVERSE;
-    ifa_message_hdr.ifa_flags     = IFA_F_PERMANENT | IFA_F_SECONDARY;
-
-    // set nlmsghdr (the main header)
-    nlmsghdr &nl_message_hdr      = ifa_req.nl_message_hdr;
-    nl_message_hdr.nlmsg_type     = RTM_NEWADDR;
-    nl_message_hdr.nlmsg_flags    = NLM_F_CREATE | NLM_F_EXCL | NLM_F_REQUEST
-        | NLM_F_ACK;
-    // nl_message_hdr.nlmsg_seq
-    ifa_req.msg_len = NLMSG_LENGTH(sizeof(ifa_message_hdr));
-
-    ifa_req.insert_attr(IFA_LOCAL, sizeof(addr6), &addr6);
-
-    msghdr* msg = ifa_req.message(nl_sock.netlink_socket());
     int send_n = -1;
-    if (msg) {
+    {
+        aux::NetlinkRequest<ifaddrmsg> addr_nl_req;
+        ifaddrmsg &nl_req_param    = addr_nl_req.nl_req_hdr;
+        nl_req_param.ifa_family    = AF_INET6;
+        nl_req_param.ifa_prefixlen = 128;
+        nl_req_param.ifa_index     = dev_idx;
+
+        nlmsghdr &msg_hdr          = addr_nl_req.nl_message_hdr;
+        msg_hdr.nlmsg_type         = RTM_GETADDR;
+        msg_hdr.nlmsg_flags        = NLM_F_REQUEST | NLM_F_DUMP; // | NLM_F_DUMP_FILTERED;
+        addr_nl_req.msg_len = NLMSG_LENGTH(sizeof(nl_req_param));
+
+        msghdr *msg = addr_nl_req.message(nl_sock.netlink_socket());
+        send_n = -1;
+        if (msg == NULL) {
+            return false;
+        }
+
         // send a request to the kernel
         send_n = sendmsg(nl_sock.fd(), msg, 0);
         if (send_n <= 0) {
-            LOG(ERROR, "sendmsg failed, "
+            LOG(ERROR, "sendmsg failed (address request), "
             "MetadataProxy::NetlinkAddVhostIp, metadata_ipv6_netlink.cc, "
             "errno = " << errno << std::endl);
             return false;
         }
-    }
 
-    if (aux::read_ack_response(msg, send_n, nl_sock, "NetlinkAddVhostIp")) {
-        int has_tentative = -1;
-        do {
-            aux::NetlinkRequest<ifaddrmsg> addr_nl_req;
-            ifaddrmsg &nl_req_param    = addr_nl_req.nl_req_hdr;
-            nl_req_param.ifa_family    = AF_INET6;
-            nl_req_param.ifa_prefixlen = 128;
-            nl_req_param.ifa_index     = dev_idx;
-
-            nlmsghdr &msg_hdr          = addr_nl_req.nl_message_hdr;
-            msg_hdr.nlmsg_type         = RTM_GETADDR;
-            msg_hdr.nlmsg_flags        = NLM_F_REQUEST | NLM_F_DUMP_FILTERED;
-            addr_nl_req.msg_len = NLMSG_LENGTH(sizeof(nl_req_param));
-            addr_nl_req.insert_attr(IFA_LOCAL, sizeof(addr6), &addr6);
-
-            msg = addr_nl_req.message(nl_sock.netlink_socket());
-            send_n = -1;
-            if (msg == NULL) {
-                return false;
-            }
-            // send a request to the kernel
-            send_n = sendmsg(nl_sock.fd(), msg, 0);
-            if (send_n <= 0) {
-                LOG(ERROR, "sendmsg failed (address request), "
-                "MetadataProxy::NetlinkAddVhostIp, metadata_ipv6_netlink.cc, "
-                "errno = " << errno << std::endl);
-                return false;
-            }
-
-            // read the response
-            aux::NetlinkResponse addr_resp(msg, nl_sock);
-            has_tentative = addr_resp.
-                response_iterate(aux::check_address_flags<IFA_F_TENTATIVE>);
-        } while (has_tentative > 0);
-        if (!has_tentative) {
+        // read the response
+        aux::NetlinkResponse addr_resp(msg, nl_sock);
+        aux::IPv6Reader ipv6_reader(dev_idx);
+        int ret_value = addr_resp.response_iterate(ipv6_reader);
+        if (ret_value > 0) {
+            vhost_ll_ip = ipv6_reader.vhost_addr_;
             return true;
         }
     }
+
     return false;
 }
 
-void MetadataProxy::NetlinkDelVhostIp(const IpAddress& vhost_ll_ip) {
-    if (!vhost_ll_ip.is_v6()) {
-        return;
-    }
 
-    // set ip address
-    in6_addr addr6;
-    int addr_res = inet_pton(AF_INET6, vhost_ll_ip.to_string().c_str(), &addr6);
-    if (addr_res < 0) {
-        LOG(ERROR, "An error has occured during address initialization,"
-        "MetadataProxy::NetlinkDelVhostIp, metadata_ipv6_netlink.cc, "
-        "errno = " << errno << std::endl);
-        return;
-    }
-    if (addr_res == 0) {
-        LOG(ERROR, "A wrong address has been specified,"
-        "MetadataProxy::NetlinkDelVhostIp, metadata_ipv6_netlink.cc, "
-        "address = " << vhost_ll_ip.to_string().c_str() << std::endl);
-        return;
-    }
-    // set device index
-    const int dev_idx =
-        if_nametoindex(services_->agent()->vhost_interface_name().c_str());
-    if (dev_idx <= 0) {
-        LOG(ERROR, "Error while retreiving device index,"
-        "MetadataProxy::NetlinkDelVhostIp, metadata_ipv6_netlink.cc, "
-        "dev_idx = " << dev_idx << std::endl);
-    }
-
-    // open a socket
-    aux::NetlinkSocket nl_sock;
-
-    aux::NetlinkRequest<ifaddrmsg> ifa_req;
-
-    // set ifaddrmsg header
-    ifaddrmsg &ifa_message_hdr    = ifa_req.nl_req_hdr;
-    ifa_message_hdr.ifa_family    = AF_INET6;  // AF_INET/AF_INET6/AF_UNSPEC
-    ifa_message_hdr.ifa_prefixlen = 128;
-    ifa_message_hdr.ifa_index     = dev_idx;
-    ifa_message_hdr.ifa_scope     = RT_SCOPE_UNIVERSE;
-
-    // set nlmsghdr (the main header)
-    nlmsghdr &nl_message_hdr = ifa_req.nl_message_hdr;
-    nl_message_hdr.nlmsg_type = RTM_DELADDR;
-    nl_message_hdr.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
-    // nl_message_hdr.nlmsg_seq
-    ifa_req.msg_len = NLMSG_LENGTH(sizeof(ifa_message_hdr));
-
-    ifa_req.insert_attr(IFA_LOCAL, sizeof(addr6), &addr6);
-
-    msghdr* msg = ifa_req.message(nl_sock.netlink_socket());
-    int send_n = -1;
-    if (msg) {
-        // send a request to the kernel
-        send_n = sendmsg(nl_sock.fd(), msg, 0);
-        if (send_n <= 0) {
-            LOG(ERROR, "Sendmsg failed,"
-            "MetadataProxy::NetlinkDelVhostIp, metadata_ipv6_netlink.cc, "
-            "errno = " << errno << std::endl);
-        }
-    }
-
-    aux::read_ack_response(msg, send_n, nl_sock, "NetlinkDelVhostIp");
-}
-
-void MetadataProxy::
-NetlinkAddVhostNb(const IpAddress& nb_ip, const MacAddress& via_mac) {
-    if (!nb_ip.is_v6()) {
-        return;
-    }
-
-    // set ip address
-    in6_addr addr6;
-    int addr_res = inet_pton(AF_INET6, nb_ip.to_string().c_str(), &addr6);
-    if (addr_res < 0) {
-        LOG(ERROR, "An error has occured during address initialization,"
-        "MetadataProxy::NetlinkAddVhostNb, metadata_ipv6_netlink.cc, "
-        "errno = " << errno << std::endl);
-        return;
-    }
-    if (addr_res == 0) {
-        LOG(ERROR, "A wrong address has been specified,"
-        "MetadataProxy::NetlinkAddVhostNb, metadata_ipv6_netlink.cc, "
-        "address = " << nb_ip.to_string().c_str() << std::endl);
-        return;
-    }
-
-    // set mac address
-    unsigned char nb_mac_addr[] = {0,0,0,0,0,0};
-    via_mac.ToArray(nb_mac_addr, sizeof(nb_mac_addr));
-
-    // set device index
-    const int dev_idx =
-        if_nametoindex(services_->agent()->vhost_interface_name().c_str());
-    if (dev_idx <= 0) {
-        LOG(ERROR, "Error while retreiving device index,"
-        "MetadataProxy::NetlinkAddVhostNb, metadata_ipv6_netlink.cc, "
-        "dev_idx = " << dev_idx << std::endl);
-    }
-
-    // open a socket
-    aux::NetlinkSocket nl_sock;
-
-    aux::NetlinkRequest<ndmsg> nd_req;
-
-    ndmsg &nd_message_hdr = nd_req.nl_req_hdr;
-    nd_message_hdr.ndm_family   = AF_INET6;  // AF_INET/AF_INET6/AF_UNSPEC
-    nd_message_hdr.ndm_ifindex  = dev_idx;
-    nd_message_hdr.ndm_state    = NUD_PERMANENT;
-
-    nlmsghdr &nl_message_hdr = nd_req.nl_message_hdr;
-    nl_message_hdr.nlmsg_type = RTM_NEWNEIGH;
-    nl_message_hdr.nlmsg_flags =  // NLM_F_REPLACE is neccessary, since a
-        NLM_F_REQUEST | NLM_F_CREATE | NLM_F_REPLACE  // route might be already
-        | NLM_F_ACK;                                  // in the table
-
-    nd_req.msg_len = NLMSG_LENGTH(sizeof(nd_message_hdr));
-
-    // insert lladdr (MAC)
-    nd_req.insert_attr(NDA_LLADDR, sizeof(nb_mac_addr), &nb_mac_addr[0]);
-    // insert IP (IPv6)
-    nd_req.insert_attr(NDA_DST, sizeof(addr6), &addr6);
-
-    msghdr* msg = nd_req.message(nl_sock.netlink_socket());
-    int send_n = -1;
-    if (msg) {
-        // sending of a request to the kernel
-        send_n = sendmsg(nl_sock.fd(), msg, 0);
-        if (send_n <= 0) {
-            LOG(ERROR, "Sendmsg failed,"
-            "MetadataProxy::NetlinkAddVhostNb, metadata_ipv6_netlink.cc, "
-            "errno = " << errno << std::endl);
-        }
-    }
-
-    aux::read_ack_response(msg, send_n, nl_sock, "NetlinkAddVhostNb");
-}
 
 //
 // END-OF-FILE

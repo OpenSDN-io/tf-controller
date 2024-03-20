@@ -143,15 +143,12 @@ const Ip6Address& MetadataProxy::Ipv6ServiceAddress() const {
 
 void MetadataProxy::InitializeHttp6Server(const VmInterface *vhost0) {
     if (vhost0 == NULL ||
-        vhost0->mdata_ip6_addr().is_unspecified() ||
-        !vhost0->mdata_ip6_addr().is_link_local() ||
         !ipv6_service_address_.is_unspecified()) {
         return;
     }
-    ipv6_service_address_ = vhost0->mdata_ip6_addr();
-    if (!NetlinkAddVhostIp(ipv6_service_address_)) {
-        LOG(ERROR, "An error has occured during binding IPv6 ll"
-        " address to vhost0 in"
+    if (!NetlinkGetVhostIp(ipv6_service_address_)) {
+        LOG(ERROR, "An error has occured during retrieving IPv6 ll"
+        " address from vhost0 in"
         " MetadataProxy::InitializeHttp6Server");
         return;
     }
@@ -162,6 +159,41 @@ void MetadataProxy::InitializeHttp6Server(const VmInterface *vhost0) {
     http_server6_->Initialize(
         services_->agent()->metadata_server_port(),
         ipv6_service_address_, vhost_idx);
+    AdvertiseVhostRoute();
+}
+
+void MetadataProxy::AdvertiseVhostRoute() {
+    PathPreference path_preference;
+    EcmpLoadBalance ecmp_load_balance;
+
+    Agent *agent = services_->agent();
+
+    const VmInterface *vhost_intf =
+        dynamic_cast<const VmInterface*>(agent->vhost_interface());
+
+    VnListType vn_list;
+    vn_list.insert(agent->fabric_vn_name());
+
+    InetUnicastAgentRouteTable *table =
+        static_cast<InetUnicastAgentRouteTable*>
+        (agent->vrf_table()->GetInet6UnicastRouteTable(
+                                        agent->fabric_vrf_name()));
+
+    table->AddLocalVmRouteReq(
+        agent->link_local_peer(), agent->fabric_vrf_name(),
+        Ipv6ServiceAddress(), 128, vhost_intf->GetUuid(),
+        vn_list, vhost_intf->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip6Address(), ecmp_load_balance, false, false, false,
+        vhost_intf->name());
+}
+
+void MetadataProxy::DeleteVhostRoute() {
+    Agent *agent = services_->agent();
+
+    InetUnicastAgentRouteTable::Delete(agent->link_local_peer(),
+        agent->fabric_vrf_name(),
+        Ipv6ServiceAddress(), 128);
 }
 
 void MetadataProxy::OnAVrfChange(DBTablePartBase *, DBEntryBase * entry) {
@@ -183,7 +215,6 @@ void MetadataProxy::OnAVrfChange(DBTablePartBase *, DBEntryBase * entry) {
                 }
             }
         }
-        // this->AdvertiseVhostRoute(vrf_entry);
     }
 }
 
@@ -213,15 +244,6 @@ void MetadataProxy::OnAFabricRouteChange
     if (interface == NULL) {
         return;
     }
-    const Ip6Address mip6 = interface->mdata_ip6_addr();
-
-    if (mip6 == route_entry->addr().to_v6()) {
-        if (entry->IsDeleted()) {
-        } else {
-            // Create neighbours records (ip neigh add ...)
-            this->NetlinkAddVhostNb(mip6, interface->vm_mac());
-        }
-    }
 }
 
 void MetadataProxy::OnAnInterfaceChange(DBTablePartBase *, DBEntryBase *entry) {
@@ -238,10 +260,8 @@ void MetadataProxy::OnAnInterfaceChange(DBTablePartBase *, DBEntryBase *entry) {
         InitializeHttp6Server(vmi);
     }
 
-    if (vmi->IsDeleted() &&
-        vmi->name() == services_->agent()->vhost_interface_name()) {
-        NetlinkDelVhostIp(vmi->mdata_ip6_addr());
-        return;
+    if (vmi->IsDeleted() && vmi == services_->agent()->vhost_interface()) {
+        this->DeleteVhostRoute();
     }
 }
 

@@ -68,18 +68,7 @@ public:
     /// @param vhost_ll_ip is a new IP address for vhost0 interface
     /// @return true if address has been successfully bound to the
     /// interface and false otherwise
-    bool NetlinkAddVhostIp(const IpAddress& vhost_ll_ip);
-
-    /// @brief Deletes an IP address specified in vhost_ll_ip from vhost0
-    //// interface inet6 addresses
-    /// @param vhost_ll_ip is an IPv6 address to the vhost0 interface
-    void NetlinkDelVhostIp(const IpAddress& vhost_ll_ip);
-
-    /// @brief Adds a new neighbour (an arp entry) with given IP and MAC
-    /// addresses
-    /// @param nb_ip - the IP address of a neighbour
-    /// @param via_mac - the MAC address of a neighbour
-    void NetlinkAddVhostNb(const IpAddress& nb_ip, const MacAddress& via_mac);
+    bool NetlinkGetVhostIp(Ip6Address& vhost_ll_ip);
 
     /// @brief Advertises routes to a given vm-interface via a given IPv6
     /// address. Routes are announced in the fabric VRF entry and in a given
@@ -103,6 +92,15 @@ public:
 
     /// @brief Initializes an HTTP server for IPv6 requests
     void InitializeHttp6Server(const VmInterface *vhost0);
+
+    /// @brief Advertises the LL route to vhost0 interface in the fabric VRF
+    /// instance
+    void AdvertiseVhostRoute();
+
+
+    /// @brief Deletes the LL route to vhost0 interface in the fabric VRF
+    /// instance
+    void DeleteVhostRoute();
 
     /// @brief A callback that is invoked each time when a VRF entry is
     /// modified: added, changed or deleted

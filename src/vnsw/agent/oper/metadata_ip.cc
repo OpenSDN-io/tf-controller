@@ -188,7 +188,8 @@ void MetaDataIpAllocator::ReleaseIndex(MetaDataIp *ip) {
 }
 
 bool MetaDataIpAllocator::CanAddRoute(MetaDataIp* ip) {
-    if (ip->intf_->vn() == NULL || ip->intf_->vrf() == NULL) {
+    if (ip->intf_->vmi_type() == VmInterface::VHOST ||
+        ip->intf_->vn() == NULL || ip->intf_->vrf() == NULL) {
         return false;
     }
 

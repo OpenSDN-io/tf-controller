@@ -22,12 +22,6 @@
 #include <oper/interface_common.h>
 #include <oper/tunnel_nh.h>
 
-// This is required to deactivate metadata proxy part, which installs it's
-// own routes
-#include "services/metadata_proxy.h"
-#include "services/metadata_server.h"
-#include "services/services_init.h"
-
 #include "testing/gunit.h"
 #include "test_cmn_util.h"
 #include "vr_types.h"
@@ -53,7 +47,6 @@ static void ValidateSandeshResponse(Sandesh *sandesh, vector<int> &result) {
 class TsnElectorTest : public ::testing::Test {
 public:
     TsnElectorTest() : agent_(Agent::GetInstance()) {
-        Agent::GetInstance()->services()->metadataproxy()->Shutdown();
     }
 
     ~TsnElectorTest() {

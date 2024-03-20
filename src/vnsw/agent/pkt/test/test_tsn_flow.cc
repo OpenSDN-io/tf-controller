@@ -12,12 +12,6 @@
 #include <base/task.h>
 #include <base/test/task_test_util.h>
 
-// This is required to deactivate metadata proxy part, which installs it's
-// own routes
-#include "services/metadata_proxy.h"
-#include "services/metadata_server.h"
-#include "services/services_init.h"
-
 #define vm1_ip "11.1.1.1"
 #define vm2_ip "11.1.1.2"
 
@@ -32,7 +26,6 @@ VmInterface *flow1;
 class TestTsnFlow : public ::testing::Test {
 public:
     TestTsnFlow() : agent_(NULL), flow_proto_(NULL), util_() {
-        Agent::GetInstance()->services()->metadataproxy()->Shutdown();
     }
 
     ~TestTsnFlow(){};
