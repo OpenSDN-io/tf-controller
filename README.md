@@ -1,7 +1,6 @@
-contrail-controller
-===================
+# OpenSDN Virtual Network Controller
 
-# Contrail Virtual Network Controller
+## License
 
 This software is licensed under the Apache License, Version 2.0 (the "License");
 you may not use this software except in compliance with the License.
@@ -13,9 +12,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-### Overview
+## Overview
 
-The OpenSDN (Tungest Fabric formerly) Controller repository contains the code for the configuration management, analytics and control-plane components of the OpenSDN network virtualization solution.
+The OpenSDN (Tungsten Fabric formerly) Virtual Network Controller repository contains the code for the configuration management, analytics and control-plane components of the OpenSDN network virtualization solution.
 
 * The data-plane component (aka vrouter) is available in a separate code repository (http://github.com/OpenSDN-io/tf-vrouter).
 
@@ -32,6 +31,31 @@ The OpenSDN (Tungest Fabric formerly) Controller repository contains the code fo
 
 * The source code of the aforementioned components is being documented using doxygen to produce online manual [https://opensdn-io.github.io/doxygen-docs/index.html](https://opensdn-io.github.io/doxygen-docs/index.html).
 
-### Contributing code
+## Contributing code
 
 * For technical questions about contributions, as well as to communicate developers and community, visit [https://docs.opensdn.io/contributing-to-opensdn/getting-started/getting-started-with-opensdn-development.html](https://docs.opensdn.io/contributing-to-opensdn/getting-started/getting-started-with-opensdn-development.html)
+
+## Coding style
+
+The OpenSDN source code includes modules writen in C, C++ and Python; there
+is also a Java API library, Lua scripts in analytics IDL, and a code generator
+based on a mini-DSL. Each of these languages has a distinct coding style.
+
+### C++
+
+The C++ code should follow the [Google C++ Style Guide](http://https://google.github.io/styleguide/cppguide.html).
+with the next main distinctions:
+    * the 4-space indentation is used rather than 2-space;
+    * for declaration comments (auto-documenting)
+     [doxygen conventions](https://www.doxygen.nl/manual/docblocks.html)
+     are used.
+
+C++ code submissions require a unit-test for the class
+interface; more complex code changes require tests for the
+functionality across multiple modules.
+
+Bugs should be first reproduced in a unit-test and then resolved.
+
+### Python
+
+Python code follows PEP-8 style.
