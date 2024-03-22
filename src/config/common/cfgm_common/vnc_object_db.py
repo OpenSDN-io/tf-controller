@@ -24,7 +24,7 @@ class VncObjectDBClient(object):
                  # svc_monitor, we consider to continue using `thrift`
                  # until we are sure they are compliant with other
                  # drivers.
-                 cassandra_driver='thrift'):
+                 cassandra_driver=None):
             if db_engine == 'cassandra':
                 self._object_db = vnc_cassandra.VncCassandraClient(
                     server_list,

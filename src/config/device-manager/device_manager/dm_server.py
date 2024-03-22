@@ -82,7 +82,8 @@ def initialize_db_connection(logger, args):
                 args.cassandra_server_list, db_prefix=args.cluster_id,
                 logger=logger.log, credential=credential,
                 ssl_enabled=args.cassandra_use_ssl,
-                ca_certs=args.cassandra_ca_certs)
+                ca_certs=args.cassandra_ca_certs,
+                cassandra_driver=args.cassandra_driver)
         except Exception as e:
             if retry_count >= max_retries:
                 raise e

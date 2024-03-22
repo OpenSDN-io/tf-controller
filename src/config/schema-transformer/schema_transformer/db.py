@@ -71,7 +71,8 @@ class SchemaTransformerDB(VncObjectDBClient):
             cass_server_list, self._args.cluster_id, keyspaces, None,
             manager.logger.log, reset_config=self._args.reset_config,
             credential=cred, ssl_enabled=self._args.cassandra_use_ssl,
-            ca_certs=self._args.cassandra_ca_certs)
+            ca_certs=self._args.cassandra_ca_certs,
+            cassandra_driver=self._args.cassandra_driver)
 
         SchemaTransformerDB._rt_cf = self._cassandra_driver._cf_dict[
             self._RT_CF]

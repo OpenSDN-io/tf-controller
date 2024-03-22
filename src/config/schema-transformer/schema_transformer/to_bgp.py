@@ -640,6 +640,7 @@ def parse_args(args_str):
     cassandraopts = {
         'cassandra_user': None,
         'cassandra_password': None,
+        'cassandra_drvier': "thrift",
     }
     zookeeperopts = {
         'zookeeper_ssl_enable': False,
@@ -743,6 +744,8 @@ def parse_args(args_str):
         help=("Optional external logger class, default: None"))
     parser.add_argument("--cassandra_user", help="Cassandra user name")
     parser.add_argument("--cassandra_password", help="Cassandra password")
+    parser.add_argument("--cassandra_driver", help="Cassandra driver",
+                        default="thrift", choices=["thrift", "cql"])
     parser.add_argument("--rabbit_server", help="Rabbitmq server address")
     parser.add_argument("--rabbit_port", help="Rabbitmq server port")
     parser.add_argument("--rabbit_user", help="Username for rabbit")
