@@ -244,6 +244,19 @@ void MetadataProxy::OnAFabricRouteChange
     if (interface == NULL) {
         return;
     }
+
+    const Ip6Address mip6 = interface->mdata_ip6_addr();
+
+    if (mip6 == route_entry->addr().to_v6()) {
+        if (entry->IsDeleted()) {
+        } else {
+            // Create a neighbour record (ip neigh add ...)
+            this->NetlinkAddVhostNb(mip6, interface->vm_mac());
+
+            // Create a routing record (ip route add)
+            this->NetlinkAddInterfaceRoute(mip6);
+        }
+    }
 }
 
 void MetadataProxy::OnAnInterfaceChange(DBTablePartBase *, DBEntryBase *entry) {
