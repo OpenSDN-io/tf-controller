@@ -70,6 +70,17 @@ public:
     /// interface and false otherwise
     bool NetlinkGetVhostIp(Ip6Address& vhost_ll_ip);
 
+    /// @brief Adds a new neighbour (an arp entry) with given IP and MAC
+    /// addresses
+    /// @param nb_ip - the IP address of a neighbour
+    /// @param via_mac - the MAC address of a neighbour
+    void NetlinkAddVhostNb(const IpAddress& nb_ip, const MacAddress& via_mac);
+
+    /// @brief Adds routes to internal addresses of VM's interfaces
+    /// @param intf_addr - the internal IP address assigned to an interface
+    /// (metadata IP)
+    void NetlinkAddInterfaceRoute(const IpAddress& intf_addr);
+
     /// @brief Advertises routes to a given vm-interface via a given IPv6
     /// address. Routes are announced in the fabric VRF entry and in a given
     /// VRF entry.
