@@ -43,7 +43,7 @@ based on a mini-DSL. Each of these languages has a distinct coding style.
 
 ### C++
 
-The C++ code should follow the [Google C++ Style Guide](http://https://google.github.io/styleguide/cppguide.html).
+The C++ code should follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
 with the next main distinctions:
     * the 4-space indentation is used rather than 2-space;
     * for declaration comments (auto-documenting)
