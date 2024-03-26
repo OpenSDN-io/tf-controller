@@ -4,6 +4,7 @@ import json
 import logging
 import datetime
 import random
+import six
 import string
 import subprocess
 import binascii
@@ -219,7 +220,9 @@ class ContainerdContainersInterface:
         if e:
             logging.critical(e)
 
-        return (p.returncode, o)
+        if isinstance(o, six.binary_type):
+            o = o.decode()
+        return (p.returncode, o.decode())
 
     def list(self, all_=True):
         tasks_dict = self._get_tasks_dict()

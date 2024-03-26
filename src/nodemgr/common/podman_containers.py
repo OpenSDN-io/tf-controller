@@ -1,5 +1,6 @@
 import json
 import logging
+import six
 import subprocess
 from nodemgr.common import utils
 from nodemgr.common.sandesh.nodeinfo.cpuinfo.ttypes import ProcessCpuInfo
@@ -77,6 +78,8 @@ class PodmanContainersInterface:
         if e:
             logging.critical(e)
 
+        if isinstance(o, six.binary_type):
+            o = o.decode()
         return (p.returncode, o)
 
     def _parse_json(self, arguments_):

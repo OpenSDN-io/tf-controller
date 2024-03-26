@@ -11,7 +11,6 @@ from nodemgr.common.sandesh.database.ttypes import (
     DatabaseUsage)
 from sandesh_common.vns.constants import (
     RepairNeededKeyspaces, AnalyticsRepairNeededKeyspaces, ThreadPoolNames)
-import six
 
 monkey.patch_all()
 
@@ -99,8 +98,6 @@ class CassandraManager(object):
     def _get_cassandra_config_option(self, config):
         # NOTE: assume that we have debian-based installation of cassandra
         raw_cfg = self.exec_cmd('cat /etc/cassandra/cassandra.yaml')
-        if isinstance(raw_cfg, six.binary_type):
-            raw_cfg = raw_cfg.decode('utf-8')
         cfg = yaml.load(raw_cfg)  # ERROR: loader=yaml.FullLoader "'module' object has no attribute 'FullLoader'"
         return cfg[config]
 
