@@ -5533,7 +5533,8 @@ class DMCassandraDB(VncObjectDBClient):
 
         self.pnf_cf = self._cassandra_driver.get_cf(self._PNF_RESOURCE_CF)
         self.pnf_resources_map = dict(
-            self.pnf_cf.get_range(column_count=0, filter_empty=True))
+            self._cassandra_driver.get_range(
+                self._PNF_RESOURCE_CF, column_count=0))
     # end
 
     def get_si_pr_set(self, si_id):
@@ -5603,7 +5604,10 @@ class DMCassandraDB(VncObjectDBClient):
             "unit_id": str(unit_id)
         }
         self.pnf_resources_map[si_id] = pnf_resources
-        self.pnf_cf.insert(si_id, pnf_resources)
+        self._cassandra_driver.insert(
+            si_id,
+            pnf_resources,
+            cf_name=self._PNF_RESOURCE_CF)
         return pnf_resources
     # end
 
@@ -5630,7 +5634,7 @@ class DMCassandraDB(VncObjectDBClient):
                         int(pnf_resources['unit_id']))
 
         del self.pnf_resources_map[si_id]
-        self.pnf_cf.remove(si_id)
+        self._cassandra_driver.remove(self._PNF_RESOURCE_CF, si_id)
     # end
 
     def handle_pnf_resource_deletes(self, si_id_list):
@@ -5640,37 +5644,40 @@ class DMCassandraDB(VncObjectDBClient):
     # end
 
     def init_pr_map(self):
-        cf = self._cassandra_driver.get_cf(self._PR_VN_IP_CF)
-        pr_entries = dict(cf.get_range(column_count=1000000))
+        pr_entries = dict(self._cassandra_driver.get_range(
+            self._PR_VN_IP_CF, column_count=1000000))
         for key in list(pr_entries.keys()):
-            key_data = key.split(':', 1)
-            cols = pr_entries[key] or {}
-            for col in list(cols.keys()):
-                ip_used_for = DMUtils.get_ip_used_for_str(col)
-                (pr_uuid, vn_subnet_uuid) = (key_data[0], key_data[1])
-                self.add_to_pr_map(pr_uuid, vn_subnet_uuid, ip_used_for)
+            if key is not None:
+                key_data = key.split(':', 1)
+                cols = pr_entries[key] or {}
+                for col in list(cols.keys()):
+                    ip_used_for = DMUtils.get_ip_used_for_str(col)
+                    (pr_uuid, vn_subnet_uuid) = (key_data[0], key_data[1])
+                    self.add_to_pr_map(pr_uuid, vn_subnet_uuid, ip_used_for)
     # end
 
     def init_pr_fabric_asn_map(self):
-        cf = self._cassandra_driver.get_cf(self._PR_ASN_CF)
-        pr_entries = dict(cf.get_range())
+        pr_entries = dict(self._cassandra_driver.get_range(
+            self._PR_ASN_CF))
         for pr_uuid in list(pr_entries.keys()):
-            pr_entry = pr_entries[pr_uuid] or {}
-            asn = pr_entry.get('asn')
-            if asn:
-                if pr_uuid not in self.pr_fabric_asn_map:
-                    self.pr_fabric_asn_map[pr_uuid] = asn
-                if asn not in self.fabric_asn_pr_map:
-                    self.fabric_asn_pr_map[asn] = pr_uuid
+            if pr_uuid is not None:
+                pr_entry = pr_entries[pr_uuid] or {}
+                asn = pr_entry.get('asn')
+                if asn:
+                    if pr_uuid not in self.pr_fabric_asn_map:
+                        self.pr_fabric_asn_map[pr_uuid] = asn
+                    if asn not in self.fabric_asn_pr_map:
+                        self.fabric_asn_pr_map[asn] = pr_uuid
     # end init_pr_fabric_asn_map
 
     def init_ipv6_ll_map(self):
-        cf = self._cassandra_driver.get_cf(self._NI_IPV6_LL_CF)
-        ipv6_subnet_entries = dict(cf.get_range())
+        ipv6_subnet_entries = dict(self._cassandra_driver.get_range(
+            self._NI_IPV6_LL_CF))
         for key in list(ipv6_subnet_entries.keys()):
-            ipv6_subnet_entry = ipv6_subnet_entries[key]
-            if key not in self.ni_ipv6_ll_map.keys():
-                self.ni_ipv6_ll_map[key] = ipv6_subnet_entry
+            if key is not None:
+                ipv6_subnet_entry = ipv6_subnet_entries[key]
+                if key not in self.ni_ipv6_ll_map.keys():
+                    self.ni_ipv6_ll_map[key] = ipv6_subnet_entry
 
     # end init_ipv6_ll_map
 

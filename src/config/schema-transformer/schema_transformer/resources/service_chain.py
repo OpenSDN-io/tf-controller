@@ -27,6 +27,8 @@ class ServiceChain(ResourceBaseST):
         # When schema transformer restarts, read all service chains
         # from cassandra
         for (name, columns) in cls._object_db.list_service_chain_uuid():
+            if len(columns) == 0:
+                continue
             json_dict = json.loads(columns['value'])
             json_dict.update({"py/object": '%s.%s' %
                              (cls.__module__, cls.__name__)})

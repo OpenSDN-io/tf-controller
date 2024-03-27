@@ -183,8 +183,9 @@ class SchemaTransformerDB(VncObjectDBClient):
 
         if alloc_new:
             vlan = vlan_ia.alloc(service_chain)
-            self._service_chain_cf.insert(service_vm,
-                                          {service_chain: str(vlan)})
+            self._cassandra_driver.insert(
+                service_vm, {service_chain: str(vlan)},
+                cf_name=self._SERVICE_CHAIN_CF)
 
         # Since vlan tag 0 is not valid, increment before returning
         return vlan + 1
@@ -197,7 +198,8 @@ class SchemaTransformerDB(VncObjectDBClient):
                 self._SERVICE_CHAIN_CF,
                 service_vm,
                 service_chain))
-            self._service_chain_cf.remove(service_vm, [service_chain])
+            self._cassandra_driver.remove(self._SERVICE_CHAIN_CF,
+                                          service_vm, [service_chain])
             vlan_ia.delete(vlan)
             if vlan_ia.empty():
                 del self._sc_vlan_allocator_dict[service_vm]
@@ -244,7 +246,9 @@ class SchemaTransformerDB(VncObjectDBClient):
 
         if (alloc_new):
             rtgt_num = self.current_rt_allocator.alloc(ri_fq_name)
-            self._rt_cf.insert(ri_fq_name, {'rtgt_num': str(rtgt_num)})
+            self._cassandra_driver.insert(
+                ri_fq_name,
+                {'rtgt_num': str(rtgt_num)}, cf_name=self._RT_CF)
 
         return rtgt_num
     # end alloc_route_target
@@ -300,7 +304,8 @@ class SchemaTransformerDB(VncObjectDBClient):
         return self._cassandra_driver.get(self._SC_IP_CF, sc_name)
 
     def add_service_chain_ip(self, sc_name, ip_dict):
-        self._sc_ip_cf.insert(sc_name, ip_dict)
+        self._cassandra_driver.insert(sc_name, ip_dict,
+                                      cf_name=self._SC_IP_CF)
 
     def remove_service_chain_ip(self, sc_name):
         self.delete(self._SC_IP_CF, sc_name)
@@ -310,7 +315,9 @@ class SchemaTransformerDB(VncObjectDBClient):
             self._SERVICE_CHAIN_UUID_CF) or [])
 
     def add_service_chain_uuid(self, name, value):
-        self._service_chain_uuid_cf.insert(name, {'value': value})
+        self._cassandra_driver.insert(
+            name, {'value': value},
+            cf_name=self._SERVICE_CHAIN_UUID_CF)
 
     def remove_service_chain_uuid(self, name):
         self.delete(self._SERVICE_CHAIN_UUID_CF, name)
