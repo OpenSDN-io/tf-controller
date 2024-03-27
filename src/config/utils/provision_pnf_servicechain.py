@@ -1,12 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
+
 import sys
 import time
 import argparse
@@ -19,7 +16,7 @@ from cfgm_common.exceptions import *
 # Provision a PNF service chain
 # Populate provision_pnf_servicechain.ini appropriately
 
-class PnfScProvisioner(object):
+class PnfScProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -54,8 +51,7 @@ class PnfScProvisioner(object):
         elif self._args.oper == 'del':
             self.del_pnf()
         else:
-            print("Unknown operation %s. Only 'add' and 'del' supported"\
-                % (self._args.oper))
+            print("Unknown operation {}. Only 'add' and 'del' supported".format(self._args.oper))
 
     # end __init__
 
@@ -80,7 +76,7 @@ class PnfScProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
 
@@ -145,10 +141,9 @@ class PnfScProvisioner(object):
         try:
             self._vnc_lib.service_appliance_set_delete(fq_name=sa_set_fq_name)
         except NoIdError:
-            print("Error: Service Appliance Set does not exist %s"\
-                                                         % (self._args.name))
+            print("Error: Service Appliance Set does not exist {}".format(self._args.name))
         else:
-            print("Deleted Service Appliance Set %s " % (self._args.name))
+            print("Deleted Service Appliance Set {} ".format(self._args.name))
     # end del_service_appliance_set
 
     def add_service_template(self):
@@ -175,7 +170,7 @@ class PnfScProvisioner(object):
                     self._args.name)
             st_obj.set_service_appliance_set(sas_obj)
         except NoIdError:
-                print("Cannot find %s" % (self._args.service_appliance_set_name))
+                print("Cannot find {}".format(self._args.service_appliance_set_name))
 
         try:
             svc_properties = ServiceTemplateType()
@@ -203,8 +198,7 @@ class PnfScProvisioner(object):
         try:
             self._vnc_lib.service_template_delete(fq_name=st_fq_name)
         except NoIdError:
-            print("Error: Service template does not exist %s "\
-                                              % (template_name))
+            print("Error: Service template does not exist {} ".format(template_name))
         else:
             print("Deleted Service Template " + (template_name))
     # end del_service_template
@@ -218,8 +212,7 @@ class PnfScProvisioner(object):
             sas_obj = self._vnc_lib.service_appliance_set_read(
                                                        fq_name=sas_fq_name)
         except NoIdError:
-            print("Error: Service Appliance Set does not exist %s "\
-                                                       % (self._args.name))
+            print("Error: Service Appliance Set does not exist {} ".format(self._args.name))
             sys.exit(-1)
 
         sa_obj = ServiceAppliance(appliance_name, sas_obj)
@@ -256,8 +249,7 @@ class PnfScProvisioner(object):
             attr = ServiceApplianceInterfaceType( interface_type='left')
             sa_obj.add_physical_interface(pnf_left_intf_obj, attr)
         except NoIdError:
-            print("Error: Left PNF interface does not exist %s "\
-                                                  % (self._args.pnf_left_intf))
+            print("Error: Left PNF interface does not exist {} ".format(self._args.pnf_left_intf))
             sys.exit(-1)
         except AttributeError:
             print("Error: Left PNF interface missing")
@@ -271,8 +263,7 @@ class PnfScProvisioner(object):
             attr = ServiceApplianceInterfaceType( interface_type='right')
             sa_obj.add_physical_interface(pnf_right_intf_obj, attr)
         except NoIdError:
-            print("Error: Right PNF interface does not exist %s "\
-                                               % (self._args.pnf_right_intf))
+            print("Error: Right PNF interface does not exist {} ".format(self._args.pnf_right_intf))
             sys.exit(-1)
         except AttributeError:
             print("Error: Right PNF interface missing")

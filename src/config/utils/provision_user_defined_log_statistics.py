@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #This is a python based script for configuring user-defined-log-statistics
 # from commandline
 # Usage :
@@ -53,10 +53,7 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
+
 import argparse
 import configparser
 import sys
@@ -67,7 +64,7 @@ from vnc_api.gen.resource_client import GlobalSystemConfig
 from vnc_admin_api import VncApiAdmin
 
 
-class VncProvisioner(object):
+class VncProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -105,7 +102,7 @@ class VncProvisioner(object):
             if gsc.user_defined_log_statistics:
                 for x in gsc.user_defined_log_statistics.statlist:
                     if self._chk2print(x.name):
-                        print('Name: "%s", Pattern: "%s"' % (x.name, x.pattern))
+                        print('Name: "{}", Pattern: "{}"'.format(x.name, x.pattern))
     # end __init__
 
     def _chk2print(self, n):
@@ -141,7 +138,7 @@ class VncProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             if 'DEFAULTS' in config.sections():
                 defaults.update(dict(config.items("DEFAULTS")))

@@ -1,14 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from builtins import object
+
 import sys
 import time
 import argparse
@@ -18,7 +13,7 @@ from cfgm_common.exceptions import *
 from vnc_admin_api import VncApiAdmin
 
 
-class VrouterProvisioner(object):
+class VrouterProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -99,7 +94,7 @@ class VrouterProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():
@@ -207,7 +202,7 @@ class VrouterProvisioner(object):
 # end class VrouterProvisioner
 
 
-class GetVrouter(object):
+class GetVrouter:
     def __init__(self, handle, name = ''):
         self.vrouter_name = name
         self.handle = handle
@@ -224,7 +219,7 @@ class GetVrouter(object):
         return vrouter
 # end class GetVrouter
 
-class GetDevice(object):
+class GetDevice:
     def __init__(self, handle, name = ''):
         self.physical_device_name = name
         self.handle = handle

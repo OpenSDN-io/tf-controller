@@ -1,12 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
+
 import sys
 import argparse
 import configparser
@@ -15,7 +12,7 @@ from vnc_api.vnc_api import *
 from vnc_admin_api import VncApiAdmin
 
 
-class ForwardingModeSetup(object):
+class ForwardingModeSetup:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -58,7 +55,7 @@ class ForwardingModeSetup(object):
                 found = True
 
         if not found:
-            print("No Virtual Network  %s" %(vn_name))
+            print("No Virtual Network  {}".format(vn_name))
             sys.exit(1)
         
     # end __init__

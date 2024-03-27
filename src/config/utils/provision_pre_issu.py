@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -8,14 +8,14 @@ import time
 import argparse
 import json
 import six
-from six.moves import configparser
+import configparser
 from pprint import pformat
 
 from cfgm_common.exceptions import *
 from vnc_api.vnc_api import *
 
 
-class ISSUContrailPreProvisioner(object):
+class ISSUContrailPreProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -76,7 +76,7 @@ class ISSUContrailPreProvisioner(object):
         args, remaining_argv = conf_parser.parse_known_args(args_str.split())
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read(args.conf_file)
             defaults.update(dict(config.items("DEFAULTS")))
 

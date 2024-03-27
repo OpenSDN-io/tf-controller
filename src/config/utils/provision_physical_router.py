@@ -1,19 +1,15 @@
-from __future__ import print_function
 #This is a python based script for configuring required MX router resources in the contrail controller. It uses the VNC Rest API provided by contrail controller.
 #Usage : # python provision_physical_router.py --api_server_ip <127.0.0.1> --api_server_port <8082> --admin_user <user1> --admin_password <password1> --admin_tenant_name default-domain --op {add_basic|remove_basic|fip_test|delete_fip_test}  {--public_vrf_test [True|False]} {--vxlan <vxlan-identifier>}
 #Note: make sure, api server authentication is disabled in contrail api server to run this script.
 #      To disable: Please set "multi_tenancy=False" in /etc/contrail/contrail-api.conf  and restart API server
 #      Please update right MX ip address and credentials in the script.
 #File name:   provision_physical_router.py
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
+
 import argparse
 import configparser
 
@@ -30,7 +26,7 @@ def get_ip(ip_w_pfx):
 # end get_ip
 
 
-class VncProvisioner(object):
+class VncProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -538,7 +534,7 @@ class VncProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():

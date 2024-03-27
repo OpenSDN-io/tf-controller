@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
 import sys
 import argparse
-from six.moves import configparser
+import configparser
 
 
 from provision_bgp import BgpProvisioner
@@ -38,7 +38,7 @@ class ControlProvisioner(BgpProvisioner):
         elif self._args.oper in ['add', 'del']:
             self.provision_control_bgp()
         else:
-            print("Unknown operation %s. Only 'add' and 'del' supported" % (self._args.oper))
+            print("Unknown operation {}. Only 'add' and 'del' supported".format(self._args.oper))
 
     def global_bgp_provisioning(self):
         print("Perfroming provisioning of global BGP parameters")
@@ -90,13 +90,13 @@ class ControlProvisioner(BgpProvisioner):
     def gr_time_type(self, value):
         time = int(value)
         if time < 0 or time > 4095:
-            raise argparse.ArgumentTypeError("graceful_restart_time %s must be in range (0..4095)" % value)
+            raise argparse.ArgumentTypeError("graceful_restart_time {} must be in range (0..4095)".format(value))
         return time
 
     def llgr_time_type(self, value):
         time = int(value)
         if time < 0 or time > 16777215:
-            raise argparse.ArgumentTypeError("long_lived_graceful_restart_time %s must be in range (0..16777215)" % value)
+            raise argparse.ArgumentTypeError("long_lived_graceful_restart_time {} must be in range (0..16777215)".format(value))
         return time
 
     def _parse_args(self, args_str):
@@ -157,7 +157,7 @@ class ControlProvisioner(BgpProvisioner):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
 
