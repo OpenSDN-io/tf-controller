@@ -222,7 +222,7 @@ class ContainerdContainersInterface:
 
         if isinstance(o, six.binary_type):
             o = o.decode()
-        return (p.returncode, o.decode())
+        return (p.returncode, o)
 
     def list(self, all_=True):
         tasks_dict = self._get_tasks_dict()
