@@ -1,13 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
+
 import os
 import sys
 import argparse
@@ -18,7 +14,7 @@ from netaddr.ip import IPNetwork
 from vnc_api.vnc_api import *
 
 
-class ProvisionVgwInterface(object):
+class ProvisionVgwInterface:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -200,3 +196,6 @@ def main(args_str=None):
 
 if __name__ == "__main__":
     main()
+
+
+# TODO: use .format instead of % 

@@ -1,12 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
+
 import sys
 import argparse
 import configparser
@@ -16,7 +13,7 @@ from vnc_api.vnc_api import *
 from vnc_admin_api import VncApiAdmin
 
 
-class GlobalVrouterConfigProvisioner(object):
+class GlobalVrouterConfigProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -66,7 +63,7 @@ class GlobalVrouterConfigProvisioner(object):
                     conf_obj=GlobalVrouterConfig(flow_export_rate=self._args.flow_export_rate)
                     conf_obj.set_port_translation_pools(port_trans_pools_obj)
                     result=self._vnc_lib.global_vrouter_config_create(conf_obj)
-                    print('Created.UUID is %s'%(result))
+                    print('Created.UUID is {}'.format(result))
                 return
             except RefsExistError:
                 print("Already created!")
@@ -86,7 +83,7 @@ class GlobalVrouterConfigProvisioner(object):
             conf_obj.set_port_translation_pools(existing_snat_pools)
 
         result=self._vnc_lib.global_vrouter_config_update(conf_obj)
-        print('Updated.%s'%(result))
+        print('Updated.{}'.format(result))
     # end __init__
 
     def check_dup_snat_pool(self, snat_pool, existing_snat_pools):
@@ -135,7 +132,7 @@ class GlobalVrouterConfigProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():

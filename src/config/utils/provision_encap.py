@@ -1,12 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
+
 import sys
 import argparse
 import configparser
@@ -16,7 +13,7 @@ from vnc_api.vnc_api import *
 from vnc_admin_api import VncApiAdmin
 
 
-class EncapsulationProvision(object):
+class EncapsulationProvision:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -42,11 +39,11 @@ class EncapsulationProvision(object):
                     fq_name=global_vrouter_fq_name)
             try:
                 result = self._vnc_lib.global_vrouter_config_create(conf_obj)
-                print('Created.UUID is %s' % result)
+                print('Created.UUID is {}'.format(result))
             except RefsExistError:
                 print ("GlobalVrouterConfig Exists Already!")
                 result = self._vnc_lib.global_vrouter_config_update(conf_obj)
-                print('Updated.%s' % result)
+                print('Updated.{}'.format(result))
             return
         elif self._args.oper != "add":
             encap_obj = EncapsulationPrioritiesType(encapsulation=[])
@@ -89,7 +86,7 @@ class EncapsulationProvision(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():

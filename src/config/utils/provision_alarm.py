@@ -1,18 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
+
 import json
 import sys
 import time
 import argparse
-import configparser
 
 from vnc_api.vnc_api import *
 from vnc_admin_api import VncApiAdmin
@@ -20,7 +15,7 @@ from cfgm_common.exceptions import *
 from contrail_alarm import alarm_list
 
 
-class AlarmProvisioner(object):
+class AlarmProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -48,9 +43,9 @@ class AlarmProvisioner(object):
             try:
                 self._vnc_lib.alarm_create(alarm_obj)
             except AttributeError:
-                print("Invalid alarm config for %s" % (fq_name))
+                print("Invalid alarm config for {}".format(fq_name))
             except RefsExistError:
-                print("alarm config %s already exists, updating" % (fq_name))
+                print("alarm config {} already exists, updating".format(fq_name))
                 try:
                     # we need to keep id_perms field empty in the alarm object
                     # otherwise vnc-api expects a valid id_perms.uuid field.
@@ -61,15 +56,15 @@ class AlarmProvisioner(object):
                     alarm_obj2 = Alarm(**kwargs)
                     self._vnc_lib.alarm_update(alarm_obj2)
                 except AttributeError:
-                    print("Invalid alarm config for %s" % (fq_name))
+                    print("Invalid alarm config for {}".format(fq_name))
                 except Exception as e:
-                    print("Failed to update alarm config %s - %s" % (fq_name, str(e)))
+                    print("Failed to update alarm config {} - {}".format(fq_name, str(e)))
                 else:
-                    print("Updated alarm %s" % (fq_name))
+                    print("Updated alarm {}".format(fq_name))
             except Exception as e:
-                print("Failed to create alarm config %s - %s" % (fq_name, str(e)))
+                print("Failed to create alarm config {} - {}".format(fq_name, str(e)))
             else:
-                print("Created alarm %s" % (fq_name))
+                print("Created alarm {}".format(fq_name))
     # end __init__
 
     def _parse_args(self, args_str):

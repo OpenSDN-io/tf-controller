@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -16,7 +16,7 @@ def get_ip(ip_w_pfx):
 # end get_ip
 
 
-class BgpProvisioner(object):
+class BgpProvisioner:
 
     def __init__(self, user, password, tenant, api_server_ip, api_server_port,
                  api_server_use_ssl=False, use_admin_api=False,
@@ -94,7 +94,7 @@ class BgpProvisioner(object):
         if local_asn:
             local_asn = int(local_asn)
             if local_asn <= 0 or local_asn > 65535:
-                raise argparse.ArgumentTypeError("local_asn %s must be in range (1..65535)" % local_asn)
+                raise argparse.ArgumentTypeError("local_asn {} must be in range (1..65535)".format(local_asn))
             router_params.set_local_autonomous_system(local_asn)
 
         bgp_router_obj = BgpRouter(router_name, rt_inst_obj,
@@ -178,7 +178,7 @@ class BgpProvisioner(object):
                          route_target_number):
         vnc_lib = self._vnc_lib
 
-        rtgt_val = "target:%s:%s" % (router_asn, route_target_number)
+        rtgt_val = "target:{}:{}".format(router_asn, route_target_number)
 
         net_obj = vnc_lib.virtual_network_read(fq_name=rt_inst_fq_name[:-1])
         route_targets = net_obj.get_route_target_list()
@@ -195,11 +195,11 @@ class BgpProvisioner(object):
                          route_target_number):
         vnc_lib = self._vnc_lib
 
-        rtgt_val = "target:%s:%s" % (router_asn, route_target_number)
+        rtgt_val = "target:{}:{}".format(router_asn, route_target_number)
         net_obj = vnc_lib.virtual_network_read(fq_name=rt_inst_fq_name[:-1])
 
         if rtgt_val not in net_obj.get_route_target_list().get_route_target():
-            print("%s not configured for VN %s" % (rtgt_val,
+            print("{} not configured for VN {}".format(rtgt_val,
                                                    rt_inst_fq_name[:-1]))
             return
 

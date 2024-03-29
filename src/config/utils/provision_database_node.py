@@ -1,10 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from future import standard_library
-standard_library.install_aliases()
 import sys
 import time
 import argparse
@@ -15,7 +13,7 @@ from cfgm_common.exceptions import *
 from vnc_admin_api import VncApiAdmin
 
 
-class DatabaseNodeProvisioner(object):
+class DatabaseNodeProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -53,8 +51,7 @@ class DatabaseNodeProvisioner(object):
         elif self._args.oper == 'del':
             self.del_database_node()
         else:
-            print("Unknown operation %s. Only 'add' and 'del' supported"
-                  % (self._args.oper))
+            print("Unknown operation {}. Only 'add' and 'del' supported".format(self._args.oper))
 
     # end __init__
 
@@ -89,7 +86,7 @@ class DatabaseNodeProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():

@@ -1,21 +1,17 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
 
 import argparse
-from builtins import object
 import sys
 import time
 
 from cfgm_common.exceptions import NoIdError
 from cfgm_common.exceptions import RefsExistError
 from cfgm_common.exceptions import ResourceExhaustionError
-from future import standard_library
-standard_library.install_aliases()  # noqa
-from six.moves import configparser
+import configparser
 from vnc_admin_api import VncApiAdmin
 from vnc_api.gen.resource_xsd import KeyValuePair
 from vnc_api.gen.resource_xsd import KeyValuePairs
@@ -38,13 +34,13 @@ class SriovPhysNetAction(argparse.Action):
                 (physnet, interface) = value.split("=", 2)
             except ValueError:
                 raise argparse.ArgumentError(
-                    self, "could not parse argument: %s", value)
+                    self, "could not parse argument: {}".format(value))
             kvp_list.append(KeyValuePair(key=physnet, value=interface))
         kvps.set_key_value_pair(kvp_list)
         setattr(args, self.dest, kvps)
 
 
-class VrouterProvisioner(object):
+class VrouterProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -88,8 +84,7 @@ class VrouterProvisioner(object):
             self.del_vhost0_vmi()
             self.del_vrouter()
         else:
-            print("Unknown operation %s. Only 'add' and 'del' supported"
-                  % (self._args.oper))
+            print("Unknown operation {}. Only 'add' and 'del' supported".format(self._args.oper))
 
     # end __init__
 
@@ -136,7 +131,7 @@ class VrouterProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():
@@ -347,7 +342,7 @@ class VrouterProvisioner(object):
         if vhost0_vmi_exists:
             self._vnc_lib.virtual_machine_interface_delete(
                 fq_name=vhost0_vmi_fq_name)
-            print(" Deleted vhost0 vmi %s " % vhost0_vmi_fq_name)
+            print(" Deleted vhost0 vmi {} ".format(vhost0_vmi_fq_name))
         else:
             print(" No vhost0 vmi found ")
 

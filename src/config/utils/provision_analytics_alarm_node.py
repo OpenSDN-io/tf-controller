@@ -1,22 +1,20 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
+
 import sys
 import time
 import argparse
-from six.moves import configparser
+import configparser
+
 from vnc_api.vnc_api import *
 from vnc_admin_api import VncApiAdmin
 from cfgm_common.exceptions import *
 
 
-class AnalyticsAlarmNodeProvisioner(object):
+class AnalyticsAlarmNodeProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -53,8 +51,7 @@ class AnalyticsAlarmNodeProvisioner(object):
         elif self._args.oper == 'del':
             self.del_analytics_alarm_node()
         else:
-            print("Unknown operation %s. Only 'add' and 'del' supported"\
-                % (self._args.oper))
+            print("Unknown operation {}. Only 'add' and 'del' supported".format(self._args.oper))
 
     # end __init__
 
@@ -89,7 +86,7 @@ class AnalyticsAlarmNodeProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():

@@ -1,22 +1,19 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
+
 import sys
 import argparse
-from six.moves import configparser
+import configparser
 from time import sleep
 
 from cfgm_common.exceptions import RefsExistError
 from vnc_api.vnc_api import *
 from vnc_admin_api import VncApiAdmin
 
-class MetadataProvisioner(object):
+class MetadataProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -46,7 +43,7 @@ class MetadataProvisioner(object):
                 linklocal_services_obj = LinklocalServicesTypes([linklocal_obj])
                 conf_obj = GlobalVrouterConfig(linklocal_services=linklocal_services_obj)
                 result = self._vnc_lib.global_vrouter_config_create(conf_obj)
-                print('Created.UUID is %s'%(result))
+                print('Created.UUID is {}'.format(result))
                 return
         except RefsExistError:
             print("Already created! Updating the object.")
@@ -77,7 +74,7 @@ class MetadataProvisioner(object):
         
         conf_obj=GlobalVrouterConfig(linklocal_services=obj)
         result=self._vnc_lib.global_vrouter_config_update(conf_obj)
-        print('Updated.%s'%(result))
+        print('Updated.{}'.format(result))
 
     # end __init__
     
@@ -123,7 +120,7 @@ class MetadataProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():

@@ -1,12 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
+
 import argparse
 import configparser
 
@@ -23,7 +20,7 @@ def get_ip(ip_w_pfx):
 # end get_ip
 
 
-class VncProvisioner(object):
+class VncProvisioner:
 
     def __init__(self, args_str=None):
         self._args = None
@@ -148,7 +145,7 @@ class VncProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():
