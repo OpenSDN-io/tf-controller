@@ -4,7 +4,6 @@
 
 import re
 import time
-import subprocess
 
 Import('AgentEnv')
 env = AgentEnv.Clone()

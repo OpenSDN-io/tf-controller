@@ -1,6 +1,5 @@
 # -*- mode: python; -*-
 import os
-import subprocess
 import sys
 
 vpath = '#/third_party/openvswitch-2.3.0'

@@ -6,8 +6,10 @@ import platform
 if platform.system() == 'Darwin':
     Return()
 
-import time
+import os
+import shutil
 import subprocess
+import time
 
 Import('BuildEnv')
 env = BuildEnv.Clone()
@@ -413,13 +415,9 @@ env.SConscript('test-xml/SConscript', exports=['AgentEnv', 'BuildEnv'],
 #Export('AgentEnv')
 
 def valgrind_run(target, source, env):
-    #import pdb; pdb.set_trace()
-
     #execute tests with valgrind
-    import subprocess
     ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
 
-    import os
     # Get test alias from agent-test test suite
     for test in env.ans['agent-test'].sources:
         cmd = test.sources[0].path
@@ -443,17 +441,12 @@ def valgrind_run(target, source, env):
 
 def code_coverage(target, source, env):
     # rm -rf vnsw/agent/test_coverage
-    import shutil
-    #import pdb; pdb.set_trace()
     shutil.rmtree(target[0].path, ignore_errors = True)
 
     # lcov --base-directory $ROOT -- directory . --zerocounters -q
-    import os
     os.system('lcov --base-directory . --directory ' + Dir('.').path +
               ' --zerocounters -q')
     # execute tests
-    import subprocess
-    #import pdb; pdb.set_trace()
     ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
 
     # Get test alias from agent-test test suite 
@@ -473,15 +466,12 @@ def code_coverage(target, source, env):
 
 
 if env['OPT'] == 'coverage':
-    #import pdb; pdb.set_trace()
     test_coverage = env.Command(Dir('test_coverage'), '', code_coverage)
     env.AlwaysBuild(test_coverage)
     env.Alias('agent:test_coverage', test_coverage)
 
 def run_ut(target, source, env):
     # execute tests
-    import subprocess
-    #import pdb; pdb.set_trace()
     ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
 
     # Get test alias from agent-test test suite 
