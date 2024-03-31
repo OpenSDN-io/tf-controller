@@ -32,7 +32,7 @@ setup(
     author='OpenContrail',
     author_email='dev@lists.opencontrail.org',
     url='http://www.opencontrail.org/documentation/api/r4.0/',
-    version='0.1dev',
+    version='0.1.dev0',
     classifiers=[
         'Environment :: OpenContrail',
         'Intended Audience :: Information Technology',

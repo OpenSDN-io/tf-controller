@@ -15,7 +15,7 @@ def requirements(filename):
 
 setup(
     name='ironic-notification-manager',
-    version='0.1dev',
+    version='0.1.dev0',
     packages=find_packages(),
     zip_safe=False,
     long_description="Ironic Node Notification Management Daemon",

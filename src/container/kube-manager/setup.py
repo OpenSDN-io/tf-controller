@@ -15,7 +15,7 @@ def requirements(filename):
 
 setup(
     name='kube_manager',
-    version='0.1dev',
+    version='0.1.dev0',
     packages=find_packages(),
     package_data={'': ['*.html', '*.css', '*.xml', '*.yml']},
 

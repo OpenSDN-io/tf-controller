@@ -19,7 +19,7 @@ setup(
     long_description="Contrail VNC Configuration Common Utils",
     license='Apache-2',
     author='OpenContrail',
-    version='0.1dev',
+    version='0.1.dev0',
     classifiers=[
         'Environment :: OpenContrail',
         'Intended Audience :: Information Technology',

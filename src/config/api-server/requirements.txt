@@ -1,7 +1,7 @@
 attrdict
 contrail-config-common
 contrail-api-client
-sandesh==0.1dev
+sandesh==0.1.dev0
 sandesh-common
 keystonemiddleware>=5.0.0,<7.0.0
 keystoneauth1<5.1.0

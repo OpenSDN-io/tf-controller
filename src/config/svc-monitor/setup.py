@@ -7,7 +7,7 @@ import setuptools, re
 
 setuptools.setup(
     name='svc_monitor',
-    version='0.1dev',
+    version='0.1.dev0',
     packages=setuptools.find_packages(),
     package_data={'': ['*.html', '*.css', '*.xml', '*.yml']},
     install_requires=[
@@ -18,7 +18,7 @@ setuptools.setup(
         'kazoo',
         'kombu',
         'requests >= 2.20.0',
-        'sandesh==0.1dev',
+        'sandesh==0.1.dev0',
         'sandesh-common',
         'six'
     ],

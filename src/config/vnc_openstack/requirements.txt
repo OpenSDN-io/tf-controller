@@ -9,5 +9,5 @@ contrail-api-client
 gevent<1.5.0
 kazoo==2.7.0
 netaddr<1
-sandesh==0.1dev
+sandesh==0.1.dev0
 sandesh-common

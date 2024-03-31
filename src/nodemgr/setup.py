@@ -11,7 +11,7 @@ def requirements(filename):
 
 setup(
     name='nodemgr',
-    version='0.1dev',
+    version='0.1.dev0',
     packages=find_packages(),
     package_data={'': ['*.html', '*.css', '*.xml', '*.yml']},
     zip_safe=False,

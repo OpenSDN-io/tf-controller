@@ -23,7 +23,7 @@ def requirements(filename):
 
 setup(
     name='contrail_config_utils',
-    version='0.1dev',
+    version='0.1.dev0',
     packages=find_packages(),
     package_data={'': ['*.xml']},
     zip_safe=False,

@@ -19,7 +19,7 @@ def requirements(filename):
 
 setup(
     name="contrail_stats_client",
-    version="0.1dev0",
+    version="0.1.dev00",
     description="contrail statistics package.",
     packages=find_packages(),
     zip_safe=False,
