@@ -115,25 +115,26 @@ libuve = env.Library('uve',
 
 libstatsuve_os_dependent_src = ['vm_stat.cc', 'vm_stat_kvm.cc', 'vm_stat_docker.cc']
 
-libstatsuve = env.Library('statsuve',
-                          StatsSandeshGenObjs +
-                         [
-                          'agent_uve_stats.cc',
-                          'interface_uve_stats_table.cc',
-                          'stats_manager.cc',
-                          libstatsuve_os_dependent_src,
-                          'vm_uve_entry.cc',
-                          'vm_uve_table.cc',
-                          'vn_uve_entry.cc',
-                          'vn_uve_table.cc',
-                          'vrouter_uve_entry.cc',
-                         ])
+libstatsuve = env.Library(
+    'statsuve',
+    StatsSandeshGenObjs + [
+        'agent_uve_stats.cc',
+        'interface_uve_stats_table.cc',
+        'stats_manager.cc',
+        libstatsuve_os_dependent_src,
+        'vm_uve_entry.cc',
+        'vm_uve_table.cc',
+        'vn_uve_entry.cc',
+        'vn_uve_table.cc',
+        'vrouter_uve_entry.cc',
+    ]
+)
 
 Import('BuildEnv')
 mockEnv = BuildEnv.Clone()
 
-def MapBuildDir(list):
-    return map(lambda x: Dir('../../../' + x).abspath, list)
+def MapBuildDir(dirs):
+    return list(map(lambda x: Dir('../../../' + x).abspath, dirs))
 
 mockEnv.Prepend(LIBS=[
     'ksync',

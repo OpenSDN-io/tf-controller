@@ -11,8 +11,8 @@ import os
 
 Import('BuildEnv')
 
-def MapBuildDir(list):
-    return map(lambda x: '#/' + Dir('.').path + '/../' + x, list)
+def MapBuildDir(dirs):
+    return list(map(lambda x: '#/' + Dir('.').path + '/../' + x, dirs))
 
 env = BuildEnv.Clone()
 

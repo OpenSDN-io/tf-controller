@@ -7,8 +7,8 @@ import platform
 Import('BuildEnv')
 env = BuildEnv.Clone()
 
-def MapBuildDir(list):
-    return map(lambda x: '#/' + Dir('..').path + '/../' + x, list)
+def MapBuildDir(dirs):
+    return list(map(lambda x: '#/' + Dir('..').path + '/../' + x, dirs))
 
 env.Prepend(CPPPATH = env['TOP'] + '/schema')
 env.Prepend(CPPPATH = env['TOP'] + '/ifmap')
