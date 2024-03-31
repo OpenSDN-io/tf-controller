@@ -1,6 +1,5 @@
 # -*- mode: python; -*-
 import os
-import subprocess
 from distutils.dir_util import copy_tree
 from shutil import copyfile
 

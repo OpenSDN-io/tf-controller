@@ -4,8 +4,11 @@
 
 # -*- mode: python; -*-
 
+import subprocess
+import shutil
+import os
+
 Import('BuildEnv')
-import sys
 env = BuildEnv.Clone()
 
 env.Append(LIBPATH = env['TOP'] + '/base')
@@ -33,14 +36,10 @@ bfd_test_suite += env.SConscript('test/SConscript', exports='BuildEnv',
                                  duplicate = 0)
 
 def code_coverage(target, source, env):
-    import shutil
-    import os
-
     shutil.rmtree(target[0].path, ignore_errors = True)
     os.system('lcov --base-directory . --directory ' + Dir('.').path +
               ' --zerocounters -q')
     # execute tests
-    import subprocess
     ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
     for test in bfd_test_suite:
         cmd = test[0].path
