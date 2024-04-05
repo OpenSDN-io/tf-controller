@@ -5,3 +5,7 @@ python-novaclient==16.0.0
 keystoneauth1<5.1.0
 testtools==2.4.0 
 WebTest==2.0.34 
+certifi>=2023.7.22 # not directly required, pinned by Snyk to avoid a vulnerability
+oslo.utils>=4.8.1 # not directly required, pinned by Snyk to avoid a vulnerability
+requests>=2.31.0 # not directly required, pinned by Snyk to avoid a vulnerability
+waitress>=2.1.1 # not directly required, pinned by Snyk to avoid a vulnerability
