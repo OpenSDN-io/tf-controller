@@ -166,17 +166,17 @@ private:
 
 };
 
-class EvpnRouteEntry : public AgentRoute {
+class EvpnRouteEntry : public AgentRoute,
+    public AgentRoutePrefix<IpAddress> {
 public:
     EvpnRouteEntry(VrfEntry *vrf,
                    const MacAddress &mac,
                    const IpAddress &ip_addr,
-                   uint32_t plen,
+                   uint8_t plen,
                    uint32_t ethernet_tag,
                    bool is_multicast);
     virtual ~EvpnRouteEntry() { }
 
-    virtual uint8_t plen() const { return plen_; }
     virtual int CompareTo(const Route &rhs) const;
     virtual std::string ToString() const;
     virtual void UpdateDependantRoutes() { }
@@ -203,8 +203,8 @@ public:
         return !IsType5();
     }
     const MacAddress &mac() const {return mac_;}
-    const IpAddress &ip_addr() const {return ip_addr_;}
-    const uint32_t GetVmIpPlen() const;
+    ///! @brief The length of EVPN Type2 / Type5 prefix IP address
+    uint8_t prefix_length() const {return prefix_length_;}
     uint32_t ethernet_tag() const {return ethernet_tag_;}
     void set_publish_to_bridge_route_table(bool publish_to_bridge_route_table) {
         publish_to_bridge_route_table_ = publish_to_bridge_route_table;
@@ -229,8 +229,6 @@ public:
 private:
 
     MacAddress mac_;
-    IpAddress ip_addr_;
-    uint32_t plen_;
     uint32_t ethernet_tag_;
     bool publish_to_inet_route_table_;
     bool publish_to_bridge_route_table_;

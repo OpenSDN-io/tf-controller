@@ -246,7 +246,7 @@ void Icmpv6VrfState::RouteUpdate(DBTablePartBase *part, DBEntryBase *entry) {
     const Interface *intf = (intf_nh) ?
         static_cast<const Interface *>(intf_nh->GetInterface()) : NULL;
 
-    NdpKey key(route->addr().to_v6(), route->vrf());
+    NdpKey key(route->prefix_address().to_v6(), route->vrf());
     NdpEntry *ndpentry = icmp_proto_->UnsolNaEntry(key, intf);
     if (route->vrf()->GetName() == agent_->fabric_vrf_name()) {
         ndpentry = icmp_proto_->UnsolNaEntry(key, icmp_proto_->ip_fabric_interface());
@@ -262,8 +262,8 @@ void Icmpv6VrfState::RouteUpdate(DBTablePartBase *part, DBEntryBase *entry) {
     }
 
     if (!state) {
-        state = new Icmpv6RouteState(this, route->vrf_id(), route->addr(),
-                                     route->plen());
+        state = new Icmpv6RouteState(this, route->vrf_id(), route->prefix_address(),
+                                     route->prefix_length());
         entry->SetState(part->parent(), route_table_listener_id_, state);
     }
 
@@ -271,11 +271,11 @@ void Icmpv6VrfState::RouteUpdate(DBTablePartBase *part, DBEntryBase *entry) {
     // May not be needed since kernel can take care of sending unsolicited NA
     if (route->vrf()->GetName() == agent_->fabric_vrf_name() &&
         route->GetActiveNextHop()->GetType() == NextHop::RECEIVE &&
-        icmp_proto_->agent()->router_id6() == route->addr().to_v6()) {
+        icmp_proto_->agent()->router_id6() == route->prefix_address().to_v6()) {
         //Send unsolicited NA
         icmp_proto_->AddUnsolNaEntry(key);
         icmp_proto_->SendIcmpv6Ipc(Icmpv6Proto::NDP_SEND_UNSOL_NA,
-                              route->addr().to_v6(), route->vrf(),
+                              route->prefix_address().to_v6(), route->vrf(),
                               icmp_proto_->ip_fabric_interface());
     }
 #endif
@@ -303,8 +303,8 @@ void Icmpv6VrfState::EvpnRouteUpdate(DBTablePartBase *part, DBEntryBase *entry) 
     }
 
     if (!state) {
-        state = new Icmpv6RouteState(this, route->vrf_id(), route->ip_addr(),
-                                     route->GetVmIpPlen());
+        state = new Icmpv6RouteState(this, route->vrf_id(), route->prefix_address(),
+                                     route->prefix_length());
         entry->SetState(part->parent(), evpn_route_table_listener_id_, state);
     }
 

@@ -1152,7 +1152,7 @@ void AgentXmppChannel::AddFabricVrfRoute(const Ip4Address &prefix_addr,
     }
 
     InetUnicastRouteEntry *rt = table->FindResolveRoute(prefix_addr);
-    if (rt && rt->addr() == prefix_addr && rt->plen() == prefix_len) {
+    if (rt && rt->prefix_address() == prefix_addr && rt->prefix_length() == prefix_len) {
         //Dont overwrite resolve route
         return;
     }
@@ -2777,8 +2777,8 @@ bool AgentXmppChannel::BuildEvpnUnicastMessage(EnetItemType &item,
     const AgentPath *active_path = NULL;
     rstr.str("");
     EvpnRouteEntry *evpn_route = static_cast<EvpnRouteEntry *>(route);
-    rstr << evpn_route->ip_addr().to_string() << "/"
-        << evpn_route->GetVmIpPlen();
+    rstr << evpn_route->prefix_address().to_string() << "/"
+        << evpn_route->prefix_length();
     active_path = evpn_route->FindLocalVmPortPath();
     item.entry.nlri.ethernet_tag = evpn_route->ethernet_tag();
 

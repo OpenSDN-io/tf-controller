@@ -424,7 +424,7 @@ void PathPreferenceSM::Process() {
          const InetUnicastRouteEntry *inet_rt =
          dynamic_cast<const InetUnicastRouteEntry *>(rt_);
          if ( inet_rt != NULL) {
-            MacIpLearningKey macip_entry_key(rt_->vrf()->vrf_id(), inet_rt->addr());
+            MacIpLearningKey macip_entry_key(rt_->vrf()->vrf_id(), inet_rt->prefix_address());
             entry = agent_->mac_learning_proto()->
                 GetMacIpLearningTable()->Find(macip_entry_key);
          }
@@ -970,8 +970,8 @@ void PathPreferenceModule::EnqueueTrafficSeen(IpAddress ip, uint32_t plen,
 
     PathPreferenceEventContainer event;
     if (rt) {
-        event.ip_ = rt->addr();
-        event.plen_ = rt->plen();
+        event.ip_ = rt->prefix_address();
+        event.plen_ = rt->prefix_length();
     } else {
         // (0 IP + Mac) event required for EVPN
         event.ip_ = IpAddress();

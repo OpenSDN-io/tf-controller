@@ -150,7 +150,7 @@ MacLearningMgmtDBTree::MacLearningMgmtDBTree(MacLearningMgmtManager *mgr) :
 MacLearningMgmtRouteEntry::MacLearningMgmtRouteEntry(const AgentRoute *rt):
     MacLearningMgmtDBEntry(BRIDGE, rt) {
     const BridgeRouteEntry *br_rt = dynamic_cast<const BridgeRouteEntry *>(rt);
-    mac_ = br_rt->mac();
+    mac_ = br_rt->prefix_address();
     vrf_ = br_rt->vrf()->GetName();
 }
 

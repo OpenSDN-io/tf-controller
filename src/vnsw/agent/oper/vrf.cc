@@ -250,9 +250,9 @@ InetUnicastRouteEntry *VrfEntry::GetUcRoute(const IpAddress &addr) const {
 InetUnicastRouteEntry *VrfEntry::GetUcRoute(const InetUnicastRouteEntry &rt_key) const {
     InetUnicastAgentRouteTable *table = NULL;
 
-    if (rt_key.addr().is_v4()) {
+    if (rt_key.prefix_address().is_v4()) {
         table = GetInet4UnicastRouteTable();
-    } else if (rt_key.addr().is_v6()) {
+    } else if (rt_key.prefix_address().is_v6()) {
         table = GetInet6UnicastRouteTable();
     }
     if (table == NULL)

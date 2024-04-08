@@ -206,7 +206,7 @@ void RouteExport::UnicastNotify(AgentXmppChannel *bgp_xmpp_peer,
         //Dont export vhost IP path to control-node
         const InetUnicastRouteEntry *inet_rt =
             dynamic_cast<const InetUnicastRouteEntry *>(route);
-        if (inet_rt && inet_rt->addr() == table->agent()->router_id()) {
+        if (inet_rt && inet_rt->prefix_address() == table->agent()->router_id()) {
             path = NULL;
         }
     }
@@ -364,7 +364,7 @@ void RouteExport::MulticastNotify(AgentXmppChannel *bgp_xmpp_peer,
     // Bridge Multicast routes are not sent to control.
     BridgeRouteEntry *l2_route = dynamic_cast<BridgeRouteEntry *>(route);
     if ((route->GetTableType() == Agent::BRIDGE) &&
-        (l2_route->mac() != MacAddress::BroadcastMac())) {
+        (l2_route->prefix_address() != MacAddress::BroadcastMac())) {
 
         return;
     }

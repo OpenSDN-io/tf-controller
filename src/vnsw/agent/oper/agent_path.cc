@@ -342,7 +342,7 @@ bool AgentPath::ResolveGwNextHops(Agent *agent, const AgentRoute *sync_route) {
         AgentPathEcmpComponentPtr member = ecmp_member_list_[0];
         InetUnicastRouteEntry *uc_rt = table->FindRoute(member->GetGwIpAddr());
         const NextHop *anh;
-        if (uc_rt == NULL || uc_rt->plen() == 0 || (anh = uc_rt->GetActiveNextHop()) == NULL) {
+        if (uc_rt == NULL || uc_rt->prefix_length() == 0 || (anh = uc_rt->GetActiveNextHop()) == NULL) {
             set_unresolved(true);
             member->UpdateDependentRoute(NULL);
             member->SetUnresolved(true);
@@ -380,7 +380,7 @@ bool AgentPath::ResolveGwNextHops(Agent *agent, const AgentRoute *sync_route) {
             InetUnicastRouteEntry *uc_rt =
                 table->FindRoute((*ecmp_member_it)->GetGwIpAddr());
             const NextHop *anh;
-            if (uc_rt == NULL || uc_rt->plen() == 0 || (anh = uc_rt->GetActiveNextHop()) == NULL) {
+            if (uc_rt == NULL || uc_rt->prefix_length() == 0 || (anh = uc_rt->GetActiveNextHop()) == NULL) {
                 (*ecmp_member_it)->UpdateDependentRoute(NULL);
                 (*ecmp_member_it)->SetUnresolved(true);
                 if (!path_unresolved) {
@@ -498,7 +498,7 @@ bool AgentPath::Sync(AgentRoute *sync_route) {
         rt = NULL;
     }
     const NextHop *anh;
-    if (rt == NULL || rt->plen() == 0) {
+    if (rt == NULL || rt->prefix_length() == 0) {
        if (agent->params()->subnet_hosts_resolvable() == false &&
             agent->fabric_vrf_name() == vrf_name_) {
             unresolved = false;
@@ -651,7 +651,7 @@ const NextHop *EvpnDerivedPath::ComputeNextHop(Agent *agent) const {
 EvpnDerivedPathData::EvpnDerivedPathData(const EvpnRouteEntry *evpn_rt) :
     AgentRouteData(AgentRouteData::ADD_DEL_CHANGE,
                    evpn_rt->is_multicast(), 0),
-    ethernet_tag_(evpn_rt->ethernet_tag()), ip_addr_(evpn_rt->ip_addr()),
+    ethernet_tag_(evpn_rt->ethernet_tag()), ip_addr_(evpn_rt->prefix_address()),
     reference_path_(evpn_rt->GetActivePath()), ecmp_suppressed_(false) {
     // For debuging add peer of active path in parent as well
     std::stringstream s;
@@ -956,7 +956,7 @@ bool LocalVmRoute::AddChangePathExtended(Agent *agent, AgentPath *path,
         const InetUnicastRouteEntry *ip_rt =
             dynamic_cast<const InetUnicastRouteEntry *>(rt);
         if (ip_rt) {
-            mac = vm_port->GetIpMac(ip_rt->addr(), ip_rt->plen());
+            mac = vm_port->GetIpMac(ip_rt->prefix_address(), ip_rt->prefix_length());
         }
         const EvpnRouteEntry *evpn_rt =
             dynamic_cast<const EvpnRouteEntry *>(rt);
@@ -2077,7 +2077,7 @@ void EvpnRoutingPath::DeleteEvpnType5Route(Agent *agent,
     const EvpnAgentRouteTable *evpn_table =
         static_cast<EvpnAgentRouteTable *>(l3_vrf->GetEvpnRouteTable());
     evpn_table->Delete(agent->local_vm_export_peer(), l3_vrf->GetName(),
-                       MacAddress(), inet_rt->addr(),
+                       MacAddress(), inet_rt->prefix_address(),
                        l3_vrf_vxlan_id_);
 }
 

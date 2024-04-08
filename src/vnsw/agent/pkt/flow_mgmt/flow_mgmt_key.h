@@ -165,7 +165,7 @@ public:
         const InetUnicastRouteEntry *inet_rt =
             dynamic_cast<const InetUnicastRouteEntry *>(rt);
         if (inet_rt) {
-            return AddrToType(inet_rt->addr());
+            return AddrToType(inet_rt->prefix_address());
         }
 
         if (dynamic_cast<const BridgeRouteEntry *>(rt))
@@ -197,8 +197,8 @@ private:
 class InetRouteFlowMgmtKey : public RouteFlowMgmtKey {
 public:
     InetRouteFlowMgmtKey(const InetUnicastRouteEntry *route) :
-        RouteFlowMgmtKey(AddrToType(route->addr()), route, route->vrf_id()),
-        ip_(route->addr()), plen_(route->plen()) {
+        RouteFlowMgmtKey(AddrToType(route->prefix_address()), route, route->vrf_id()),
+        ip_(route->prefix_address()), plen_(route->prefix_length()) {
     }
 
     InetRouteFlowMgmtKey(uint32_t vrf_id, const IpAddress &ip, uint8_t plen) :
@@ -291,7 +291,7 @@ private:
 class BridgeRouteFlowMgmtKey : public RouteFlowMgmtKey {
 public:
     BridgeRouteFlowMgmtKey(const BridgeRouteEntry *rt) :
-        RouteFlowMgmtKey(BRIDGE, rt, rt->vrf_id()), mac_(rt->mac()) {
+        RouteFlowMgmtKey(BRIDGE, rt, rt->vrf_id()), mac_(rt->prefix_address()) {
     }
 
     BridgeRouteFlowMgmtKey(uint32_t vrf_id, const MacAddress &mac) :

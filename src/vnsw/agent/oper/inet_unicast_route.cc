@@ -180,8 +180,8 @@ static void InetUnicastTableProcess(Agent *agent, const string &vrf_name,
  */
 bool InetUnicastAgentRouteTable::ResyncSubnetRoutes
 (const InetUnicastRouteEntry *rt, bool val) {
-    const IpAddress addr = rt->addr();
-    uint16_t plen = rt->plen();
+    const IpAddress addr = rt->prefix_address();
+    uint16_t plen = rt->prefix_length();
     InetUnicastRouteEntry *lpm_rt = GetNextNonConst(rt);
 
     Ip4Address v4_parent_mask;
@@ -201,17 +201,17 @@ bool InetUnicastAgentRouteTable::ResyncSubnetRoutes
 
 
     // Iterate thru all the routes under this subnet and update route flags
-    while ((lpm_rt != NULL) && (plen < lpm_rt->plen())) {
+    while ((lpm_rt != NULL) && (plen < lpm_rt->prefix_length())) {
         if (GetTableType() == Agent::INET4_UNICAST) {
             Ip4Address node_mask =
-                Address::GetIp4SubnetAddress(lpm_rt->addr().to_v4(),
+                Address::GetIp4SubnetAddress(lpm_rt->prefix_address().to_v4(),
                                              plen);
             if (v4_parent_mask != node_mask)
                 break;
 
         } else if (GetTableType() == Agent::INET6_UNICAST) {
             Ip6Address node_mask =
-                Address::GetIp6SubnetAddress(lpm_rt->addr().to_v6(),
+                Address::GetIp6SubnetAddress(lpm_rt->prefix_address().to_v6(),
                                              plen);
             if (v6_parent_mask != node_mask)
                 break;
@@ -248,9 +248,9 @@ void
 InetUnicastAgentRouteTable::TraverseHostRoutesInSubnet(InetUnicastRouteEntry *rt,
                                                        const Peer *peer)
 {
-    const IpAddress addr = rt->addr();
-    uint16_t plen = rt->plen();
-    InetUnicastRouteEntry *supernet_rt = GetSuperNetRoute(rt->addr());
+    const IpAddress addr = rt->prefix_address();
+    uint16_t plen = rt->prefix_length();
+    InetUnicastRouteEntry *supernet_rt = GetSuperNetRoute(rt->prefix_address());
 
     //If supernet route is NULL, then this is the default route and visit to
     //unresolved route for resync should suffice.
@@ -264,9 +264,9 @@ InetUnicastAgentRouteTable::TraverseHostRoutesInSubnet(InetUnicastRouteEntry *rt
     //to this subnet route, if they fall in same subnet.
     IpAddress parent_mask = GetSubnetAddress(addr, plen);
     for (InetUnicastRouteEntry *lpm_rt = GetNextNonConst(rt);
-         (lpm_rt != NULL) && (plen < lpm_rt->plen());
+         (lpm_rt != NULL) && (plen < lpm_rt->prefix_length());
          lpm_rt= GetNextNonConst(lpm_rt)) {
-        IpAddress node_mask = GetSubnetAddress(lpm_rt->addr(), plen);
+        IpAddress node_mask = GetSubnetAddress(lpm_rt->prefix_address(), plen);
         if (parent_mask != node_mask)
             break;
 
@@ -318,17 +318,18 @@ InetUnicastAgentRouteTable::GetSuperNetRoute(const IpAddress &addr) {
 
 /////////////////////////////////////////////////////////////////////////////
 // Inet4UnicastAgentRouteEntry functions
-/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////_////////////////////////////////
 InetUnicastRouteEntry::InetUnicastRouteEntry(VrfEntry *vrf,
                                              const IpAddress &addr,
                                              uint8_t plen,
                                              bool is_multicast) :
-    AgentRoute(vrf, is_multicast), plen_(plen), ipam_subnet_route_(false),
+    AgentRoute(vrf, is_multicast), AgentRoutePrefix(addr, plen),
+    ipam_subnet_route_(false),
     ipam_host_route_(false), proxy_arp_(false) {
         if (addr.is_v4()) {
-        addr_ = Address::GetIp4SubnetAddress(addr.to_v4(), plen);
+        prefix_address_ = Address::GetIp4SubnetAddress(addr.to_v4(), plen);
     } else {
-        addr_ = Address::GetIp6SubnetAddress(addr.to_v6(), plen);
+        prefix_address_ = Address::GetIp6SubnetAddress(addr.to_v6(), plen);
     }
 }
 
@@ -342,9 +343,9 @@ string InetUnicastRouteKey::ToString() const {
 
 string InetUnicastRouteEntry::ToString() const {
     ostringstream str;
-    str << addr_.to_string();
+    str << prefix_address_.to_string();
     str << "/";
-    str << (int)plen_;
+    str << (int)prefix_length();
     return str.str();
 }
 
@@ -357,19 +358,19 @@ int InetUnicastRouteEntry::CompareTo(const Route &rhs) const {
     const InetUnicastRouteEntry &a =
         static_cast<const InetUnicastRouteEntry &>(rhs);
 
-    if (addr_ < a.addr_) {
+    if (prefix_address_ < a.prefix_address_) {
         return -1;
     }
 
-    if (addr_ > a.addr_) {
+    if (prefix_address_ > a.prefix_address_) {
         return 1;
     }
 
-    if (plen_ < a.plen_) {
+    if (prefix_length() < a.prefix_length()) {
         return -1;
     }
 
-    if (plen_ > a.plen_) {
+    if (prefix_length() > a.prefix_length()) {
         return 1;
     }
 
@@ -384,11 +385,11 @@ DBEntryBase::KeyPtr InetUnicastRouteEntry::GetDBRequestKey() const {
     if ((table->GetTableType() == Agent::INET4_MPLS)) {
         key =
         new InetMplsUnicastRouteKey(agent->local_peer(),
-                                 vrf()->GetName(), addr_, plen_);
+                                 vrf()->GetName(), prefix_address_, prefix_length());
     } else {
         key =
         new InetUnicastRouteKey(agent->local_peer(),
-                                 vrf()->GetName(), addr_, plen_);
+                                 vrf()->GetName(), prefix_address_, prefix_length());
     }
 
     return DBEntryBase::KeyPtr(key);
@@ -402,17 +403,17 @@ void InetUnicastRouteEntry::SetKey(const DBRequestKey *key) {
     SetVrf(agent->vrf_table()->FindVrfFromName(k->vrf_name()));
     IpAddress tmp(k->addr());
     set_addr(tmp);
-    set_plen(k->plen());
+    set_prefix_length(k->plen());
 }
 
 bool InetUnicastRouteEntry::IsHostRoute() const {
     InetUnicastAgentRouteTable *table =
         static_cast<InetUnicastAgentRouteTable *>(get_table());
     if (table->GetTableType() == Agent::INET4_UNICAST) {
-        if (plen_ != Address::kMaxV4PrefixLen)
+        if (prefix_length() != Address::kMaxV4PrefixLen)
             return false;
     } else if (table->GetTableType() == Agent::INET6_UNICAST) {
-        if (plen_ != Address::kMaxV6PrefixLen)
+        if (prefix_length() != Address::kMaxV6PrefixLen)
             return false;
     }
     return true;
@@ -429,7 +430,7 @@ bool InetUnicastRouteEntry::IpamSubnetRouteAvailable() const {
 
 InetUnicastRouteEntry *
 InetUnicastRouteEntry::GetIpamSuperNetRoute() const {
-    if (plen_ == 0)
+    if (prefix_length() == 0)
         return NULL;
 
     //Local path present means that this route itself was programmed
@@ -441,10 +442,10 @@ InetUnicastRouteEntry::GetIpamSuperNetRoute() const {
     //Search for supernet, if none then dont flood else again search for
     //local path. If found then mark for flood otherwise check for active path
     //and retain flood flag from that path.
-    uint16_t plen = plen_ - 1;
+    uint16_t plen = prefix_length() - 1;
     while (plen != 0) {
-        assert(plen < plen_);
-        InetUnicastRouteEntry key(vrf(), addr_, plen, false);
+        assert(plen < prefix_length());
+        InetUnicastRouteEntry key(vrf(), prefix_address_, plen, false);
         // Find next highest matching route
         InetUnicastRouteEntry *supernet_rt = table->FindRouteUsingKey(key);
 
@@ -690,7 +691,7 @@ bool Inet4UnicastGatewayRoute::AddChangePathExtended(Agent *agent, AgentPath *pa
         IpAddress gw_ip = gw_list_.empty() ? Ip4Address(0) : gw_list_[0];
         rt = table->FindRoute(gw_ip);
         const NextHop *anh;
-        if (rt == NULL || rt->plen() == 0 || (anh = rt->GetActiveNextHop()) == NULL) {
+        if (rt == NULL || rt->prefix_length() == 0 || (anh = rt->GetActiveNextHop()) == NULL) {
             path->set_unresolved(true);
         } else if (anh->GetType() == NextHop::RESOLVE) {
             const ResolveNH *nh =
@@ -720,7 +721,7 @@ bool Inet4UnicastGatewayRoute::AddChangePathExtended(Agent *agent, AgentPath *pa
         for (ptr = gw_list_.begin(); ptr < gw_list_.end(); ptr++) {
             InetUnicastRouteEntry *uc_rt = table->FindRoute(*ptr);
             rt = uc_rt;
-            if (uc_rt == NULL || uc_rt->plen() == 0) {
+            if (uc_rt == NULL || uc_rt->prefix_length() == 0) {
                 path->set_unresolved(true);
                 break;
             } else if (uc_rt->GetActiveNextHop()->GetType() == NextHop::RESOLVE) {
@@ -841,10 +842,10 @@ bool InetEvpnRoutePath::SyncDependantRoute(const AgentRoute *sync_route) {
         static_cast<InetUnicastAgentRouteTable *>(sync_route->get_table());
     InetUnicastRouteEntry *parent_subnet_route =
         table->GetSuperNetRoute(dynamic_cast<const InetUnicastRouteEntry *>
-                                (sync_route)->addr());
+                                (sync_route)->prefix_address());
 
     if (parent_subnet_route != dependant_route) {
-        set_gw_ip(parent_subnet_route ? parent_subnet_route->addr() :
+        set_gw_ip(parent_subnet_route ? parent_subnet_route->prefix_address() :
                   IpAddress());
         if (parent_subnet_route) {
             ResetDependantRoute(parent_subnet_route);
@@ -960,8 +961,8 @@ bool Inet4UnicastInterfaceRoute::AddChangePathExtended(Agent *agent, AgentPath *
 bool InetUnicastRouteEntry::DBEntrySandesh(Sandesh *sresp, bool stale) const {
 
     RouteUcSandeshData data;
-    data.set_src_ip(addr_.to_string());
-    data.set_src_plen(plen_);
+    data.set_src_ip(prefix_address_.to_string());
+    data.set_src_plen(prefix_length());
     data.set_ipam_subnet_route(ipam_subnet_route_);
     data.set_ipam_host_route(ipam_host_route_);
     data.set_proxy_arp(proxy_arp_);
@@ -982,7 +983,7 @@ bool InetUnicastRouteEntry::DBEntrySandesh(Sandesh *sresp, bool stale) const {
         }
     }
 
-    if (addr_.is_v4()) {
+    if (prefix_address_.is_v4()) {
         Inet4UcRouteResp *v4_resp = static_cast<Inet4UcRouteResp *>(sresp);
         std::vector<RouteUcSandeshData> &list =
         const_cast<std::vector<RouteUcSandeshData>&>(v4_resp->get_route_list());
@@ -998,7 +999,7 @@ bool InetUnicastRouteEntry::DBEntrySandesh(Sandesh *sresp, bool stale) const {
 
 bool InetUnicastRouteEntry::DBEntrySandesh(Sandesh *sresp, IpAddress addr,
                                             uint8_t plen, bool stale) const {
-    if (addr_ == addr && plen_ == plen) {
+    if (prefix_address_ == addr && prefix_length() == plen) {
         return DBEntrySandesh(sresp, stale);
     }
 
@@ -1919,7 +1920,7 @@ InetUnicastAgentRouteTable::AddInterfaceRouteReq(Agent *agent, const Peer *peer,
 void InetUnicastAgentRouteTable::AddEvpnRoute(const AgentRoute *route) {
     const EvpnRouteEntry *evpn_route =
         dynamic_cast<const EvpnRouteEntry *>(route);
-    const IpAddress &ip_addr = evpn_route->ip_addr();
+    const IpAddress &ip_addr = evpn_route->prefix_address();
     //No installation for evpn route with zero Ip prefix.
     if (ip_addr.is_unspecified())
         return;
@@ -1928,7 +1929,7 @@ void InetUnicastAgentRouteTable::AddEvpnRoute(const AgentRoute *route) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     const uint32_t plen = evpn_route->IsType5() ?
-        evpn_route->GetVmIpPlen() : GetHostPlen(ip_addr);
+        evpn_route->prefix_length() : GetHostPlen(ip_addr);
     //Set key and data
     req.key.reset(new InetUnicastRouteKey(agent()->inet_evpn_peer(),
                                           evpn_route->vrf()->GetName(),
@@ -1941,14 +1942,14 @@ void InetUnicastAgentRouteTable::AddEvpnRoute(const AgentRoute *route) {
 void InetUnicastAgentRouteTable::DeleteEvpnRoute(const AgentRoute *rt) {
     const EvpnRouteEntry *evpn_route =
         static_cast<const EvpnRouteEntry *>(rt);
-    const IpAddress &ip_addr = evpn_route->ip_addr();
+    const IpAddress &ip_addr = evpn_route->prefix_address();
     DBRequest req(DBRequest::DB_ENTRY_DELETE);
     const Peer *peer = agent()->inet_evpn_peer();
     if (evpn_route->IsType5()) {
         peer = agent()->evpn_routing_peer();
     }
     const uint32_t plen = evpn_route->IsType5() ?
-        evpn_route->GetVmIpPlen() : GetHostPlen(ip_addr);
+        evpn_route->prefix_length() : GetHostPlen(ip_addr);
     req.key.reset(new InetUnicastRouteKey(peer,
                                           evpn_route->vrf()->GetName(),
                                           ip_addr,

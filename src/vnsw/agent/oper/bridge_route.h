@@ -96,12 +96,12 @@ private:
     DISALLOW_COPY_AND_ASSIGN(BridgeAgentRouteTable);
 };
 
-class BridgeRouteEntry : public AgentRoute {
+class BridgeRouteEntry : public AgentRoute,
+    public AgentRoutePrefix<MacAddress> {
 public:
     BridgeRouteEntry(VrfEntry *vrf, const MacAddress &mac,
                      Peer::Type type, bool is_multicast) :
-        AgentRoute(vrf, is_multicast), mac_(mac) {
-        l3_plen_ = 0;
+        AgentRoute(vrf, is_multicast), AgentRoutePrefix(mac,0) {
     }
     virtual ~BridgeRouteEntry() { }
 
@@ -123,12 +123,12 @@ public:
     virtual AgentPath *FindPathUsingKeyData(const AgentRouteKey *key,
                                             const AgentRouteData *data) const;
     virtual bool ValidateMcastSrc() const {
-        return (mac_ == MacAddress::BroadcastMac());
+        return (prefix_address_ == MacAddress::BroadcastMac());
     }
-    const MacAddress &mac() const {return mac_;}
+    ///! @brief The length of L3 IP prefix (if present) associated with this
+    /// L2 address.
+    uint8_t prefix_length() const {return prefix_length_;}
     const MacVmBindingPath *FindMacVmBindingPath() const;
-    const uint8_t plen() {return l3_plen_;};
-    const void setplen(uint8_t l3_plen) { l3_plen_ = l3_plen;};
 
 private:
     AgentPath *FindEvpnPathUsingKeyData(const AgentRouteKey *key,
@@ -136,8 +136,6 @@ private:
     AgentPath *FindMulticastPathUsingKeyData(const AgentRouteKey *key,
                                              const AgentRouteData *data) const;
 
-    MacAddress mac_;
-    uint8_t l3_plen_;
     DISALLOW_COPY_AND_ASSIGN(BridgeRouteEntry);
 };
 

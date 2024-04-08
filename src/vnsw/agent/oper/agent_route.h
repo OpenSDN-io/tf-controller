@@ -304,7 +304,6 @@ public:
 
     void FillTrace(RouteInfo &route, Trace event, const AgentPath *path) const;
     bool WaitForTraffic() const;
-    virtual uint8_t plen() const { return 0; }
 
     bool DeleteAllBgpPath(DBTablePartBase *part, AgentRouteTable *table);
     void DeletePathFromPeer(DBTablePartBase *part, AgentRouteTable *table,
@@ -319,6 +318,8 @@ public:
                      AgentRouteKey *key, AgentRouteData *data);
     void AddUnresolvedRouteToTable(AgentRouteTable *table);
     void RemoveUnresolvedRouteFromTable(AgentRouteTable *table);
+    ///! Returns the length of a stored prefix address
+    virtual uint8_t prefix_length() const { return 0; }
 protected:
     void SetVrf(VrfEntry *vrf) { vrf_ = vrf; }
     void RemovePath(AgentPath *path);
@@ -353,6 +354,44 @@ private:
     DEPENDENCY_LIST(AgentRoute, AgentRoute, dependant_routes_);
     DEPENDENCY_LIST(NextHop, AgentRoute, tunnel_nh_list_);
     DISALLOW_COPY_AND_ASSIGN(AgentRoute);
+};
+
+///! @brief This class defines interfaces for manipulating the prefix
+/// of a route stored in an Agent VRF table
+template <class PrefixType>
+class AgentRoutePrefix {
+public:
+
+    ///! Creates a new route prefix
+    AgentRoutePrefix(const PrefixType& new_prefix, uint8_t new_plen)
+    : prefix_address_(new_prefix), prefix_length_(new_plen) {}
+
+    ///! The destructor of a route prefix
+    ~AgentRoutePrefix(){}
+
+    ///! Returns the value of a stored prefix address
+    /// (IPv4, IPv6 or MAC address)
+    virtual const PrefixType& prefix_address() const {return prefix_address_;}
+
+    ///! Sets the length of a stored prefix address
+    void set_prefix_length(uint8_t new_plen) {
+        prefix_length_ = new_plen;
+    }
+
+protected:
+
+    ///! The prefix address
+    PrefixType prefix_address_;
+
+    ///! The prefix length
+    uint8_t prefix_length_;
+
+private:
+
+    ///! Forbid default ctor
+    AgentRoutePrefix();
+
+    DISALLOW_COPY_AND_ASSIGN(AgentRoutePrefix);
 };
 
 #define GETPEERNAME(peer) (peer)? peer->GetName() : ""

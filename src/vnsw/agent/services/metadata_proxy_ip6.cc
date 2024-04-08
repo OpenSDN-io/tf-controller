@@ -49,8 +49,8 @@ void MetadataProxy::AdvertiseMetaDataLinkLocalRoutes(const VmInterface* vm_intf,
         // explicitly forbid advertisement of LL IPv6 route
         // if another with the given prefix exists
         if (rt_entry != NULL &&
-            rt_entry->addr().to_v6() == ll_ip &&
-            rt_entry->plen() == 128) {
+            rt_entry->prefix_address().to_v6() == ll_ip &&
+            rt_entry->prefix_length() == 128) {
              return;
         }
         VnListType vn_list;
@@ -127,7 +127,7 @@ void MetadataProxy::DeleteMetaDataLinkLocalRoute(const VmInterface* vm_intf) {
             table->Delete(
                 vm_intf->peer(),
                 vrf_entry->GetName(),
-                ll_ip, c_entry->plen(),
+                ll_ip, c_entry->prefix_length(),
                 data);
         }
     }
@@ -247,7 +247,7 @@ void MetadataProxy::OnAFabricRouteChange
 
     const Ip6Address mip6 = interface->mdata_ip6_addr();
 
-    if (mip6 == route_entry->addr().to_v6()) {
+    if (mip6 == route_entry->prefix_address().to_v6()) {
         if (entry->IsDeleted()) {
         } else {
             // Create a neighbour record (ip neigh add ...)
