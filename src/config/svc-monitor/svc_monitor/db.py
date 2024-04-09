@@ -59,9 +59,9 @@ class ServiceMonitorDB(VncObjectDBClient):
         self._hm_cf = self._cassandra_driver._cf_dict[self._HM_CF]
 
     # db CRUD
-    def _db_get(self, table, key, column):
+    def _db_get(self, cf_name, key, column):
         try:
-            entry = self._cassandra_driver.get_one_col(table.column_family, key, column)
+            entry = self._cassandra_driver.get_one_col(cf_name, key, column)
         except Exception:
             # TODO(ethuleau): VncError is raised if more than one row was
             #                 fetched from db with get_one_col method.
@@ -135,7 +135,7 @@ class ServiceMonitorDB(VncObjectDBClient):
 
     # service instance CRUD
     def service_instance_get(self, si_fq_str):
-        return self._db_get(self._svc_si_cf, si_fq_str)
+        return self._db_get(self._SVC_SI_CF, si_fq_str)
 
     def service_instance_insert(self, si_fq_str, entry):
         return self._db_insert(self._SVC_SI_CF, si_fq_str, entry)
@@ -147,7 +147,7 @@ class ServiceMonitorDB(VncObjectDBClient):
         return self._db_list(self._SVC_SI_CF)
 
     def health_monitor_config_get(self, hm_id):
-        return self._db_get(self._hm_cf, hm_id, 'config_info')
+        return self._db_get(self._HM_CF, hm_id, 'config_info')
 
     def health_monitor_config_insert(self, hm_id, hm_obj):
         entry = json.dumps(hm_obj)
@@ -157,7 +157,7 @@ class ServiceMonitorDB(VncObjectDBClient):
         return self._db_remove(self._HM_CF, hm_id, 'config_info')
 
     def health_monitor_driver_info_get(self, hm_id):
-        return self._db_get(self._hm_cf, hm_id, 'driver_info')
+        return self._db_get(self._HM_CF, hm_id, 'driver_info')
 
     def health_monitor_driver_info_insert(self, hm_id, hm_obj):
         entry = json.dumps(hm_obj)
@@ -181,10 +181,10 @@ class ServiceMonitorDB(VncObjectDBClient):
         return self._db_remove(self._HM_CF, hm_id, columns)
 
     def loadbalancer_config_get(self, lb_id):
-        return self._db_get(self._lb_cf, lb_id, 'config_info')
+        return self._db_get(self._LB_CF, lb_id, 'config_info')
 
     def loadbalancer_driver_info_get(self, lb_id):
-        return self._db_get(self._lb_cf, lb_id, 'driver_info')
+        return self._db_get(self._LB_CF, lb_id, 'driver_info')
 
     def loadbalancer_config_insert(self, lb_id, lb_obj):
         entry = json.dumps(lb_obj)
@@ -209,10 +209,10 @@ class ServiceMonitorDB(VncObjectDBClient):
         return ret_list
 
     def pool_config_get(self, pool_id):
-        return self._db_get(self._pool_cf, pool_id, 'config_info')
+        return self._db_get(self._POOL_CF, pool_id, 'config_info')
 
     def pool_driver_info_get(self, pool_id):
-        return self._db_get(self._pool_cf, pool_id, 'driver_info')
+        return self._db_get(self._POOL_CF, pool_id, 'driver_info')
 
     def pool_config_insert(self, pool_id, pool_obj):
         entry = json.dumps(pool_obj)
