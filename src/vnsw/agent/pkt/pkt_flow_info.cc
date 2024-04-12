@@ -85,9 +85,9 @@ void PktFlowInfo::UpdateRoute(const AgentRoute **rt, const VrfEntry *vrf,
                 const InetUnicastRouteEntry *inet_rt =
                     dynamic_cast<const InetUnicastRouteEntry *>(route);
                 if (inet_rt != NULL) {
-                    temp->setplen(inet_rt->plen());
+                    temp->set_prefix_length(inet_rt->prefix_length());
                 } else {
-                    temp->setplen(-1); // -1 = 255 invalid plen for both v4 and v6
+                    temp->set_prefix_length(-1); // -1 = 255 invalid plen for both v4 and v6
                 }
             }
         }
@@ -104,13 +104,13 @@ uint8_t PktFlowInfo::RouteToPrefixLen(const AgentRoute *route) {
     const InetUnicastRouteEntry *inet_rt =
         dynamic_cast<const InetUnicastRouteEntry *>(route);
     if (inet_rt != NULL) {
-        return inet_rt->plen();
+        return inet_rt->prefix_length();
     }
 
     const BridgeRouteEntry *l2_rt =
         dynamic_cast<const BridgeRouteEntry *>(route);
     if (l2_rt) {
-        return l2_rt->mac().bit_len();
+        return l2_rt->prefix_address().bit_len();
     }
 
     assert(0);
@@ -513,7 +513,7 @@ bool PktFlowInfo::IsBgpRouterServiceRoute(const AgentRoute *in_rt,
         if (in_inet_rt == NULL || out_inet_rt == NULL)
             return false;
         if (agent->oper_db()->bgp_as_a_service()->
-            IsBgpService(vm_intf, in_inet_rt->addr(), out_inet_rt->addr())) {
+            IsBgpService(vm_intf, in_inet_rt->prefix_address(), out_inet_rt->prefix_address())) {
             bgp_router_service_flow = true;
             return true;
         }
@@ -1207,11 +1207,11 @@ void PktFlowInfo::ChangeFloatingIpEncap(const PktInfo *pkt,
      overlay_route_not_found = false;
      const InetUnicastRouteEntry *src =
          static_cast<const InetUnicastRouteEntry *>(in->rt_);
-     const IpAddress src_ip = src->addr();
+     const IpAddress src_ip = src->prefix_address();
 
      const InetUnicastRouteEntry *dst =
          static_cast<const InetUnicastRouteEntry *>(out->rt_);
-     const IpAddress dst_ip = dst->addr();
+     const IpAddress dst_ip = dst->prefix_address();
 
      uint32_t src_tunnel_bmap = in->rt_->GetActivePath()->tunnel_bmap();
      uint32_t dst_tunnel_bmap = out->rt_->GetActivePath()->tunnel_bmap();
@@ -1917,7 +1917,7 @@ void PktFlowInfo::GenerateTrafficSeen(const PktInfo *pkt,
     // Generate event if route was waiting for traffic
     if (rt && rt->WaitForTraffic()) {
         enqueue_traffic_seen = true;
-        plen = rt->plen();
+        plen = rt->prefix_length();
     } else if (vm_intf) {
         //L3 route is not in wait for traffic state
         //EVPN route could be in wait for traffic, if yes
@@ -1927,7 +1927,7 @@ void PktFlowInfo::GenerateTrafficSeen(const PktInfo *pkt,
         if (rt && rt->WaitForTraffic()) {
             const EvpnRouteEntry *evpn_rt = static_cast<const EvpnRouteEntry *>
                 (rt);
-            plen = evpn_rt->GetVmIpPlen();
+            plen = evpn_rt->prefix_length();
             enqueue_traffic_seen = true;
         } else {
             IpAddress addr;

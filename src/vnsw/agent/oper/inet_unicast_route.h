@@ -63,7 +63,8 @@ private:
     DISALLOW_COPY_AND_ASSIGN(InetMplsUnicastRouteKey);
 };
 
-class InetUnicastRouteEntry : public AgentRoute {
+class InetUnicastRouteEntry : public AgentRoute ,
+    public AgentRoutePrefix<IpAddress> {
 public:
     InetUnicastRouteEntry(VrfEntry *vrf, const IpAddress &addr,
                            uint8_t plen, bool is_multicast);
@@ -75,7 +76,7 @@ public:
     virtual void SetKey(const DBRequestKey *key);
     virtual bool DBEntrySandesh(Sandesh *sresp, bool stale) const;
     virtual const std::string GetAddressString() const {
-        return addr_.to_string();
+        return prefix_address_.to_string();
     }
     virtual const std::string GetSourceAddressString() const {
         return "0.0.0.0";
@@ -83,28 +84,26 @@ public:
     virtual Agent::RouteTableType GetTableType() const;
     virtual bool ReComputePathDeletion(AgentPath *path);
     virtual bool ReComputePathAdd(AgentPath *path);
-    const IpAddress &addr() const { return addr_; }
-    void set_addr(IpAddress addr) { addr_ = addr; };
-
-    uint8_t plen() const { return plen_; }
-    void set_plen(int plen) { plen_ = plen; }
+    ///! @brief The length of Inet prefix IP address.
+    uint8_t prefix_length() const { return prefix_length_; }
+    void set_addr(IpAddress addr) { prefix_address_ = addr; };
 
     //Key for patricia node lookup
     class Rtkey {
       public:
           static std::size_t BitLength(const InetUnicastRouteEntry *key) {
-              return key->plen();
+              return key->prefix_length();
           }
           static char ByteValue(
                   const InetUnicastRouteEntry *key, std::size_t i) {
-              if (key->addr().is_v4()) {
+              if (key->prefix_address().is_v4()) {
                   Ip4Address::bytes_type addr_bytes;
-                  addr_bytes = key->addr().to_v4().to_bytes();
+                  addr_bytes = key->prefix_address().to_v4().to_bytes();
                   char res = static_cast<char>(addr_bytes[i]);
                   return res;
               } else {
                   Ip6Address::bytes_type addr_bytes;
-                  addr_bytes = key->addr().to_v6().to_bytes();
+                  addr_bytes = key->prefix_address().to_v6().to_bytes();
                   volatile char res = static_cast<char>(addr_bytes[i]);
                   return res;
               }
@@ -129,8 +128,6 @@ public:
 protected:
     friend class InetUnicastAgentRouteTable;
 
-    IpAddress addr_;
-    uint8_t plen_;
     Patricia::Node rtnode_;
     // Flag set if route exactly matches a subnet in IPAM
     // ARP packets hitting this route must be flooded even if its ECMP route

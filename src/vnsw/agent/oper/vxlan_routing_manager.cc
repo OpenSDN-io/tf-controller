@@ -552,8 +552,8 @@ void VxlanRoutingManager::RoutingVrfDeleteAllRoutes(VrfEntry* rt_vrf) {
     const uint32_t ethernet_tag = 0;
     const MacAddress mac_addr;
     while (c_entry) {
-        const IpAddress prefix_ip = c_entry->ip_addr();
-        const uint32_t plen = c_entry->GetVmIpPlen();
+        const IpAddress prefix_ip = c_entry->prefix_address();
+        const uint32_t plen = c_entry->prefix_length();
 
         // Compute next entry in advance
         if (c_entry && c_entry->get_table_partition())

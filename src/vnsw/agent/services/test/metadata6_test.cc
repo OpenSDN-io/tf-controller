@@ -194,8 +194,8 @@ TEST_F(Metadata6Test, Metadata6RouteFuncsTest) {
     // AdvertiseVhostRoute, OnAVrfChange
     ASSERT_TRUE(ucrt_vm_ip != NULL);
     ASSERT_TRUE(ucrt_md_ip != NULL);
-    EXPECT_TRUE(ucrt_vm_ip->addr().to_string() == std::string(vm1_ip));
-    EXPECT_TRUE(ucrt_md_ip->addr().to_string() == std::string(md_ip6));
+    EXPECT_TRUE(ucrt_vm_ip->prefix_address().to_string() == std::string(vm1_ip));
+    EXPECT_TRUE(ucrt_md_ip->prefix_address().to_string() == std::string(md_ip6));
 
     VrfEntry *fabric_vrf = agent_->fabric_vrf();
     EXPECT_TRUE(fabric_vrf != NULL);
@@ -301,7 +301,7 @@ TEST_F(Metadata6Test, Metadata6ServerResetTest) {
     InetUnicastRouteEntry *vrf1_md_rt =
         vrf1->GetUcRoute(md_ip6_address);
     EXPECT_TRUE(vrf1_md_rt != NULL);
-    EXPECT_EQ(md_ip6_address.to_string(), vrf1_md_rt->addr().to_string());
+    EXPECT_EQ(md_ip6_address.to_string(), vrf1_md_rt->prefix_address().to_string());
 
     // Change address of Metadata service and update config
     md_ip6_address = Ip6Address::from_string("fe80::a9fe:fea9");
@@ -328,7 +328,7 @@ TEST_F(Metadata6Test, Metadata6ServerResetTest) {
     vrf1_md_rt =
         vrf1->GetUcRoute(md_ip6_address);
     EXPECT_TRUE(vrf1_md_rt != NULL);
-    EXPECT_EQ(md_ip6_address.to_string(), vrf1_md_rt->addr().to_string());
+    EXPECT_EQ(md_ip6_address.to_string(), vrf1_md_rt->prefix_address().to_string());
 
     DeleteVmportEnv(input, 1, 1, 0);
     client->WaitForIdle();

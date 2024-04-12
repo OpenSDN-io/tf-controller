@@ -489,11 +489,11 @@ uint32_t EvpnAgentRouteTable::ComputeHostIpPlen(const IpAddress &addr) {
 EvpnRouteEntry::EvpnRouteEntry(VrfEntry *vrf,
                                const MacAddress &mac,
                                const IpAddress &ip_addr,
-                               uint32_t plen,
+                               uint8_t plen,
                                uint32_t ethernet_tag,
                                bool is_multicast) :
-    AgentRoute(vrf, is_multicast), mac_(mac), ip_addr_(ip_addr),
-    plen_(plen),
+    AgentRoute(vrf, is_multicast), AgentRoutePrefix(ip_addr, plen),
+    mac_(mac),
     ethernet_tag_(ethernet_tag),
     publish_to_inet_route_table_(true),
     publish_to_bridge_route_table_(true) {
@@ -512,9 +512,9 @@ string EvpnRouteEntry::ToString() const {
         str << "-";
         str << mac_.ToString();
         str << "-";
-        str << ip_addr_.to_string();
+        str << prefix_address_.to_string();
         str << "/";
-        str << plen_;
+        str << int(prefix_length());
     }
     return str.str();
 }
@@ -532,16 +532,16 @@ int EvpnRouteEntry::CompareTo(const Route &rhs) const {
     if (cmp != 0)
         return cmp;
 
-    if (ip_addr_ < a.ip_addr_)
+    if (prefix_address_ < a.prefix_address_)
         return -1;
 
-    if (ip_addr_ > a.ip_addr_)
+    if (prefix_address_ > a.prefix_address_)
         return 1;
 
-    if (plen_ < a.plen_)
+    if (prefix_length() < a.prefix_length())
         return -1;
 
-    if (plen_ > a.plen_)
+    if (prefix_length() > a.prefix_length())
         return 1;
 
     return 0;
@@ -550,8 +550,8 @@ int EvpnRouteEntry::CompareTo(const Route &rhs) const {
 DBEntryBase::KeyPtr EvpnRouteEntry::GetDBRequestKey() const {
     EvpnRouteKey *key =
         new EvpnRouteKey(Agent::GetInstance()->local_vm_peer(),
-                           vrf()->GetName(), mac_, ip_addr_,
-                           plen_, ethernet_tag_);
+                           vrf()->GetName(), mac_, prefix_address_,
+                           prefix_length(), ethernet_tag_);
     return DBEntryBase::KeyPtr(key);
 }
 
@@ -559,12 +559,8 @@ void EvpnRouteEntry::SetKey(const DBRequestKey *key) {
     const EvpnRouteKey *k = static_cast<const EvpnRouteKey *>(key);
     SetVrf(Agent::GetInstance()->vrf_table()->FindVrfFromName(k->vrf_name()));
     mac_ = k->GetMac();
-    ip_addr_ = k->ip_addr();
+    prefix_address_ = k->ip_addr();
     ethernet_tag_ = k->ethernet_tag();
-}
-
-const uint32_t EvpnRouteEntry::GetVmIpPlen() const {
-    return plen_;
 }
 
 uint32_t EvpnRouteEntry::GetActiveLabel() const {
@@ -608,7 +604,7 @@ void EvpnRouteEntry::UpdateDerivedRoutes(AgentRouteTable *table,
     }
     if (publish_to_inet_route_table()) {
         InetUnicastAgentRouteTable *inet_table =
-            table->vrf_entry()->GetInetUnicastRouteTable(ip_addr());
+            table->vrf_entry()->GetInetUnicastRouteTable(prefix_address());
         if (inet_table)
             inet_table->AddEvpnRoute(this);
     }
@@ -624,7 +620,7 @@ void EvpnRouteEntry::DeleteDerivedRoutes(AgentRouteTable *table) {
 
     //Delete from Inet table
     InetUnicastAgentRouteTable *inet_table =
-        table->vrf_entry()->GetInetUnicastRouteTable(ip_addr());
+        table->vrf_entry()->GetInetUnicastRouteTable(prefix_address());
     if (inet_table)
         inet_table->DeleteEvpnRoute(this);
 }
@@ -657,7 +653,7 @@ bool EvpnRouteEntry::DBEntrySandesh(Sandesh *sresp, bool stale) const {
     EvpnRouteResp *resp = static_cast<EvpnRouteResp *>(sresp);
     RouteEvpnSandeshData data;
     data.set_mac(ToString());
-    data.set_ip_addr(ip_addr_.to_string());
+    data.set_ip_addr(prefix_address_.to_string());
 
     for (Route::PathList::const_iterator it = GetPathList().begin();
          it != GetPathList().end(); it++) {

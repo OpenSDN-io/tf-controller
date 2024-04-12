@@ -304,7 +304,7 @@ void MacLearningDBClient::EvpnRouteNotify(MacLearningVrfState *vrf_state,
         return;
     }
 
-    IpAddress ip_ = entry->ip_addr();
+    IpAddress ip_ = entry->prefix_address();
     MacAddress mac_ = entry->mac();
     MacLearningEntryRequestPtr ptr(new MacLearningEntryRequest(
                     MacLearningEntryRequest::REMOTE_MAC_IP,
@@ -508,12 +508,12 @@ void MacLearningDBClient::ReleaseToken(const DBEntry *entry) {
 
     //Get the partition id for mac of interest
     uint32_t id = agent_->mac_learning_proto()->Hash(brt->vrf()->vrf_id(),
-                                                     brt->mac());
+                                                     brt->prefix_address());
     MacLearningPartition *partition =
         agent_->mac_learning_proto()->Find(id);
     assert(partition);
 
     //Release the token
-    MacLearningKey key(brt->vrf()->vrf_id(), brt->mac());
+    MacLearningKey key(brt->vrf()->vrf_id(), brt->prefix_address());
     partition->ReleaseToken(key);
 }

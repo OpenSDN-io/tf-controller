@@ -511,7 +511,7 @@ void AgentBridgeRtSandesh::Alloc() {
 bool AgentBridgeRtSandesh::UpdateResp(DBEntryBase *entry) {
     BridgeRouteEntry *rt = static_cast<BridgeRouteEntry *>(entry);
     assert(rt);
-    if (MatchSubString(rt->mac().ToString(), mac_) == false)
+    if (MatchSubString(rt->prefix_address().ToString(), mac_) == false)
         return false;
 
     return rt->DBEntrySandesh(resp_, stale_);

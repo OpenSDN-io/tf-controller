@@ -145,7 +145,7 @@ void VnswInterfaceListenerBase::FabricRouteNotify(DBTablePartBase *part,
             e->ClearState(part->parent(), fabric_listener_id_);
             delete state;
             revent_queue_->Enqueue(new Event(Event::DEL_LL_ROUTE,
-                                             "", rt->addr().to_v4()));
+                                             "", rt->prefix_address().to_v4()));
         }
     } else {
         // listen to only metadata ip routes
@@ -158,7 +158,7 @@ void VnswInterfaceListenerBase::FabricRouteNotify(DBTablePartBase *part,
             state = new DBState();
             e->SetState(part->parent(), fabric_listener_id_, state);
             revent_queue_->Enqueue(new Event(Event::ADD_LL_ROUTE,
-                                             "", rt->addr().to_v4()));
+                                             "", rt->prefix_address().to_v4()));
         }
     }
 
@@ -176,7 +176,7 @@ void VnswInterfaceListenerBase::VnDBState::Enqueue(VnswInterfaceListenerBase *ba
         base->agent()->fabric_vrf()->GetInet4UnicastRouteTable();
     InetUnicastRouteEntry *rt =
         table->FindResolveRoute(entry.ip_prefix.to_v4());
-    if (rt && rt->plen() >= entry.plen) {
+    if (rt && rt->prefix_length() >= entry.plen) {
         return;
     }
 

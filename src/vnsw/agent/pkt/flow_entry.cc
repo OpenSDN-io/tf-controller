@@ -1190,9 +1190,11 @@ static void SetRpfFieldsInternal(FlowEntry *flow, const AgentRoute *rt) {
         return;
     }
 
-    if (dynamic_cast<const InetUnicastRouteEntry *>(rt)) {
-        flow->data().rpf_vrf = rt->vrf()->vrf_id();
-        flow->data().rpf_plen = rt->plen();
+    const InetUnicastRouteEntry *inet_rt =
+        dynamic_cast<const InetUnicastRouteEntry *>(rt);
+    if (inet_rt) {
+        flow->data().rpf_vrf = inet_rt->vrf()->vrf_id();
+        flow->data().rpf_plen = inet_rt->prefix_length();
         return;
     }
 
@@ -1207,7 +1209,7 @@ static void SetRpfFieldsInternal(FlowEntry *flow, const AgentRoute *rt) {
             dynamic_cast<const BridgeRouteEntry *>(rt);
         if (bridge_rt != NULL) {
             BridgeRouteEntry *temp = const_cast<BridgeRouteEntry *>(bridge_rt);
-            flow->data().rpf_plen  = temp->plen();
+            flow->data().rpf_plen  = temp->prefix_length();
         }
         return;
     }
@@ -1495,12 +1497,12 @@ void FlowEntry::GetSourceRouteInfo(const AgentRoute *rt) {
 
         //Policy lookup needs to happen in Policy VRF
         AgentRoute *new_rt = GetUcRoute(policy_vrf,
-                                        inet_rt->addr());
+                                        inet_rt->prefix_address());
         data_.src_policy_plen = 0;
         if (new_rt) {
             rt = new_rt;
             inet_rt = dynamic_cast<const InetUnicastRouteEntry *>(new_rt);
-            data_.src_policy_plen = inet_rt->plen();
+            data_.src_policy_plen = inet_rt->prefix_length();
             data_.src_policy_vrf = inet_rt->vrf()->vrf_id();
         }
     }
@@ -1525,7 +1527,7 @@ void FlowEntry::GetSourceRouteInfo(const AgentRoute *rt) {
             data_.origin_vn_src_list.insert(path->origin_vn());
         }
         data_.source_sg_id_l = path->sg_list();
-        data_.source_plen = rt->plen();
+        data_.source_plen = rt->prefix_length();
         data_.source_tag_id_l = path->tag_list();
     }
     /* Handle case when default route NextHop points to vrf */
@@ -1568,11 +1570,11 @@ void FlowEntry::GetDestRouteInfo(const AgentRoute *rt) {
                     vrf_table()->FindVrfFromId(data_.dst_policy_vrf));
 
         AgentRoute *new_rt =
-            GetUcRoute(policy_vrf, inet_rt->addr());
+            GetUcRoute(policy_vrf, inet_rt->prefix_address());
         if (new_rt) {
             rt = new_rt;
             inet_rt = dynamic_cast<const InetUnicastRouteEntry *>(rt);
-            data_.dst_policy_plen = inet_rt->plen();
+            data_.dst_policy_plen = inet_rt->prefix_length();
             data_.dst_policy_vrf = inet_rt->vrf()->vrf_id();
         }
     }
@@ -1597,7 +1599,7 @@ void FlowEntry::GetDestRouteInfo(const AgentRoute *rt) {
             data_.origin_vn_dst_list.insert(path->origin_vn());
         }
         data_.dest_sg_id_l = path->sg_list();
-        data_.dest_plen = rt->plen();
+        data_.dest_plen = rt->prefix_length();
         data_.dest_tag_id_l = path->tag_list();
     }
 

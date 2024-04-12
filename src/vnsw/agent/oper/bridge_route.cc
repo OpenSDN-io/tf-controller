@@ -306,40 +306,40 @@ const VmInterface *BridgeAgentRouteTable::FindVmFromDhcpBinding
 /////////////////////////////////////////////////////////////////////////////
 const std::string BridgeRouteEntry::GetAddressString() const {
     //For broadcast, xmpp message is sent with address as 255.255.255.255
-    if (mac_ == MacAddress::BroadcastMac()) {
+    if (prefix_address_ == MacAddress::BroadcastMac()) {
         return "255.255.255.255";
     }
     return ToString();
 }
 
 const std::string BridgeRouteEntry::GetSourceAddressString() const {
-    if (mac_ == MacAddress::BroadcastMac()) {
+    if (prefix_address_ == MacAddress::BroadcastMac()) {
         return "0.0.0.0";
     }
     return (MacAddress::kZeroMac).ToString();
 }
 
 string BridgeRouteEntry::ToString() const {
-    return mac_.ToString();
+    return prefix_address_.ToString();
 }
 
 int BridgeRouteEntry::CompareTo(const Route &rhs) const {
     const BridgeRouteEntry &a = static_cast<const BridgeRouteEntry &>(rhs);
 
-    return mac_.CompareTo(a.mac_);
+    return prefix_address_.CompareTo(a.prefix_address_);
 }
 
 DBEntryBase::KeyPtr BridgeRouteEntry::GetDBRequestKey() const {
     BridgeRouteKey *key =
         new BridgeRouteKey(Agent::GetInstance()->local_vm_peer(),
-                           vrf()->GetName(), mac_);
+                           vrf()->GetName(), prefix_address_);
     return DBEntryBase::KeyPtr(key);
 }
 
 void BridgeRouteEntry::SetKey(const DBRequestKey *key) {
     const BridgeRouteKey *k = static_cast<const BridgeRouteKey *>(key);
     SetVrf(Agent::GetInstance()->vrf_table()->FindVrfFromName(k->vrf_name()));
-    mac_ = k->GetMac();
+    prefix_address_ = k->GetMac();
 }
 
 uint32_t BridgeRouteEntry::GetActiveLabel() const {

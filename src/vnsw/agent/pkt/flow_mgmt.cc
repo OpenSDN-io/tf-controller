@@ -330,10 +330,10 @@ bool FlowMgmtManager::DBRequestHandler(FlowMgmtRequest *req,
         dynamic_cast<const InetUnicastRouteEntry *>(entry);
     if (inet_uc_rt) {
         InetRouteFlowMgmtKey key(inet_uc_rt);
-        if (inet_uc_rt->addr().is_v4()) {
+        if (inet_uc_rt->prefix_address().is_v4()) {
             return ProcessEvent(req, &key, &ip4_route_flow_mgmt_tree_);
         }
-        if (inet_uc_rt->addr().is_v6()) {
+        if (inet_uc_rt->prefix_address().is_v6()) {
             return ProcessEvent(req, &key, &ip6_route_flow_mgmt_tree_);
         }
     }

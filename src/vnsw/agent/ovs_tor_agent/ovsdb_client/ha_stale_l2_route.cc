@@ -213,7 +213,7 @@ KSyncEntry *HaStaleL2RouteTable::DBToKSyncEntry(const DBEntry* db_entry) {
     const BridgeRouteEntry *entry =
         static_cast<const BridgeRouteEntry *>(db_entry);
     HaStaleL2RouteEntry *key =
-        new HaStaleL2RouteEntry(this, entry->mac().ToString());
+        new HaStaleL2RouteEntry(this, entry->prefix_address().ToString());
     return static_cast<KSyncEntry *>(key);
 }
 

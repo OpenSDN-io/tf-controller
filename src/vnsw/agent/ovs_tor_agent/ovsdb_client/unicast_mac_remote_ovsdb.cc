@@ -34,7 +34,7 @@ UnicastMacRemoteEntry::UnicastMacRemoteEntry(UnicastMacRemoteTable *table,
 
 UnicastMacRemoteEntry::UnicastMacRemoteEntry(UnicastMacRemoteTable *table,
         const BridgeRouteEntry *entry) : OvsdbDBEntry(table),
-    mac_(entry->mac().ToString()),
+    mac_(entry->prefix_address().ToString()),
     logical_switch_name_(table->logical_switch_name()),
     self_exported_route_(false), sequence_(0), self_sequence_(0),
     ecmp_suppressed_(false), logical_switch_(NULL, this) {
@@ -202,7 +202,7 @@ bool UnicastMacRemoteEntry::Sync(DBEntry *db_entry) {
     EvpnAgentRouteTable *evpn_table =
         static_cast<EvpnAgentRouteTable *>(vrf->GetEvpnRouteTable());
     Ip4Address default_ip;
-    EvpnRouteEntry *evpn_rt = evpn_table->FindRoute(entry->mac(), default_ip, 32,
+    EvpnRouteEntry *evpn_rt = evpn_table->FindRoute(entry->prefix_address(), default_ip, 32,
                                                     entry->GetActiveLabel());
 
     bool self_exported_route = false;

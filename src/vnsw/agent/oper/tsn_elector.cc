@@ -127,7 +127,7 @@ void TsnElector::RouteNotify(DBTablePartBase *partition, DBEntryBase *e) {
     const InetUnicastRouteEntry *rt =
         static_cast<const InetUnicastRouteEntry*>(e);
 
-    if (!agent_->params()->IsConfiguredTsnHostRoute(rt->addr().to_string()))
+    if (!agent_->params()->IsConfiguredTsnHostRoute(rt->prefix_address().to_string()))
         return;
 
     const string rt_addr_str = rt->GetAddressString();

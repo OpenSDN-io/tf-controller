@@ -1460,19 +1460,19 @@ TEST_F(RouteTest, FindLPM) {
     client->WaitForIdle();
 
     rt = agent_->fabric_inet4_unicast_table()->FindLPM(lpm4_ip_);
-    EXPECT_EQ(lpm4_ip_, rt->addr());
+    EXPECT_EQ(lpm4_ip_, rt->prefix_address());
     DeleteRoute(agent_->local_peer(), agent_->fabric_vrf_name(), lpm4_ip_, 32);
     client->WaitForIdle();
     rt = agent_->fabric_inet4_unicast_table()->FindLPM(lpm4_ip_);
-    EXPECT_EQ(lpm3_ip_, rt->addr());
+    EXPECT_EQ(lpm3_ip_, rt->prefix_address());
     DeleteRoute(agent_->local_peer(), agent_->fabric_vrf_name(), lpm3_ip_, 24);
     client->WaitForIdle();
     rt = agent_->fabric_inet4_unicast_table()->FindLPM(lpm4_ip_);
-    EXPECT_EQ(lpm2_ip_, rt->addr());
+    EXPECT_EQ(lpm2_ip_, rt->prefix_address());
     DeleteRoute(agent_->local_peer(), agent_->fabric_vrf_name(), lpm2_ip_, 16);
     client->WaitForIdle();
     rt = agent_->fabric_inet4_unicast_table()->FindLPM(lpm4_ip_);
-    EXPECT_EQ(lpm1_ip_, rt->addr());
+    EXPECT_EQ(lpm1_ip_, rt->prefix_address());
     DeleteRoute(agent_->local_peer(), agent_->fabric_vrf_name(), lpm1_ip_, 8);
     client->WaitForIdle();
     DeleteRoute(agent_->local_peer(), agent_->fabric_vrf_name(), lpm5_ip_, 32);
@@ -1803,7 +1803,7 @@ TEST_F(RouteTest, RtEntryReuse) {
     client->WaitForIdle();
 
     rt = agent_->fabric_inet4_unicast_table()->FindLPM(lpm4_ip_);
-    EXPECT_EQ(lpm4_ip_, rt->addr());
+    EXPECT_EQ(lpm4_ip_, rt->prefix_address());
 
     boost::scoped_ptr<TestRtState> state(new TestRtState());
     rt->SetState(agent_->fabric_inet4_unicast_table(), id, state.get());
@@ -1811,12 +1811,12 @@ TEST_F(RouteTest, RtEntryReuse) {
     DeleteRoute(agent_->local_peer(), agent_->fabric_vrf_name(), lpm4_ip_, 32);
     client->WaitForIdle();
     rt = agent_->fabric_inet4_unicast_table()->FindLPM(lpm4_ip_);
-    EXPECT_EQ(lpm3_ip_, rt->addr());
+    EXPECT_EQ(lpm3_ip_, rt->prefix_address());
 
     AddArp(lpm4_ip_.to_string().c_str(), "0d:0b:0c:0d:0e:0f", eth_name_.c_str());
     client->WaitForIdle();
     rt = agent_->fabric_inet4_unicast_table()->FindLPM(lpm4_ip_);
-    EXPECT_EQ(lpm4_ip_, rt->addr());
+    EXPECT_EQ(lpm4_ip_, rt->prefix_address());
     EXPECT_EQ(rt, rt_hold);
     rt->ClearState(agent_->fabric_inet4_unicast_table(), id);
 

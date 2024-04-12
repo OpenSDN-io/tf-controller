@@ -208,8 +208,8 @@ bool VxlanRoutingManager::RoutePrefixIsEqualTo(const EvpnRouteEntry* route,
     const IpAddress& prefix_ip,
     const uint32_t prefix_len) {
     if (route == NULL ||
-        route->ip_addr() != prefix_ip ||
-        route->GetVmIpPlen() != prefix_len) {
+        route->prefix_address() != prefix_ip ||
+        route->prefix_length() != prefix_len) {
         return false;
     }
     return true;
@@ -219,8 +219,8 @@ bool VxlanRoutingManager::RoutePrefixIsEqualTo(const InetUnicastRouteEntry* rout
         const IpAddress& prefix_ip,
         const uint32_t prefix_len) {
     if (route == NULL ||
-        route->addr() != prefix_ip ||
-        route->plen() != prefix_len) {
+        route->prefix_address() != prefix_ip ||
+        route->prefix_length() != prefix_len) {
         return false;
     }
     return true;
@@ -236,7 +236,7 @@ bool VxlanRoutingManager::IsHostRoute(const IpAddress& prefix_ip, uint32_t prefi
 
 bool VxlanRoutingManager::IsHostRoute(const EvpnRouteEntry *evpn_rt) {
     if (evpn_rt != NULL) {
-        return IsHostRoute(evpn_rt->ip_addr(), evpn_rt->GetVmIpPlen());
+        return IsHostRoute(evpn_rt->prefix_address(), evpn_rt->prefix_length());
     }
     return false;
 }
@@ -270,7 +270,7 @@ bool VxlanRoutingManager::IsHostRouteFromLocalSubnet(const EvpnRouteEntry *rt) {
         bridge_vn = *it_br;
         const std::vector<VnIpam> &VnIpams = bridge_vn->GetVnIpam();
         for (uint32_t j=0; j < VnIpams.size(); j++) {
-            if (VnIpams[j].IsSubnetMember(rt->ip_addr())) {
+            if (VnIpams[j].IsSubnetMember(rt->prefix_address())) {
                 return true;
             }
         }
@@ -284,16 +284,16 @@ bool VxlanRoutingManager::IsVrfLocalRoute(EvpnRouteEntry *routing_evpn_rt,
     // check that the Inet table holds the corresponding route
     InetUnicastRouteEntry local_vm_route_key(
         bridge_vrf,
-        routing_evpn_rt->ip_addr(),
-        routing_evpn_rt->GetVmIpPlen(), false);
+        routing_evpn_rt->prefix_address(),
+        routing_evpn_rt->prefix_length(), false);
 
     InetUnicastAgentRouteTable *inet_table =
-        bridge_vrf->GetInetUnicastRouteTable(routing_evpn_rt->ip_addr());
+        bridge_vrf->GetInetUnicastRouteTable(routing_evpn_rt->prefix_address());
     InetUnicastRouteEntry *inet_rt =
         dynamic_cast<InetUnicastRouteEntry *>
         (inet_table->FindLPM(local_vm_route_key));
-    if (inet_rt && RoutePrefixIsEqualTo(inet_rt, routing_evpn_rt->ip_addr(),
-        routing_evpn_rt->GetVmIpPlen())) {
+    if (inet_rt && RoutePrefixIsEqualTo(inet_rt, routing_evpn_rt->prefix_address(),
+        routing_evpn_rt->prefix_length())) {
         return inet_rt->FindPath(agent_->evpn_routing_peer()) ? false : true;
     }
     return false;
@@ -593,7 +593,7 @@ bool VxlanRoutingManager::IsExternalType5(
             // if at least one dest is not found in the fabric policy VRF
             // instance, then the route is treated as an external
             if (router_rt == NULL ||
-                router_rt->addr() != nh_ip) {
+                router_rt->prefix_address() != nh_ip) {
                 return true;
             }
         }
@@ -639,7 +639,7 @@ bool VxlanRoutingManager::IsExternalType5(EvpnAgentRouteTable *rt_table,
         dip = tunnel_nh->GetDip();
         router_rt = underlay_vrf->GetUcRoute(*dip);
         if (router_rt == NULL ||
-            router_rt->addr().to_v4() != *dip) {
+            router_rt->prefix_address().to_v4() != *dip) {
             return true;
         }
         return false;
@@ -657,7 +657,7 @@ bool VxlanRoutingManager::IsExternalType5(EvpnAgentRouteTable *rt_table,
                 dip = tunnel_nh->GetDip();
                 router_rt = underlay_vrf->GetUcRoute(*dip);
                 if (router_rt == NULL ||
-                    router_rt->addr().to_v4() != *dip) {
+                    router_rt->prefix_address().to_v4() != *dip) {
                     return true;
                 }
             }
@@ -675,7 +675,7 @@ MacAddress VxlanRoutingManager::NbComputeMac(const Ip4Address& compute_ip,
     InetUnicastRouteEntry *router_rt = NULL;
     router_rt = underlay_vrf->GetUcRoute(compute_ip);
     if (router_rt != NULL &&
-        router_rt->addr() == compute_ip) {
+        router_rt->prefix_address() == compute_ip) {
         const AgentPath *apath = FindPathWithGivenPeerAndNexthop(router_rt,
             Peer::BGP_PEER, NextHop::TUNNEL);
         if (apath) {
@@ -1057,7 +1057,7 @@ void VxlanRoutingManager::PrintEvpnTable(const VrfEntry* const_vrf) {
     }
     while (c_entry) {
         const Route::PathList & path_list = c_entry->GetPathList();
-        std::cout<< "  IP:" << c_entry->ip_addr()
+        std::cout<< "  IP:" << c_entry->prefix_address()
                  << ", path count = " << path_list.size()
                  << ", ethernet_tag = " << c_entry->ethernet_tag()
                  << std::endl;
@@ -1112,7 +1112,7 @@ void VxlanRoutingManager::PrintInetTable(const VrfEntry* const_vrf) {
     }
     while (c_entry) {
         const Route::PathList & path_list = c_entry->GetPathList();
-        std::cout<< "  IP:" << c_entry->addr()
+        std::cout<< "  IP:" << c_entry->prefix_address()
                  << ", path count = " << path_list.size() << std::endl;
         for (Route::PathList::const_iterator it = path_list.begin();
             it != path_list.end(); ++it) {

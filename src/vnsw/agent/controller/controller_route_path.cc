@@ -85,7 +85,7 @@ bool ControllerEcmpRoute::AddChangePathExtended(Agent *agent, AgentPath *path,
                                     addr, label, path->GetParentRoute()));
             InetUnicastRouteEntry *uc_rt = table->FindRoute(addr);
             const NextHop *anh;
-            if (uc_rt == NULL || uc_rt->plen() == 0 || (anh = uc_rt->GetActiveNextHop()) == NULL) {
+            if (uc_rt == NULL || uc_rt->prefix_length() == 0 || (anh = uc_rt->GetActiveNextHop()) == NULL) {
                 member->SetUnresolved(true);
                 if (!path_unresolved) {
                     path_unresolved  = true;
@@ -515,7 +515,7 @@ bool ControllerVmRoute::AddChangePathExtended(Agent *agent, AgentPath *path,
                                         path->GetParentRoute()));
         InetUnicastRouteEntry *uc_rt = table->FindRoute(tunnel_dest_);
         const NextHop *anh;
-        if (uc_rt == NULL || uc_rt->plen() == 0 || (anh = uc_rt->GetActiveNextHop()) == NULL) {
+        if (uc_rt == NULL || uc_rt->prefix_length() == 0 || (anh = uc_rt->GetActiveNextHop()) == NULL) {
             path->set_unresolved(true);
             member->SetUnresolved(false);
         } else {
@@ -746,7 +746,7 @@ bool ClonedLocalPath::AddChangePathExtended(Agent *agent, AgentPath *path,
         const InetUnicastRouteEntry *uc_rt =
             static_cast<const InetUnicastRouteEntry *>(rt);
         const AgentRoute *mpls_vrf_uc_rt =
-            vrf_nh->GetVrf()->GetUcRoute(uc_rt->addr());
+            vrf_nh->GetVrf()->GetUcRoute(uc_rt->prefix_address());
         if (mpls_vrf_uc_rt == NULL) {
             return ret;
         }

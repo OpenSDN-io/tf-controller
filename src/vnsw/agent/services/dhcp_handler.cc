@@ -643,11 +643,11 @@ bool DhcpHandler::FindLeaseData() {
             if (rt) {
                 Ip4Address gw = agent()->vhost_default_gateway()[0];
                 boost::system::error_code ec;
-                if (IsIp4SubnetMember(rt->addr().to_v4(),
-                    Ip4Address::from_string("169.254.0.0", ec), rt->plen())) {
+                if (IsIp4SubnetMember(rt->prefix_address().to_v4(),
+                    Ip4Address::from_string("169.254.0.0", ec), rt->prefix_length())) {
                     gw = unspecified;
                 }
-                FillDhcpInfo(ip, rt->plen(), gw, gw);
+                FillDhcpInfo(ip, rt->prefix_length(), gw, gw);
                 return true;
             }
             agent()->GetDhcpProto()->IncrStatsErrors();

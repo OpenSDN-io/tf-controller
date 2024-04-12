@@ -527,8 +527,8 @@ void FlowMgmtDbClient::TraceMsg(AgentRoute *entry, const AgentPath *path,
     if (inet) {
         FLOW_TRACE(RouteUpdate,
                    inet->vrf()->GetName(),
-                   inet->addr().to_string(),
-                   inet->plen(),
+                   inet->prefix_address().to_string(),
+                   inet->prefix_length(),
                    vn_list,
                    inet->IsDeleted(),
                    deleted,
@@ -540,8 +540,8 @@ void FlowMgmtDbClient::TraceMsg(AgentRoute *entry, const AgentPath *path,
     if (bridge) {
         FLOW_TRACE(RouteUpdate,
                    bridge->vrf()->GetName(),
-                   bridge->mac().ToString(),
-                   bridge->plen(),
+                   bridge->prefix_address().ToString(),
+                   bridge->prefix_length(),
                    vn_list,
                    bridge->IsDeleted(),
                    deleted,
@@ -712,9 +712,9 @@ void FlowMgmtDbClient::RouteNotify(VrfFlowHandlerState *vrf_state,
          * Ipv6 InetRoutes which have prefix < 128
          */
         if (inet_route) {
-            uint8_t plen = inet_route->plen();
-            if ((inet_route->addr().is_v4() && plen < 32) ||
-                (inet_route->addr().is_v6() && plen < 128)) {
+            uint8_t plen = inet_route->prefix_length();
+            if ((inet_route->prefix_address().is_v4() && plen < 32) ||
+                (inet_route->prefix_address().is_v6() && plen < 128)) {
                 inet_rt_nh_changed = true;
             } else {
                 new_route = true;

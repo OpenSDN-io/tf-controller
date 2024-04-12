@@ -530,10 +530,10 @@ void MirrorTable::BridgeRouteTableNotify(DBTablePartBase *partition,
         ResyncResolvedMirrorEntry(bridge_rt->vrf());
     } else {
         MirrorEntry *unresolved_mirror_entry = GetMirrorEntry(bridge_rt->vrf(),
-                                                              bridge_rt->mac(),
+                                                              bridge_rt->prefix_address(),
                                                               unresolved_entry_list_);
         MirrorEntry *resolved_mirror_entry = GetMirrorEntry(bridge_rt->vrf(),
-                                                            bridge_rt->mac(),
+                                                            bridge_rt->prefix_address(),
                                                             resolved_entry_list_);
         // Check for Both resolved and unresolved list for Change in route
         if (unresolved_mirror_entry &&

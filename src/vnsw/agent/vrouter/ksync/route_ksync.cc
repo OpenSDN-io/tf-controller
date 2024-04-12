@@ -67,9 +67,9 @@ RouteKSyncEntry::RouteKSyncEntry(RouteKSyncObject* obj, const AgentRoute *rt) :
     case Agent::INET4_UNICAST: {
           const InetUnicastRouteEntry *uc_rt =
               static_cast<const InetUnicastRouteEntry *>(rt);
-          addr_ = uc_rt->addr();
+          addr_ = uc_rt->prefix_address();
           src_addr_ = IpAddress::from_string("0.0.0.0", ec).to_v4();
-          prefix_len_ = uc_rt->plen();
+          prefix_len_ = uc_rt->prefix_length();
           AgentPath *local_vm_path = uc_rt->FindLocalVmPortPath();
           if (local_vm_path && local_vm_path->IsDynamicLearntRoute()) {
               is_learnt_route_ = true;
@@ -80,9 +80,9 @@ RouteKSyncEntry::RouteKSyncEntry(RouteKSyncObject* obj, const AgentRoute *rt) :
     case Agent::INET6_UNICAST: {
           const InetUnicastRouteEntry *uc_rt =
               static_cast<const InetUnicastRouteEntry *>(rt);
-          addr_ = uc_rt->addr();
+          addr_ = uc_rt->prefix_address();
           src_addr_ = Ip6Address();
-          prefix_len_ = uc_rt->plen();
+          prefix_len_ = uc_rt->prefix_length();
           break;
     }
     case Agent::INET4_MULTICAST: {
@@ -96,7 +96,7 @@ RouteKSyncEntry::RouteKSyncEntry(RouteKSyncObject* obj, const AgentRoute *rt) :
     case Agent::BRIDGE: {
           const BridgeRouteEntry *l2_rt =
               static_cast<const BridgeRouteEntry *>(rt);
-          mac_ = l2_rt->mac();
+          mac_ = l2_rt->prefix_address();
           prefix_len_ = 0;
           break;
     }
@@ -1080,10 +1080,10 @@ void VrfKSyncObject::EvpnRouteTableNotify(DBTablePartBase *partition,
         return;
 
     if (evpn_rt->IsDeleted()) {
-        DelIpMacBinding(evpn_rt->vrf(), evpn_rt->ip_addr(),
+        DelIpMacBinding(evpn_rt->vrf(), evpn_rt->prefix_address(),
                         evpn_rt->mac(), evpn_rt->ethernet_tag());
     } else {
-        AddIpMacBinding(evpn_rt->vrf(), evpn_rt->ip_addr(),
+        AddIpMacBinding(evpn_rt->vrf(), evpn_rt->prefix_address(),
                         evpn_rt->mac(),
                         evpn_rt->ethernet_tag(),
                         evpn_rt->GetActivePath()->path_preference().preference(),
@@ -1149,10 +1149,10 @@ void vr_vrf_req::Process(SandeshContext *context) {
 // 3. NH does not belong to Gateway Interface
 // to interface or tunnel-nh
 bool VrfKSyncObject::RouteNeedsMacBinding(const InetUnicastRouteEntry *rt) {
-    if (rt->addr().is_v4() && rt->plen() != 32)
+    if (rt->prefix_address().is_v4() && rt->prefix_length() != 32)
         return false;
 
-    if (rt->addr().is_v6() && rt->plen() != 128)
+    if (rt->prefix_address().is_v6() && rt->prefix_length() != 128)
         return false;
 
     VnEntry *vn = NULL;

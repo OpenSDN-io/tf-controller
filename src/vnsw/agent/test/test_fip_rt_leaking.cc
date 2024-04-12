@@ -164,7 +164,7 @@ public:
                 dynamic_cast<InetUnicastRouteEntry*> 
                 (c_inet_tbl->GetTablePartition(i_part)->GetFirst());
             while (c_route) {
-                std::cout<< "IP:" << c_route->addr() << std::endl;
+                std::cout<< "IP:" << c_route->prefix_address() << std::endl;
                 this->print_table_routes(c_route);
                 c_route = dynamic_cast<InetUnicastRouteEntry*>
                     (c_inet_tbl->GetTablePartition(i_part)->GetNext(c_route));
@@ -182,9 +182,9 @@ public:
                 dynamic_cast<EvpnRouteEntry*> 
                 (c_evpn_tbl->GetTablePartition(i_part)->GetFirst());
             while (c_route) {
-                std::cout<< "IP:" << c_route->ip_addr() << ", "
+                std::cout<< "IP:" << c_route->prefix_address() << ", "
                          << "MAC:"<< c_route->mac().ToString() << ", "
-                         << "PLEN:"<< c_route->GetVmIpPlen() << ", "
+                         << "PLEN:"<< c_route->prefix_length() << ", "
                          << "ETAG:"<< c_route->ethernet_tag()
                          << std::endl;
                 this->print_table_routes(c_route);
@@ -311,7 +311,7 @@ TEST_F(FipRoutesLeaking, fip_test_two_vrf) {
         evpn_table->FindRoute(
             wanted_mac1,
             wanted_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0   // ethernet tag is zero for Type5
         );
     EXPECT_TRUE(evpn_rt);
@@ -395,7 +395,7 @@ TEST_F(FipRoutesLeaking, fip_test_add_fip) {
         evpn_table->FindRoute(
             wanted_mac1,
             wanted_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0   // ethernet tag is zero for Type5
         );
     EXPECT_TRUE(evpn_rt);
@@ -478,14 +478,14 @@ TEST_F(FipRoutesLeaking, fip_test_initial_conf_with_lr1) {
         evpn_table->FindRoute(
             MacAddress(),    // MAC is zero after route leaking
             wanted_fip_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0  // ethernet tag is zero for Type5
         );
     EvpnRouteEntry* evpn_rt2 =
         evpn_table->FindRoute(
             MacAddress(),    // MAC is zero after route leaking
             wanted_int_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0  // ethernet tag is zero for Type5
         );
     EXPECT_TRUE(evpn_rt);
@@ -570,14 +570,14 @@ TEST_F(FipRoutesLeaking, fip_test_initial_conf_with_lr2) {
         evpn_table->FindRoute(
             MacAddress(),    //MAC is zero after route leaking
             wanted_fip_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0   // ethernet tag is zero for Type5
         );
     EvpnRouteEntry* evpn_rt2 =
         evpn_table->FindRoute(
             MacAddress(),    //MAC is zero after route leaking
             wanted_int_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0   // ethernet tag is zero for Type5
         );
     EXPECT_TRUE(evpn_rt);
@@ -662,14 +662,14 @@ TEST_F(FipRoutesLeaking, fip_test_initial_conf_with_lr3) {
         evpn_table->FindRoute(
             MacAddress(),    // MAC is zero after route leaking
             wanted_fip_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0   // ethernet tag is zero for Type5
         );
     EvpnRouteEntry* evpn_rt2 =
         evpn_table->FindRoute(
             MacAddress(),    // MAC is zero after route leaking
             wanted_int_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0   // ethernet tag is zero for Type5
         );
     EXPECT_TRUE(evpn_rt);
@@ -762,14 +762,14 @@ TEST_F(FipRoutesLeaking, fip_test_2vrf_conf_with_lr1) {
         evpn_table->FindRoute(
             MacAddress(),    // MAC is zero after route leaking
             wanted_fip_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0   // ethernet tag is zero for Type5
         );
     EvpnRouteEntry* evpn_rt2 =
         evpn_table->FindRoute(
             MacAddress(),    //MAC is zero after route leaking
             wanted_int_prefix,
-            inet_rt->plen(),
+            inet_rt->prefix_length(),
             0   // ethernet tag is zero for Type5
         );
     EXPECT_TRUE(evpn_rt);

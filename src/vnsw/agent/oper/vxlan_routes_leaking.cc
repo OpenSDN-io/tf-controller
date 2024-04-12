@@ -74,8 +74,8 @@ bool VxlanRoutingManager::InetRouteNotify(DBTablePartBase *partition,
     const InetUnicastRouteEntry *inet_rt =
         dynamic_cast<const InetUnicastRouteEntry*>(e);
 
-    if (inet_rt->addr().is_v6() &&
-        inet_rt->addr().to_v6().is_link_local()) {
+    if (inet_rt->prefix_address().is_v6() &&
+        inet_rt->prefix_address().to_v6().is_link_local()) {
         return true;
     }
 
@@ -99,7 +99,7 @@ bool VxlanRoutingManager::InetRouteNotify(DBTablePartBase *partition,
         // found, then it is extracted and copied into EVPN Type5 table
         local_vm_port_path = FindBGPaaSPath(inet_rt);
         if (local_vm_port_path != NULL) {
-            AdvertiseBGPaaSRoute(inet_rt->addr(), inet_rt->plen(),
+            AdvertiseBGPaaSRoute(inet_rt->prefix_address(), inet_rt->prefix_length(),
                 local_vm_port_path, evpn_table);
             return true;
         }
@@ -120,8 +120,8 @@ bool VxlanRoutingManager::InetRouteNotify(DBTablePartBase *partition,
     dest_vns.insert(routing_vrf->vn()->GetName());
 
     CopyInterfacePathToEvpnTable(local_vm_port_path,
-        inet_rt->addr(),
-        inet_rt->plen(),
+        inet_rt->prefix_address(),
+        inet_rt->prefix_length(),
         routing_vrf_interface_peer_,  // agent->local_vm_export_peer(),
         RouteParameters(IpAddress(),  // not needed here
             MacAddress(),             // not needed here ?
@@ -160,8 +160,8 @@ bool VxlanRoutingManager::EvpnRouteNotify(DBTablePartBase *partition,
         FindPathWithGivenPeer(evpn_rt, Peer::BGP_PEER);
 
     if (bgp_path) {
-        XmppAdvertiseInetRoute(evpn_rt->ip_addr(),
-            evpn_rt->GetVmIpPlen(), vrf->GetName(), bgp_path);
+        XmppAdvertiseInetRoute(evpn_rt->prefix_address(),
+            evpn_rt->prefix_length(), vrf->GetName(), bgp_path);
     }
 
     if (local_vm_port_path) {
@@ -170,8 +170,8 @@ bool VxlanRoutingManager::EvpnRouteNotify(DBTablePartBase *partition,
             return true;
         }
         CopyPathToInetTable(local_vm_port_path,
-            evpn_rt->ip_addr(),
-            evpn_rt->GetVmIpPlen(),
+            evpn_rt->prefix_address(),
+            evpn_rt->prefix_length(),
             routing_vrf_interface_peer_,
                 RouteParameters(IpAddress(),
                 MacAddress(),
@@ -182,7 +182,7 @@ bool VxlanRoutingManager::EvpnRouteNotify(DBTablePartBase *partition,
                 local_vm_port_path->path_preference(),
                 local_vm_port_path->ecmp_load_balance(),
                 routing_vrf_interface_peer_->sequence_number()),
-            vrf->GetInetUnicastRouteTable(evpn_rt->ip_addr()));
+            vrf->GetInetUnicastRouteTable(evpn_rt->prefix_address()));
 
         LeakRoutesIntoBridgeTables(partition,
             e, vrf->vn()->logical_router_uuid(), NULL, true);
@@ -222,8 +222,8 @@ void VxlanRoutingManager::ClearRedundantVrfPath(DBEntryBase *e) {
         inet_route->FindPath(agent_->evpn_routing_peer())) {
         InetUnicastAgentRouteTable::Delete(agent_->evpn_routing_peer(),
             inet_route->vrf()->GetName(),
-            inet_route->addr(),
-            inet_route->plen());
+            inet_route->prefix_address(),
+            inet_route->prefix_length());
     }
 }
 
@@ -254,14 +254,14 @@ void VxlanRoutingManager::WhenBridgeInetIntfWasDeleted(
     const EvpnRouteEntry *evpn_rt =
         const_cast<EvpnAgentRouteTable *>
         (evpn_table)->FindRoute(MacAddress(),
-        inet_rt->addr(), inet_rt->plen(), 0);
-    if (RoutePrefixIsEqualTo(evpn_rt, inet_rt->addr(), inet_rt->plen()) == false) {
+        inet_rt->prefix_address(), inet_rt->prefix_length(), 0);
+    if (RoutePrefixIsEqualTo(evpn_rt, inet_rt->prefix_address(), inet_rt->prefix_length()) == false) {
         if (inet_rt->IsDeleted()) {
             // That might be an IPAM route from neighb. bridge VRF instances.
-            if (IsHostRoute(inet_rt->addr(), inet_rt->plen()) == false) {
+            if (IsHostRoute(inet_rt->prefix_address(), inet_rt->prefix_length()) == false) {
                 DeleteIpamRoutes(inet_rt->vrf()->vn(),
                     inet_rt->vrf()->GetName(),
-                    inet_rt->addr(), inet_rt->plen());
+                    inet_rt->prefix_address(), inet_rt->prefix_length());
             }
         }
         return;
@@ -275,8 +275,8 @@ void VxlanRoutingManager::WhenBridgeInetIntfWasDeleted(
             routing_vrf_interface_peer_,
             routing_vrf->GetName(),
             MacAddress(),
-            inet_rt->addr(),
-            inet_rt->plen(),
+            inet_rt->prefix_address(),
+            inet_rt->prefix_length(),
             0,  // ethernet_tag = 0 for Type5
             NULL);
     }
@@ -300,7 +300,7 @@ void VxlanRoutingManager::WhenRoutingEvpnRouteWasDeleted
         return;
     }
     InetUnicastAgentRouteTable *routing_inet_table =
-        vrf->GetInetUnicastRouteTable(routing_evpn_rt->ip_addr());
+        vrf->GetInetUnicastRouteTable(routing_evpn_rt->prefix_address());
     if (routing_inet_table == NULL) {
         return;
     }
@@ -308,13 +308,13 @@ void VxlanRoutingManager::WhenRoutingEvpnRouteWasDeleted
     // check that the Inet table holds the corresponding route
     InetUnicastRouteEntry local_vm_route_key(
         routing_inet_table->vrf_entry(),
-        routing_evpn_rt->ip_addr(),
-        routing_evpn_rt->GetVmIpPlen(), false);
+        routing_evpn_rt->prefix_address(),
+        routing_evpn_rt->prefix_length(), false);
     InetUnicastRouteEntry *inet_rt =
         dynamic_cast<InetUnicastRouteEntry *>
         (routing_inet_table->FindLPM(local_vm_route_key));
-    if (RoutePrefixIsEqualTo(inet_rt, routing_evpn_rt->ip_addr(),
-        routing_evpn_rt->GetVmIpPlen()) == false) {
+    if (RoutePrefixIsEqualTo(inet_rt, routing_evpn_rt->prefix_address(),
+        routing_evpn_rt->prefix_length()) == false) {
         return;
     }
 
@@ -326,8 +326,8 @@ void VxlanRoutingManager::WhenRoutingEvpnRouteWasDeleted
         InetUnicastAgentRouteTable::DeleteReq(
             delete_from_peer,
             vrf->GetName(),
-            routing_evpn_rt->ip_addr(),
-            routing_evpn_rt->GetVmIpPlen(),
+            routing_evpn_rt->prefix_address(),
+            routing_evpn_rt->prefix_length(),
             NULL);
     }
 }
@@ -344,16 +344,16 @@ bool VxlanRoutingManager::WithdrawEvpnRouteFromRoutingVrf(
     EvpnAgentRouteTable *routing_evpn = static_cast<EvpnAgentRouteTable*>(
         routing_vrf->GetEvpnRouteTable());
     const EvpnRouteEntry *rt_route = routing_evpn->FindRoute(
-        MacAddress(), evpn_rt->ip_addr(), evpn_rt->GetVmIpPlen(), 0);
-    if (RoutePrefixIsEqualTo(rt_route, evpn_rt->ip_addr(),
-        evpn_rt->GetVmIpPlen())) {
+        MacAddress(), evpn_rt->prefix_address(), evpn_rt->prefix_length(), 0);
+    if (RoutePrefixIsEqualTo(rt_route, evpn_rt->prefix_address(),
+        evpn_rt->prefix_length())) {
         // Remove deleted EVPN Type 5 record in the routing VRF
         EvpnAgentRouteTable::DeleteReq(
             routing_vrf_interface_peer_,
             routing_vrf->GetName(),
             MacAddress(),
-            evpn_rt->ip_addr(),
-            evpn_rt->GetVmIpPlen(),
+            evpn_rt->prefix_address(),
+            evpn_rt->prefix_length(),
             0,  // ethernet_tag = 0 for Type5
             NULL);
     }
@@ -400,13 +400,13 @@ bool VxlanRoutingManager::LeakRoutesIntoBridgeTables
         }
 
         InetUnicastAgentRouteTable *inet_table =
-                bridge_vrf->GetInetUnicastRouteTable(evpn_rt->ip_addr());
+                bridge_vrf->GetInetUnicastRouteTable(evpn_rt->prefix_address());
 
         if (evpn_rt->IsDeleted()) {
             InetUnicastAgentRouteTable::DeleteReq(agent_->evpn_routing_peer(),
                               bridge_vrf->GetName(),
-                              evpn_rt->ip_addr(),
-                              evpn_rt->GetVmIpPlen(),
+                              evpn_rt->prefix_address(),
+                              evpn_rt->prefix_length(),
                               NULL);
         } else {
             const AgentPath *p = evpn_rt->GetActivePath();
@@ -419,8 +419,8 @@ bool VxlanRoutingManager::LeakRoutesIntoBridgeTables
             DBRequest nh_req(DBRequest::DB_ENTRY_ADD_CHANGE);
             nh_req.key.reset(new VrfNHKey(routing_vrf->GetName(), false, false));
             nh_req.data.reset(new VrfNHData(false, false, false));
-            inet_table->AddEvpnRoutingRoute(evpn_rt->ip_addr(),
-                                    evpn_rt->GetVmIpPlen(),
+            inet_table->AddEvpnRoutingRoute(evpn_rt->prefix_address(),
+                                    evpn_rt->prefix_length(),
                                     bridge_vrf,
                                     agent_->evpn_routing_peer(),
                                     p->sg_list(),

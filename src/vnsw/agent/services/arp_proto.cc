@@ -334,8 +334,8 @@ void ArpDBState::UpdateMac(const InterfaceNH *nh) {
 }
 
 void ArpDBState::UpdateArpRoutes(const InetUnicastRouteEntry *rt) {
-    int plen = rt->plen();
-    uint32_t start_ip = rt->addr().to_v4().to_ulong();
+    int plen = rt->prefix_length();
+    uint32_t start_ip = rt->prefix_address().to_v4().to_ulong();
     ArpKey start_key(start_ip, rt->vrf());
 
     ArpProto::ArpIterator start_iter =
@@ -345,15 +345,15 @@ void ArpDBState::UpdateArpRoutes(const InetUnicastRouteEntry *rt) {
     while (start_iter != vrf_state_->arp_proto->arp_cache().end() &&
            start_iter->first.vrf == rt->vrf() &&
            IsIp4SubnetMember(Ip4Address(start_iter->first.ip),
-                             rt->addr().to_v4(), plen)) {
+                             rt->prefix_address().to_v4(), plen)) {
         start_iter->second->Resync(policy_, vn_list_, sg_list_, tag_list_);
         start_iter++;
     }
 }
 
 void ArpDBState::Delete(const InetUnicastRouteEntry *rt) {
-    int plen = rt->plen();
-    uint32_t start_ip = rt->addr().to_v4().to_ulong();
+    int plen = rt->prefix_length();
+    uint32_t start_ip = rt->prefix_address().to_v4().to_ulong();
 
     ArpKey start_key(start_ip, rt->vrf());
 
@@ -363,7 +363,7 @@ void ArpDBState::Delete(const InetUnicastRouteEntry *rt) {
     while (start_iter != vrf_state_->arp_proto->arp_cache().end() &&
            start_iter->first.vrf == rt->vrf() &&
            IsIp4SubnetMember(Ip4Address(start_iter->first.ip),
-                             rt->addr().to_v4(), plen)) {
+                             rt->prefix_address().to_v4(), plen)) {
         ArpProto::ArpIterator tmp = start_iter++;
         if (tmp->second->DeleteArpRoute()) {
             vrf_state_->arp_proto->DeleteArpEntry(tmp->second);
@@ -410,7 +410,7 @@ void ArpDBState::Update(const AgentRoute *rt) {
 void ArpVrfState::EvpnRouteUpdate(DBTablePartBase *part, DBEntryBase *entry) {
     EvpnRouteEntry *route = static_cast<EvpnRouteEntry *>(entry);
     /* Ignore route updates for Non-IPv4 addresses */
-    if (!route->ip_addr().is_v4()) {
+    if (!route->prefix_address().is_v4()) {
         return;
     }
 
@@ -426,8 +426,8 @@ void ArpVrfState::EvpnRouteUpdate(DBTablePartBase *part, DBEntryBase *entry) {
     }
 
     if (state == NULL) {
-        state = new ArpDBState(this, route->vrf_id(), route->ip_addr(),
-                               route->GetVmIpPlen());
+        state = new ArpDBState(this, route->vrf_id(), route->prefix_address(),
+                               route->prefix_length());
         entry->SetState(part->parent(), evpn_route_table_listener_id, state);
     }
 
@@ -446,7 +446,7 @@ void ArpVrfState::RouteUpdate(DBTablePartBase *part, DBEntryBase *entry) {
     const Interface *intf = (intf_nh) ?
         static_cast<const Interface *>(intf_nh->GetInterface()) : NULL;
 
-    ArpKey key(route->addr().to_v4().to_ulong(), route->vrf());
+    ArpKey key(route->prefix_address().to_v4().to_ulong(), route->vrf());
     ArpEntry *arpentry = arp_proto->GratuitousArpEntry(key, intf);
     if (entry->IsDeleted() || deleted) {
         if (state) {
@@ -459,8 +459,8 @@ void ArpVrfState::RouteUpdate(DBTablePartBase *part, DBEntryBase *entry) {
     }
 
     if (!state) {
-        state = new ArpDBState(this, route->vrf_id(), route->addr(),
-                               route->plen());
+        state = new ArpDBState(this, route->vrf_id(), route->prefix_address(),
+                               route->prefix_length());
         entry->SetState(part->parent(), route_table_listener_id, state);
     }
 
@@ -468,20 +468,20 @@ void ArpVrfState::RouteUpdate(DBTablePartBase *part, DBEntryBase *entry) {
 
     if (route->vrf()->GetName() == agent->fabric_vrf_name() && intf_nh &&
         route->GetActiveNextHop()->GetType() == NextHop::RECEIVE &&
-        arp_proto->agent()->router_id() == route->addr().to_v4()) {
+        arp_proto->agent()->router_id() == route->prefix_address().to_v4()) {
         //Send Grat ARP
         arp_proto->AddGratuitousArpEntry(key);
         arp_proto->SendArpIpc(ArpProto::ARP_SEND_GRATUITOUS,
-                              route->addr().to_v4().to_ulong(), route->vrf(),
+                              route->prefix_address().to_v4().to_ulong(), route->vrf(),
                               arp_proto->ip_fabric_interface());
     } else {
         if (intf_nh) {
             if (intf->type() == Interface::VM_INTERFACE &&
                 static_cast<const VmInterface*>(intf)->IsActive()) {
-                ArpKey intf_key(route->addr().to_v4().to_ulong(), route->vrf());
+                ArpKey intf_key(route->prefix_address().to_v4().to_ulong(), route->vrf());
                 arp_proto->AddGratuitousArpEntry(intf_key);
                 arp_proto->SendArpIpc(ArpProto::ARP_SEND_GRATUITOUS,
-                        route->addr().to_v4().to_ulong(), intf->vrf(), intf);
+                        route->prefix_address().to_v4().to_ulong(), intf->vrf(), intf);
             }
         }
     }
@@ -967,7 +967,7 @@ void ArpProto::HandlePathPreferenceArpReply(const VrfEntry *vrf, uint32_t itf,
     if (!state) {
         return;
     }
-    ArpPathPreferenceState* pstate = state->Get(sip, rt->plen());
+    ArpPathPreferenceState* pstate = state->Get(sip, rt->prefix_length());
     if (!pstate) {
         return;
     }
@@ -1023,11 +1023,11 @@ bool ArpInterfaceState::WalkNotify(DBTablePartBase *partition,
                                    DBEntryBase *e) {
     const EvpnRouteEntry *evpn = static_cast<const EvpnRouteEntry *>(e);
 
-    if (evpn->ip_addr().is_v4() == false) {
+    if (evpn->prefix_address().is_v4() == false) {
         return true;
     }
 
-    if (evpn->ip_addr() == Ip4Address(0)) {
+    if (evpn->prefix_address() == Ip4Address(0)) {
         return true;
     }
 
@@ -1050,8 +1050,8 @@ bool ArpInterfaceState::WalkNotify(DBTablePartBase *partition,
     }
 
     agent->GetArpProto()->IncrementStatsVmGarpReq();
-    arp_handler.SendArp(ARPOP_REQUEST, smac, evpn->ip_addr().to_v4().to_ulong(),
-                        smac, vmi->vm_mac(), evpn->ip_addr().to_v4().to_ulong(),
+    arp_handler.SendArp(ARPOP_REQUEST, smac, evpn->prefix_address().to_v4().to_ulong(),
+                        smac, vmi->vm_mac(), evpn->prefix_address().to_v4().to_ulong(),
                         intf_->id(), intf_->vrf()->vrf_id());
     return true;
 }

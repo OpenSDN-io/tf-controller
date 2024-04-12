@@ -20,13 +20,13 @@ void RouteLeakState::AddIndirectRoute(const AgentRoute *route) {
 
     Ip4Address gw_ip = *(nh->GetDip());
 
-    if (gw_ip == uc_rt->addr().to_v4() &&
+    if (gw_ip == uc_rt->prefix_address().to_v4() &&
         InetUnicastAgentRouteTable::FindResolveRoute(dest_vrf_->GetName(),
-                                                     uc_rt->addr().to_v4())) {
+                                                     uc_rt->prefix_address().to_v4())) {
         bool resolved = false;
         MacAddress mac;
         const Interface *itf = agent_->vhost_interface();
-        ArpNHKey nh_key(dest_vrf_->GetName(), uc_rt->addr().to_v4(), false);
+        ArpNHKey nh_key(dest_vrf_->GetName(), uc_rt->prefix_address().to_v4(), false);
         ArpNH *arp_nh = static_cast<ArpNH *>(agent_->nexthop_table()->
                                              FindActiveEntry(&nh_key));
         if (arp_nh) {
@@ -35,7 +35,7 @@ void RouteLeakState::AddIndirectRoute(const AgentRoute *route) {
             itf = arp_nh->GetInterface();
         }
         InetUnicastAgentRouteTable::CheckAndAddArpRoute
-            (dest_vrf_->GetName(), uc_rt->addr().to_v4(), mac, itf,
+            (dest_vrf_->GetName(), uc_rt->prefix_address().to_v4(), mac, itf,
              resolved, active_path->dest_vn_list(),
              active_path->sg_list(), active_path->tag_list());
         return;
@@ -44,13 +44,13 @@ void RouteLeakState::AddIndirectRoute(const AgentRoute *route) {
     const Peer *peer = agent_->local_peer();
     peer_list_.insert(peer);
 
-    if (gw_ip == uc_rt->addr().to_v4()) {
+    if (gw_ip == uc_rt->prefix_address().to_v4()) {
         gw_ip = agent_->vhost_default_gateway()[0];
     }
 
     table->AddGatewayRoute(peer, dest_vrf_->GetName(),
-                           uc_rt->addr().to_v4(),
-                           uc_rt->plen(),
+                           uc_rt->prefix_address().to_v4(),
+                           uc_rt->prefix_length(),
                            AddressList(1, gw_ip),
                            active_path->dest_vn_list(),
                            MplsTable::kInvalidExportLabel,
@@ -75,7 +75,7 @@ void RouteLeakState::AddInterfaceRoute(const AgentRoute *route,
     }
 
     if (uc_rt->IsHostRoute() &&
-        uc_rt->addr() == agent_->router_id()) {
+        uc_rt->prefix_address() == agent_->router_id()) {
         //Dont overwrite vhost IP in default VRF
         if (intf_nh->GetInterface() != agent_->vhost_interface()) {
             return;
@@ -88,7 +88,7 @@ void RouteLeakState::AddInterfaceRoute(const AgentRoute *route,
             static_cast<InetUnicastAgentRouteTable *>
             (dest_vrf_->GetInet4UnicastRouteTable());
 
-        table->AddHostRoute(dest_vrf_->GetName(), uc_rt->addr(), uc_rt->plen(),
+        table->AddHostRoute(dest_vrf_->GetName(), uc_rt->prefix_address(), uc_rt->prefix_length(),
                             "", true);
         return;
     }
@@ -97,7 +97,7 @@ void RouteLeakState::AddInterfaceRoute(const AgentRoute *route,
         const VmInterface *vm_intf =
             static_cast<const VmInterface *>(intf_nh->GetInterface());
         if (vm_intf->vmi_type() == VmInterface::VHOST) {
-            if (uc_rt->addr() == agent_->router_id()) {
+            if (uc_rt->prefix_address() == agent_->router_id()) {
                 if (uc_rt->FindLocalVmPortPath() == NULL) {
                     peer_list_.insert(agent_->local_peer());
                 } else {
@@ -118,7 +118,7 @@ void RouteLeakState::AddInterfaceRoute(const AgentRoute *route,
      * subnet list. To disable export, use local_peer */
     if ((uc_rt->IsHostRoute()) &&
         dest_vrf_->GetName() == agent_->fabric_vrf_name()) {
-        if (agent_->oper_db()->vrouter()->IsSubnetMember(uc_rt->addr())) {
+        if (agent_->oper_db()->vrouter()->IsSubnetMember(uc_rt->prefix_address())) {
             peer = agent_->local_peer();
         }
     }
@@ -142,7 +142,7 @@ void RouteLeakState::AddInterfaceRoute(const AgentRoute *route,
 
     DBRequest req(DBRequest::DB_ENTRY_ADD_CHANGE);
     req.key.reset(new InetUnicastRouteKey(peer, dest_vrf_->GetName(),
-                                          uc_rt->addr(), uc_rt->plen()));
+                                          uc_rt->prefix_address(), uc_rt->prefix_length()));
     req.data.reset(local_vm_route);
 
     AgentRouteTable *table =
@@ -189,8 +189,8 @@ void RouteLeakState::AddReceiveRoute(const AgentRoute *route) {
     table->AddVHostRecvRoute(agent_->fabric_rt_export_peer(),
                              dest_vrf_->GetName(),
                              vmi_key,
-                             uc_rt->addr(),
-                             uc_rt->plen(),
+                             uc_rt->prefix_address(),
+                             uc_rt->prefix_length(),
                              agent_->fabric_vn_name(), false, true);
 }
 
@@ -200,20 +200,20 @@ bool RouteLeakState::CanAdd(const InetUnicastRouteEntry *rt) {
         agent_->fabric_vrf()->GetInet4UnicastRouteTable();
     std::vector<Ip4Address> gateway_list = agent_->vhost_default_gateway();
 
-    if (rt->addr() == Ip4Address(0) && rt->plen() == 0) {
+    if (rt->prefix_address() == Ip4Address(0) && rt->prefix_length() == 0) {
         return false;
     }
 
-    InetUnicastRouteEntry *rsl_rt = table->FindResolveRoute(rt->addr().to_v4());
-    if (rsl_rt && rt->addr() == rsl_rt->addr() &&
-        rt->plen() == rsl_rt->plen()) {
+    InetUnicastRouteEntry *rsl_rt = table->FindResolveRoute(rt->prefix_address().to_v4());
+    if (rsl_rt && rt->prefix_address() == rsl_rt->prefix_address() &&
+        rt->prefix_length() == rsl_rt->prefix_length()) {
         //Dont overwrite resolve route
         return false;
     }
 
     if (rt->IsHostRoute() &&
         std::find(gateway_list.begin(), gateway_list.end(),
-                  rt->addr()) != gateway_list.end()) {
+                  rt->prefix_address()) != gateway_list.end()) {
         return false;
     }
 
@@ -275,7 +275,7 @@ void RouteLeakState::AddRoute(const AgentRoute *route) {
         InetUnicastAgentRouteTable *table =
             dest_vrf_->GetInet4UnicastRouteTable();
         table->ResyncRoute(agent_->fabric_rt_export_peer(),
-                           dest_vrf_->GetName(), uc_rt->addr(), uc_rt->plen());
+                           dest_vrf_->GetName(), uc_rt->prefix_address(), uc_rt->prefix_length());
     }
 }
 
@@ -291,8 +291,8 @@ void RouteLeakState::DeleteRoute(const AgentRoute *route,
             static_cast<const InetUnicastRouteEntry *>(route);
         dest_vrf_->GetInet4UnicastRouteTable()->Delete(*it,
                                                        dest_vrf_->GetName(),
-                                                       uc_rt->addr(),
-                                                       uc_rt->plen());
+                                                       uc_rt->prefix_address(),
+                                                       uc_rt->prefix_length());
     }
 }
 
