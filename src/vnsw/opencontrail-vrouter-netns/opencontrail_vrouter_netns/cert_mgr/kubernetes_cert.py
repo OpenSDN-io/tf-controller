@@ -5,7 +5,13 @@ from builtins import object
 import os
 from six.moves import configparser
 import logging
-import exceptions
+#check python version
+import six
+if six.PY2:
+
+    import exceptions
+else:
+    import builtins as exceptions
 
 import requests
 import json

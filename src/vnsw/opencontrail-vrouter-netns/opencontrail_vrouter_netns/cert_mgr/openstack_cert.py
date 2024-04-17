@@ -1,6 +1,12 @@
 from builtins import object
 import logging
-import exceptions
+#check python version
+import six
+if six.PY2:
+
+    import exceptions
+else:
+    import builtins as exceptions
 
 class OSCert(object):
 
