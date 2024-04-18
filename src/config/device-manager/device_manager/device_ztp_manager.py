@@ -66,15 +66,15 @@ class DeviceZtpManager(object):
         self._initial_cleanup()
         self._amqp_client.add_exchange(self.EXCHANGE)
 
-        consumer = 'device_manager_ztp.%s.config_queue' % \
+        consumer_name = 'device_manager_ztp.%s.config_queue' % \
             socket.getfqdn()
         self._amqp_client.add_consumer(
-            consumer, self.EXCHANGE, routing_key=self.CONFIG_FILE_ROUTING_KEY,
+            consumer_name, self.EXCHANGE, routing_key=self.CONFIG_FILE_ROUTING_KEY,
             callback=self.handle_config_file_request)
 
-        consumer = 'device_manager_ztp.%s.tftp_queue' % \
+        consumer_name = 'device_manager_ztp.%s.tftp_queue' % \
             socket.getfqdn()
-        self._amqp_client.add_consumer(consumer, self.EXCHANGE,
+        self._amqp_client.add_consumer(consumer_name, self.EXCHANGE,
                                        routing_key=self.TFTP_FILE_ROUTING_KEY,
                                        callback=self.handle_tftp_file_request)
         self._initialized = True
@@ -126,9 +126,9 @@ class DeviceZtpManager(object):
         self._lease_pattern = re.compile(
             r"[0-9]+ ([:A-Fa-f0-9]+) ([0-9.]+) ([a-zA-Z0-9\-_]+|\*) .*",
             re.MULTILINE | re.DOTALL)
-        consumer = 'device_manager_ztp.ztp_queue'
+        consumer_name = 'device_manager_ztp.ztp_queue'
         self._amqp_client.add_consumer(
-            consumer, self.EXCHANGE, routing_key=self.ZTP_REQUEST_ROUTING_KEY,
+            consumer_name, self.EXCHANGE, routing_key=self.ZTP_REQUEST_ROUTING_KEY,
             callback=self.handle_ztp_request)
     # end set_active
 

@@ -11,7 +11,6 @@ import socket
 import subprocess
 import sys
 
-from attrdict import AttrDict
 from cfgm_common import vnc_cgitb
 from cfgm_common.kombu_amqp import KombuAmqpClient
 from cfgm_common.vnc_object_db import VncObjectDBClient
@@ -38,7 +37,7 @@ def initialize_amqp_client(logger, args):
     amqp_client = None
     try:
         # prepare rabbitMQ params
-        rabbitmq_cfg = AttrDict(
+        rabbitmq_cfg = dict(
             servers=args.rabbit_server,
             port=args.rabbit_port,
             user=args.rabbit_user,

@@ -25,12 +25,6 @@ setup(
     zip_safe=False,
     long_description="Vrouter Sandesh",
     install_requires=[
-        'lxml',
-        'gevent',
-        'geventhttpclient',
-        'redis',
-        'xmltodict',
-        'prettytable',
         'psutil>=0.6.0,!=5.5.0,!=5.5.1',
         'future',
     ]
