@@ -643,7 +643,7 @@ def parse_args(args_str):
     cassandraopts = {
         'cassandra_user': None,
         'cassandra_password': None,
-        'cassandra_drvier': "thrift",
+        'cassandra_driver': "thrift",
         'num_workers': None,
         'num_groups': None,
     }

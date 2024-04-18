@@ -88,7 +88,7 @@ def initialize_db_connection(logger, args):
                 num_groups=args.num_groups)
         except Exception as e:
             if retry_count >= max_retries:
-                raise e
+                raise
             logger.error("Error while initializing db connection, "
                          "retrying: %s" % str(e))
             gevent.sleep(timeout)
@@ -204,7 +204,7 @@ def run_job_ztp_manager(dm_logger, args):
     except Exception as e:
         dm_logger.error("Error while initializing the device job "
                         "manager %s" % str(e))
-        raise e
+        raise
 
     try:
         # Initialize the device ztp manager
@@ -214,7 +214,7 @@ def run_job_ztp_manager(dm_logger, args):
     except Exception as e:
         dm_logger.error("Error while initializing the device ztp "
                         "manager %s" % str(e))
-        raise e
+        raise
 
     if args.dm_run_mode == 'Partial':
         dm_logger.notice("Process %s started in Partial mode..."
