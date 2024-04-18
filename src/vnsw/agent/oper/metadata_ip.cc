@@ -128,8 +128,7 @@ void MetaDataIp::set_destination_ip(const IpAddress &dst_ip) {
 }
 
 void MetaDataIp::set_active(bool active) {
-    if (active_ == active ||
-        (active & !allocator_->CanAddRoute(this))) {
+    if (active_ == active) {
         return;
     }
     active_ = active;
