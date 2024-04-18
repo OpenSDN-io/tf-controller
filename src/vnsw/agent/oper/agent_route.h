@@ -103,8 +103,9 @@ struct RouteTableWalkerState {
     LifetimeRef<RouteTableWalkerState> rt_delete_ref_;
 };
 
-// Agent implements multiple route tables - inet4-unicast, inet4-multicast,
-// bridge. This base class contains common code for all route tables
+/// @brief Agent supports multiple route tables - Inet-unicast (IPv4/IPv6),
+/// Inet-multicast, bridge, EVPN (Type2/Type5). This base class contains
+/// common code for all types of route tables.
 class AgentRouteTable : public RouteTable {
 public:
     static const int kPartitionCount = 1;
@@ -219,7 +220,7 @@ do {\
                        __FILE__, __LINE__, __VA_ARGS__);\
 } while (false)
 
-// Base class for all Route entries in agent
+/// @brief Base class for all Route entries in agent
 class AgentRoute : public Route {
 public:
     enum Trace {
@@ -318,7 +319,7 @@ public:
                      AgentRouteKey *key, AgentRouteData *data);
     void AddUnresolvedRouteToTable(AgentRouteTable *table);
     void RemoveUnresolvedRouteFromTable(AgentRouteTable *table);
-    ///! Returns the length of a stored prefix address
+    /// Returns the length of a stored prefix address
     virtual uint8_t prefix_length() const { return 0; }
 protected:
     void SetVrf(VrfEntry *vrf) { vrf_ = vrf; }
@@ -356,39 +357,39 @@ private:
     DISALLOW_COPY_AND_ASSIGN(AgentRoute);
 };
 
-///! @brief This class defines interfaces for manipulating the prefix
+/// @brief This class defines interfaces for manipulating the prefix
 /// of a route stored in an Agent VRF table
 template <class PrefixType>
 class AgentRoutePrefix {
 public:
 
-    ///! Creates a new route prefix
+    /// @brief Creates a new route prefix
     AgentRoutePrefix(const PrefixType& new_prefix, uint8_t new_plen)
     : prefix_address_(new_prefix), prefix_length_(new_plen) {}
 
-    ///! The destructor of a route prefix
+    /// @brief The destructor of a route prefix
     ~AgentRoutePrefix(){}
 
-    ///! Returns the value of a stored prefix address
+    /// @brief Returns the value of a stored prefix address
     /// (IPv4, IPv6 or MAC address)
     virtual const PrefixType& prefix_address() const {return prefix_address_;}
 
-    ///! Sets the length of a stored prefix address
+    /// @brief Sets the length of a stored prefix address
     void set_prefix_length(uint8_t new_plen) {
         prefix_length_ = new_plen;
     }
 
 protected:
 
-    ///! The prefix address
+    /// @brief The prefix address
     PrefixType prefix_address_;
 
-    ///! The prefix length
+    /// @brief The prefix length
     uint8_t prefix_length_;
 
 private:
 
-    ///! Forbid default ctor
+    /// @brief Forbid default ctor
     AgentRoutePrefix();
 
     DISALLOW_COPY_AND_ASSIGN(AgentRoutePrefix);
