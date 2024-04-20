@@ -14,7 +14,6 @@ import kombu
 import re
 import socket
 import ssl
-from attrdict import AttrDict
 from gevent.event import Event
 from gevent.lock import Semaphore
 from gevent.queue import Queue
@@ -27,10 +26,10 @@ class KombuAmqpClient(object):
 
     def __init__(self, logger, config, heartbeat=0):
         self._logger = logger
-        servers = re.compile(r'[,\s]+').split(config.servers)
+        servers = re.compile(r'[,\s]+').split(config["servers"])
         urls = self._parse_servers(servers, config)
         ssl_params = self._fetch_ssl_params(config)
-        self._queue_args = {"x-ha-policy": "all"} if config.ha_mode else None
+        self._queue_args = {"x-ha-policy": "all"} if config["ha_mode"] else None
         self._heartbeat = float(heartbeat)
         self._connection_lock = Semaphore()
         self._consumer_lock = Semaphore()
@@ -69,7 +68,7 @@ class KombuAmqpClient(object):
         exchange_obj = self.get_exchange(exchange)
         queue = kombu.Queue(name, exchange_obj, routing_key=routing_key,
                             durable=durable, **kwargs)
-        consumer = AttrDict(queue=queue, callback=callback)
+        consumer = dict(queue=queue, callback=callback)
         self._consumers[name] = consumer
         self._consumers_created_event.clear()
         self._consumer_event.set()
@@ -78,7 +77,6 @@ class KombuAmqpClient(object):
             self._consumers_created_event.wait()
         msg = 'KombuAmqpClient: Added consumer: %s' % name
         self._logger(msg, level=SandeshLevel.SYS_DEBUG)
-        return consumer
     # end add_consumer
 
     def remove_consumer(self, name):
@@ -98,7 +96,7 @@ class KombuAmqpClient(object):
             message = None
         msg = 'KombuAmqpClient: Publishing message to exchange %s, routing_key %s' % (exchange, routing_key)
         self._logger(msg, level=SandeshLevel.SYS_DEBUG)
-        self._publisher_queue.put(AttrDict(message=message, exchange=exchange,
+        self._publisher_queue.put(dict(message=message, exchange=exchange,
             routing_key=routing_key, kwargs=kwargs))
     # end publish
 
@@ -221,12 +219,12 @@ class KombuAmqpClient(object):
                     if payload is None:
                         payload = self._publisher_queue.get()
 
-                    exchange = self.get_exchange(payload.exchange)
+                    exchange = self.get_exchange(payload["exchange"])
                     with self._consumer_lock:
-                        msg = 'KombuAmqpClient: Producer publish: {}'.format(payload.routing_key)
+                        msg = 'KombuAmqpClient: Producer publish: {}'.format(payload["routing_key"])
                         self._logger(msg, level=SandeshLevel.SYS_DEBUG)
-                        producer.publish(payload.message, exchange=exchange,
-                            routing_key=payload.routing_key, **payload.kwargs)
+                        producer.publish(payload["message"], exchange=exchange,
+                            routing_key=payload["routing_key"], **payload["kwargs"])
                     payload = None
             except errors as e:
                 msg = 'KombuAmqpClient: Connection error in Kombu amqp publisher greenlet: %s' % str(e)
@@ -281,20 +279,20 @@ class KombuAmqpClient(object):
 
     @classmethod
     def _fetch_ssl_params(cls, config):
-        if not config.use_ssl:
+        if not config.get("use_ssl", False):
             return False
         ssl_params = dict()
-        if config.ssl_version:
+        if config.get("ssl_version"):
             # legacy parameter - checking if user doesn't try to use
             # unsupported protocol (he doesn't have choice anyway)
-            cls._validate_ssl_version(config.ssl_version)
+            cls._validate_ssl_version(config.get("ssl_version"))
         ssl_params['ssl_version'] = ssl.PROTOCOL_TLSv1_2
-        if config.ssl_keyfile:
-            ssl_params['keyfile'] = config.ssl_keyfile
-        if config.ssl_certfile:
-            ssl_params['certfile'] = config.ssl_certfile
-        if config.ssl_ca_certs:
-            ssl_params['ca_certs'] = config.ssl_ca_certs
+        if config.get("ssl_keyfile"):
+            ssl_params['keyfile'] = config.get("ssl_keyfile")
+        if config.get("ssl_certfile"):
+            ssl_params['certfile'] = config.get("ssl_certfile")
+        if config.get("ssl_ca_certs"):
+            ssl_params['ca_certs'] = config.get("ssl_ca_certs")
             ssl_params['cert_reqs'] = ssl.CERT_REQUIRED
         return ssl_params or True
     # end _fetch_ssl_params

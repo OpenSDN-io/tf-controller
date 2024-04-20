@@ -17,12 +17,6 @@ setup(
     zip_safe=False,
     long_description="Control Node Sandesh",
     install_requires=[
-        'lxml',
-        'gevent',
-        'geventhttpclient',
-        'redis',
-        'xmltodict',
-        'prettytable',
         'psutil>=0.6.0'
     ]
 )

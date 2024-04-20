@@ -39,7 +39,6 @@ import os
 import re
 import random
 import socket
-import ast
 from cfgm_common import jsonutils as json
 from .provision_defaults import *
 import uuid
@@ -50,8 +49,6 @@ from vnc_api.utils import AAA_MODE_VALID_VALUES
 # import GreenletProfiler
 from cfgm_common import vnc_cgitb
 from kazoo.exceptions import LockTimeout
-from attrdict import AttrDict
-from distutils.util import strtobool
 
 from cfgm_common import has_role
 from cfgm_common import _obj_serializer_all
@@ -728,9 +725,9 @@ class VncApiServer(object):
             self._amqp_client.add_exchange(body.get('exchange'),
                                            type=body.get('exchange_type'))
 
-        consumer = 'amqp_request.%s.%s' % (socket.getfqdn(), str(uuid.uuid4()))
+        consumer_name = 'amqp_request.%s.%s' % (socket.getfqdn(), str(uuid.uuid4()))
         amqp_worker = VncApiServer.AmqpWorker()
-        self._amqp_client.add_consumer(consumer, body.get('exchange'),
+        self._amqp_client.add_consumer(consumer_name, body.get('exchange'),
             routing_key=body.get('response_key'),
             callback=amqp_worker.handle_message,
             wait=True, auto_delete=True)
@@ -748,7 +745,7 @@ class VncApiServer(object):
         except gevent.queue.Empty:
             bottle.response.status = 500
         finally:
-            self._amqp_client.remove_consumer(consumer)
+            self._amqp_client.remove_consumer(consumer_name)
 
         msg = "Amqp response, status %s, body %s " % (bottle.response.status,
             json.dumps(amqp_worker.body))
@@ -2368,7 +2365,7 @@ class VncApiServer(object):
                 use_ssl = str(self._args.rabbit_use_ssl).lower() == 'true'
 
             # prepare rabbitMQ params
-            rabbitmq_cfg = AttrDict(
+            rabbitmq_cfg = dict(
                 servers=self._args.rabbit_server,
                 port=self._args.rabbit_port,
                 user=self._args.rabbit_user,
@@ -2387,8 +2384,8 @@ class VncApiServer(object):
             amqp_client.run()
             # add dummy consumer to initialize the consumer greenlet
             amqp_client.add_exchange('amqp_request_exchange', type='direct')
-            consumer = 'amqp_request.%s.dummy' % socket.getfqdn()
-            amqp_client.add_consumer(consumer, 'amqp_request_exchange',
+            consumer_name = 'amqp_request.%s.dummy' % socket.getfqdn()
+            amqp_client.add_consumer(consumer_name, 'amqp_request_exchange',
                 routing_key='amqp.request.dummy', auto_delete=True)
         except Exception as e:
             err_msg = "Error while initializing the AMQP client %s " % repr(e)
