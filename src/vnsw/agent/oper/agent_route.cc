@@ -822,7 +822,8 @@ const AgentPath *AgentRoute::FindIntfOrCompLocalVmPortPath() const {
         const AgentPath *path = static_cast<const AgentPath *>
             (it.operator->());
 
-        if (RtPathHasLocalInterface(path)) {
+        if (intf_path == NULL &&
+            RtPathHasLocalInterface(path)) {
             intf_path = path;
             continue;
         }
