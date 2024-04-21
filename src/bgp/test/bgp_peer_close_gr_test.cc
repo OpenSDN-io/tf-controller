@@ -268,7 +268,7 @@ TEST_F(BgpPeerCloseGrTest, RestartFlagsTest8) {
     EXPECT_EQ(time, bgp_peer_close_test_->gr_params().time);
 }
 
-typedef std::tr1::tuple<bool, vector<string>, vector<string>,
+typedef std::tuple<bool, vector<string>, vector<string>,
         uint16_t, uint8_t, vector<Address::Family>,
         uint32_t, uint8_t, vector<Address::Family> > TestParams;
 
@@ -285,11 +285,11 @@ protected:
 
     void Initialize() {
         bgp_peer_close_test_->set_in_llgr_timer_wait_state(
-                ::std::tr1::get<0>(GetParam()));
+                std::get<0>(GetParam()));
         bgp_peer_close_test_->set_negotiated_families(
-                ::std::tr1::get<1>(GetParam()));
+                std::get<1>(GetParam()));
         bgp_peer_close_test_->set_peer_negotiated_families(
-                ::std::tr1::get<2>(GetParam()));
+                std::get<2>(GetParam()));
     }
 
     struct GRInfo {
@@ -304,15 +304,15 @@ protected:
     };
 
     void SetCapabilities() {
-        uint16_t gr_time = ::std::tr1::get<3>(GetParam());
-        vector<Address::Family> gr_families = ::std::tr1::get<5>(GetParam());
+        uint16_t gr_time = std::get<3>(GetParam());
+        vector<Address::Family> gr_families = std::get<5>(GetParam());
 
         vector<uint8_t> afi_flags;
         for (size_t i = 0; i < gr_families.size(); i++) {
             uint8_t flags = 0;
-            if (::std::tr1::get<4>(GetParam()) == 1 ||
+            if (std::get<4>(GetParam()) == 1 ||
                 (i == gr_families.size() - 1 &&
-                 ::std::tr1::get<4>(GetParam()) == 2)) {
+                 std::get<4>(GetParam()) == 2)) {
                 flags = BgpProto::OpenMessage::Capability::GR::
                             ForwardingStatePreservedFlag;
             }
@@ -326,10 +326,10 @@ protected:
         gr_info_.push_back(GRInfo(false, gr_time, afi_flags, families_str));
         families_str.clear();
 
-        uint32_t llgr_time = ::std::tr1::get<6>(GetParam());
-        uint8_t llgr_afi_flags = ::std::tr1::get<7>(GetParam());
+        uint32_t llgr_time = std::get<6>(GetParam());
+        uint8_t llgr_afi_flags = std::get<7>(GetParam());
 
-        vector<Address::Family> llgr_families = ::std::tr1::get<8>(GetParam());
+        vector<Address::Family> llgr_families = std::get<8>(GetParam());
 
         BgpProto::OpenMessage::Capability *cap;
         cap = BgpProto::OpenMessage::Capability::GR::Encode(

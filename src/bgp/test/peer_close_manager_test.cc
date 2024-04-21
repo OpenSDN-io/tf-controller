@@ -667,7 +667,7 @@ void PeerCloseManagerTest::Run() {
     }
 }
 
-typedef std::tr1::tuple<int, int, bool, bool, bool, bool, int, bool, int, bool>
+typedef std::tuple<int, int, bool, bool, bool, bool, int, bool, int, bool>
             TestParams;
 class PeerCloseTest : public ::testing::TestWithParam<TestParams> {
 public:
@@ -678,23 +678,23 @@ public:
         close_manager_.reset(new PeerCloseManagerTest(peer_close_.get(),
                                      *(evm_.io_service())));
         peer_close_->SetManager(close_manager_.get());
-        close_manager_->SetUp(std::tr1::get<0>(GetParam()),
-                              std::tr1::get<1>(GetParam()),
-                              std::tr1::get<6>(GetParam()),
-                              std::tr1::get<7>(GetParam()),
-                              std::tr1::get<8>(GetParam()),
-                              std::tr1::get<9>(GetParam()),
+        close_manager_->SetUp(std::get<0>(GetParam()),
+                              std::get<1>(GetParam()),
+                              std::get<6>(GetParam()),
+                              std::get<7>(GetParam()),
+                              std::get<8>(GetParam()),
+                              std::get<9>(GetParam()),
 
                               // Reuse these params as gtest param limit is 10.
-                              std::tr1::get<2>(GetParam()),
-                              std::tr1::get<3>(GetParam()),
-                              std::tr1::get<4>(GetParam()),
-                              std::tr1::get<5>(GetParam()),
+                              std::get<2>(GetParam()),
+                              std::get<3>(GetParam()),
+                              std::get<4>(GetParam()),
+                              std::get<5>(GetParam()),
                               peer_close_.get());
-        peer_close_->set_is_ready(std::tr1::get<2>(GetParam()));
-        peer_close_->set_graceful(std::tr1::get<3>(GetParam()));
-        peer_close_->set_ll_graceful(std::tr1::get<4>(GetParam()));
-        peer_close_->set_close_graceful(std::tr1::get<5>(GetParam()));
+        peer_close_->set_is_ready(std::get<2>(GetParam()));
+        peer_close_->set_graceful(std::get<3>(GetParam()));
+        peer_close_->set_ll_graceful(std::get<4>(GetParam()));
+        peer_close_->set_close_graceful(std::get<5>(GetParam()));
 
         thread_.Start();
     }

@@ -3392,13 +3392,13 @@ static vector<int> GetTargetParameters() {
 }
 
 void BgpStressTest::InitParams() {
-    n_instances_ = ::std::tr1::get<0>(GetParam());
-    n_routes_ = ::std::tr1::get<1>(GetParam());
-    n_peers_ = ::std::tr1::get<2>(GetParam());
-    n_agents_ = ::std::tr1::get<3>(GetParam());
-    n_targets_ = ::std::tr1::get<4>(GetParam());
-    xmpp_close_from_control_node_ = ::std::tr1::get<5>(GetParam());
-    xmpp_auth_enabled_ = ::std::tr1::get<6>(GetParam());
+    n_instances_ = std::get<0>(GetParam());
+    n_routes_ = std::get<1>(GetParam());
+    n_peers_ = std::get<2>(GetParam());
+    n_agents_ = std::get<3>(GetParam());
+    n_targets_ = std::get<4>(GetParam());
+    xmpp_close_from_control_node_ = std::get<5>(GetParam());
+    xmpp_auth_enabled_ = std::get<6>(GetParam());
 }
 
 #define COMBINE_PARAMS \

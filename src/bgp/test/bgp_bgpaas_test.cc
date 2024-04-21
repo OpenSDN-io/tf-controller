@@ -273,7 +273,7 @@ protected:
     string auth_config_;
 };
 
-typedef std::tr1::tuple<bool, bool, bool, bool> TestParams;
+typedef std::tuple<bool, bool, bool, bool> TestParams;
 class BGPaaSTest : public BGPaaSBase,
                    public ::testing::TestWithParam<TestParams>{
 public:
@@ -285,10 +285,10 @@ public:
              uint32_t ribout_cid = 0) const { return false; }
 protected:
     virtual void SetUp() {
-        set_local_as_ = std::tr1::get<0>(GetParam());
-        ebgp_ = std::tr1::get<1>(GetParam());
-        set_auth_ = std::tr1::get<2>(GetParam());
-        server_as4_supported_ = std::tr1::get<3>(GetParam());
+        set_local_as_ = std::get<0>(GetParam());
+        ebgp_ = std::get<1>(GetParam());
+        set_auth_ = std::get<2>(GetParam());
+        server_as4_supported_ = std::get<3>(GetParam());
         BGPaaSBase::SetUp(0, 0);
     }
 

@@ -56,7 +56,7 @@ using ::testing::Combine;
 static char **gargv;
 static int    gargc;
 
-typedef std::tr1::tuple<int, int, int> TestParams;
+typedef std::tuple<int, int, int> TestParams;
 
 class BgpPeerMock : public IPeer {
 public:
@@ -171,9 +171,9 @@ protected:
     }
 
     void InitParams() {
-        max_vrf_ = std::tr1::get<0>(GetParam());
-        max_num_connections_ = std::tr1::get<1>(GetParam());
-        max_iterations_ = std::tr1::get<2>(GetParam());
+        max_vrf_ = std::get<0>(GetParam());
+        max_num_connections_ = std::get<1>(GetParam());
+        max_iterations_ = std::get<2>(GetParam());
     }
 
     void NetworkConfig(const VrfList &instance_names,

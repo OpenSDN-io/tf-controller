@@ -1069,15 +1069,15 @@ INSTANTIATE_TEST_CASE_P(One, StateMachineActiveParamTest1, ::testing::Bool());
 
 // Parameterize id (higher/lower) and holdtime (higher/lower)
 
-typedef std::tr1::tuple<bool, bool> ActiveTestParams2;
+typedef std::tuple<bool, bool> ActiveTestParams2;
 
 class StateMachineActiveParamTest2 :
     public StateMachineActiveTest,
     public ::testing::WithParamInterface<ActiveTestParams2> {
 protected:
     virtual void SetUp() {
-        id_ = tr1::get<0>(GetParam()) ? lower_id_ : higher_id_;
-        if (tr1::get<1>(GetParam())) {
+        id_ = std::get<0>(GetParam()) ? lower_id_ : higher_id_;
+        if (std::get<1>(GetParam())) {
             holdtime_ = StateMachine::kHoldTime - 1;
         } else {
             holdtime_ = StateMachine::kHoldTime + 1;
@@ -1447,15 +1447,15 @@ INSTANTIATE_TEST_CASE_P(One, StateMachineConnectParamTest1, ::testing::Bool());
 
 // Parameterize id (higher/lower) and holdtime (higher/lower)
 
-typedef std::tr1::tuple<bool, bool> ConnectTestParams2;
+typedef std::tuple<bool, bool> ConnectTestParams2;
 
 class StateMachineConnectParamTest2 :
     public StateMachineConnectTest,
     public ::testing::WithParamInterface<ConnectTestParams2> {
 protected:
     virtual void SetUp() {
-        id_ = tr1::get<0>(GetParam()) ? lower_id_ : higher_id_;
-        if (tr1::get<1>(GetParam())) {
+        id_ = std::get<0>(GetParam()) ? lower_id_ : higher_id_;
+        if (std::get<1>(GetParam())) {
             holdtime_ = StateMachine::kHoldTime - 1;
         } else {
             holdtime_ = StateMachine::kHoldTime + 1;
@@ -2354,15 +2354,15 @@ INSTANTIATE_TEST_CASE_P(One, StateMachineOpenSentParamTest2, ::testing::Bool());
 
 // Parameterize id (higher/lower) and holdtime (higher/lower)
 
-typedef std::tr1::tuple<bool, bool> OpenSentTestParams3;
+typedef std::tuple<bool, bool> OpenSentTestParams3;
 
 class StateMachineOpenSentParamTest3 :
     public StateMachineOpenSentTest,
     public ::testing::WithParamInterface<OpenSentTestParams3> {
 protected:
     virtual void SetUp() {
-        id_ = tr1::get<0>(GetParam()) ? lower_id_ : higher_id_;
-        if (tr1::get<1>(GetParam())) {
+        id_ = std::get<0>(GetParam()) ? lower_id_ : higher_id_;
+        if (std::get<1>(GetParam())) {
             holdtime_ = StateMachine::kHoldTime - 1;
         } else {
             holdtime_ = StateMachine::kHoldTime + 1;

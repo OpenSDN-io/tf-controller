@@ -465,7 +465,7 @@ TEST_F(BgpPeerTest, MessageBuffer8) {
     TASK_UTIL_EXPECT_EQ(0, session_->message_count());
 }
 
-typedef std::tr1::tuple<time_t, uint64_t, bool, Address::Family, time_t, bool,
+typedef std::tuple<time_t, uint64_t, bool, Address::Family, time_t, bool,
                         bool> TestParams;
 class BgpPeerParamTest :
     public BgpPeerTest,
@@ -478,13 +478,13 @@ protected:
         // Reset startup time for each test.
         MiscUtils::set_startup_time_secs();
         BgpPeerTest::SetUp();
-        elapsed_ = std::tr1::get<0>(GetParam());
-        output_q_depth_ = std::tr1::get<1>(GetParam());
-        is_ready_ = std::tr1::get<2>(GetParam());
-        family_ = std::tr1::get<3>(GetParam());
-        rtarget_table_last_updated_ = std::tr1::get<4>(GetParam());
-        starting_up_ = std::tr1::get<5>(GetParam());
-        end_of_config_ = std::tr1::get<6>(GetParam());
+        elapsed_ = std::get<0>(GetParam());
+        output_q_depth_ = std::get<1>(GetParam());
+        is_ready_ = std::get<2>(GetParam());
+        family_ = std::get<3>(GetParam());
+        rtarget_table_last_updated_ = std::get<4>(GetParam());
+        starting_up_ = std::get<5>(GetParam());
+        end_of_config_ = std::get<6>(GetParam());
         peer_->set_elapsed(elapsed_);
         peer_->set_output_q_depth(output_q_depth_);
         peer_->set_is_ready(is_ready_);

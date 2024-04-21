@@ -338,7 +338,7 @@ private:
     std::vector<bool> ribout_creation_complete_;
 };
 
-typedef std::tr1::tuple<int, int, int, int, int, bool, bool> TestParams;
+typedef std::tuple<int, int, int, int, int, bool, bool> TestParams;
 
 class BgpStressTest : public ::testing::TestWithParam<TestParams> {
 protected:

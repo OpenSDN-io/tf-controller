@@ -1574,21 +1574,21 @@ void NetworkAgentMock::InstanceMgr<T>::Unsubscribe(const std::string &network,
             iter = rti->originated().begin();
         while (iter != rti->originated().end()) {
             xml_document *xdoc = NULL;
-            if (std::tr1::is_same<T, RouteEntry>::value) {
+            if (std::is_same<T, RouteEntry>::value) {
                 if (ipv6())
                     xdoc = parent_->impl_->Inet6RouteDeleteXmlDoc(network,
                                                                   *iter);
                 else
                     xdoc = parent_->impl_->RouteDeleteXmlDoc(network, *iter);
-            } else if (std::tr1::is_same<T, EnetRouteEntry>::value) {
+            } else if (std::is_same<T, EnetRouteEntry>::value) {
                 xdoc = parent_->impl_->RouteEnetDeleteXmlDoc(network, *iter);
-            } else if (std::tr1::is_same<T, McastRouteEntry>::value) {
+            } else if (std::is_same<T, McastRouteEntry>::value) {
                 xdoc = parent_->impl_->RouteMcastDeleteXmlDoc(network, *iter);
-            } else if (std::tr1::is_same<T, MvpnRouteEntry>::value) {
+            } else if (std::is_same<T, MvpnRouteEntry>::value) {
                 // Delete all types of routes
                 xdoc = parent_->impl_->RouteMvpnDeleteXmlDoc(network, *iter, 5);
                 xdoc = parent_->impl_->RouteMvpnDeleteXmlDoc(network, *iter, 7);
-            } else if (std::tr1::is_same<T, LabeledInetRouteEntry>::value) {
+            } else if (std::is_same<T, LabeledInetRouteEntry>::value) {
                 xdoc = parent_->impl_->LabeledInetRouteDeleteXmlDoc(network,
                                                                     *iter);
             } else {

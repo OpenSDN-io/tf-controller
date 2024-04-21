@@ -207,7 +207,7 @@ public:
 private:
 };
 
-typedef std::tr1::tuple<bool, int, int, int> TestParams;
+typedef std::tuple<bool, int, int, int> TestParams;
 class BgpMvpnTest : public ::testing::TestWithParam<TestParams> {
 public:
     void NotifyRoute(ErmVpnRoute **ermvpn_rt, int i, int j) {
@@ -356,10 +356,10 @@ protected:
         server_->set_mvpn_ipv4_enable(true);
         thread_.reset(new ServerThread(evm_.get()));
         thread_->Start();
-        preconfigure_pm_ = std::tr1::get<0>(GetParam());
-        instances_set_count_ = std::tr1::get<1>(GetParam());
-        groups_count_ = std::tr1::get<2>(GetParam());
-        paths_count_ = std::tr1::get<3>(GetParam());
+        preconfigure_pm_ = std::get<0>(GetParam());
+        instances_set_count_ = std::get<1>(GetParam());
+        groups_count_ = std::get<2>(GetParam());
+        paths_count_ = std::get<3>(GetParam());
         fabric_ermvpn_ = new ErmVpnTable *[instances_set_count_];
         fabric_mvpn_ = new MvpnTable *[instances_set_count_];
         red_ = new MvpnTable *[instances_set_count_];

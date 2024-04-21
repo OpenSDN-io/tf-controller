@@ -921,7 +921,7 @@ static const char *config_template = "\
 
 // Parameterize single vs. dual servers and the tag value.
 
-typedef std::tr1::tuple<bool, uint32_t> TestParams1;
+typedef std::tuple<bool, uint32_t> TestParams1;
 
 //
 // 2 Control Nodes X and Y.
@@ -932,8 +932,8 @@ class BgpXmppEvpnMcastTest :
 
 protected:
     virtual void SetUp() {
-        single_server_ = std::tr1::get<0>(GetParam());
-        tag_ = std::tr1::get<1>(GetParam());
+        single_server_ = std::get<0>(GetParam());
+        tag_ = std::get<1>(GetParam());
         BgpXmppEvpnMcastTestBase::SetUp();
     }
 
@@ -1219,7 +1219,7 @@ TEST_P(BgpXmppEvpnMcastTest, AddDelAgents) {
 #if 0
 // Parameterize single vs. dual servers and the tag value.
 
-typedef std::tr1::tuple<bool, uint32_t> TestParams2;
+typedef std::tuple<bool, uint32_t> TestParams2;
 
 //
 // 2 Control Nodes X and Y.
@@ -1230,8 +1230,8 @@ class BgpXmppEvpnArMcastTest :
 
 protected:
     virtual void SetUp() {
-        single_server_ = std::tr1::get<0>(GetParam());
-        tag_ = std::tr1::get<1>(GetParam());
+        single_server_ = std::get<0>(GetParam());
+        tag_ = std::get<1>(GetParam());
         vxlan_ = true;
         BgpXmppEvpnMcastTestBase::SetUp();
     }

@@ -695,16 +695,16 @@ protected:
 
 // Parameterize table name, peer type and local AS.
 
-typedef std::tr1::tuple<const char *, bool, bool, bool> TestParams1;
+typedef std::tuple<const char *, bool, bool, bool> TestParams1;
 
 class BgpTableExportParamTest1 :
     public BgpTableExportTest,
     public ::testing::WithParamInterface<TestParams1> {
     virtual void SetUp() {
-        table_name_ = std::tr1::get<0>(GetParam());
-        internal_ = std::tr1::get<1>(GetParam());
-        local_as_is_different_ = std::tr1::get<2>(GetParam());
-        server_as4_supported_ = std::tr1::get<3>(GetParam());
+        table_name_ = std::get<0>(GetParam());
+        internal_ = std::get<1>(GetParam());
+        local_as_is_different_ = std::get<2>(GetParam());
+        server_as4_supported_ = std::get<3>(GetParam());
         BgpTableExportTest::SetUp();
     }
 
@@ -1744,16 +1744,16 @@ INSTANTIATE_TEST_CASE_P(Instance, BgpTableExportParamTest2,
 
 // Fix peer type to external and parameterize table name and local AS.
 
-typedef std::tr1::tuple<const char *, bool, bool> TestParams3;
+typedef std::tuple<const char *, bool, bool> TestParams3;
 
 class BgpTableExportParamTest3 :
     public BgpTableExportTest,
     public ::testing::WithParamInterface<TestParams3> {
     virtual void SetUp() {
-        table_name_ = std::tr1::get<0>(GetParam());
+        table_name_ = std::get<0>(GetParam());
         internal_ = false;
-        local_as_is_different_ = std::tr1::get<1>(GetParam());
-        server_as4_supported_ = std::tr1::get<2>(GetParam());
+        local_as_is_different_ = std::get<1>(GetParam());
+        server_as4_supported_ = std::get<2>(GetParam());
         BgpTableExportTest::SetUp();
     }
 
@@ -2096,16 +2096,16 @@ INSTANTIATE_TEST_CASE_P(Instance, BgpTableExportParamTest3,
 
 // Fix table name to inet.0 and parameterize peer type and local AS.
 
-typedef std::tr1::tuple<bool, bool, bool> TestParams4a;
+typedef std::tuple<bool, bool, bool> TestParams4a;
 
 class BgpTableExportParamTest4a :
     public BgpTableExportTest,
     public ::testing::WithParamInterface<TestParams4a> {
     virtual void SetUp() {
         table_name_ = "inet.0";
-        internal_ = std::tr1::get<0>(GetParam());
-        local_as_is_different_ = std::tr1::get<1>(GetParam());
-        server_as4_supported_ = std::tr1::get<2>(GetParam());
+        internal_ = std::get<0>(GetParam());
+        local_as_is_different_ = std::get<1>(GetParam());
+        server_as4_supported_ = std::get<2>(GetParam());
         BgpTableExportTest::SetUp();
     }
 
@@ -2250,16 +2250,16 @@ INSTANTIATE_TEST_CASE_P(Instance, BgpTableExportParamTest4b,
 
 // Fix table name to bgp.l3vpn.0 and parameterize peer type and local AS.
 
-typedef std::tr1::tuple<bool, bool, bool> TestParams5;
+typedef std::tuple<bool, bool, bool> TestParams5;
 
 class BgpTableExportParamTest5 :
     public BgpTableExportTest,
     public ::testing::WithParamInterface<TestParams5> {
     virtual void SetUp() {
         table_name_ = "bgp.l3vpn.0";
-        internal_ = std::tr1::get<0>(GetParam());
-        local_as_is_different_ = std::tr1::get<1>(GetParam());
-        server_as4_supported_ = std::tr1::get<2>(GetParam());
+        internal_ = std::get<0>(GetParam());
+        local_as_is_different_ = std::get<1>(GetParam());
+        server_as4_supported_ = std::get<2>(GetParam());
         BgpTableExportTest::SetUp();
     }
 
@@ -2311,16 +2311,16 @@ INSTANTIATE_TEST_CASE_P(Instance, BgpTableExportParamTest5,
 //
 // Long Lived Graceful Restart related tests.
 //
-typedef std::tr1::tuple<const char *, bool, bool, bool, bool> TestParams6;
+typedef std::tuple<const char *, bool, bool, bool, bool> TestParams6;
 class BgpTableExportParamTest6 :
     public BgpTableExportTest,
     public ::testing::WithParamInterface<TestParams6> {
     virtual void SetUp() {
-        table_name_ = std::tr1::get<0>(GetParam());
-        peer_llgr_ = std::tr1::get<1>(GetParam());
-        path_llgr_ = std::tr1::get<2>(GetParam());
-        comm_llgr_ = std::tr1::get<3>(GetParam());
-        internal_ = std::tr1::get<4>(GetParam());
+        table_name_ = std::get<0>(GetParam());
+        peer_llgr_ = std::get<1>(GetParam());
+        path_llgr_ = std::get<2>(GetParam());
+        comm_llgr_ = std::get<3>(GetParam());
+        internal_ = std::get<4>(GetParam());
         BgpTableExportTest::SetUp();
     }
 

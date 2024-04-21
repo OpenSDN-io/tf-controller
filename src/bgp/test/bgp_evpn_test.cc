@@ -205,7 +205,7 @@ public:
 private:
 };
 
-typedef std::tr1::tuple<int, int, int> TestParams;
+typedef std::tuple<int, int, int> TestParams;
 class BgpEvpnTest : public ::testing::TestWithParam<TestParams> {
 public:
     void NotifyRoute(ErmVpnRoute **ermvpn_rt, int i, int j) {
@@ -250,9 +250,9 @@ protected:
         server_.reset(new BgpServerTest(evm_.get(), "local"));
         thread_.reset(new ServerThread(evm_.get()));
         thread_->Start();
-        instances_set_count_ = std::tr1::get<0>(GetParam());
-        groups_count_ = std::tr1::get<1>(GetParam());
-        paths_count_ = std::tr1::get<2>(GetParam());
+        instances_set_count_ = std::get<0>(GetParam());
+        groups_count_ = std::get<1>(GetParam());
+        paths_count_ = std::get<2>(GetParam());
         red_ermvpn_ = new ErmVpnTable *[instances_set_count_];
         red_ = new EvpnTable *[instances_set_count_];
         peers_ = new scoped_ptr<BgpPeerMock>[paths_count_];

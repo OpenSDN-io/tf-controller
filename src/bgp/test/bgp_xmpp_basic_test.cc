@@ -410,14 +410,14 @@ bool BgpXmppBasicTest::validate_done_ = false;
 
 // Parameterize shared vs unique IP for each agent.
 // Parameterize third parameter for xmpp listener ip.
-typedef std::tr1::tuple<bool, bool, bool> TestParams3;
+typedef std::tuple<bool, bool, bool> TestParams3;
 
 class BgpXmppBasicParamTest : public BgpXmppBasicTest,
     public ::testing::WithParamInterface<TestParams3> {
 protected:
     virtual void SetUp() {
-        bool agent_address_same_ = std::tr1::get<0>(GetParam());
-        auth_enabled_ = std::tr1::get<1>(GetParam());
+        bool agent_address_same_ = std::get<0>(GetParam());
+        auth_enabled_ = std::get<1>(GetParam());
         LOG(DEBUG, "BgpXmppBasicParamTest Agent Address: " <<
                    ((agent_address_same_)? "Same" : "Unique") <<
                    "Xmpp Authentication: " <<
@@ -431,7 +431,7 @@ protected:
             agent_b_addr_ = "127.0.0.12";
             agent_c_addr_ = "127.0.0.13";
         }
-        BgpXmppBasicTest::SetUp(std::tr1::get<2>(GetParam()));
+        BgpXmppBasicTest::SetUp(std::get<2>(GetParam()));
     }
 
     virtual void TearDown() {
@@ -1510,8 +1510,8 @@ class BgpXmppBasicParamTest2 : public BgpXmppBasicTest,
     public ::testing::WithParamInterface<TestParams3> {
 protected:
     virtual void SetUp() {
-        agent_address_same_ = std::tr1::get<0>(GetParam());
-        auth_enabled_ = std::tr1::get<1>(GetParam());
+        agent_address_same_ = std::get<0>(GetParam());
+        auth_enabled_ = std::get<1>(GetParam());
 
         LOG(DEBUG, "BgpXmppBasicParamTest Agent Address: " <<
                    ((agent_address_same_)? "Same" : "Unique") <<
@@ -1526,7 +1526,7 @@ protected:
             agent_x2_addr_ = "127.0.0.22";
             agent_x3_addr_ = "127.0.0.23";
         }
-        BgpXmppBasicTest::SetUp(std::tr1::get<2>(GetParam()));
+        BgpXmppBasicTest::SetUp(std::get<2>(GetParam()));
     }
 
     virtual void TearDown() {

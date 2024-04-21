@@ -224,7 +224,7 @@ public:
     BgpXmppChannel *channel_;
 };
 
-typedef std::tr1::tuple<int, int, int, int, int, bool> TestParams;
+typedef std::tuple<int, int, int, int, int, bool> TestParams;
 
 class BgpPeerCloseTest : public ::testing::TestWithParam<TestParams> {
 
@@ -812,12 +812,12 @@ void BgpPeerCloseTest::XmppPeerClose() {
 }
 
 void BgpPeerCloseTest::InitParams() {
-    n_instances_ = ::std::tr1::get<0>(GetParam());
-    n_routes_ = ::std::tr1::get<1>(GetParam());
-    n_peers_ = ::std::tr1::get<2>(GetParam());
-    n_agents_ = ::std::tr1::get<3>(GetParam());
-    n_targets_ = ::std::tr1::get<4>(GetParam());
-    xmpp_close_from_control_node_ = ::std::tr1::get<5>(GetParam());
+    n_instances_ = std::get<0>(GetParam());
+    n_routes_ = std::get<1>(GetParam());
+    n_peers_ = std::get<2>(GetParam());
+    n_agents_ = std::get<3>(GetParam());
+    n_targets_ = std::get<4>(GetParam());
+    xmpp_close_from_control_node_ = std::get<5>(GetParam());
 }
 
 // Peer flaps

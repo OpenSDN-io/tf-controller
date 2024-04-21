@@ -1808,7 +1808,7 @@ static const char *config_tmpl2_new = "\
 
 // Parameterize RouterId change for X and Y.
 
-typedef std::tr1::tuple<bool, bool> RouterIdChangeParams;
+typedef std::tuple<bool, bool> RouterIdChangeParams;
 
 class BgpXmppMcast2ServerParamTest :
     public BgpXmppMcast2ServerTest,
@@ -1818,9 +1818,9 @@ protected:
     void Reconfigure(const char *config_tmpl) {
         char config[8192];
         snprintf(config, sizeof(config), config_tmpl,
-            tr1::get<0>(GetParam()) ? "192.168.0.111" : "192.168.0.101",
+            std::get<0>(GetParam()) ? "192.168.0.111" : "192.168.0.101",
             bs_x_->session_manager()->GetPort(),
-            tr1::get<1>(GetParam()) ? "192.168.0.112" : "192.168.0.102",
+            std::get<1>(GetParam()) ? "192.168.0.112" : "192.168.0.102",
             bs_y_->session_manager()->GetPort());
         bs_x_->Configure(config);
         bs_y_->Configure(config);
@@ -1859,7 +1859,7 @@ TEST_P(BgpXmppMcast2ServerParamTest, SingleAgent) {
         Reconfigure(config_tmpl2_new);
 
         if (idx == 0) {
-            if (tr1::get<0>(GetParam())) {
+            if (std::get<0>(GetParam())) {
                 TASK_UTIL_EXPECT_NE(flap_count_xa_, agent_xa_->flap_count());
                 TASK_UTIL_EXPECT_TRUE(agent_xa_->IsEstablished());
                 agent_xa_->ClearInstances();
@@ -1867,7 +1867,7 @@ TEST_P(BgpXmppMcast2ServerParamTest, SingleAgent) {
                 agent_xa_->McastSubscribe("blue", 1);
             }
 
-            if (tr1::get<1>(GetParam())) {
+            if (std::get<1>(GetParam())) {
                 TASK_UTIL_EXPECT_NE(flap_count_ya_, agent_ya_->flap_count());
                 TASK_UTIL_EXPECT_TRUE(agent_ya_->IsEstablished());
                 agent_ya_->ClearInstances();
@@ -1948,7 +1948,7 @@ TEST_P(BgpXmppMcast2ServerParamTest, MultipleAgent) {
         Reconfigure(config_tmpl2_new);
 
         if (idx == 0) {
-            if (tr1::get<0>(GetParam())) {
+            if (std::get<0>(GetParam())) {
                 TASK_UTIL_EXPECT_NE(flap_count_xa_, agent_xa_->flap_count());
                 TASK_UTIL_EXPECT_NE(flap_count_xb_, agent_xb_->flap_count());
                 TASK_UTIL_EXPECT_NE(flap_count_xc_, agent_xc_->flap_count());
@@ -1966,7 +1966,7 @@ TEST_P(BgpXmppMcast2ServerParamTest, MultipleAgent) {
                 agent_xc_->McastSubscribe("blue", 1);
             }
 
-            if (tr1::get<1>(GetParam())) {
+            if (std::get<1>(GetParam())) {
                 TASK_UTIL_EXPECT_NE(flap_count_ya_, agent_ya_->flap_count());
                 TASK_UTIL_EXPECT_NE(flap_count_yb_, agent_yb_->flap_count());
                 TASK_UTIL_EXPECT_NE(flap_count_yc_, agent_yc_->flap_count());

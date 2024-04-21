@@ -125,7 +125,7 @@ private:
 // GTest parameterize for
 //     Stale/LlgrStale subscription state for the two routing-instances
 //     SubscriptionList empty or not
-typedef std::tr1::tuple<uint32_t, uint32_t, bool> TestParams;
+typedef std::tuple<uint32_t, uint32_t, bool> TestParams;
 class BgpXmppRTargetManagerTestRun :
     public ::testing::TestWithParam<TestParams> {
 protected:
@@ -138,10 +138,10 @@ protected:
     }
 
     virtual void SetUp() {
-        instance1_->set_gr_state(std::tr1::get<0>(GetParam()));
-        instance2_->set_gr_state(std::tr1::get<1>(GetParam()));
+        instance1_->set_gr_state(std::get<0>(GetParam()));
+        instance2_->set_gr_state(std::get<1>(GetParam()));
         rtarget_manager_test_->set_empty_subscription(
-                std::tr1::get<2>(GetParam()));
+                std::get<2>(GetParam()));
     }
 
     virtual void TearDown() { }

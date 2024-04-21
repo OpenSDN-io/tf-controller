@@ -47,7 +47,7 @@ static void Replace(string *str, const char *substr, T content) {
     }
 }
 
-typedef std::tr1::tuple<const char *, bool> TestParams;
+typedef std::tuple<const char *, bool> TestParams;
 class L3VPNPeerTest : public ::testing::TestWithParam<TestParams> {
 protected:
     L3VPNPeerTest()
@@ -193,8 +193,8 @@ protected:
     }
 
     virtual void SetUp() {
-        peer_type_ = std::tr1::get<0>(GetParam());
-        server_as4_supported_ = std::tr1::get<1>(GetParam());
+        peer_type_ = std::get<0>(GetParam());
+        server_as4_supported_ = std::get<1>(GetParam());
         vpn_notify_count_ = 1;
         a_.reset(new BgpServerTest(&evm_, "A"));
         b_.reset(new BgpServerTest(&evm_, "B"));

@@ -224,7 +224,7 @@ protected:
 // 1. Long vs. short peer names.
 // 2. Reuse message string for tracing by passing it to SendUpdate
 // 3. Caching of RibOutAttr string representation
-typedef std::tr1::tuple<bool, bool, bool> TestParams;
+typedef std::tuple<bool, bool, bool> TestParams;
 
 class XmppMessageBuilderParamTest:
     public XmppMessageBuilderTest,
@@ -232,9 +232,9 @@ class XmppMessageBuilderParamTest:
 };
 
 TEST_P(XmppMessageBuilderParamTest, Basic) {
-    bool long_name = std::tr1::get<0>(GetParam());
-    bool reuse_msg_str = std::tr1::get<1>(GetParam());
-    bool cache = std::tr1::get<2>(GetParam());
+    bool long_name = std::get<0>(GetParam());
+    bool reuse_msg_str = std::get<1>(GetParam());
+    bool cache = std::get<2>(GetParam());
     cout << "Long Name = " << long_name << " ";
     cout << "Reuse Message String = " << reuse_msg_str << " ";
     cout << "Cache = " << cache << endl;
@@ -271,9 +271,9 @@ class XmppMvpnMessageBuilderParamTest:
 };
 
 TEST_P(XmppMvpnMessageBuilderParamTest, Basic) {
-    bool long_name = std::tr1::get<0>(GetParam());
-    bool reuse_msg_str = std::tr1::get<1>(GetParam());
-    bool cache = std::tr1::get<2>(GetParam());
+    bool long_name = std::get<0>(GetParam());
+    bool reuse_msg_str = std::get<1>(GetParam());
+    bool cache = std::get<2>(GetParam());
     cout << "Long Name = " << long_name << " ";
     cout << "Reuse Message String = " << reuse_msg_str << " ";
     cout << "Cache = " << cache << endl;
