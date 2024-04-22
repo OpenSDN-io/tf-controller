@@ -127,7 +127,7 @@ def add_parser_arguments(parser):
                         help="Enable TLS for cassandra communication")
     parser.add_argument("--cassandra_ca_certs", help="Cassandra CA certs")
     parser.add_argument("--cassandra_driver", help="Cassandra driver",
-                        default="thrift", choices=["thrift", "cql"])
+                        choices=["thrift", "cql"])
     parser.add_argument("--reset_config", action="store_true",
                         help="Warning! Destroy previous configuration and "
                              "start clean")
