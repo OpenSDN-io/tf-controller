@@ -78,7 +78,7 @@ bool IFMapServerParser::ParseMetadata(const pugi::xml_node &node,
     if (loc == metadata_map_.end()) {
         return false;
     }
-    auto_ptr<AutogenProperty> pvalue;
+    std::unique_ptr<AutogenProperty> pvalue;
     bool success = (loc->second)(node, &pvalue);
     if (!success) {
         return false;

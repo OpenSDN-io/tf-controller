@@ -27,7 +27,7 @@ class ConfigCass2JsonAdapter;
 class ConfigJsonParser : public ConfigJsonParserBase {
 public:
     typedef boost::function<
-        bool(const contrail_rapidjson::Value &, std::auto_ptr<AutogenProperty > *)
+        bool(const contrail_rapidjson::Value &, std::unique_ptr<AutogenProperty> *)
     > MetadataParseFn;
     typedef std::map<std::string, MetadataParseFn> MetadataParseMap;
     typedef std::list<struct DBRequest *> RequestList;
@@ -79,7 +79,7 @@ private:
     void EnqueueListToTables(RequestList *req_list) const;
     void InsertRequestIntoQ(IFMapOrigin::Origin origin,
         const std::string &neigh_type, const std::string &neigh_name,
-        const std::string &metaname, std::auto_ptr<AutogenProperty > pvalue,
+        const std::string &metaname, std::unique_ptr<AutogenProperty> &pvalue,
         const IFMapTable::RequestKey &key, bool add_change,
         RequestList *req_list) const;
 
