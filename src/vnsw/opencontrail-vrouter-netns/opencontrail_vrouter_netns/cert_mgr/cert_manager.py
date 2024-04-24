@@ -1,14 +1,7 @@
 from __future__ import absolute_import
 from builtins import object
 import logging
-
-#check python version
-import six
-if six.PY2:
-
-    import exceptions
-else:
-    import builtins as exceptions
+import exceptions
 
 try:
     from .barbican_cert_manager import BarbicanCertManager
