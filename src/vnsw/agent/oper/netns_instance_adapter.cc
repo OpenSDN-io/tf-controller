@@ -85,7 +85,7 @@ InstanceTask* NetNSInstanceAdapter::CreateStartTask(const ServiceInstance::Prope
     if (update) {
         cmd_str << " --update";
     }
-
+    LOG(INFO, "Command to be executed: " + cmd_str.str());
     return new InstanceTaskExecvp("NetNS", cmd_str.str(), START,
                                   agent_->event_manager());
 }
@@ -119,7 +119,7 @@ InstanceTask* NetNSInstanceAdapter::CreateStopTask(const ServiceInstance::Proper
         }
         cmd_str << " --loadbalancer-id " << props.loadbalancer_id;
     }
-
+    LOG(INFO, "Preparing to destroy with command: " + cmd_str.str());
     return new InstanceTaskExecvp("NetNS", cmd_str.str(), STOP,
                                   agent_->event_manager());
 }

@@ -5,7 +5,6 @@ from builtins import object
 import os
 from six.moves import configparser
 import logging
-import exceptions
 
 from .tls import TLS
 from .openstack_cert import OSCert
@@ -45,7 +44,7 @@ class BarbicanCertManager(object):
         try:
             kc = client.Password(**kwargs)
             self.session = session.Session(auth=kc)
-        except exceptions.Exception as e:
+        except Exception as e:
             logging.exception('Error creating Keystone session')
             logging.error(e.__class__)
             logging.error(e.__doc__)
@@ -86,7 +85,7 @@ class BarbicanCertManager(object):
     def get_tls_certificates(self, barbican, url):
         try:
             container = barbican.containers.get(url)
-        except exceptions.Exception as e:
+        except Exception as e:
             msg = "Error in getting Barbican Containers for url %s" %url
             logging.exception(msg)
             logging.error(e.__class__)

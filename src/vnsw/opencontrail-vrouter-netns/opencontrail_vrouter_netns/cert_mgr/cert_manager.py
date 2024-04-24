@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 from builtins import object
-import logging
-import exceptions
 
 try:
     from .barbican_cert_manager import BarbicanCertManager

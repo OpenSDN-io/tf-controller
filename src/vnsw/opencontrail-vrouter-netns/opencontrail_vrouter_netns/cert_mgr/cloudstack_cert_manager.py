@@ -4,7 +4,6 @@ standard_library.install_aliases()
 from builtins import object
 from six.moves import configparser
 import logging
-import exceptions
 import requests
 import json
 import base64
@@ -59,7 +58,7 @@ class CloudstackCertManager(object):
         try:
             json = self.get_resource(params)
             data = json['getloadbalancersslcertificateresponse']['data']
-        except exceptions.Exception as e:
+        except Exception as e:
             msg = "Error in getting data from %s as %s" % (params, e)
             logging.exception(msg)
             return None

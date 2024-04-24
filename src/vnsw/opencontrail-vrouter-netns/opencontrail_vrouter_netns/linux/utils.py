@@ -17,43 +17,29 @@
 #
 # @author: Juliano Martinez, Locaweb.
 
-from builtins import map
-from builtins import str
 import fcntl
 import os
 import shlex
 import signal
 import socket
 import struct
-import tempfile
+import subprocess
 import sys
-
-if sys.version_info[:2] == (2, 6):
-   import subprocess
-else:
-   from eventlet.green import subprocess
-   from eventlet import greenthread
-
+import tempfile
+from eventlet import greenthread
 
 def _subprocess_setup():
-    # Python installs a SIGPIPE handler by default. This is usually not what
-    # non-Python subprocesses expect.
+    """Set the signal behavior to default (especially SIGPIPE) to non-Python subprocesses."""
     signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
-
-def subprocess_popen(args, stdin=None, stdout=None, stderr=None, shell=False,
-                     env=None):
+def subprocess_popen(args, stdin=None, stdout=None, stderr=None, shell=False, env=None):
+    """Helper to open a subprocess."""
     return subprocess.Popen(args, shell=shell, stdin=stdin, stdout=stdout,
                             stderr=stderr, preexec_fn=_subprocess_setup,
                             close_fds=True, env=env)
 
-
 def create_process(cmd, root_helper=None, addl_env=None):
-    """Create a process object for the given command.
-
-    The return value will be a tuple of the process object and the
-    list of command arguments used to create it.
-    """
+    """Create and return a subprocess.Popen object and the command list."""
     if root_helper:
         cmd = shlex.split(root_helper) + cmd
     cmd = list(map(str, cmd))
@@ -62,62 +48,41 @@ def create_process(cmd, root_helper=None, addl_env=None):
     if addl_env:
         env.update(addl_env)
 
-    obj = subprocess_popen(cmd, shell=False,
-                           stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE,
-                           env=env)
-
+    obj = subprocess_popen(cmd, shell=False, stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
     return obj, cmd
-
 
 def execute(cmd, root_helper=None, process_input=None, addl_env=None,
             check_exit_code=True, return_stderr=False):
+    """Execute a command in the subprocess and handle the output."""
     try:
-        obj, cmd = create_process(cmd, root_helper=root_helper,
-                                  addl_env=addl_env)
-        _stdout, _stderr = (process_input and
-                            obj.communicate(process_input) or
-                            obj.communicate())
-        obj.stdin.close()
-        m = ("\nCommand: %(cmd)s\nExit code: %(code)s\nStdout: %(stdout)r\n"
-             "Stderr: %(stderr)r") % {'cmd': cmd, 'code': obj.returncode,
-                                      'stdout': _stdout, 'stderr': _stderr}
+        obj, cmd = create_process(cmd, root_helper=root_helper, addl_env=addl_env)
+        _stdout, _stderr = obj.communicate(process_input)
+        _stdout = _stdout.decode('utf-8') if _stdout else ""
+        _stderr = _stderr.decode('utf-8') if _stderr else ""
+
         if obj.returncode:
             if check_exit_code:
-                raise RuntimeError(m)
+                raise RuntimeError(
+                    f"\nCommand: {cmd}\nExit code: {obj.returncode}\nStdout: {_stdout}\nStderr: {_stderr}"
+                )
     finally:
-        if sys.version_info[:2] == (2, 6):
-            pass
-        else:
-        # NOTE(termie): this appears to be necessary to let the subprocess
-        #               call clean something up in between calls, without
-        #               it two execute calls in a row hangs the second one
+        if sys.version_info[:2] != (2, 6):
             greenthread.sleep(0)
 
-    return return_stderr and (_stdout, _stderr) or _stdout
-
+    return (_stdout, _stderr) if return_stderr else _stdout
 
 def get_interface_mac(interface):
+    """Get the MAC address for the specified interface."""
     DEVICE_NAME_LEN = 15
     MAC_START = 18
     MAC_END = 24
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    info = fcntl.ioctl(s.fileno(), 0x8927,
-                       struct.pack('256s', interface[:DEVICE_NAME_LEN]))
-    return ''.join(['%02x:' % ord(char)
-                    for char in info[MAC_START:MAC_END]])[:-1]
-
+    info = fcntl.ioctl(s.fileno(), 0x8927, struct.pack('256s', interface[:DEVICE_NAME_LEN].encode('utf-8')))
+    return ':'.join(f"{b:02x}" for b in info[MAC_START:MAC_END])
 
 def replace_file(file_name, data):
-    """Replaces the contents of file_name with data in a safe manner.
-
-    First write to a temp file and then rename. Since POSIX renames are
-    atomic, the file is unlikely to be corrupted by competing writes.
-
-    We create the tempfile on the same device to ensure that it can be renamed.
-    """
-
+    """Replace the contents of a file with data safely."""
     base_dir = os.path.dirname(os.path.abspath(file_name))
     tmp_file = tempfile.NamedTemporaryFile('w+', dir=base_dir, delete=False)
     tmp_file.write(data)
@@ -125,16 +90,14 @@ def replace_file(file_name, data):
     os.chmod(tmp_file.name, 0o644)
     os.rename(tmp_file.name, file_name)
 
-
 def find_child_pids(pid):
-    """Retrieve a list of the pids of child processes of the given pid."""
-
+    """Find and return child PIDs for a given PID."""
     try:
-        raw_pids = execute(['ps', '--ppid', pid, '-o', 'pid='])
+        raw_pids = execute(['ps', '--ppid', str(pid), '-o', 'pid='], check_exit_code=False)
+        return [x.strip() for x in raw_pids.split() if x.strip()]
     except RuntimeError as e:
         no_children_found = 'Exit code: 1' in str(e)
         if no_children_found:
-            ctxt.reraise = False
             return []
         raise
-    return [x.strip() for x in raw_pids.split('\n') if x.strip()]
+

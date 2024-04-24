@@ -1,6 +1,5 @@
 from builtins import object
 import logging
-import exceptions
 
 class OSCert(object):
 
@@ -12,7 +11,7 @@ class OSCert(object):
             try:
                 payload = self._cert_container.certificate.payload
                 return True, payload
-            except exceptions.Exception as e:
+            except Exception as e:
                 logging.exception('')
                 logging.error(e.__class__)
                 logging.error(e.__doc__)
@@ -25,7 +24,7 @@ class OSCert(object):
             try:
                 payload = self._cert_container.intermediates.payload
                 return True, payload
-            except exceptions.Exception as e:
+            except Exception as e:
                 logging.exception('')
                 logging.error(e.__class__)
                 logging.error(e.__doc__)
@@ -38,7 +37,7 @@ class OSCert(object):
             try:
                 payload = self._cert_container.private_key.payload
                 return True, payload
-            except exceptions.Exception as e:
+            except Exception as e:
                 logging.exception('')
                 logging.error(e.__class__)
                 logging.error(e.__doc__)
@@ -51,7 +50,7 @@ class OSCert(object):
             try:
                 payload = self._cert_container.private_key_passphrase.payload
                 return True, payload
-            except exceptions.Exception as e:
+            except Exception as e:
                 msg = "Error in getting Private-Key-PassPhrase from Container"
                 logging.exception('')
                 logging.error(e.__class__)

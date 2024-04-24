@@ -5,7 +5,6 @@ from builtins import object
 import os
 from six.moves import configparser
 import logging
-import exceptions
 
 import requests
 import json
@@ -80,7 +79,7 @@ class KubernetesCert(object):
         try:
             json = self.get_resource('secrets', secret, ns_name)
             data = json['data']
-        except exceptions.Exception as e:
+        except Exception as e:
             msg = "Error in getting secrets %s - %s" %(ns_name - secret)
             logging.exception(msg)
             logging.error(e.__class__)
