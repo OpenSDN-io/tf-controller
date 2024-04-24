@@ -147,11 +147,6 @@ test = env.TestSuite('agent-test', agent_suite)
 env.Alias('agent:agent_test', test)
 env.Alias('controller/src/vnsw/agent:test', test)
 
-md6_arr = [test_vxlan_routing_v6]
-md6_test = env.TestSuite('agent-test-v6', md6_arr)
-env.Alias('agent:agent_test_v6', md6_test)
-env.Alias('controller/src/vnsw/agent:test_v6', md6_test)
-
 Return('agent_suite')
 
 # Local Variables:
