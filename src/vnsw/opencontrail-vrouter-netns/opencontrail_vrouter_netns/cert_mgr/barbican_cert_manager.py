@@ -5,14 +5,7 @@ from builtins import object
 import os
 from six.moves import configparser
 import logging
-
-#check python version
-import six
-if six.PY2:
-
-    import exceptions
-else:
-    import builtins as exceptions
+import exceptions
 
 from .tls import TLS
 from .openstack_cert import OSCert

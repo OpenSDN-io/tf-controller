@@ -73,7 +73,7 @@ env.Append(BUILDERS = {'PythonTestSetup': GeneratePyTestSetup})
 test_sources += env.PythonTestSetup(source=packages)
 
 test = env.Command('test.log', test_sources,
-                   cd_cmd + 'python3 setup.py test > test.log')
+                   cd_cmd + 'python setup.py test > test.log')
 
 env.Alias('controller/src/vnsw/opencontrail_vrouter_netns:test',
           env.AlwaysBuild(test))
@@ -83,7 +83,7 @@ env.Alias('controller/src/opencontrail-vrouter-netns/opencontrail_vrouter_netns:
 
 if 'install' in BUILD_TARGETS:
     install_cmd = env.Command(None, sources,
-                              cd_cmd + 'python3 setup.py install %s' %
+                              cd_cmd + 'python setup.py install %s' %
                               env['PYTHON_INSTALL_OPT'])
     env.Alias('install', install_cmd)
 
