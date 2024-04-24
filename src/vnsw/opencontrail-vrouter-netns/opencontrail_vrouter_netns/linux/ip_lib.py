@@ -16,7 +16,6 @@ from __future__ import absolute_import
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 from builtins import zip
 from builtins import str
 from builtins import next
@@ -189,8 +188,6 @@ class IPWrapper(SubProcessBase):
     @classmethod
     def get_namespaces(cls, root_helper):
         output = cls._execute('', 'netns', ('list',), root_helper=root_helper)
-        if not isinstance(output, six.string_types):
-            output = output.decode('utf-8')
         return [l.strip() for l in output.split('\n')]
 
 
@@ -518,8 +515,7 @@ class IpNetnsCommand(IpCommandBase):
 
     def exists(self, name):
         output = self._parent._execute('o', 'netns', ['list'])
-        if not isinstance(output, six.string_types):
-            output = output.decode('utf-8')
+
         for line in output.split('\n'):
             if name in line.strip():
                 return True
@@ -549,8 +545,4 @@ def iproute_arg_supported(command, arg, root_helper=None):
     command += ['help']
     stdout, stderr = utils.execute(command, root_helper=root_helper,
                                    check_exit_code=False, return_stderr=True)
-    if not isinstance(stdout, six.string_types):
-        stdout = stdout.decode('utf-8')
-    if not isinstance(stderr, six.string_types):
-        stderr = stderr.decode('utf-8')
     return any(arg in line for line in stderr.split('\n'))
