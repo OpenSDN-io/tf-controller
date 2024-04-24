@@ -353,7 +353,7 @@ void AgentXmppChannel::ReceiveEvpnUpdate(XmlPugi *pugi) {
     }
 
     //Call Auto-generated Code to return struct
-    auto_ptr<AutogenProperty> xparser(new AutogenProperty());
+    std::unique_ptr<AutogenProperty> xparser(new AutogenProperty());
     if (EnetItemsType::XmlParseProperty(node, &xparser) == false) {
         CONTROLLER_TRACE(Trace, GetBgpPeerName(), vrf_name,
                          "Xml Parsing for evpn Failed");
@@ -482,7 +482,7 @@ void AgentXmppChannel::ReceiveMulticastUpdate(XmlPugi *pugi) {
     }
 
     //Call Auto-generated Code to return struct
-    auto_ptr<AutogenProperty> xparser(new AutogenProperty());
+    std::unique_ptr<AutogenProperty> xparser(new AutogenProperty());
     if (McastItemsType::XmlParseProperty(node, &xparser) == false) {
         CONTROLLER_TRACE(Trace, GetBgpPeerName(), vrf_name,
                         "Xml Parsing for Multicast Message Failed");
@@ -625,7 +625,7 @@ void AgentXmppChannel::ReceiveMvpnUpdate(XmlPugi *pugi) {
     }
 
     //Call Auto-generated Code to return struct
-    auto_ptr<AutogenProperty> xparser(new AutogenProperty());
+    std::unique_ptr<AutogenProperty> xparser(new AutogenProperty());
     if (MvpnItemsType::XmlParseProperty(node, &xparser) == false) {
         CONTROLLER_TRACE(Trace, GetBgpPeerName(), vrf_name,
                         "Xml Parsing for Multicast Message Failed");
@@ -750,7 +750,7 @@ void AgentXmppChannel::ReceiveV4V6Update(XmlPugi *pugi) {
         }
 
         //Call Auto-generated Code to return struct
-        auto_ptr<AutogenProperty> xparser(new AutogenProperty());
+        std::unique_ptr<AutogenProperty> xparser(new AutogenProperty());
         if (ItemsType::XmlParseProperty(node, &xparser) == false) {
             CONTROLLER_TRACE(Trace, GetBgpPeerName(), vrf_name,
                              "Xml Parsing Failed");
@@ -860,7 +860,7 @@ void AgentXmppChannel::ReceiveInet4MplsUpdate(XmlPugi *pugi) {
         }
 
         //Call Auto-generated Code to return struct
-        auto_ptr<AutogenProperty> xparser(new AutogenProperty());
+        std::unique_ptr<AutogenProperty> xparser(new AutogenProperty());
         if (ItemsType::XmlParseProperty(node, &xparser) == false) {
             CONTROLLER_TRACE(Trace, GetBgpPeerName(), vrf_name,
                              "Xml Parsing Failed");

@@ -171,7 +171,7 @@ bool ConfigJsonParser::ParseOneProperty(const ConfigCass2JsonAdapter &adapter,
     // Treat updates with NULL value as deletes.
     if (add_change && value_node.IsNull())
         add_change = false;
-    auto_ptr<AutogenProperty> pvalue;
+    std::unique_ptr<AutogenProperty> pvalue;
     if (add_change) {
         bool success = (loc->second)(value_node, &pvalue);
         CONFIG_PARSE_ASSERT(Property, success, metaname,
@@ -222,7 +222,7 @@ bool ConfigJsonParser::ParseRef(const ConfigCass2JsonAdapter &adapter,
     CONFIG_PARSE_ASSERT(Reference, loc != metadata_map_.end(), metaname,
                         "No entry in metadata map");
 
-    auto_ptr<AutogenProperty> pvalue;
+    std::unique_ptr<AutogenProperty> pvalue;
     if (ref_entry.HasMember("attr")) {
         const Value& attr_node = ref_entry["attr"];
         bool success = (loc->second)(attr_node, &pvalue);
@@ -281,7 +281,7 @@ bool ConfigJsonParser::ParseLinks(const ConfigCass2JsonAdapter &adapter,
                     GetParentName(parent_type,key.id_type);
                 CONFIG_PARSE_ASSERT(Parent, !metaname.empty(), parent_type,
                                     "Missing link name");
-                auto_ptr<AutogenProperty > pvalue;
+                std::unique_ptr<AutogenProperty > pvalue;
                 InsertRequestIntoQ(origin, parent_type,
                      parent_name, metaname, pvalue, key, add_change, req_list);
             } else {
@@ -316,7 +316,7 @@ bool ConfigJsonParser::ParseDocument(const ConfigCass2JsonAdapter &adapter,
 
 void ConfigJsonParser::InsertRequestIntoQ(IFMapOrigin::Origin origin,
         const string &neigh_type, const string &neigh_name,
-        const string &metaname, auto_ptr<AutogenProperty > pvalue,
+        const string &metaname, std::unique_ptr<AutogenProperty> &pvalue,
         const IFMapTable::RequestKey &key, bool add_change,
         RequestList *req_list) const {
 
