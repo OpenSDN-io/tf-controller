@@ -486,9 +486,8 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
     def safe_create_table(self, cf_name):
         """Create table c.f ColumnFamilly if does not already exist."""
         ses = self.get_cf(cf_name)
-        # We don't use IF EXISTS to print debug.
         cql = """
-          CREATE TABLE "{}" (
+          CREATE TABLE IF NOT EXISTS "{}" (
             key blob,
             column1 blob,
             value text,
@@ -534,9 +533,8 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
     def safe_create_keyspace(self, keyspace, props=REPLICATION_PROPERTIES):
         """Create keyspace if does not already exist."""
         ses = self.get_default_session()
-        # We don't use IF EXISTS to print debug.
         cql = """
-          CREATE KEYSPACE "{}" WITH REPLICATION = {{
+          CREATE KEYSPACE IF NOT EXISTS "{}" WITH REPLICATION = {{
             'class': '{}',
             'replication_factor': '{}'
           }}

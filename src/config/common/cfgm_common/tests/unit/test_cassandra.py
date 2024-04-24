@@ -366,7 +366,7 @@ class TestCassandraDriverCQL(unittest.TestCase):
         self.drv.safe_create_keyspace(datastore_api.OBJ_UUID_CF_NAME)
         self.assertCql(
             """
-            CREATE KEYSPACE "obj_uuid_table"
+            CREATE KEYSPACE IF NOT EXISTS "obj_uuid_table"
               WITH REPLICATION = {
                 'class': 'SimpleStrategy',
                 'replication_factor': '2'
@@ -392,7 +392,7 @@ class TestCassandraDriverCQL(unittest.TestCase):
         self.drv.safe_create_table(datastore_api.OBJ_UUID_CF_NAME)
         self.assertCql(
             """
-            CREATE TABLE "obj_uuid_table" (
+            CREATE TABLE IF NOT EXISTS "obj_uuid_table" (
               key blob,
               column1 blob,
               value text,
