@@ -12,24 +12,14 @@ import kombu
 import gevent
 import gevent.monkey
 gevent.monkey.patch_all()
-import time
 import signal
 import socket
 from gevent.queue import Queue
-try:
-    from gevent.lock import Semaphore
-except ImportError:
-    # older versions of gevent
-    from gevent.coros import Semaphore
 
 from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
 from pysandesh.gen_py.process_info.ttypes import ConnectionType as ConnType
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
-try:
-    from gevent.hub import ConcurrentObjectUseError
-except:
-    from gevent.exceptions import ConcurrentObjectUseError
 from cfgm_common import vnc_greenlets
 import ssl
 
@@ -303,6 +293,7 @@ class VncKombuClientBase(object):
             return ssl_params or True
         return False
 
+
 class VncKombuClientV1(VncKombuClientBase):
     def __init__(self, rabbit_ip, rabbit_port, rabbit_user, rabbit_password,
                  rabbit_vhost, rabbit_ha_mode, q_name, subscribe_cb, logger,
@@ -327,7 +318,6 @@ class VncKombuClientV1(VncKombuClientBase):
 
 class VncKombuClientV2(VncKombuClientBase):
     def _parse_rabbit_hosts(self, rabbit_hosts):
-
         default_dict = {'user': self._rabbit_user,
                         'password': self._rabbit_password,
                         'port': self._rabbit_port}
@@ -352,6 +342,9 @@ class VncKombuClientV2(VncKombuClientBase):
                                                rabbit_vhost, rabbit_ha_mode,
                                                q_name, subscribe_cb, logger,
                                                heartbeat_seconds, **kwargs)
+        if not rabbit_hosts:
+            raise Exception("rabbit_hosts must be set")
+
         self._server_addrs = re.compile('[,\s]+').split(rabbit_hosts)
 
         _hosts = self._parse_rabbit_hosts(self._server_addrs)

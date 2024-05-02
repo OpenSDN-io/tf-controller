@@ -109,5 +109,5 @@ if 'install' in BUILD_TARGETS:
     py3_install_cmd = env.Command(None, 'setup3.py',
                                   cd_cmd + 'python3 setup3.py install %s' %
                                   env['PYTHON_INSTALL_OPT'])
-    env.Depends(py3_install_cmd, sdist_depends)
+    env.Depends(py3_install_cmd, setup_link_cmd)
     env.Alias('install', py3_install_cmd)

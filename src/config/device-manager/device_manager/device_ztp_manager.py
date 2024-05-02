@@ -69,7 +69,8 @@ class DeviceZtpManager(object):
         consumer_name = 'device_manager_ztp.%s.config_queue' % \
             socket.getfqdn()
         self._amqp_client.add_consumer(
-            consumer_name, self.EXCHANGE, routing_key=self.CONFIG_FILE_ROUTING_KEY,
+            consumer_name, self.EXCHANGE,
+            routing_key=self.CONFIG_FILE_ROUTING_KEY,
             callback=self.handle_config_file_request)
 
         consumer_name = 'device_manager_ztp.%s.tftp_queue' % \
@@ -128,7 +129,8 @@ class DeviceZtpManager(object):
             re.MULTILINE | re.DOTALL)
         consumer_name = 'device_manager_ztp.ztp_queue'
         self._amqp_client.add_consumer(
-            consumer_name, self.EXCHANGE, routing_key=self.ZTP_REQUEST_ROUTING_KEY,
+            consumer_name, self.EXCHANGE,
+            routing_key=self.ZTP_REQUEST_ROUTING_KEY,
             callback=self.handle_ztp_request)
     # end set_active
 

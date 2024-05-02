@@ -86,7 +86,6 @@ import bottle
 from . import utils
 from . import context
 from .context import get_request, get_context, set_context, use_context
-from .context import ApiContext
 from .context import is_internal_request
 from .event_dispatcher import EventDispatcher
 from .resources import initialize_all_server_resource_classes
@@ -96,8 +95,7 @@ import cfgm_common
 from cfgm_common import ignore_exceptions
 from cfgm_common.uve.vnc_api.ttypes import VncApiCommon, VncApiConfigLog,\
     VncApiDebug, VncApiInfo, VncApiNotice, VncApiError
-from cfgm_common.uve.vnc_api.ttypes import FabricJobExecution, FabricJobUve, \
-    PhysicalRouterJobExecution, PhysicalRouterJobUve
+
 from cfgm_common import illegal_xml_chars_RE
 from sandesh_common.vns.ttypes import Module
 from sandesh_common.vns.constants import ModuleNames, Module2NodeType,\
