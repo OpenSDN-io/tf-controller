@@ -14,6 +14,7 @@ from docker.errors import APIError
 from .vrouter_netns import NetnsManager
 from .common import validate_uuid
 
+
 class VRouterDocker(object):
     """
     Creates and drestoys service instance inside Docker.
@@ -266,8 +267,6 @@ class VRouterDocker(object):
         self._stop(vm_name, self.args.vmi_left_id, self.args.vmi_right_id,
                    self.args.vmi_management_id)
         self._client.remove_container(vm_name)
-
-
 
 
 def main(args_str=None):

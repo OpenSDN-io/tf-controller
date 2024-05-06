@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 import os
-from six.moves import configparser
 import subprocess
 import shlex
 import logging
@@ -31,12 +30,14 @@ for log_level_key in list(log_levels.keys()):
     log_level = log_levels[log_level_key]
     logging.addLevelName(log_level['value'], log_level['name'])
 
+
 def delete_haproxy_dir(base_dir, loadbalancer_id):
     dir_name = base_dir + "/" +  loadbalancer_id
     cmd = "rm -rf " + dir_name
     cmd_list = shlex.split(cmd)
     p = subprocess.Popen(cmd_list)
     p.communicate()
+
 
 def create_haproxy_dir(base_dir, loadbalancer_id):
     dir_name = base_dir + "/" + loadbalancer_id
@@ -45,6 +46,7 @@ def create_haproxy_dir(base_dir, loadbalancer_id):
     p = subprocess.Popen(cmd_list)
     p.communicate()
     return dir_name
+
 
 def update_ssl_config(haproxy_config,
              haproxy_ssl_cert_path, dir_name):
@@ -55,6 +57,7 @@ def update_ssl_config(haproxy_config,
                              search_string, haproxy_ssl_cert_path)
             break
     return haproxy_config
+
 
 def get_haproxy_config_file(cfg_file, dir_name):
     f = open(cfg_file)
@@ -102,10 +105,12 @@ def get_haproxy_config_file(cfg_file, dir_name):
 
     return haproxy_cfg_file
 
+
 def get_pid_file_from_conf_file(conf_file):
     dir_name = os.path.dirname(conf_file)
     pid_file = dir_name + "/" + "haproxy.pid"
     return pid_file
+
 
 def remove_unmovable_files(scheme, loadbalancer_id):
     if (scheme == "1"):
@@ -115,6 +120,7 @@ def remove_unmovable_files(scheme, loadbalancer_id):
         cmd_list = shlex.split(cmd)
         p = subprocess.Popen(cmd_list)
         p.communicate()
+
 
 def transform_oldscheme_to_newscheme(loadbalancer_id):
     scheme = ""
@@ -164,6 +170,7 @@ def transform_oldscheme_to_newscheme(loadbalancer_id):
         p.communicate()
     return scheme
 
+
 def stop_haproxy(loadbalancer_id, daemon_mode=False):
     old_scheme = transform_oldscheme_to_newscheme(loadbalancer_id)
     conf_file = HAPROXY_DIR + "/" +  loadbalancer_id + "/" + HAPROXY_PROCESS_CONF
@@ -174,15 +181,13 @@ def stop_haproxy(loadbalancer_id, daemon_mode=False):
             pool_id = os.path.split(os.path.dirname(conf_file))[1]
             _stop_supervisor_haproxy(pool_id)
     except Exception as e:
-        msg = "Exception in Stopping haproxy for Loadbalancer-ID %s" %loadbalancer_id
+        msg = "Exception in Stopping haproxy for Loadbalancer-ID %s" % loadbalancer_id
         logging.exception(msg)
-        logging.error(e.__class__)
-        logging.error(e.__doc__)
-        logging.error(e.message)
 
     delete_haproxy_dir(HAPROXY_DIR, loadbalancer_id)
     if (old_scheme):
         remove_unmovable_files(old_scheme, loadbalancer_id)
+
 
 def start_update_haproxy(loadbalancer_id, cfg_file,
                          netns, daemon_mode=False):
@@ -198,9 +203,6 @@ def start_update_haproxy(loadbalancer_id, cfg_file,
     except Exception as e:
         msg = "Exception in Createing haproxy config for Loadbalancer-ID %s" %loadbalancer_id
         logging.exception(msg)
-        logging.error(e.__class__)
-        logging.error(e.__doc__)
-        logging.error(e.message)
         stop_haproxy(loadbalancer_id, daemon_mode)
         return False
     try:
@@ -211,11 +213,9 @@ def start_update_haproxy(loadbalancer_id, cfg_file,
     except Exception as e:
         msg = "Exception in Starting/Updating haproxy for Loadbalancer-ID %s" %loadbalancer_id
         logging.exception(msg)
-        logging.error(e.__class__)
-        logging.error(e.__doc__)
-        logging.error(e.message)
         return False
     return True
+
 
 def _get_lbaas_pid(conf_file):
     pid_file = get_pid_file_from_conf_file(conf_file)
@@ -226,8 +226,10 @@ def _get_lbaas_pid(conf_file):
     p = subprocess.Popen(cmd_list, stdout=subprocess.PIPE)
     pid, err = p.communicate()
     if err:
+        logging.error("failed to get lbaas pid: " + err.decode())
         return None
-    return pid
+    return pid.decode()
+
 
 def _stop_haproxy_daemon(loadbalancer_id, conf_file):
     log_msg = log_levels['MSG']
@@ -238,10 +240,11 @@ def _stop_haproxy_daemon(loadbalancer_id, conf_file):
         cmd_list = shlex.split('kill -9 ' + last_pid)
         p = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = p.communicate()
-        if (stdout != ''):
-            logging.log(log_msg['value'], stdout)
-        if (stderr != ''):
-            logging.log(log_msg['value'], stderr)
+        if stdout:
+            logging.log(log_msg['value'], stdout.decode())
+        if stderr:
+            logging.log(log_msg['value'], stderr.decode())
+
 
 def _start_haproxy_daemon(pool_id, netns, conf_file):
     log_msg = log_levels['MSG']
@@ -262,10 +265,11 @@ def _start_haproxy_daemon(pool_id, netns, conf_file):
     cmd_list = shlex.split(cmd)
     p = subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
-    if (stdout != ''):
-        logging.log(log_msg['value'], stdout)
-    if (stderr != ''):
-        logging.log(log_msg['value'], stderr)
+    if stdout:
+        logging.log(log_msg['value'], stdout.decode())
+    if stderr:
+        logging.log(log_msg['value'], stderr.decode())
+
 
 def _stop_supervisor_haproxy(pool_id):
     pool_suffix = _get_pool_suffix(pool_id)
@@ -275,6 +279,7 @@ def _stop_supervisor_haproxy(pool_id):
     subprocess.Popen(cmd_list)
     _update_supervisor()
 
+
 def _start_supervisor_haproxy(pool_id, netns, conf_file):
     data = []
     data.extend(_set_config(pool_id, netns, conf_file))
@@ -283,8 +288,10 @@ def _start_supervisor_haproxy(pool_id, netns, conf_file):
         f.write('\n'.join(data) + '\n')
     _update_supervisor()
 
+
 def _get_pool_suffix(pool_id):
     return pool_id.split('-')[0]
+
 
 def _update_supervisor():
     if os.path.exists('/tmp/supervisord_vrouter.sock'):
@@ -293,6 +300,7 @@ def _update_supervisor():
         cmd = "supervisorctl -s unix:///var/run/supervisord_vrouter.sock update"
     cmd_list = shlex.split(cmd)
     subprocess.Popen(cmd_list)
+
 
 def _set_config(pool_id, netns, conf_file):
     pool_suffix = _get_pool_suffix(pool_id)
@@ -304,7 +312,8 @@ def _set_config(pool_id, netns, conf_file):
     cmd += program_name
     cmd_list = shlex.split(cmd)
     p = subprocess.Popen(cmd_list, stdout=subprocess.PIPE)
-    last_pid, err = p.communicate()
+    last_pid, _ = p.communicate()
+    last_pid = last_pid.decode()
     try:
         int(last_pid)
         sf_opt = '-sf ' + last_pid

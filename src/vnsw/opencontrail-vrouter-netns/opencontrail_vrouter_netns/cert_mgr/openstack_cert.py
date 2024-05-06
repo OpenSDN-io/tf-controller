@@ -12,10 +12,7 @@ class OSCert(object):
                 payload = self._cert_container.certificate.payload
                 return True, payload
             except Exception as e:
-                logging.exception('')
-                logging.error(e.__class__)
-                logging.error(e.__doc__)
-                logging.error(e.message)
+                logging.exception('get_certificate failed')
                 return False, None
         return True, None
 
@@ -25,10 +22,7 @@ class OSCert(object):
                 payload = self._cert_container.intermediates.payload
                 return True, payload
             except Exception as e:
-                logging.exception('')
-                logging.error(e.__class__)
-                logging.error(e.__doc__)
-                logging.error(e.message)
+                logging.exception('get_intermediates failed')
                 return False, None
         return True, None
 
@@ -38,10 +32,7 @@ class OSCert(object):
                 payload = self._cert_container.private_key.payload
                 return True, payload
             except Exception as e:
-                logging.exception('')
-                logging.error(e.__class__)
-                logging.error(e.__doc__)
-                logging.error(e.message)
+                logging.exception('get_private_key failed')
                 return False, None
         return True, None
 
@@ -52,9 +43,6 @@ class OSCert(object):
                 return True, payload
             except Exception as e:
                 msg = "Error in getting Private-Key-PassPhrase from Container"
-                logging.exception('')
-                logging.error(e.__class__)
-                logging.error(e.__doc__)
-                logging.error(e.message)
+                logging.exception(msg)
                 return False, None
         return True, None

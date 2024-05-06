@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-import os
 from six.moves import configparser
 import logging
 
@@ -80,11 +79,8 @@ class KubernetesCert(object):
             json = self.get_resource('secrets', secret, ns_name)
             data = json['data']
         except Exception as e:
-            msg = "Error in getting secrets %s - %s" %(ns_name - secret)
+            msg = "Error in getting secrets %s - %s" % (ns_name - secret)
             logging.exception(msg)
-            logging.error(e.__class__)
-            logging.error(e.__doc__)
-            logging.error(e.message)
             return None
         certificate = base64.b64decode(data['tls.crt'])
         private_key = base64.b64decode(data['tls.key'])

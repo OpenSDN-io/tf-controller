@@ -45,7 +45,7 @@ def main():
     instance_name = '%s-%s' % (socket.getfqdn(), args.container_id)
     pid_str = subprocess.check_output(
         'docker inspect -f \'{{.State.Pid}}\' %s' % args.container_id, shell=True)
-    pid = int(pid_str)
+    pid = int(pid_str.decode())
 
     subprocess.check_output(
         'ln -sf /proc/%d/ns/net /var/run/netns/%s' % (pid, args.container_id), shell=True)

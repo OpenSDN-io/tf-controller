@@ -483,13 +483,6 @@ class VRouterNetns(object):
                    self.args.service_type)
             raise NotImplementedError(msg)
 
-def _check_output(cmd, flag=True):
-    proc = subprocess.Popen(cmd, shell=flag, stdout=subprocess.PIPE)
-    data, err = proc.communicate()
-    retcode = proc.poll()
-    if retcode:
-       raise subprocess.CalledProcessError(retcode, cmd)
-    return data
 
 def main(args_str=None):
     vrouter_netns = VRouterNetns(args_str)

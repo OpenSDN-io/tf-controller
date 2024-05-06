@@ -1,5 +1,5 @@
-
 from contrail_vrouter_api.vrouter_api import ContrailVRouterApi
+
 
 def interface_register(vm, vmi, iface_name, project=None, vrouter_api=None):
     api = vrouter_api or ContrailVRouterApi()

@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-import os
 from six.moves import configparser
 import logging
 
@@ -14,6 +13,7 @@ from keystoneclient.auth.identity import v2 as v2_client
 from keystoneclient.auth.identity import v3 as v3_client
 
 from barbicanclient import client
+
 
 class BarbicanCertManager(object):
 
@@ -46,9 +46,6 @@ class BarbicanCertManager(object):
             self.session = session.Session(auth=kc)
         except Exception as e:
             logging.exception('Error creating Keystone session')
-            logging.error(e.__class__)
-            logging.error(e.__doc__)
-            logging.error(e.message)
             return None
 
         return self.session
@@ -88,9 +85,6 @@ class BarbicanCertManager(object):
         except Exception as e:
             msg = "Error in getting Barbican Containers for url %s" %url
             logging.exception(msg)
-            logging.error(e.__class__)
-            logging.error(e.__doc__)
-            logging.error(e.message)
             return None
         cert = OSCert(container)
         status, certificate = cert.get_certificate()

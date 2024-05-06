@@ -3,12 +3,11 @@ from builtins import range
 from builtins import object
 import re
 import subprocess
-import sys
 
 
 def shell_command(str):
     cmd = subprocess.check_output(str, shell=True)
-    return cmd
+    return cmd.decode()
 
 
 class LxcManager(object):
