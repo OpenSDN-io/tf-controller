@@ -2846,8 +2846,8 @@ TEST_F(RouteTest, EcmpTest_1) {
     MplsLabel *mpls = agent_->mpls_table()->FindMplsLabel(label);
     DBEntryBase::KeyPtr key_tmp = mpls->nexthop()->GetDBRequestKey();
     NextHopKey *comp_nh_key = static_cast<NextHopKey *>(key_tmp.release());
-    std::auto_ptr<const NextHopKey> nh_key_ptr(comp_nh_key);
-    ComponentNHKeyPtr component_nh_key(new ComponentNHKey(label, nh_key_ptr));
+    std::unique_ptr<const NextHopKey> nh_key_ptr(comp_nh_key);
+    ComponentNHKeyPtr component_nh_key(new ComponentNHKey(label, std::move(nh_key_ptr)));
     comp_nh_list.push_back(component_nh_key);
     for(int i = 1; i < nh_count; i++) {
         ComponentNHKeyPtr comp_nh(new ComponentNHKey((label + i),

@@ -95,7 +95,7 @@ void VxlanRoutingManager::XmppAdvertiseEvpnTunnel(
         return;
     }
     DBRequest nh_req(DBRequest::DB_ENTRY_ADD_CHANGE);
-    std::auto_ptr<TunnelNHKey> tun_nh_key (AllocateTunnelNextHopKey(
+    std::unique_ptr<TunnelNHKey> tun_nh_key (AllocateTunnelNextHopKey(
         params.nh_addr_, params.nh_mac_));
 
     ControllerVmRoute *data =

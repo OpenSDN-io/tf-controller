@@ -130,12 +130,12 @@ ForwardingClassTable::CreateTable(Agent *agent, DB *db, const std::string &name)
     return fc_table;
 }
 
-std::auto_ptr<DBEntry>
+std::unique_ptr<DBEntry>
 ForwardingClassTable::AllocEntry(const DBRequestKey *k) const {
     const ForwardingClassKey *key =
         static_cast<const ForwardingClassKey *>(k);
     ForwardingClass *fc = new ForwardingClass(key->uuid_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(fc));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(fc));
 }
 
 DBEntry* ForwardingClassTable::OperDBAdd(const DBRequest *req) {

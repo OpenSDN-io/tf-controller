@@ -60,12 +60,12 @@ SourceGroupInfo::Action MulticastPolicyEntry::GetAction(IpAddress source,
     return SourceGroupInfo::ACTION_DENY;
 }
 
-std::auto_ptr<DBEntry> MulticastPolicyTable::AllocEntry(const DBRequestKey *k)
+std::unique_ptr<DBEntry> MulticastPolicyTable::AllocEntry(const DBRequestKey *k)
                                     const {
 
     const MulticastPolicyKey *key = static_cast<const MulticastPolicyKey *>(k);
     MulticastPolicyEntry *mp = new MulticastPolicyEntry(key->mp_uuid_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(mp));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(mp));
 }
 
 DBEntry *MulticastPolicyTable::OperDBAdd(const DBRequest *req) {

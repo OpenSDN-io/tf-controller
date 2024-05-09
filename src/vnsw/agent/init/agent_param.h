@@ -763,7 +763,7 @@ private:
     std::string vmware_physical_port_;
     bool test_mode_;
     boost::property_tree::ptree tree_;
-    std::auto_ptr<VirtualGatewayConfigTable> vgw_config_table_;
+    std::unique_ptr<VirtualGatewayConfigTable> vgw_config_table_;
     bool dhcp_relay_mode_;
     bool xmpp_auth_enable_;
     std::string xmpp_server_cert_;

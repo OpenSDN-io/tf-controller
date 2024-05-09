@@ -94,7 +94,7 @@ void FlowEventQueueBase::TaskExit(bool done) {
 }
 
 bool FlowEventQueueBase::Handler(FlowEvent *event) {
-    std::auto_ptr<FlowEvent> event_ptr(event);
+    std::unique_ptr<FlowEvent> event_ptr(event);
     count_++;
     if (CanProcess(event) == false) {
         ProcessDone(event, false);

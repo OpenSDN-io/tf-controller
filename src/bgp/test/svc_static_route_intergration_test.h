@@ -462,25 +462,25 @@ protected:
         VerifyNetworkConfig(cn1_.get(), instance_names);
         VerifyNetworkConfig(cn2_.get(), instance_names);
 
-        auto_ptr<autogen::ServiceChainInfo> params;
+        unique_ptr<autogen::ServiceChainInfo> params;
         params =
             GetChainConfig("controller/src/bgp/testdata/service_chain_1.xml");
-        SetServiceChainProperty(cn1_.get(), "blue-i1", params);
+        SetServiceChainProperty(cn1_.get(), "blue-i1", std::move(params));
         task_util::WaitForIdle();
 
         params =
             GetChainConfig("controller/src/bgp/testdata/service_chain_1.xml");
-        SetServiceChainProperty(cn2_.get(), "blue-i1", params);
+        SetServiceChainProperty(cn2_.get(), "blue-i1", std::move(params));
         task_util::WaitForIdle();
 
         params =
             GetChainConfig("controller/src/bgp/testdata/service_chain_6.xml");
-        SetServiceChainProperty(cn1_.get(), "red-i2", params);
+        SetServiceChainProperty(cn1_.get(), "red-i2", std::move(params));
         task_util::WaitForIdle();
 
         params =
             GetChainConfig("controller/src/bgp/testdata/service_chain_6.xml");
-        SetServiceChainProperty(cn2_.get(), "red-i2", params);
+        SetServiceChainProperty(cn2_.get(), "red-i2", std::move(params));
         task_util::WaitForIdle();
 
         if (ServiceChainIntegrationTestGlobals::single_si_)
@@ -488,11 +488,11 @@ protected:
 
         params =
             GetChainConfig("controller/src/bgp/testdata/service_chain_5.xml");
-        SetServiceChainProperty(cn1_.get(), "blue-i3", params);
+        SetServiceChainProperty(cn1_.get(), "blue-i3", std::move(params));
         task_util::WaitForIdle();
         params =
             GetChainConfig("controller/src/bgp/testdata/service_chain_5.xml");
-        SetServiceChainProperty(cn2_.get(), "blue-i3", params);
+        SetServiceChainProperty(cn2_.get(), "blue-i3", std::move(params));
         task_util::WaitForIdle();
     }
 
@@ -972,8 +972,8 @@ protected:
         return content;
     }
 
-    auto_ptr<autogen::ServiceChainInfo> GetChainConfig(const string &filename) {
-        auto_ptr<autogen::ServiceChainInfo> params(
+    unique_ptr<autogen::ServiceChainInfo> GetChainConfig(const string &filename) {
+        unique_ptr<autogen::ServiceChainInfo> params(
             new autogen::ServiceChainInfo());
         string content = FileRead(filename);
         istringstream sstream(content);
@@ -989,9 +989,9 @@ protected:
         return params;
     }
 
-    auto_ptr<autogen::StaticRouteEntriesType> GetStaticRouteConfig(
+    unique_ptr<autogen::StaticRouteEntriesType> GetStaticRouteConfig(
         const string &filename) {
-        auto_ptr<autogen::StaticRouteEntriesType> params(
+        unique_ptr<autogen::StaticRouteEntriesType> params(
             new autogen::StaticRouteEntriesType());
         string content = FileRead(filename);
         istringstream sstream(content);
@@ -1008,7 +1008,7 @@ protected:
     }
 
     void SetServiceChainProperty(BgpServerTest *server, const string &instance,
-        auto_ptr<autogen::ServiceChainInfo> params) {
+        unique_ptr<autogen::ServiceChainInfo> params) {
         ifmap_test_util::IFMapMsgPropertyAdd(server->config_db(),
             "routing-instance", instance,
             family_ == Address::INET ?
@@ -1172,9 +1172,9 @@ protected:
 
     EventManager evm_;
     ServerThread thread_;
-    auto_ptr<BgpServerTest> cn1_;
-    auto_ptr<BgpServerTest> cn2_;
-    auto_ptr<BgpServerTest> mx_;
+    unique_ptr<BgpServerTest> cn1_;
+    unique_ptr<BgpServerTest> cn2_;
+    unique_ptr<BgpServerTest> mx_;
     XmppServer *cn1_xmpp_server_;
     XmppServer *cn2_xmpp_server_;
     Address::Family family_;

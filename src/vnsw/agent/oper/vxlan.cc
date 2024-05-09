@@ -142,10 +142,10 @@ bool VxLanTable::AddCompositeNH(uint32_t vxlan_id, ComponentNHKeyPtr nh_key) {
 }
 
 
-std::auto_ptr<DBEntry> VxLanTable::AllocEntry(const DBRequestKey *k) const {
+std::unique_ptr<DBEntry> VxLanTable::AllocEntry(const DBRequestKey *k) const {
     const VxLanIdKey *key = static_cast<const VxLanIdKey *>(k);
     VxLanId *vxlan_id = new VxLanId(key->vxlan_id());
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(vxlan_id));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(vxlan_id));
 }
 
 void VxLanTable::Process(DBRequest &req) {

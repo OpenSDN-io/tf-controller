@@ -1126,12 +1126,12 @@ TEST_F(RemoteEcmpTest, DISABLE_VgwFlag) {
 
     InetInterfaceKey *intf_key = new InetInterfaceKey("vgw1");
     InetInterface *intf = InetInterfaceGet("vgw1");
-    std::auto_ptr<const NextHopKey> nh_key(new InterfaceNHKey(intf_key, false,
+    std::unique_ptr<const NextHopKey> nh_key(new InterfaceNHKey(intf_key, false,
                                                               InterfaceNHFlags::INET4,
                                                               intf->mac()));
 
     Ip4Address remote_server_ip1 = Ip4Address::from_string("10.10.10.100");
-    ComponentNHKeyPtr nh_data1(new ComponentNHKey(16, nh_key));
+    ComponentNHKeyPtr nh_data1(new ComponentNHKey(16, std::move(nh_key)));
     ComponentNHKeyPtr nh_data2(new ComponentNHKey(20, agent_->fabric_vrf_name(),
                                                   agent_->router_id(),
                                                   remote_server_ip1,

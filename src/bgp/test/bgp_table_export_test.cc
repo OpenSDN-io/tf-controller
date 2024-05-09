@@ -17,7 +17,7 @@
 
 using boost::assign::list_of;
 using boost::scoped_ptr;
-using std::auto_ptr;
+using std::unique_ptr;
 using std::cout;
 using std::endl;
 using std::ostringstream;
@@ -137,7 +137,7 @@ public:
     virtual string ToString() const { return ""; }
     virtual int CompareTo(const Route &rhs) const { return 0; }
     virtual void SetKey(const DBRequestKey *key) { }
-    virtual KeyPtr GetDBRequestKey() const { return KeyPtr(NULL); }
+    virtual KeyPtr GetDBRequestKey() const { return KeyPtr(nullptr); }
     virtual bool IsLess(const DBEntry &rhs) const { return true; }
     virtual u_int16_t Afi() const { return 0; }
     virtual u_int8_t Safi() const { return 0; }
@@ -684,7 +684,7 @@ protected:
 
     BgpTable *table_;
     RibOut *ribout_;
-    auto_ptr<BgpTestPeer> peer_;
+    unique_ptr<BgpTestPeer> peer_;
     vector<BgpTestPeer *> ribout_peers_;
     BgpRouteMock rt_;
     BgpAttrPtr attr_ptr_;

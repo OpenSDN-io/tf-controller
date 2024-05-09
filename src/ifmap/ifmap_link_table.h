@@ -43,7 +43,7 @@ public:
     void DeleteLink(IFMapLink *link, const IFMapOrigin &origin);
     void DeleteLink(IFMapLink *link);
 
-    virtual std::auto_ptr<DBEntry> AllocEntry(const DBRequestKey *key) const;
+    virtual std::unique_ptr<DBEntry> AllocEntry(const DBRequestKey *key) const;
 
     void Clear();
 

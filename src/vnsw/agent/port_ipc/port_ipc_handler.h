@@ -117,7 +117,7 @@ private:
     std::string vmvn_dir_;
     int version_;
     boost::scoped_ptr<InterfaceConfigStaleCleaner> interface_stale_cleaner_;
-    std::auto_ptr<PortSubscribeTable> port_subscribe_table_;
+    std::unique_ptr<PortSubscribeTable> port_subscribe_table_;
 
     DISALLOW_COPY_AND_ASSIGN(PortIpcHandler);
 };

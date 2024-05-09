@@ -140,7 +140,7 @@ TEST_F(AgentDbEntry, bug_1680720) {
                          state);
     //Release reference of NH, resulting in trigger of mpls delete
     int task_id = TaskScheduler::GetInstance()->GetTaskId("db::DBTable");
-    std::auto_ptr<TaskTrigger> trigger
+    std::unique_ptr<TaskTrigger> trigger
         (new TaskTrigger(boost::bind(ReleaseNHReference, &nh_ref), task_id, 0));
     trigger->Set();
     client->WaitForIdle();

@@ -19,8 +19,8 @@ std::string ControlNode::prog_name_;
 std::string ControlNode::self_ip_;
 bool ControlNode::test_mode_;
 
-static std::auto_ptr<Timer> node_info_log_timer;
-static std::auto_ptr<TaskTrigger> node_info_trigger;
+static std::unique_ptr<Timer> node_info_log_timer;
+static std::unique_ptr<TaskTrigger> node_info_trigger;
 
 bool ControlNode::ControlNodeInfoLogger(const BgpServer *server,
         const BgpXmppChannelManager *xmpp_channel_mgr,

@@ -137,7 +137,7 @@ public:
         TaskTrigger *trigger =
             new TaskTrigger(boost::bind(&FlowFipTestBase::StopAgingTrigger,
                                         this, stop), task_id, 0);
-        std::auto_ptr<TaskTrigger> trigger_ptr(trigger);
+        std::unique_ptr<TaskTrigger> trigger_ptr(trigger);
         trigger_ptr->Set();
         client->WaitForIdle();
     }

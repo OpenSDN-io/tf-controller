@@ -93,9 +93,9 @@ bool ControllerEcmpRoute::AddChangePathExtended(Agent *agent, AgentPath *path,
                      agent->nexthop_table()->discard_nh()->GetDBRequestKey();
                     NextHopKey *nh_key =
                         static_cast<NextHopKey *>(key.release());
-                    std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+                    std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                     ComponentNHKeyPtr component_nh_key(new ComponentNHKey(label,
-                                                   nh_key_ptr));
+                                                   std::move(nh_key_ptr)));
                     comp_nh_list.push_back(component_nh_key);
                 }
             } else {
@@ -108,9 +108,9 @@ bool ControllerEcmpRoute::AddChangePathExtended(Agent *agent, AgentPath *path,
                     //of type composite
                     nh_key->SetPolicy(false);
                 }
-                std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+                std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                 ComponentNHKeyPtr component_nh_key(new ComponentNHKey(label,
-                                                   nh_key_ptr));
+                                                   std::move(nh_key_ptr)));
                 comp_nh_list.push_back(component_nh_key);
                 //Reset to new gateway route, no nexthop for indirect route
                 member->UpdateDependentRoute(uc_rt);
@@ -259,9 +259,9 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
                     //of type composite
                     nh_key->SetPolicy(false);
                 }
-                std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+                std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                 ComponentNHKeyPtr component_nh_key(new ComponentNHKey(label,
-                                                   nh_key_ptr));
+                                                   std::move(nh_key_ptr)));
                 comp_nh_list.push_back(component_nh_key);
                 if (!comp_nh_policy) {
                     comp_nh_policy = mpls_nh->NexthopToInterfacePolicy();
@@ -307,9 +307,9 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
                                             TunnelType::ComputeType(encap),
                                             mac,
                                             label);
-                std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+                std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                 ComponentNHKeyPtr component_nh_key(new ComponentNHKey(label,
-                                                                    nh_key_ptr));
+                                                                    std::move(nh_key_ptr)));
                 comp_nh_list.push_back(component_nh_key);
             } else if (encap == TunnelType::MplsoMplsType()) {
                 // copy ecmp nexthop list
@@ -329,9 +329,9 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
                         mac);
                 }
 
-               std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+               std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                 ComponentNHKeyPtr component_nh_key(new ComponentNHKey(label,
-                                                                    nh_key_ptr));
+                                                                    std::move(nh_key_ptr)));
                 comp_nh_list.push_back(component_nh_key);
             }
         }

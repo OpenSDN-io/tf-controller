@@ -245,7 +245,7 @@ private:
 };
 
 ConfigManager::ConfigManager(Agent *agent) :
-    agent_(agent), trigger_(NULL), timer_(NULL), timeout_(kMinTimeout) {
+    agent_(agent), trigger_(), timer_(NULL), timeout_(kMinTimeout) {
 
     int task_id = TaskScheduler::GetInstance()->GetTaskId("db::DBTable");
     trigger_.reset

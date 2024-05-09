@@ -46,7 +46,7 @@ public:
     DBTable *table_;
 
     // Take the ownership of key passed
-    std::auto_ptr<DBRequestKey> key_start_;
+    std::unique_ptr<DBRequestKey> key_start_;
 
     WalkFn walker_fn_;
     WalkCompleteFn done_fn_;
@@ -77,7 +77,7 @@ private:
     DBTableWalker::Walker *walker_;
 
     // Store the last visited node to continue walk
-    std::auto_ptr<DBRequestKey> walk_ctx_;
+    std::unique_ptr<DBRequestKey> walk_ctx_;
 
     // This is where the walk started
     const DBRequestKey *key_start_;
@@ -124,7 +124,7 @@ bool DBTableWalker::Worker::Run() {
     DBEntry *entry;
     if (key_resume != NULL) {
         DBTable *table = walker_->table_;
-        std::auto_ptr<const DBEntryBase> start;
+        std::unique_ptr<const DBEntryBase> start;
         start = table->AllocEntry(key_resume);
         // Find matching or next in sort order
         entry = tbl_partition_->lower_bound(start.get());

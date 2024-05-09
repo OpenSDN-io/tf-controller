@@ -45,8 +45,8 @@ struct DBRequest {
     DBRequest(DBOperation op) : oper(op) { }
     ~DBRequest();
 
-    std::auto_ptr<DBRequestKey> key;
-    std::auto_ptr<DBRequestData> data;
+    std::unique_ptr<DBRequestKey> key;
+    std::unique_ptr<DBRequestData> data;
 
     // Swap contents between two DBRequest entries.
     void Swap(DBRequest *rhs);
@@ -145,7 +145,7 @@ private:
     class ListenerInfo;
     DB *db_;
     std::string name_;
-    std::auto_ptr<ListenerInfo> info_;
+    std::unique_ptr<ListenerInfo> info_;
     uint64_t enqueue_count_;
     uint64_t input_count_;
     uint64_t notify_count_;
@@ -189,7 +189,7 @@ public:
     ///////////////////////////////////////////////////////////
 
     // Alloc a derived DBEntry
-    virtual std::auto_ptr<DBEntry> AllocEntry(const DBRequestKey *key) const = 0;
+    virtual std::unique_ptr<DBEntry> AllocEntry(const DBRequestKey *key) const = 0;
 
     // Hash for an entry. Used to identify partition
     virtual size_t Hash(const DBEntry *entry) const {return 0;};
@@ -347,7 +347,7 @@ private:
     bool WalkCallback(DBTablePartBase *tpart, DBEntryBase *entry);
     void WalkCompleteCallback(DBTableBase *tbl_base);
 
-    std::auto_ptr<TableWalker> walker_;
+    std::unique_ptr<TableWalker> walker_;
     std::vector<DBTablePartition *> partitions_;
     DBTable::DBTableWalkRef walk_ref_;
     int walker_task_id_;

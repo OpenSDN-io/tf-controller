@@ -285,12 +285,12 @@ AgentQosConfigTable::CreateTable(Agent *agent, DB *db, const std::string &name) 
     return qos_table;
 }
 
-std::auto_ptr<DBEntry>
+std::unique_ptr<DBEntry>
 AgentQosConfigTable::AllocEntry(const DBRequestKey *k) const {
     const AgentQosConfigKey *key =
         static_cast<const AgentQosConfigKey *>(k);
     AgentQosConfig *fc = new AgentQosConfig(key->uuid_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(fc));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(fc));
 }
 
 DBEntry* AgentQosConfigTable::OperDBAdd(const DBRequest *req) {

@@ -122,7 +122,7 @@ class ClientTest : public ::testing::Test {
     }
 
     EventManager evm_;
-    auto_ptr<ServerThread> thread_;
+    unique_ptr<ServerThread> thread_;
     Communicator cm_;
     Server server_;
     Client client_;

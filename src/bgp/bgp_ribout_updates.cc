@@ -17,7 +17,7 @@
 #include "bgp/bgp_update_sender.h"
 #include "bgp/message_builder.h"
 
-using std::auto_ptr;
+using std::unique_ptr;
 using std::vector;
 
 vector<Message *> RibOutUpdates::bgp_messages_;

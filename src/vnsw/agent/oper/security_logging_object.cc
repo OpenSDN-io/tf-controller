@@ -177,12 +177,12 @@ SecurityLoggingObjectTable::CreateTable(Agent *agent, DB *db,
     return table;
 }
 
-std::auto_ptr<DBEntry>
+std::unique_ptr<DBEntry>
 SecurityLoggingObjectTable::AllocEntry(const DBRequestKey *k) const {
     const SecurityLoggingObjectKey *key =
         static_cast<const SecurityLoggingObjectKey *>(k);
     SecurityLoggingObject *slo = new SecurityLoggingObject(key->uuid_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(slo));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(slo));
 }
 
 DBEntry* SecurityLoggingObjectTable::OperDBAdd(const DBRequest *req) {

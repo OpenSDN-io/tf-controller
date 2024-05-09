@@ -281,10 +281,10 @@ void MplsTable::FreeLabel(uint32_t label, const std::string &vrf_name) {
     Process(req);
 }
 
-std::auto_ptr<DBEntry> MplsTable::AllocEntry(const DBRequestKey *k) const {
+std::unique_ptr<DBEntry> MplsTable::AllocEntry(const DBRequestKey *k) const {
     const MplsLabelKey *key = static_cast<const MplsLabelKey *>(k);
     MplsLabel *mpls = new MplsLabel(agent(), key->label());
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(mpls));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(mpls));
 }
 
 DBEntry *MplsTable::Add(const DBRequest *req) {

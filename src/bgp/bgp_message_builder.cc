@@ -12,7 +12,7 @@
 #include "bgp/bgp_server.h"
 #include "net/bgp_af.h"
 
-using std::auto_ptr;
+using std::unique_ptr;
 
 BgpMessage::BgpMessage() : table_(NULL), datalen_(0) {
 }

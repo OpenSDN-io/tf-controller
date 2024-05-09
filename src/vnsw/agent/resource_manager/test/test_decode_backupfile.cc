@@ -37,7 +37,7 @@ TEST_F(SandeshDecodeBackupFileTest, DecodeBackupFile) {
         cout << "Incorrect file path provided\n";
         EXPECT_TRUE(0);
     } else {
-        std::auto_ptr<uint8_t> buffer;
+        std::unique_ptr<uint8_t> buffer;
         uint32_t size = ResourceBackupManager::ReadResourceDataFromFile(backup_file,
                                                                         &(buffer));
         int error = 0;

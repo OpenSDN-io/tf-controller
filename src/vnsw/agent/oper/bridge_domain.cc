@@ -205,11 +205,11 @@ DBTableBase *BridgeDomainTable::CreateTable(Agent *agent, DB *db,
     return table;
 }
 
-std::auto_ptr<DBEntry>
+std::unique_ptr<DBEntry>
 BridgeDomainTable::AllocEntry(const DBRequestKey *k) const {
     const BridgeDomainKey *key = static_cast<const BridgeDomainKey *>(k);
     BridgeDomainEntry *bd = new BridgeDomainEntry(this, key->uuid_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(bd));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(bd));
 }
 
 DBEntry *BridgeDomainTable::OperDBAdd(const DBRequest *req) {

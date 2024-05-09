@@ -108,7 +108,7 @@ TEST_F(PktParseTest, InvalidAgentHdr_1) {
     unsigned int err_count = AgentStats::GetInstance()->pkt_invalid_agent_hdr();
     VmInterface *vnet1 = VmInterfaceGet(1);
 
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt->AddAgentHdr(vnet1->id(), 0);
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
@@ -141,7 +141,7 @@ TEST_F(PktParseTest, Arp_1) {
     uint32_t arp_count = GetPktModuleCount(PktHandler::ARP);
     VmInterface *vnet1 = VmInterfaceGet(1);
 
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt->AddAgentHdr(vnet1->id(), 0);
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x806);
@@ -162,7 +162,7 @@ TEST_F(PktParseTest, NonIp_On_Vnet_1) {
     VmInterface *vnet1 = VmInterfaceGet(1);
 
     // Packet with VLAN header 0x8100
-    std::auto_ptr<PktGen> pkt1(new PktGen());
+    std::unique_ptr<PktGen> pkt1(new PktGen());
     pkt1->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt1->AddAgentHdr(vnet1->id(), 0);
     pkt1->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x8100);
@@ -171,7 +171,7 @@ TEST_F(PktParseTest, NonIp_On_Vnet_1) {
     client->agent_init()->pkt0()->ProcessFlowPacket(ptr1, pkt1->GetBuffLen() + 64, pkt1->GetBuffLen() + 64);
 
     // Packet with VLAN header 0x88a8
-    std::auto_ptr<PktGen> pkt2(new PktGen());
+    std::unique_ptr<PktGen> pkt2(new PktGen());
     pkt2->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt2->AddAgentHdr(vnet1->id(), 0);
     pkt2->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x88a8);
@@ -180,7 +180,7 @@ TEST_F(PktParseTest, NonIp_On_Vnet_1) {
     client->agent_init()->pkt0()->ProcessFlowPacket(ptr2, pkt2->GetBuffLen() + 64, pkt2->GetBuffLen() + 64);
 
     // Packet with VLAN header 0x9100
-    std::auto_ptr<PktGen> pkt3(new PktGen());
+    std::unique_ptr<PktGen> pkt3(new PktGen());
     pkt3->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt3->AddAgentHdr(vnet1->id(), 0);
     pkt3->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x9100);
@@ -189,7 +189,7 @@ TEST_F(PktParseTest, NonIp_On_Vnet_1) {
     client->agent_init()->pkt0()->ProcessFlowPacket(ptr3, pkt3->GetBuffLen() + 64, pkt3->GetBuffLen() + 64);
 
     // Packet with ether-type 0x100
-    std::auto_ptr<PktGen> pkt4(new PktGen());
+    std::unique_ptr<PktGen> pkt4(new PktGen());
     pkt4->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt4->AddAgentHdr(vnet1->id(), 0);
     pkt4->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x100);
@@ -208,7 +208,7 @@ TEST_F(PktParseTest, NonIp_On_Eth_1) {
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
 
     // Packet with VLAN header 0x8100
-    std::auto_ptr<PktGen> pkt1(new PktGen());
+    std::unique_ptr<PktGen> pkt1(new PktGen());
     pkt1->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt1->AddAgentHdr(eth->id(), 0);
     pkt1->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x8100);
@@ -217,7 +217,7 @@ TEST_F(PktParseTest, NonIp_On_Eth_1) {
     client->agent_init()->pkt0()->ProcessFlowPacket(ptr1, pkt1->GetBuffLen() + 64, pkt1->GetBuffLen() + 64);
 
     // Packet with VLAN header 0x88a8
-    std::auto_ptr<PktGen> pkt2(new PktGen());
+    std::unique_ptr<PktGen> pkt2(new PktGen());
     pkt2->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt2->AddAgentHdr(eth->id(), 0);
     pkt2->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x88a8);
@@ -226,7 +226,7 @@ TEST_F(PktParseTest, NonIp_On_Eth_1) {
     client->agent_init()->pkt0()->ProcessFlowPacket(ptr2, pkt2->GetBuffLen() + 64, pkt2->GetBuffLen() + 64);
 
     // Packet with VLAN header 0x9100
-    std::auto_ptr<PktGen> pkt3(new PktGen());
+    std::unique_ptr<PktGen> pkt3(new PktGen());
     pkt3->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt3->AddAgentHdr(eth->id(), 0);
     pkt3->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x9100);
@@ -237,7 +237,7 @@ TEST_F(PktParseTest, NonIp_On_Eth_1) {
                                                     pkt3->GetBuffLen() + 64);
 
     // Packet with ether-type 0x100
-    std::auto_ptr<PktGen> pkt4(new PktGen());
+    std::unique_ptr<PktGen> pkt4(new PktGen());
     pkt4->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt4->AddAgentHdr(eth->id(), 0);
     pkt4->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x100);
@@ -413,7 +413,7 @@ static bool ValidateIp6PktInfo(PktInfo *pkt_info, const char *sip,
 
 TEST_F(PktParseTest, IP_On_Vnet_1) {
     VmInterface *vnet1 = VmInterfaceGet(1);
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     pkt->Reset();
     MakeIpPacket(pkt.get(), vnet1->id(), "1.1.1.1", "1.1.1.2", 1, 1, -1);
@@ -487,7 +487,7 @@ TEST_F(PktParseTest, IPv6_On_Vnet_1) {
 
 TEST_F(PktParseTest, IP_On_Eth_1) {
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     pkt->Reset();
     MakeIpPacket(pkt.get(), eth->id(), "1.1.1.1", "1.1.1.2", 1, 1, -1);
@@ -539,7 +539,7 @@ TEST_F(PktParseTest, IPv6_On_Eth_1) {
 
 TEST_F(PktParseTest, GRE_On_Vnet_1) {
     VmInterface *vnet1 = VmInterfaceGet(1);
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     pkt->Reset();
     MakeIpMplsPacket(pkt.get(), vnet1->id(), "1.1.1.1", "1.1.1.2", 1,
@@ -603,7 +603,7 @@ TEST_F(PktParseTest, IPv6_GRE_On_Vnet_1) {
 TEST_F(PktParseTest, GRE_On_Enet_1) {
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
     VmInterface *vnet1 = VmInterfaceGet(1);
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     pkt->Reset();
     MakeIpMplsPacket(pkt.get(), eth->id(), "1.1.1.1", "10.1.1.1",
@@ -675,7 +675,7 @@ TEST_F(PktParseTest, IPv6_GRE_On_Enet_1) {
 TEST_F(PktParseTest, Invalid_GRE_On_Enet_1) {
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
     VmInterface *vnet1 = VmInterfaceGet(1);
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     // Invalid Label
     pkt->Reset();
@@ -791,7 +791,7 @@ TEST_F(PktParseTest, FlowOverridesDHCP) {
     unsigned int invalid_count = GetPktModuleCount(PktHandler::INVALID);
     VmInterface *vnet1 = VmInterfaceGet(1);
 
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
     pkt->AddAgentHdr(vnet1->id(), AGENT_TRAP_FLOW_MISS);
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
@@ -810,7 +810,7 @@ TEST_F(PktParseTest, FlowOverridesDHCP) {
 }
 
 TEST_F(PktParseTest, UnicastControlWord) {
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
     VmInterface *vnet1 = VmInterfaceGet(1);
 
@@ -854,7 +854,7 @@ TEST_F(PktParseTest, MulticastControlWord) {
             "vrf1", broadcast, sip, 4100, olist, 1);
     client->WaitForIdle();
 
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
     pkt->Reset();
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
@@ -878,7 +878,7 @@ TEST_F(PktParseTest, MulticastControlWord) {
 // Validate that hash changes when vhost-ip changes
 TEST_F(PktParseTest, ECMP_Hash_1) {
     VmInterface *vnet1 = VmInterfaceGet(1);
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     pkt->Reset();
     MakeIpPacket(pkt.get(), vnet1->id(), "1.1.1.1", "1.1.1.2", 1, 1, -1);
@@ -899,7 +899,7 @@ TEST_F(PktParseTest, ECMP_Hash_1) {
 
 TEST_F(PktParseTest, InvalidICMPv6_Vxlan_IP) {
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     pkt->Reset();
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
@@ -920,7 +920,7 @@ TEST_F(PktParseTest, InvalidICMPv6_Vxlan_IP) {
 
 TEST_F(PktParseTest, InvalidICMP_Vxlan_IP) {
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     pkt->Reset();
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
@@ -941,7 +941,7 @@ TEST_F(PktParseTest, InvalidICMP_Vxlan_IP) {
 
 TEST_F(PktParseTest, InvalidIGMP_Vxlan_IP) {
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     pkt->Reset();
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
@@ -996,7 +996,7 @@ TEST_F(PktParseTest, DISABLED_InvalidICMPv6_Vxlan_IP_Tor) {
     uint32_t vxlan_id = vrf->vxlan_id();
 
     PhysicalInterface *eth = EthInterfaceGet("vnet0");
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
 
     pkt->Reset();
     pkt->AddEthHdr("00:00:00:00:00:01", "00:00:00:00:00:02", 0x800);
@@ -1024,7 +1024,7 @@ TEST_F(PktParseTest, DISABLED_InvalidICMPv6_Vxlan_IP_Tor) {
 // and PktHandler generic queue
 TEST_F(PktParseTest, BFD_priority_queue_BasicTest) {
     VmInterface *vnet1 = VmInterfaceGet(1);
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
     uint64_t pkt_wq_count = Agent::GetInstance()->pkt()->pkt_handler()->GetPktEnqueueCount();
     uint64_t bfd_wq_count = Agent::GetInstance()->pkt()->pkt_handler()->GetBfdKaEnqueueCount();
 
@@ -1076,7 +1076,7 @@ TEST_F(PktParseTest, BFD_priority_queue_BasicTest) {
 // Test BFD control and Keepalive packets
 TEST_F(PktParseTest, BFD_priority_queue_BFDPktTest) {
     VmInterface *vnet1 = VmInterfaceGet(1);
-    std::auto_ptr<PktGen> pkt(new PktGen());
+    std::unique_ptr<PktGen> pkt(new PktGen());
     uint64_t pkt_wq_count = Agent::GetInstance()->pkt()->pkt_handler()->GetPktEnqueueCount();
     uint64_t bfd_wq_count = Agent::GetInstance()->pkt()->pkt_handler()->GetBfdKaEnqueueCount();
 

@@ -52,7 +52,7 @@ public:
     void BackupVlanResource(ResourceData *data, uint16_t op);
     const NextHopKey *GetNhKey() const { return nh_key_.get(); }
 private:
-    std::auto_ptr<NextHopKey> nh_key_;
+    std::unique_ptr<NextHopKey> nh_key_;
     DISALLOW_COPY_AND_ASSIGN(NexthopIndexResourceKey);
 };
 

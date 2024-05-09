@@ -336,7 +336,7 @@ void ConfigJsonParser::InsertRequestIntoQ(IFMapOrigin::Origin origin,
 
 void ConfigJsonParser::EnqueueListToTables(RequestList *req_list) const {
     while (!req_list->empty()) {
-        auto_ptr<DBRequest> req(req_list->front());
+        unique_ptr<DBRequest> req(req_list->front());
         req_list->pop_front();
         IFMapTable::RequestKey *key =
             static_cast<IFMapTable::RequestKey *>(req->key.get());
@@ -365,7 +365,7 @@ bool ConfigJsonParser::Receive(const ConfigCass2JsonAdapter &adapter,
                        adapter.document().GetParseError()), adapter.uuid());
         return false;
     } else {
-        auto_ptr<IFMapTable::RequestKey> key(new IFMapTable::RequestKey());
+        unique_ptr<IFMapTable::RequestKey> key(new IFMapTable::RequestKey());
         if (!ParseDocument(adapter, IFMapOrigin::CASSANDRA, &req_list, key.get(), add_change)) {
             STLDeleteValues(&req_list);
             return false;

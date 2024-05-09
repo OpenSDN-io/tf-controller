@@ -538,9 +538,9 @@ void VxlanRoutingManager::AdvertiseBGPaaSRoute(const IpAddress& prefix_ip,
                     GetDBRequestKey();
                 nh_key = static_cast<NextHopKey *>(key.release());
 
-                std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+                std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                 ComponentNHKeyPtr component_nh_key(new ComponentNHKey(
-                    MplsTable::kInvalidLabel, nh_key_ptr));
+                    MplsTable::kInvalidLabel, std::move(nh_key_ptr)));
                 new_comp_nh_list.push_back(component_nh_key);
             }
         }

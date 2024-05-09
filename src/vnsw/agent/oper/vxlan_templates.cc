@@ -70,9 +70,9 @@ void VxlanRoutingManager::AddInterfaceComponentToList(
             loc_path->nexthop()->GetDBRequestKey();
         NextHopKey *nh_key =
             static_cast<NextHopKey *>(key_ptr.release());
-        std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+        std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
         ComponentNHKeyPtr component_nh_key(new ComponentNHKey(MplsTable::kInvalidLabel,  // label
-                                        nh_key_ptr));
+                                        std::move(nh_key_ptr)));
         comp_nh_list.push_back(component_nh_key);
         return;
     }
@@ -88,7 +88,7 @@ void VxlanRoutingManager::AddInterfaceComponentToList(
             loc_comp_nh->GetDBRequestKey();
         CompositeNHKey *nh_key =
             static_cast<CompositeNHKey *>(key_ptr.release());
-        std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+        std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
 
         if (nh_key == NULL){
             LOG(ERROR, "Error in VxlanRoutingManager::AddInterfaceComponentToList"
@@ -104,7 +104,7 @@ void VxlanRoutingManager::AddInterfaceComponentToList(
             it_nh != component_nh_list.end(); it_nh++) {
             // nullptr means deleted component, which
             // can be reused later
-            std::auto_ptr<const NextHopKey> nh_key_ptr;
+            std::unique_ptr<const NextHopKey> nh_key_ptr;
             ComponentNHKeyPtr component_nh_key;
             if (it_nh->get() == NULL) {
                 // component_nh_key.reset(NULL);
@@ -115,7 +115,7 @@ void VxlanRoutingManager::AddInterfaceComponentToList(
                     static_cast<NextHopKey *>(key.release());
                 nh_key_ptr.reset(nh_key);
                 component_nh_key.reset(
-                    new ComponentNHKey(MplsTable::kInvalidLabel, nh_key_ptr));
+                    new ComponentNHKey(MplsTable::kInvalidLabel, std::move(nh_key_ptr)));
             }
             comp_nh_list.push_back(component_nh_key);
         }

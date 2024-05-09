@@ -1052,7 +1052,7 @@ TEST_F(BgpProtoTest, RandomUpdate) {
         }
 
         ParseErrorContext  err;
-        std::auto_ptr<const BgpProto::Update> result(
+        std::unique_ptr<const BgpProto::Update> result(
             static_cast<const BgpProto::Update *>(
                 BgpProto::Decode(data, msglen, &err, false)));
         EXPECT_TRUE(result.get() != NULL);

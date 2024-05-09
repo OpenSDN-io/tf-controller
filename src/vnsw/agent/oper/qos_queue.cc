@@ -98,12 +98,12 @@ QosQueueTable::CreateTable(Agent *agent, DB *db, const std::string &name) {
     return qos_q_table;
 }
 
-std::auto_ptr<DBEntry>
+std::unique_ptr<DBEntry>
 QosQueueTable::AllocEntry(const DBRequestKey *k) const {
     const QosQueueKey *key =
         static_cast<const QosQueueKey *>(k);
     QosQueue *qos_q = new QosQueue(key->uuid_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(qos_q));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(qos_q));
 }
 
 DBEntry* QosQueueTable::OperDBAdd(const DBRequest *req) {

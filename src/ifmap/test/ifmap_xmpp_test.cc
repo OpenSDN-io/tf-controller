@@ -352,7 +352,7 @@ protected:
     ConfigCassandraClientTest *config_cassandra_client_;
     IFMapExporter *exporter_;
     XmppServer *xmpp_server_;
-    auto_ptr<IFMapChannelManager> ifmap_channel_mgr_;
+    unique_ptr<IFMapChannelManager> ifmap_channel_mgr_;
     IFMapVmUuidMapper *vm_uuid_mapper_;
 };
 
