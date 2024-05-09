@@ -73,7 +73,8 @@ class SchemaTransformerDB(VncObjectDBClient):
             ca_certs=self._args.cassandra_ca_certs,
             cassandra_driver=self._args.cassandra_driver,
             num_workers=self._args.num_workers,
-            num_groups=self._args.num_groups)
+            num_groups=self._args.num_groups,
+            zk_servers=self._args.zk_server_ip)
 
         SchemaTransformerDB._rt_cf = self._cassandra_driver._cf_dict[
             self._RT_CF]

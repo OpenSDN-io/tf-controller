@@ -80,6 +80,11 @@ OptionsDefault = {
     'inserts_use_batch': True,
     'removes_use_batch': True,
     'batch_limit': 1000,
+    'zk_servers': None,
+    'zk_ssl_enable': False,
+    'zk_ssl_keyfile': None,
+    'zk_ssl_certificate': None,
+    'zk_ssl_ca_cert': None,
 }
 OptionsType = collections.namedtuple(
     'Options', OptionsDefault.keys())

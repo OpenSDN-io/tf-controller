@@ -11,6 +11,7 @@ from multiprocessing import get_context
 from multiprocessing import Process
 from multiprocessing.queues import Queue
 import queue
+import socket
 import ssl
 import sys
 
@@ -28,7 +29,7 @@ from cfgm_common import utils
 from cfgm_common.datastore import api as datastore_api
 from cfgm_common.exceptions import\
     DatabaseUnavailableError, NoIdError, VncError
-
+from cfgm_common.zkclient import ZookeeperClient, ZookeeperLock
 
 try:
     connector = importlib.import_module('cassandra')
@@ -419,6 +420,15 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
         self.options.logger("CassandraDriverCQL.__init__Cluster connected",
                             level=SandeshLevel.SYS_NOTICE)
 
+        # get hostname to create ZookeeperClient
+        self._host_ip = socket.gethostbyname(socket.getfqdn())
+        self._zk_client = ZookeeperClient(
+            __name__, self.options.zk_servers, self._host_ip,
+            zk_ssl_ca_cert=self.options.zk_ssl_ca_cert,
+            zk_ssl_certificate=self.options.zk_ssl_certificate,
+            zk_ssl_enable=self.options.zk_ssl_enable,
+            zk_ssl_keyfile=self.options.zk_ssl_keyfile)
+
         PoolClass = Pool if self.options.use_workers else DummyPool
         self.pool = PoolClass(
             self.options.num_groups or DEFAULT_NUM_GROUPS,
@@ -426,13 +436,15 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
             self.worker,
             self.initializer)
 
+        existing_keyspaces = self._get_keyspaces()
         # Initializes RW keyspaces
         for ks, cf_dict in self.options.rw_keyspaces.items():
             keyspace = self.keyspace(ks)
             if self.options.reset_config:
                 self.safe_drop_keyspace(keyspace)
-            self.safe_create_keyspace(keyspace)
-            self.ensure_keyspace_replication(keyspace)
+            if keyspace not in existing_keyspaces:
+                self.safe_create_keyspace(keyspace)
+                self.ensure_keyspace_replication(keyspace)
 
         # Ensures RO keyspaces are initialized
         while not self.are_keyspaces_ready(self.options.ro_keyspaces):
@@ -443,18 +455,21 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
             # Let's a chance to an other greenthread to be scheduled.
             gevent.sleep(1)
 
+        existing_tables = []
         # The CFs are flatten in a dict with the keyspaces' session
         # related.
         for ks, cf_dict in itertools.chain(
                 self.options.rw_keyspaces.items(),
                 self.options.ro_keyspaces.items()):
+            self._get_keyspace_tables(ks, existing_tables)
             for cf_name in cf_dict:
                 self.create_session(self.keyspace(ks), cf_name)
 
         # Now we create the tables/CFs if not already alive.
         for cf_name in self._cf_dict:
-            self.safe_create_table(cf_name)
-            self.ensure_table_properties(cf_name)
+            if cf_name not in existing_tables:
+                self.safe_create_table(cf_name)
+                self.ensure_table_properties(cf_name)
 
         self.report_status_up()
 
@@ -494,35 +509,58 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
 
     def safe_create_table(self, cf_name):
         """Create table c.f ColumnFamilly if does not already exist."""
-        ses = self.get_cf(cf_name)
-        cql = """
-          CREATE TABLE IF NOT EXISTS "{}" (
-            key blob,
-            column1 blob,
-            value text,
-            PRIMARY KEY (key, column1)
-          ) WITH COMPACT STORAGE AND CLUSTERING ORDER BY (column1 ASC)
-          """.format(cf_name)
-        try:
-            ses.execute(cql)
-            msg = "table '{}', created"
-        except connector.protocol.AlreadyExists:
-            msg = "table '{}', already created"
+        zk_lock_name = "table_create_" + cf_name
+        zk_lock = {'zookeeper_client': self._zk_client,
+                   'path': '/cassandra_schema_change',
+                   'name': zk_lock_name, 'timeout': 60}
+        with ZookeeperLock(**zk_lock):
+            self.options.logger(
+                "Zookeeper lock acquired. Performing schema change...",
+                level=SandeshLevel.SYS_NOTICE)
+            ses = self.get_cf(cf_name)
+            cql = """
+                CREATE TABLE IF NOT EXISTS "{}" (
+                    key blob,
+                    column1 blob,
+                    value text,
+                    PRIMARY KEY (key, column1)
+                ) WITH COMPACT STORAGE AND CLUSTERING ORDER BY (column1 ASC)
+            """.format(cf_name)
+            try:
+                ses.execute(cql)
+                msg = "table '{}', created".format(cf_name)
+                self.options.logger(msg, level=SandeshLevel.SYS_NOTICE)
+            except connector.protocol.AlreadyExists:
+                msg = "table '{}', already created".format(cf_name)
+                self.options.logger(msg, level=SandeshLevel.SYS_NOTICE)
+            except connector.protocol.InvalidRequest as e:
+                msg = "table '{}' failed to create: {}".format(cf_name, e)
+                self.options.logger(msg, level=SandeshLevel.SYS_ERR)
         self.options.logger(
-            msg.format(cf_name), level=SandeshLevel.SYS_NOTICE)
+            "Zookeeper lock released.", level=SandeshLevel.SYS_NOTICE)
 
     def ensure_table_properties(self, cf_name, props=TABLE_PROPERTIES):
         """Alter table to fix properties if necessary."""
-        ses = self.get_cf(cf_name)
-        cql = """
-         ALTER TABLE "{}" WITH {}
-        """.format(cf_name,
-                   "AND ".join(
-                       ["{}={} ".format(k, v) for k, v in props.items()]))
-        ses.execute(cql)
-        msg = "table '{}' fixed with properties {}"
+        zk_lock_name = "table_alter_" + cf_name
+        zk_lock = {'zookeeper_client': self._zk_client,
+                   'path': '/cassandra_schema_change',
+                   'name': zk_lock_name, 'timeout': 60}
+        with ZookeeperLock(**zk_lock):
+            self.options.logger(
+                "Zookeeper lock acquired. Performing schema change...",
+                level=SandeshLevel.SYS_NOTICE)
+            ses = self.get_cf(cf_name)
+            cql = """
+            ALTER TABLE "{}" WITH {}
+            """.format(cf_name,
+                       "AND ".join(
+                           ["{}={} ".format(k, v) for k, v in props.items()]))
+            ses.execute(cql)
+            msg = "table '{}' fixed with properties {}"
+            self.options.logger(
+                msg.format(cf_name, props), level=SandeshLevel.SYS_NOTICE)
         self.options.logger(
-            msg.format(cf_name, props), level=SandeshLevel.SYS_NOTICE)
+            "Zookeeper lock released.", level=SandeshLevel.SYS_NOTICE)
 
     def safe_drop_keyspace(self, keyspace):
         """Drop keyspace if exists."""
@@ -539,43 +577,98 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
         self.options.logger(
             msg.format(keyspace), level=SandeshLevel.SYS_NOTICE)
 
-    def safe_create_keyspace(self, keyspace, props=REPLICATION_PROPERTIES):
-        """Create keyspace if does not already exist."""
+    def _get_keyspaces(self):
+        """Get all existings keyspaces."""
+        ses = self.get_default_session()
+        cql = """SELECT keyspace_name FROM system_schema.keyspaces"""
+        req = None
+        try:
+            req = ses.execute(cql)
+        except connector.protocol.ConfigurationException:
+            msg = "failed to get existing keyspaces"
+            self.options.logger(msg, level=SandeshLevel.SYS_ERR)
+        if req:
+            # convert names to string and remove them from tuples
+            return [str(keyspace_name[0]) for keyspace_name in req]
+        return []
+
+    def _get_keyspace_tables(self, keyspace, tables_list):
+        """Get all existing tables of keyspace."""
         ses = self.get_default_session()
         cql = """
-          CREATE KEYSPACE IF NOT EXISTS "{}" WITH REPLICATION = {{
-            'class': '{}',
-            'replication_factor': '{}'
-          }}
-        """.format(keyspace,
-                   props['class'],
-                   # TODO(sahid): Considering using max 3
-                   props['replication_factor'] or self.nodes())
+            SELECT table_name FROM system_schema.tables
+            WHERE keyspace_name='{}'""".format(keyspace)
+        rows = []
         try:
-            ses.execute(cql)
-            msg = "keyspace '{}', created"
-        except connector.protocol.AlreadyExists:
-            msg = "keyspace '{}', already created"
+            rows = ses.execute(cql)
+        except connector.protocol.ConfigurationException:
+            msg = "failed to get existing tables from keyspace '{}'\
+                  ".format(keyspace)
+            self.options.logger(msg, level=SandeshLevel.SYS_ERR)
+        if rows:
+            temp_tables = [str(row[0]) for row in rows]
+            tables_list += temp_tables
+
+    def safe_create_keyspace(self, keyspace, props=REPLICATION_PROPERTIES):
+        """Create keyspace if does not already exist."""
+        zk_lock_name = "keyspace_create_" + keyspace
+        zk_lock = {'zookeeper_client': self._zk_client,
+                   'path': '/cassandra_schema_change',
+                   'name': zk_lock_name, 'timeout': 60}
+        with ZookeeperLock(**zk_lock):
+            self.options.logger(
+                "Zookeeper lock acquired. Performing schema change...",
+                level=SandeshLevel.SYS_NOTICE)
+            ses = self.get_default_session()
+            cql = """
+            CREATE KEYSPACE IF NOT EXISTS "{}" WITH REPLICATION = {{
+                'class': '{}',
+                'replication_factor': '{}'
+            }}
+            """.format(keyspace,
+                       props['class'],
+                       # TODO(sahid): Considering using max 3
+                       props['replication_factor'] or self.nodes())
+            try:
+                ses.execute(cql)
+                msg = "keyspace '{}', created".format(keyspace)
+                self.options.logger(msg, level=SandeshLevel.SYS_NOTICE)
+            except connector.protocol.AlreadyExists:
+                msg = "keyspace '{}', already created.".format(keyspace)
+                self.options.logger(msg, level=SandeshLevel.SYS_NOTICE)
+            except connector.protocol.InvalidRequest as e:
+                msg = "keyspace '{}' failed to create: {}".format(keyspace, e)
+                self.options.logger(msg, level=SandeshLevel.SYS_ERR)
         self.options.logger(
-            msg.format(keyspace), level=SandeshLevel.SYS_NOTICE)
+            "Zookeeper lock released.", level=SandeshLevel.SYS_NOTICE)
 
     def ensure_keyspace_replication(self, keyspace,
                                     props=REPLICATION_PROPERTIES):
         """Alter keyspace to fix replication."""
-        ses = self.get_default_session()
-        cql = """
-          ALTER KEYSPACE "{}" WITH REPLICATION = {{
-            'class': '{}',
-            'replication_factor': '{}'
-          }}
-        """.format(keyspace,
-                   props.get('class'),
-                   # TODO(sahid): Considering using max 3
-                   props.get('replication_factor') or self.nodes())
-        ses.execute(cql)
-        msg = "keyspace '{}' fixed with replication {}"
+        zk_lock_name = "keyspace_alter_" + keyspace
+        zk_lock = {'zookeeper_client': self._zk_client,
+                   'path': '/cassandra_schema_change',
+                   'name': zk_lock_name, 'timeout': 60}
+        with ZookeeperLock(**zk_lock):
+            self.options.logger(
+                "Zookeeper lock acquired. Performing schema change...",
+                level=SandeshLevel.SYS_NOTICE)
+            ses = self.get_default_session()
+            cql = """
+            ALTER KEYSPACE "{}" WITH REPLICATION = {{
+                'class': '{}',
+                'replication_factor': '{}'
+            }}
+            """.format(keyspace,
+                       props.get('class'),
+                       # TODO(sahid): Considering using max 3
+                       props.get('replication_factor') or self.nodes())
+            ses.execute(cql)
+            msg = "keyspace '{}' fixed with replication {}"
+            self.options.logger(
+                msg.format(keyspace, props), level=SandeshLevel.SYS_NOTICE)
         self.options.logger(
-            msg.format(keyspace, props), level=SandeshLevel.SYS_NOTICE)
+            "Zookeeper lock released.", level=SandeshLevel.SYS_NOTICE)
 
     def initializer(self, group_id, worker_id):
         self._cluster = self.create_cluster()

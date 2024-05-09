@@ -109,9 +109,11 @@ class VncServerCassandraClient(VncCassandraClient):
                  obj_cache_exclude_types, debug_obj_cache_types,
                  log_response_time=None, ssl_enabled=False, ca_certs=None,
                  pool_size=20,
-                 # Default to None, VncCassandraClient will raise an
-                 # exception if not well configured.
-                 cassandra_driver=None):
+                 # cassandra_driver default to None, VncCassandraClient
+                 # will raise an exception if not well configured.
+                 cassandra_driver=None, zk_servers=None, zk_ssl_enable=False,
+                 zk_ssl_keyfile=None, zk_ssl_certificate=None,
+                 zk_ssl_ca_cert=None):
         self._db_client_mgr = db_client_mgr
         keyspaces = datastore_api.UUID_KEYSPACE.copy()
         keyspaces[self._USERAGENT_KEYSPACE_NAME] = {
@@ -124,7 +126,11 @@ class VncServerCassandraClient(VncCassandraClient):
             obj_cache_exclude_types=obj_cache_exclude_types,
             debug_obj_cache_types=debug_obj_cache_types,
             log_response_time=log_response_time, ssl_enabled=ssl_enabled,
-            ca_certs=ca_certs, cassandra_driver=cassandra_driver)
+            ca_certs=ca_certs, cassandra_driver=cassandra_driver,
+            zk_servers=zk_servers, zk_ssl_enable=zk_ssl_enable,
+            zk_ssl_keyfile=zk_ssl_keyfile,
+            zk_ssl_certificate=zk_ssl_certificate,
+            zk_ssl_ca_cert=zk_ssl_ca_cert)
     # end __init__
 
     def config_log(self, msg, level):
@@ -1193,7 +1199,7 @@ class VncZkClient(object):
 class VncDbClient(object):
     def __init__(self, api_svr_mgr, db_srv_list, rabbit_servers, rabbit_port,
                  rabbit_user, rabbit_password, rabbit_vhost, rabbit_ha_mode,
-                 host_ip, reset_config=False, zk_server_ip=None,
+                 host_ip, reset_config=False, zk_servers=None,
                  db_prefix='', db_credential=None, obj_cache_entries=0,
                  obj_cache_exclude_types=None, debug_obj_cache_types=None,
                  db_engine='cassandra', cassandra_use_ssl=False,
@@ -1233,12 +1239,12 @@ class VncDbClient(object):
         self.log_cassandra_response_time = functools.partial(self.log_db_response_time, "CASSANDRA")
         self.log_zk_response_time = functools.partial(self.log_db_response_time, "ZK")
 
-        msg = "Connecting to zookeeper on %s" % (zk_server_ip)
+        msg = "Connecting to zookeeper on %s" % (zk_servers)
         self.config_log(msg, level=SandeshLevel.SYS_NOTICE)
 
         if db_engine == 'cassandra':
             self._zk_db = VncZkClient(api_svr_mgr.get_worker_id(),
-                                      zk_server_ip, host_ip,
+                                      zk_servers, host_ip,
                                       reset_config, db_prefix, self.config_log,
                                       log_response_time=self.log_zk_response_time,
                                       zk_ssl_enable=zk_ssl_enable,
@@ -1260,7 +1266,11 @@ class VncDbClient(object):
                     obj_cache_exclude_types, debug_obj_cache_types,
                     self.log_cassandra_response_time,
                     ssl_enabled=cassandra_use_ssl, ca_certs=cassandra_ca_certs,
-                    cassandra_driver=cassandra_driver)
+                    cassandra_driver=cassandra_driver,
+                    zk_servers=zk_servers, zk_ssl_enable=zk_ssl_enable,
+                    zk_ssl_keyfile=zk_ssl_keyfile,
+                    zk_ssl_certificate=zk_ssl_certificate,
+                    zk_ssl_ca_cert=zk_ssl_ca_cert)
 
             self._zk_db.master_election("/api-server-election", db_client_init)
         else:
