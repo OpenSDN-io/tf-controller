@@ -2778,7 +2778,7 @@ bool AgentXmppChannel::BuildEvpnUnicastMessage(EnetItemType &item,
     rstr.str("");
     EvpnRouteEntry *evpn_route = static_cast<EvpnRouteEntry *>(route);
     rstr << evpn_route->prefix_address().to_string() << "/"
-        << evpn_route->prefix_length();
+        << static_cast<int>(evpn_route->prefix_length());
     active_path = evpn_route->FindLocalVmPortPath();
     item.entry.nlri.ethernet_tag = evpn_route->ethernet_tag();
 
