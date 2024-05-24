@@ -76,7 +76,7 @@ class IFMapServerTest : public ::testing::Test {
     EventManager evm_;
     IFMapServer server_;
     XmppServer *xmpp_server_;
-    auto_ptr<IFMapChannelManagerMock> ifmap_channel_mgr_;
+    unique_ptr<IFMapChannelManagerMock> ifmap_channel_mgr_;
 };
 
 static void IFMapVRouterLink(DB *db, const string &vrouter,

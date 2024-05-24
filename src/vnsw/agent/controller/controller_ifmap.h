@@ -46,7 +46,7 @@ public:
 
     virtual std::string ToString() const;
     virtual bool SendUpdate(const std::string &msg);
-    void ReceiveConfigMessage(std::auto_ptr<XmlBase> impl);
+    void ReceiveConfigMessage(std::unique_ptr<XmlBase> impl);
     virtual void ReceiveUpdate(const XmppStanza::XmppMessage *msg);
     uint8_t GetXmppServerIdx() { return xs_idx_; }
     static uint64_t GetSeqNumber() { return seq_number_; }

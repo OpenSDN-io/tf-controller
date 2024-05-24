@@ -24,7 +24,7 @@
 #include "bgp/routing-instance/routing_instance_analytics_types.h"
 #include "bgp/routing-instance/routing_instance_log.h"
 
-using std::auto_ptr;
+using std::unique_ptr;
 using std::pair;
 using std::string;
 using std::set;
@@ -54,16 +54,16 @@ PathResolver *MvpnTable::CreatePathResolver() {
     return path_resolver;
 }
 
-auto_ptr<DBEntry> MvpnTable::AllocEntry(
+unique_ptr<DBEntry> MvpnTable::AllocEntry(
     const DBRequestKey *key) const {
     const RequestKey *pfxkey = static_cast<const RequestKey *>(key);
-    return auto_ptr<DBEntry> (new MvpnRoute(pfxkey->prefix));
+    return unique_ptr<DBEntry> (new MvpnRoute(pfxkey->prefix));
 }
 
-auto_ptr<DBEntry> MvpnTable::AllocEntryStr(
+unique_ptr<DBEntry> MvpnTable::AllocEntryStr(
     const string &key_str) const {
     MvpnPrefix prefix = MvpnPrefix::FromString(key_str);
-    return auto_ptr<DBEntry> (new MvpnRoute(prefix));
+    return unique_ptr<DBEntry> (new MvpnRoute(prefix));
 }
 
 size_t MvpnTable::Hash(const DBEntry *entry) const {

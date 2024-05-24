@@ -389,10 +389,10 @@ bool AgentPath::ResolveGwNextHops(Agent *agent, const AgentRoute *sync_route) {
                         agent->nexthop_table()->discard_nh()->GetDBRequestKey();
                     NextHopKey *nh_key =
                         static_cast<NextHopKey *>(key.release());
-                    std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+                    std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                     ComponentNHKeyPtr component_nh_key(new ComponentNHKey(
                                     (*ecmp_member_it)->GetLabel(),
-                                    nh_key_ptr));
+                                    std::move(nh_key_ptr)));
                     comp_nh_list.push_back(component_nh_key);
                 }
             } else {
@@ -406,10 +406,10 @@ bool AgentPath::ResolveGwNextHops(Agent *agent, const AgentRoute *sync_route) {
                     //of type composite
                     nh_key->SetPolicy(false);
                 }
-                std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+                std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                 ComponentNHKeyPtr component_nh_key(new
                         ComponentNHKey((*ecmp_member_it)->GetLabel(),
-                                                   nh_key_ptr));
+                                                   std::move(nh_key_ptr)));
                 comp_nh_list.push_back(component_nh_key);
                 //Reset to new gateway route, no nexthop for indirect route
                 (*ecmp_member_it)->UpdateDependentRoute(uc_rt);
@@ -1831,7 +1831,7 @@ void AgentPath::CopyLocalPath(CompositeNHKey *composite_nh_key,
     DBEntryBase::KeyPtr key_nh = local_path->nexthop()->GetDBRequestKey();
     NextHopKey *nh_key = static_cast<NextHopKey *>(key_nh.get());
     nh_key->SetPolicy(false);
-    std::auto_ptr<const NextHopKey> nh_key_p(nh_key->Clone());
+    std::unique_ptr<const NextHopKey> nh_key_p(nh_key->Clone());
 
     ComponentNHKeyList comp_nh_list;
     if (nh_key_p->GetType() == NextHop::COMPOSITE) {
@@ -1841,7 +1841,7 @@ void AgentPath::CopyLocalPath(CompositeNHKey *composite_nh_key,
         comp_nh_list = comp_nh_key->component_nh_key_list();
     } else {
         //Append the interface NH to composite NH list
-        ComponentNHKeyPtr new_comp_nh(new ComponentNHKey(0, nh_key_p));
+        ComponentNHKeyPtr new_comp_nh(new ComponentNHKey(0, std::move(nh_key_p)));
         comp_nh_list.push_back(new_comp_nh);
     }
 

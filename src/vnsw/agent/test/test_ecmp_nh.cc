@@ -77,17 +77,17 @@ TEST_F(EcmpNhTest, DISABLED_EcmpNH_controller) {
                                           agent_->router_id(),
                                           ip1, false,
                                           TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+    std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
     TunnelNHKey *nh_key_2 = new TunnelNHKey(agent_->fabric_vrf_name(),
                                             agent_->router_id(),
                                             ip2, false,
                                             TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
+    std::unique_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
 
     ComponentNHKeyPtr component_nh_key(new ComponentNHKey(1000,
-                                                          nh_key_ptr));
+                                                          std::move(nh_key_ptr)));
     ComponentNHKeyPtr component_nh_key_2(new ComponentNHKey(1001,
-                                                            nh_key_ptr_2));
+                                                            std::move(nh_key_ptr_2)));
     ComponentNHKeyList comp_nh_list;
     comp_nh_list.push_back(component_nh_key);
     comp_nh_list.push_back(component_nh_key_2);
@@ -725,9 +725,9 @@ TEST_F(EcmpNhTest, DISABLED_EcmpNH_7) {
 
     DBEntryBase::KeyPtr comp_key = comp_nh->GetDBRequestKey();
     NextHopKey *nh_key = static_cast<NextHopKey *>(comp_key.release());
-    std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+    std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
     ComponentNHKeyPtr nh_data1(new ComponentNHKey(rt->GetActiveLabel(),
-                                                  nh_key_ptr));
+                                                  std::move(nh_key_ptr)));
     Ip4Address remote_server_ip1 = Ip4Address::from_string("11.1.1.1");
     //Leak the route via BGP peer
     ComponentNHKeyPtr nh_data2(new ComponentNHKey(30, agent_->fabric_vrf_name(),
@@ -1236,9 +1236,9 @@ TEST_F(EcmpNhTest, EcmpNH_14) {
 
     DBEntryBase::KeyPtr db_nh_key = nh->GetDBRequestKey();
     NextHopKey *nh_key = static_cast<NextHopKey *>(db_nh_key.release());
-    std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+    std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
     ComponentNHKeyPtr nh_data1(new ComponentNHKey(rt->GetActiveLabel(),
-                                                  nh_key_ptr));
+                                                  std::move(nh_key_ptr)));
     Ip4Address remote_server_ip1 = Ip4Address::from_string("11.1.1.1");
     //Leak the route via BGP peer
     ComponentNHKeyPtr nh_data2(new ComponentNHKey(30, agent_->fabric_vrf_name(),
@@ -1527,9 +1527,9 @@ TEST_F(EcmpNhTest, EcmpNH_17) {
                                                   TunnelType::DefaultType()));
     DBEntryBase::KeyPtr key = nh->GetDBRequestKey();
     NextHopKey *nh_key = static_cast<NextHopKey *>(key.release());
-    std::auto_ptr<const NextHopKey> nh_akey(nh_key);
+    std::unique_ptr<const NextHopKey> nh_akey(nh_key);
     nh_key->SetPolicy(false);
-    ComponentNHKeyPtr nh_data2(new ComponentNHKey(intf->label(), nh_akey));
+    ComponentNHKeyPtr nh_data2(new ComponentNHKey(intf->label(), std::move(nh_akey)));
 
     ComponentNHKeyList comp_nh_list;
     //Insert new NH first and then existing route NH

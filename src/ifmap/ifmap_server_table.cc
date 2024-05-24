@@ -28,10 +28,10 @@ IFMapServerTable::RequestData::RequestData(IFMapOrigin::Origin orig,
     : origin(orig), id_type(type), id_name(name) {
 }
 
-// Warning: std::auto_ptr<> will not call the destructor if the type is
-// incomplete at the time the auto_ptr destructor is generated. Depending
+// Warning: std::unique_ptr<> will not call the destructor if the type is
+// incomplete at the time the unique_ptr destructor is generated. Depending
 // on the compiler this may occur at different times. With clang the
-// auto_ptr appears to be generated when needed by an enclosing type.
+// unique_ptr appears to be generated when needed by an enclosing type.
 // gcc appears to behave differently.
 IFMapServerTable::RequestData::~RequestData() {
 #if defined(__GNUC__)
@@ -48,8 +48,8 @@ IFMapServerTable::IFMapServerTable(DB *db, const string &name, DBGraph *graph)
         : IFMapTable(db, name, graph) {
 }
 
-auto_ptr<DBEntry> IFMapServerTable::AllocEntry(const DBRequestKey *key) const {
-    auto_ptr<DBEntry> entry(
+unique_ptr<DBEntry> IFMapServerTable::AllocEntry(const DBRequestKey *key) const {
+    unique_ptr<DBEntry> entry(
         new IFMapNode(const_cast<IFMapServerTable *>(this)));
     entry->SetKey(key);
     return entry;
@@ -65,7 +65,7 @@ static IFMapServerTable *TableFind(DB *db, const string &metadata) {
 }
 
 IFMapNode *IFMapServerTable::EntryLookup(RequestKey *request) {
-    auto_ptr<DBEntry> key(AllocEntry(request));
+    unique_ptr<DBEntry> key(AllocEntry(request));
     IFMapNode *node = static_cast<IFMapNode *>(Find(key.get()));
     if ((node == NULL) || node->IsDeleted()) {
         return NULL;
@@ -74,7 +74,7 @@ IFMapNode *IFMapServerTable::EntryLookup(RequestKey *request) {
 }
 
 IFMapNode *IFMapServerTable::EntryLocate(RequestKey *request, bool *changep) {
-    auto_ptr<DBEntry> key(AllocEntry(request));
+    unique_ptr<DBEntry> key(AllocEntry(request));
     IFMapNode *node = static_cast<IFMapNode *>(Find(key.get()));
     if (node != NULL) {
         if (node->IsDeleted()) {

@@ -140,7 +140,7 @@ TEST_F(TestKSyncRoute, vm_interface_route_1) {
     EXPECT_TRUE(rt != NULL);
 
     MacAddress mac("00:00:00:01:01:01");
-    std::auto_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
+    std::unique_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
     EXPECT_TRUE(vrf1_obj_->RouteNeedsMacBinding(rt));
     EXPECT_TRUE(vrf1_obj_->GetIpMacBinding(vrf1_, vnet1_->primary_ip_addr(),
                                             NULL) == mac);
@@ -155,7 +155,7 @@ TEST_F(TestKSyncRoute, vm_interface_route_2) {
     InetUnicastRouteEntry *rt = vrf1_uc_table_->FindLPM(vnet1_->primary_ip_addr());
     EXPECT_TRUE(rt != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
+    std::unique_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
     EXPECT_TRUE(vrf1_obj_->RouteNeedsMacBinding(rt));
 
     ksync->BuildArpFlags(rt, rt->GetActivePath(), MacAddress());
@@ -172,7 +172,7 @@ TEST_F(TestKSyncRoute, remote_route_1) {
     InetUnicastRouteEntry *rt = vrf1_uc_table_->FindLPM(addr);
     EXPECT_TRUE(rt != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
+    std::unique_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
     EXPECT_TRUE(vrf1_obj_->RouteNeedsMacBinding(rt));
 
     ksync->BuildArpFlags(rt, rt->GetActivePath(), vnet1_->mac());
@@ -198,7 +198,7 @@ TEST_F(TestKSyncRoute, remote_route_2) {
     InetUnicastRouteEntry *rt = vrf1_uc_table_->FindLPM(addr);
     EXPECT_TRUE(rt != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
+    std::unique_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
     EXPECT_TRUE(vrf1_obj_->RouteNeedsMacBinding(rt));
 
     ksync->BuildArpFlags(rt, rt->GetActivePath(), MacAddress());
@@ -216,7 +216,7 @@ TEST_F(TestKSyncRoute, remote_evpn_route_1) {
     MacAddress vmi_mac(input[0].mac);
     BridgeRouteEntry *vmi_rt = vrf1_bridge_table_->FindRoute(vmi_mac);
     EXPECT_TRUE(vmi_rt != NULL);
-    std::auto_ptr<RouteKSyncEntry> ksync_vmi(new RouteKSyncEntry(
+    std::unique_ptr<RouteKSyncEntry> ksync_vmi(new RouteKSyncEntry(
                                              vrf1_bridge_rt_obj_, vmi_rt));
     ksync_vmi->Sync(vmi_rt);
     EXPECT_FALSE(ksync_vmi->flood_dhcp()); // flood DHCP not set when VMI exists
@@ -230,7 +230,7 @@ TEST_F(TestKSyncRoute, remote_evpn_route_1) {
     EXPECT_TRUE(rt != NULL);
 
     EXPECT_TRUE(vrf1_obj_->GetIpMacBinding(vrf1_, addr, NULL) == mac);
-    std::auto_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_bridge_rt_obj_, rt));
+    std::unique_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_bridge_rt_obj_, rt));
     ksync->Sync(rt);
     EXPECT_TRUE(ksync->flood_dhcp()); // flood DHCP set for MAC without VMI
 
@@ -249,7 +249,7 @@ TEST_F(TestKSyncRoute, different_vn_1) {
     InetUnicastRouteEntry *rt = vrf1_uc_table_->FindLPM(addr);
     EXPECT_TRUE(rt != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
+    std::unique_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
     EXPECT_TRUE(vrf1_obj_->RouteNeedsMacBinding(rt));
 
     ksync->BuildArpFlags(rt, rt->GetActivePath(), vnet1_->mac());
@@ -269,7 +269,7 @@ TEST_F(TestKSyncRoute, replacement_rt_1) {
     InetUnicastRouteEntry *rt1 = vrf1_uc_table_->FindLPM(addr1);
     EXPECT_TRUE(rt1 != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync1(new RouteKSyncEntry(vrf1_rt_obj_, rt1));
+    std::unique_ptr<RouteKSyncEntry> ksync1(new RouteKSyncEntry(vrf1_rt_obj_, rt1));
     EXPECT_TRUE(vrf1_obj_->RouteNeedsMacBinding(rt1));
 
     ksync1->BuildArpFlags(rt1, rt1->GetActivePath(), vnet1_->mac());
@@ -288,14 +288,14 @@ TEST_F(TestKSyncRoute, replacement_rt_1) {
     InetUnicastRouteEntry *rt2 = vrf1_uc_table_->FindLPM(addr2);
     EXPECT_TRUE(rt2 != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync2(new RouteKSyncEntry(vrf1_rt_obj_, rt2));
+    std::unique_ptr<RouteKSyncEntry> ksync2(new RouteKSyncEntry(vrf1_rt_obj_, rt2));
     EXPECT_TRUE(vrf1_obj_->RouteNeedsMacBinding(rt2));
 
     ksync2->BuildArpFlags(rt2, rt2->GetActivePath(), MacAddress());
     EXPECT_FALSE(ksync2->proxy_arp());
     EXPECT_TRUE(ksync2->flood());
 
-    std::auto_ptr<RouteKSyncEntry> ksync3(new RouteKSyncEntry(vrf1_rt_obj_, rt2));
+    std::unique_ptr<RouteKSyncEntry> ksync3(new RouteKSyncEntry(vrf1_rt_obj_, rt2));
     ksync3->CopyReplacementData(NULL, ksync2.get());
     EXPECT_FALSE(ksync3->proxy_arp());
     EXPECT_TRUE(ksync3->flood());
@@ -321,7 +321,7 @@ TEST_F(TestKSyncRoute, no_replacement_rt_1) {
     InetUnicastRouteEntry *rt1 = vrf1_uc_table_->FindLPM(addr1);
     EXPECT_TRUE(rt1 != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync1(new RouteKSyncEntry(vrf1_rt_obj_, rt1));
+    std::unique_ptr<RouteKSyncEntry> ksync1(new RouteKSyncEntry(vrf1_rt_obj_, rt1));
     EXPECT_TRUE(vrf1_obj_->RouteNeedsMacBinding(rt1));
 
     ksync1->BuildArpFlags(rt1, rt1->GetActivePath(), vnet1_->mac());
@@ -349,7 +349,7 @@ TEST_F(TestKSyncRoute, ipam_subnet_route_1) {
     InetUnicastRouteEntry *rt = vrf1_uc_table_->FindLPM(addr);
     EXPECT_TRUE(rt != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
+    std::unique_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
     EXPECT_FALSE(vrf1_obj_->RouteNeedsMacBinding(rt));
 
     ksync->BuildArpFlags(rt, rt->GetActivePath(), MacAddress());
@@ -374,7 +374,7 @@ TEST_F(TestKSyncRoute, ipam_subnet_route_2) {
     InetUnicastRouteEntry *rt = vrf1_uc_table_->FindLPM(addr);
     EXPECT_TRUE(rt != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
+    std::unique_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
     EXPECT_FALSE(vrf1_obj_->RouteNeedsMacBinding(rt));
 
     ksync->BuildArpFlags(rt, rt->GetActivePath(), MacAddress());
@@ -400,7 +400,7 @@ TEST_F(TestKSyncRoute, ecmp_ipam_subnet_route_2) {
     InetUnicastRouteEntry *rt = vrf1_uc_table_->FindLPM(addr);
     EXPECT_TRUE(rt != NULL);
 
-    std::auto_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
+    std::unique_ptr<RouteKSyncEntry> ksync(new RouteKSyncEntry(vrf1_rt_obj_, rt));
     EXPECT_FALSE(vrf1_obj_->RouteNeedsMacBinding(rt));
 
     ksync->BuildArpFlags(rt, rt->GetActivePath(), MacAddress());
@@ -545,7 +545,7 @@ TEST_F(TestKSyncRoute, ksync_intf_pbb_mac) {
     // By default pbb interface flag is false, expect flag is false in InterfaceKSyncEntry
     EXPECT_FALSE(vnet1_->pbb_interface());
 
-    std::auto_ptr<InterfaceKSyncEntry> ksync(new InterfaceKSyncEntry(interface_obj, vnet1_));
+    std::unique_ptr<InterfaceKSyncEntry> ksync(new InterfaceKSyncEntry(interface_obj, vnet1_));
     EXPECT_FALSE(ksync->pbb_interface());
     ksync->Sync(vnet1_);
     EXPECT_FALSE(ksync->pbb_interface());

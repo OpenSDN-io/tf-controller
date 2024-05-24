@@ -138,7 +138,7 @@ static bool RenameFile(const std::string &file_tmp_name,
 // This hash sum will be validated while reading the content.
 bool BackUpResourceTable::CalculateHashSum(const std::string &file_name,
                                            uint32_t *hashsum) {
-    std::auto_ptr<uint8_t> buffer;
+    std::unique_ptr<uint8_t> buffer;
     uint32_t size = ResourceBackupManager::ReadResourceDataFromFile(file_name,
                                                                     &(buffer));
     if (size && buffer.get()) {
@@ -257,7 +257,7 @@ void BackUpResourceTable::ReadMapFromFile(T* sandesh_data,
         LOG(DEBUG, "File path not found " << file_path.str());
         return;
     }
-    std::auto_ptr<uint8_t> buffer;
+    std::unique_ptr<uint8_t> buffer;
     uint32_t size = ResourceBackupManager::ReadResourceDataFromFile(file_path.str(),
                                                                     &(buffer));
     if (buffer.get()) {

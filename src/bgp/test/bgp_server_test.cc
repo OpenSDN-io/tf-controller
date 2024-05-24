@@ -289,11 +289,11 @@ protected:
     void GRTestCommon(bool hard_reset, size_t expected_stale_count,
                       size_t expected_llgr_stale_count);
 
-    auto_ptr<EventManager> evm_;
-    auto_ptr<ServerThread> thread_;
-    auto_ptr<BgpServerTest> a_;
-    auto_ptr<BgpServerTest> b_;
-    auto_ptr<BgpServerTest> c_;
+    unique_ptr<EventManager> evm_;
+    unique_ptr<ServerThread> thread_;
+    unique_ptr<BgpServerTest> a_;
+    unique_ptr<BgpServerTest> b_;
+    unique_ptr<BgpServerTest> c_;
     BgpSessionManagerCustom *a_session_manager_;
     BgpSessionManagerCustom *b_session_manager_;
     BgpSessionManagerCustom *c_session_manager_;

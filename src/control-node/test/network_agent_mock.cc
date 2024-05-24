@@ -209,7 +209,7 @@ public:
                 xml_attribute id = item.attribute("id");
                 std::string sid = id.value();
                 if (inet_route) {
-                    auto_ptr<autogen::ItemType> rt_entry(
+                    unique_ptr<autogen::ItemType> rt_entry(
                             new autogen::ItemType());
                     if (!rt_entry->XmlParse(item))
                         continue;
@@ -221,7 +221,7 @@ public:
                                 network, sid, rt_entry.release());
                     }
                 } else if (labeled_inet_route) {
-                    auto_ptr<autogen::ItemType> rt_entry(
+                    unique_ptr<autogen::ItemType> rt_entry(
                             new autogen::ItemType());
                     if (!rt_entry->XmlParse(item))
                         continue;
@@ -233,7 +233,7 @@ public:
                                                             rt_entry.release());
                     }
                 } else if (inet6_route) {
-                    auto_ptr<autogen::ItemType> rt_entry(
+                    unique_ptr<autogen::ItemType> rt_entry(
                             new autogen::ItemType());
                     if (!rt_entry->XmlParse(item)) {
                         continue;
@@ -246,7 +246,7 @@ public:
                                                      rt_entry.release());
                     }
                 } else if (enet_route) {
-                    auto_ptr<autogen::EnetItemType> rt_entry(
+                    unique_ptr<autogen::EnetItemType> rt_entry(
                             new autogen::EnetItemType());
                     if (!rt_entry->XmlParse(item))
                         continue;
@@ -258,7 +258,7 @@ public:
                                 network, sid, rt_entry.release());
                     }
                 } else if (mcast_route) {
-                    auto_ptr<autogen::McastItemType> rt_entry(
+                    unique_ptr<autogen::McastItemType> rt_entry(
                             new autogen::McastItemType());
                     if (!rt_entry->XmlParse(item))
                         continue;
@@ -274,7 +274,7 @@ public:
                                 network, mstr, rt_entry.release());
                     }
                 } else if (mvpn_route) {
-                    auto_ptr<autogen::MvpnItemType> rt_entry(
+                    unique_ptr<autogen::MvpnItemType> rt_entry(
                             new autogen::MvpnItemType());
                     if (!rt_entry->XmlParse(item))
                         continue;

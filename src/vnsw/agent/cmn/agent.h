@@ -1455,8 +1455,8 @@ private:
     InterfaceTable *intf_table_;
     HealthCheckTable *health_check_table_;
     BridgeDomainTable *bridge_domain_table_;
-    std::auto_ptr<MetaDataIpAllocator> metadata_ip_allocator_;
-    std::auto_ptr<MetaDataIpAllocator> metadata_ip6_allocator_;
+    std::unique_ptr<MetaDataIpAllocator> metadata_ip_allocator_;
+    std::unique_ptr<MetaDataIpAllocator> metadata_ip6_allocator_;
     NextHopTable *nh_table_;
     InetUnicastAgentRouteTable *uc_rt_table_;
     InetUnicastAgentRouteTable *mpls_rt_table_;
@@ -1482,7 +1482,7 @@ private:
     AgentQosConfigTable *qos_config_table_;
     PolicySetTable *policy_set_table_;
     CryptTunnelTable *crypt_tunnel_table_;
-    std::auto_ptr<ConfigManager> config_manager_;
+    std::unique_ptr<ConfigManager> config_manager_;
     MulticastPolicyTable *mp_table_;
 
     // Mirror config table
@@ -1540,24 +1540,24 @@ private:
     MacLearningProto *mac_learning_proto_;
     MacLearningModule *mac_learning_module_;
 
-    std::auto_ptr<Peer> local_peer_;
-    std::auto_ptr<Peer> local_vm_peer_;
-    std::auto_ptr<Peer> linklocal_peer_;
-    std::auto_ptr<Peer> ecmp_peer_;
-    std::auto_ptr<Peer> vgw_peer_;
-    std::auto_ptr<Peer> evpn_routing_peer_;
-    std::auto_ptr<Peer> vxlan_bgp_peer_;
-    std::auto_ptr<Peer> evpn_peer_;
-    std::auto_ptr<Peer> multicast_peer_;
-    std::auto_ptr<Peer> multicast_tor_peer_;
-    std::auto_ptr<Peer> multicast_tree_builder_peer_;
-    std::auto_ptr<Peer> mac_vm_binding_peer_;
-    std::auto_ptr<Peer> inet_evpn_peer_;
-    std::auto_ptr<Peer> mac_learning_peer_;
-    std::auto_ptr<Peer> fabric_rt_export_peer_;
-    std::auto_ptr<Peer> local_vm_export_peer_;
+    std::unique_ptr<Peer> local_peer_;
+    std::unique_ptr<Peer> local_vm_peer_;
+    std::unique_ptr<Peer> linklocal_peer_;
+    std::unique_ptr<Peer> ecmp_peer_;
+    std::unique_ptr<Peer> vgw_peer_;
+    std::unique_ptr<Peer> evpn_routing_peer_;
+    std::unique_ptr<Peer> vxlan_bgp_peer_;
+    std::unique_ptr<Peer> evpn_peer_;
+    std::unique_ptr<Peer> multicast_peer_;
+    std::unique_ptr<Peer> multicast_tor_peer_;
+    std::unique_ptr<Peer> multicast_tree_builder_peer_;
+    std::unique_ptr<Peer> mac_vm_binding_peer_;
+    std::unique_ptr<Peer> inet_evpn_peer_;
+    std::unique_ptr<Peer> mac_learning_peer_;
+    std::unique_ptr<Peer> fabric_rt_export_peer_;
+    std::unique_ptr<Peer> local_vm_export_peer_;
 
-    std::auto_ptr<AgentSignal> agent_signal_;
+    std::unique_ptr<AgentSignal> agent_signal_;
 
     IFMapAgentParser *ifmap_parser_;
     bool router_id_configured_;

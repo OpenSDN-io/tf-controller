@@ -253,7 +253,7 @@ public:
 
 private:
     // Store the last visited node to continue walk
-    std::auto_ptr<DBRequestKey> walk_ctx_;
+    std::unique_ptr<DBRequestKey> walk_ctx_;
 
     // Table partition for which this worker was created
     DBTablePartition *tbl_partition_;
@@ -294,7 +294,7 @@ bool DBTable::WalkWorker::Run() {
     DBEntry *entry;
 
     if (key_resume != NULL) {
-        std::auto_ptr<const DBEntryBase> start;
+        std::unique_ptr<const DBEntryBase> start;
         start = table->AllocEntry(key_resume);
         // Find matching or next in sort order
         entry = tbl_partition_->lower_bound(start.get());

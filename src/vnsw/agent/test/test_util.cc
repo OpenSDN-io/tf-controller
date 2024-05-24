@@ -1761,7 +1761,7 @@ public:
         if (VxlanRoutingManager::IsVxlanAvailable(agent) &&
         VxlanRoutingManager::IsRoutingVrf(vm_vrf, agent)) {
             const MacAddress mac(rewrite_dmac_str);
-            auto_ptr<TunnelNHKey> nh_key
+            unique_ptr<TunnelNHKey> nh_key
                 (agent->oper_db()->vxlan_routing_manager()->
                 AllocateTunnelNextHopKey(server_ip, mac));
             agent->oper_db()->vxlan_routing_manager()->
@@ -2013,9 +2013,9 @@ bool MplsLabelInetEcmpTunnelAdd(const BgpPeer *peer, const string &vrf,
                                 TunnelType::ComputeType(encap),
                                 MacAddress(),
                                 label1);
-    std::auto_ptr<const NextHopKey> nh_key_ptr1(nh_key1);
+    std::unique_ptr<const NextHopKey> nh_key_ptr1(nh_key1);
     ComponentNHKeyPtr component_nh_key1(new ComponentNHKey(label1,
-                                                        nh_key_ptr1));
+        std::move(nh_key_ptr1)));
     LabelledTunnelNHKey *nh_key2 = new LabelledTunnelNHKey(
                                 agent->fabric_vrf_name(),
                                 agent->router_id(),
@@ -2024,9 +2024,9 @@ bool MplsLabelInetEcmpTunnelAdd(const BgpPeer *peer, const string &vrf,
                                 TunnelType::ComputeType(encap),
                                 MacAddress(),
                                 label1);
-    std::auto_ptr<const NextHopKey> nh_key_ptr2(nh_key2);
+    std::unique_ptr<const NextHopKey> nh_key_ptr2(nh_key2);
     ComponentNHKeyPtr component_nh_key2(new ComponentNHKey(label2,
-                                                        nh_key_ptr2));
+        std::move(nh_key_ptr2)));
     ComponentNHKeyList comp_nh_list;
     comp_nh_list.push_back(component_nh_key1);
     comp_nh_list.push_back(component_nh_key2);
@@ -4180,7 +4180,7 @@ bool FlowDelete(const string &vrf_name, const char *sip, const char *dip,
     }
 
     int task_id = TaskScheduler::GetInstance()->GetTaskId(kTaskFlowEvent);
-    std::auto_ptr<TaskTrigger> trigger_
+    std::unique_ptr<TaskTrigger> trigger_
         (new TaskTrigger(boost::bind(FlowDeleteTrigger, key), task_id, 0));
     trigger_->Set();
     client->WaitForIdle();
@@ -5010,7 +5010,7 @@ void DeleteBgpPeer(Peer *peer) {
     BgpPeer *bgp_peer = static_cast<BgpPeer *>(peer);
     FireAllControllerTimers(Agent::GetInstance(), NULL);
     int task_id = TaskScheduler::GetInstance()->GetTaskId("Agent::ControllerXmpp");
-    std::auto_ptr<TaskTrigger> trigger_
+    std::unique_ptr<TaskTrigger> trigger_
         (new TaskTrigger(boost::bind(&ControllerCleanupTrigger, bgp_peer),
                          task_id, 0));
     trigger_->Set();

@@ -289,8 +289,8 @@ uint32_t NextHopTable::ReserveIndex() {
     return index_table_.Insert(NULL);
 }
 
-std::auto_ptr<DBEntry> NextHopTable::AllocEntry(const DBRequestKey *k) const {
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(AllocWithKey(k)));
+std::unique_ptr<DBEntry> NextHopTable::AllocEntry(const DBRequestKey *k) const {
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(AllocWithKey(k)));
 }
 
 NextHop *NextHopTable::AllocWithKey(const DBRequestKey *k) const {
@@ -298,8 +298,8 @@ NextHop *NextHopTable::AllocWithKey(const DBRequestKey *k) const {
     return key->AllocEntry();
 }
 
-std::auto_ptr<DBEntry> NextHopTable::GetEntry(const DBRequestKey *key) const {
-    return std::auto_ptr<DBEntry>(AllocWithKey(key));
+std::unique_ptr<DBEntry> NextHopTable::GetEntry(const DBRequestKey *key) const {
+    return std::unique_ptr<DBEntry>(AllocWithKey(key));
 }
 
 DBEntry *NextHopTable::Add(const DBRequest *req) {
@@ -399,7 +399,7 @@ void NextHopTable::OnZeroRefcount(AgentDBEntry *e) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_DELETE;
     DBEntryBase::KeyPtr key = nh->GetDBRequestKey();
-    req.key = key;
+    req.key = std::move(key);
     req.data.reset(NULL);
     Process(req);
 }
@@ -1920,9 +1920,9 @@ void CompositeNHKey::ChangeTunnelType(TunnelType::Type tunnel_type) {
             TunnelNHKey *tunnel_nh_key =
                 static_cast<TunnelNHKey *>((*it)->nh_key()->Clone());
             tunnel_nh_key->set_tunnel_type(tunnel_type);
-            std::auto_ptr<const NextHopKey> nh_key(tunnel_nh_key);
+            std::unique_ptr<const NextHopKey> nh_key(tunnel_nh_key);
             ComponentNHKeyPtr new_tunnel_nh(new ComponentNHKey((*it)->label(),
-                                                               nh_key));
+                                                               std::move(nh_key)));
             (*it) = new_tunnel_nh;
         }
     }
@@ -2276,9 +2276,9 @@ void CompositeNH::ChangeComponentNHKeyTunnelType(
             }
             ChangeComponentNHKeyTunnelType(
                     composite_nh_key->component_nh_key_list_, type);
-            std::auto_ptr<const NextHopKey> nh_key(composite_nh_key);
+            std::unique_ptr<const NextHopKey> nh_key(composite_nh_key);
             ComponentNHKeyPtr new_comp_nh(new ComponentNHKey((*it)->label(),
-                                                             nh_key));
+                                                             std::move(nh_key)));
             (*it) = new_comp_nh;
         }
 
@@ -2286,9 +2286,9 @@ void CompositeNH::ChangeComponentNHKeyTunnelType(
             TunnelNHKey *tunnel_nh_key =
                 static_cast<TunnelNHKey *>((*it)->nh_key()->Clone());
             tunnel_nh_key->set_tunnel_type(type);
-            std::auto_ptr<const NextHopKey> nh_key(tunnel_nh_key);
+            std::unique_ptr<const NextHopKey> nh_key(tunnel_nh_key);
             ComponentNHKeyPtr new_tunnel_nh(new ComponentNHKey((*it)->label(),
-                                                               nh_key));
+                                                               std::move(nh_key)));
             (*it) = new_tunnel_nh;
         }
     }
@@ -2358,7 +2358,7 @@ void CompositeNH::UpdateEcmpHashFieldsUponRouteDelete(Agent *agent,
         DBEntryBase::KeyPtr key = GetDBRequestKey();
         NextHopKey *nh_key = static_cast<NextHopKey *>(key.get());
         nh_key->sub_op_ = AgentKey::RESYNC;
-        nh_req.key = key;
+        nh_req.key = std::move(key);
         nh_req.data.reset(NULL);
         agent->nexthop_table()->Process(nh_req);
     }
@@ -2469,9 +2469,9 @@ bool CompositeNH::UpdateComponentNHKey(uint32_t label, NextHopKey *nh_key,
             new_label = label;
             ret = true;
         }
-        std::auto_ptr<const NextHopKey> nh_key_ptr(lhs);
+        std::unique_ptr<const NextHopKey> nh_key_ptr(lhs);
         ComponentNHKeyPtr component_nh_key(
-            new ComponentNHKey(new_label, nh_key_ptr));
+            new ComponentNHKey(new_label, std::move(nh_key_ptr)));
         component_nh_key_list.push_back(component_nh_key);
         if (!comp_nh_policy) {
             comp_nh_policy = component_nh->nh()->NexthopToInterfacePolicy();
@@ -2724,9 +2724,9 @@ bool CompositeNHKey::ExpandLocalCompositeNH(Agent *agent) {
         const ComponentNH *component_nh = it.get();
         DBEntryBase::KeyPtr key = component_nh->nh()->GetDBRequestKey();
         NextHopKey *nh_key = static_cast<NextHopKey *>(key.release());
-        std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+        std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
         ComponentNHKeyPtr component_nh_key(
-            new ComponentNHKey(component_nh->label(), nh_key_ptr));
+            new ComponentNHKey(component_nh->label(), std::move(nh_key_ptr)));
         insert(component_nh_key);
         if (!comp_nh_new_policy) {
             comp_nh_new_policy = component_nh->nh()->NexthopToInterfacePolicy();
@@ -2763,11 +2763,11 @@ bool CompositeNHKey::Reorder(Agent *agent,
         DBEntryBase::KeyPtr key = nh->GetDBRequestKey();
         NextHopKey *nh_key = static_cast<NextHopKey *>(key.release());
         nh_key->SetPolicy(false);
-        std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+        std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
         //Insert exisiting nexthop at first slot
         //This ensures that old flows are not disturbed
         ComponentNHKeyPtr component_nh_key(new ComponentNHKey(label,
-                                                              nh_key_ptr));
+                                                              std::move(nh_key_ptr)));
         if (find(component_nh_key)) {
             //Swap first entry and previous nexthop which
             //route would have been pointing to

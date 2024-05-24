@@ -740,9 +740,9 @@ bool Inet4UnicastGatewayRoute::AddChangePathExtended(Agent *agent, AgentPath *pa
                 DBEntryBase::KeyPtr key =
                     uc_rt->GetActiveNextHop()->GetDBRequestKey();
                 NextHopKey *nh_key = static_cast<NextHopKey *>(key.release());
-                std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+                std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                 ComponentNHKeyPtr component_nh_key(new ComponentNHKey(-1,
-                            nh_key_ptr));
+                            std::move(nh_key_ptr)));
                 comp_nh_list.push_back(component_nh_key);
             }
         }

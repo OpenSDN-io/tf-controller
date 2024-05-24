@@ -590,7 +590,7 @@ void XmppConnection::ReceiveMsg(XmppSession *session, const string &msg) {
 }
 
 XmppStanza::XmppMessage *XmppConnection::XmppDecode(const string &msg) {
-    auto_ptr<XmppStanza::XmppMessage> minfo(XmppProto::Decode(this, msg));
+    unique_ptr<XmppStanza::XmppMessage> minfo(XmppProto::Decode(this, msg));
     if (minfo.get() == NULL) {
         XMPP_INFO(XmppSessionDelete, ToUVEKey(), XMPP_PEER_DIR_IN, "Server",
                   FromString(), ToString());

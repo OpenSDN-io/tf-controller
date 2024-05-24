@@ -728,7 +728,7 @@ private:
     void XmppHandleChannelEvent(XmppChannel *channel, xmps::PeerState state);
 
     XmppClient *client_;
-    std::auto_ptr<AgentPeer> peer_;
+    std::unique_ptr<AgentPeer> peer_;
     boost::scoped_ptr<XmppDocumentMock> impl_;
 
     std::string server_address_;

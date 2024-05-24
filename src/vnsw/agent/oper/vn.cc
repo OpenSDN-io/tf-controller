@@ -761,10 +761,10 @@ VnEntry *VnTable::Find(const boost::uuids::uuid &u) {
     return static_cast<VnEntry *>(FindActiveEntry(&key));
 }
 
-std::auto_ptr<DBEntry> VnTable::AllocEntry(const DBRequestKey *k) const {
+std::unique_ptr<DBEntry> VnTable::AllocEntry(const DBRequestKey *k) const {
     const VnKey *key = static_cast<const VnKey *>(k);
     VnEntry *vn = new VnEntry(agent(), key->uuid_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(vn));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(vn));
 }
 
 DBEntry *VnTable::OperDBAdd(const DBRequest *req) {

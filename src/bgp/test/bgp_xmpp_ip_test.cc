@@ -23,7 +23,7 @@
 #include "xmpp/xmpp_factory.h"
 
 using std::string;
-using std::auto_ptr;
+using std::unique_ptr;
 using boost::assign::list_of;
 
 static const char *config_2_control_nodes = "\

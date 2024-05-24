@@ -79,17 +79,17 @@ TEST_F(L2Ecmpest, Controller_verify_evpn) {
                                           agent_->router_id(),
                                           ip1, false,
                                           TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+    std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
     TunnelNHKey *nh_key_2 = new TunnelNHKey(agent_->fabric_vrf_name(),
                                             agent_->router_id(),
                                             ip2, false,
                                             TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
+    std::unique_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
 
     ComponentNHKeyPtr component_nh_key(new ComponentNHKey(1000,
-                                                          nh_key_ptr));
+                                                          std::move(nh_key_ptr)));
     ComponentNHKeyPtr component_nh_key_2(new ComponentNHKey(1001,
-                                                            nh_key_ptr_2));
+                                                            std::move(nh_key_ptr_2)));
     ComponentNHKeyList comp_nh_list;
     comp_nh_list.push_back(component_nh_key);
     comp_nh_list.push_back(component_nh_key_2);
@@ -150,17 +150,17 @@ TEST_F(L2Ecmpest, Controller_verify_l2) {
                                           agent_->router_id(),
                                           ip1, false,
                                           TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+    std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
     TunnelNHKey *nh_key_2 = new TunnelNHKey(agent_->fabric_vrf_name(),
                                             agent_->router_id(),
                                             ip2, false,
                                             TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
+    std::unique_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
 
     ComponentNHKeyPtr component_nh_key(new ComponentNHKey(1000,
-                                                          nh_key_ptr));
+                                                          std::move(nh_key_ptr)));
     ComponentNHKeyPtr component_nh_key_2(new ComponentNHKey(1001,
-                                                            nh_key_ptr_2));
+                                                            std::move(nh_key_ptr_2)));
     ComponentNHKeyList comp_nh_list;
     comp_nh_list.push_back(component_nh_key);
     comp_nh_list.push_back(component_nh_key_2);
@@ -236,17 +236,17 @@ TEST_F(L2Ecmpest, Controller_tunnel_to_ecmp) {
                                           agent_->router_id(),
                                           ip1, false,
                                           TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+    std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
     TunnelNHKey *nh_key_2 = new TunnelNHKey(agent_->fabric_vrf_name(),
                                             agent_->router_id(),
                                             ip2, false,
                                             TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
+    std::unique_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
 
     ComponentNHKeyPtr component_nh_key(new ComponentNHKey(1000,
-                                                          nh_key_ptr));
+                                                          std::move(nh_key_ptr)));
     ComponentNHKeyPtr component_nh_key_2(new ComponentNHKey(1001,
-                                                            nh_key_ptr_2));
+                                                            std::move(nh_key_ptr_2)));
     ComponentNHKeyList comp_nh_list;
     comp_nh_list.push_back(component_nh_key);
     comp_nh_list.push_back(component_nh_key_2);
@@ -308,17 +308,17 @@ TEST_F(L2Ecmpest, Controller_ecmp_to_tunnel) {
                                           agent_->router_id(),
                                           ip1, false,
                                           TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr(nh_key);
+    std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
     TunnelNHKey *nh_key_2 = new TunnelNHKey(agent_->fabric_vrf_name(),
                                             agent_->router_id(),
                                             ip2, false,
                                             TunnelType::MPLS_GRE);
-    std::auto_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
+    std::unique_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
 
     ComponentNHKeyPtr component_nh_key(new ComponentNHKey(1000,
-                                                          nh_key_ptr));
+                                                          std::move(nh_key_ptr)));
     ComponentNHKeyPtr component_nh_key_2(new ComponentNHKey(1001,
-                                                            nh_key_ptr_2));
+                                                            std::move(nh_key_ptr_2)));
     ComponentNHKeyList comp_nh_list;
     comp_nh_list.push_back(component_nh_key);
     comp_nh_list.push_back(component_nh_key_2);

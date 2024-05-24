@@ -79,13 +79,13 @@ AgentRouteTable::~AgentRouteTable() {
 }
 
 // Allocate a route entry
-auto_ptr<DBEntry> AgentRouteTable::AllocEntry(const DBRequestKey *k) const {
+unique_ptr<DBEntry> AgentRouteTable::AllocEntry(const DBRequestKey *k) const {
     const AgentRouteKey *key = static_cast<const AgentRouteKey*>(k);
     VrfKey vrf_key(key->vrf_name());
     AgentRoute *route =
         static_cast<AgentRoute *>(key->AllocRouteEntry(vrf_entry_.get(),
                                                        false));
-    return auto_ptr<DBEntry>(static_cast<DBEntry *>(route));
+    return unique_ptr<DBEntry>(static_cast<DBEntry *>(route));
 }
 
 // Algorithm to select an active path from multiple potential paths.
@@ -663,7 +663,7 @@ void AgentRoute::DeletePathFromPeer(DBTablePartBase *part,
     }
 
     // Assign path to auto-pointer to delete it on return
-    std::auto_ptr<AgentPath> path_ref(path);
+    std::unique_ptr<AgentPath> path_ref(path);
 
     // TODO : Move this to end of delete processing?
     // Path deletion can result in changes such as ECMP-NH, Mulitcast NH etc
@@ -902,7 +902,7 @@ void AgentRoute::ResyncTunnelNextHop(void) {
         nh_key->sub_op_ = AgentKey::RESYNC;
 
         DBRequest req(DBRequest::DB_ENTRY_ADD_CHANGE);
-        req.key = key;
+        req.key = std::move(key);
         req.data.reset(NULL);
         Agent *agent = (static_cast<AgentRouteTable *>(get_table()))->agent();
         agent->nexthop_table()->Enqueue(&req);
@@ -1272,7 +1272,7 @@ bool AgentRoute::ReComputeMulticastPaths(AgentPath *path, bool del) {
                                                       vrf()->GetName(),
                                                       ToString());
             }
-            std::auto_ptr<AgentPath> path_ref(multicast_peer_path);
+            std::unique_ptr<AgentPath> path_ref(multicast_peer_path);
             RemovePath(multicast_peer_path);
         }
         return true;
@@ -1300,8 +1300,8 @@ bool AgentRoute::ReComputeMulticastPaths(AgentPath *path, bool del) {
         NextHopKey *tor_peer_key =
             static_cast<NextHopKey *>((tor_peer_path->
                         ComputeNextHop(agent)->GetDBRequestKey()).release());
-        std::auto_ptr<const NextHopKey> key4(tor_peer_key);
-        ComponentNHKeyPtr component_nh_data4(new ComponentNHKey(0, key4));
+        std::unique_ptr<const NextHopKey> key4(tor_peer_key);
+        ComponentNHKeyPtr component_nh_data4(new ComponentNHKey(0, std::move(key4)));
         component_nh_list.push_back(component_nh_data4);
     }
 
@@ -1309,8 +1309,8 @@ bool AgentRoute::ReComputeMulticastPaths(AgentPath *path, bool del) {
         NextHopKey *evpn_peer_key =
             static_cast<NextHopKey *>((evpn_peer_path->
                         ComputeNextHop(agent)->GetDBRequestKey()).release());
-        std::auto_ptr<const NextHopKey> key2(evpn_peer_key);
-        ComponentNHKeyPtr component_nh_data2(new ComponentNHKey(0, key2));
+        std::unique_ptr<const NextHopKey> key2(evpn_peer_key);
+        ComponentNHKeyPtr component_nh_data2(new ComponentNHKey(0, std::move(key2)));
         component_nh_list.push_back(component_nh_data2);
     }
 
@@ -1318,8 +1318,8 @@ bool AgentRoute::ReComputeMulticastPaths(AgentPath *path, bool del) {
         NextHopKey *fabric_peer_key =
             static_cast<NextHopKey *>((fabric_peer_path->
                         ComputeNextHop(agent)->GetDBRequestKey()).release());
-        std::auto_ptr<const NextHopKey> key3(fabric_peer_key);
-        ComponentNHKeyPtr component_nh_data3(new ComponentNHKey(0, key3));
+        std::unique_ptr<const NextHopKey> key3(fabric_peer_key);
+        ComponentNHKeyPtr component_nh_data3(new ComponentNHKey(0, std::move(key3)));
         component_nh_list.push_back(component_nh_data3);
     }
 
@@ -1327,8 +1327,8 @@ bool AgentRoute::ReComputeMulticastPaths(AgentPath *path, bool del) {
         NextHopKey *local_vm_peer_key =
             static_cast<NextHopKey *>((local_vm_peer_path->
                                        ComputeNextHop(agent)->GetDBRequestKey()).release());
-        std::auto_ptr<const NextHopKey> key4(local_vm_peer_key);
-        ComponentNHKeyPtr component_nh_data4(new ComponentNHKey(0, key4));
+        std::unique_ptr<const NextHopKey> key4(local_vm_peer_key);
+        ComponentNHKeyPtr component_nh_data4(new ComponentNHKey(0, std::move(key4)));
         component_nh_list.push_back(component_nh_data4);
 
         const CompositeNH *cnh = dynamic_cast<const CompositeNH *>(

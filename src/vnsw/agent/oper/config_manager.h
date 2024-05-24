@@ -125,38 +125,38 @@ public:
 
 private:
     Agent *agent_;
-    std::auto_ptr<TaskTrigger> trigger_;
+    std::unique_ptr<TaskTrigger> trigger_;
     Timer *timer_;
     uint32_t timeout_;
 
-    std::auto_ptr<ConfigManagerNodeList> vmi_list_;
-    std::auto_ptr<ConfigManagerNodeList> physical_interface_list_;
-    std::auto_ptr<ConfigManagerNodeList> logical_interface_list_;
-    std::auto_ptr<ConfigManagerNodeList> device_list_;
-    std::auto_ptr<ConfigManagerNodeList> sg_list_;
-    std::auto_ptr<ConfigManagerNodeList> tag_list_;
-    std::auto_ptr<ConfigManagerNodeList> vn_list_;
-    std::auto_ptr<ConfigManagerNodeList> vrf_list_;
-    std::auto_ptr<ConfigManagerNodeList> vm_list_;
-    std::auto_ptr<ConfigManagerNodeList> hc_list_;
-    std::auto_ptr<ConfigManagerNodeList> qos_config_list_;
-    std::auto_ptr<ConfigManagerNodeList> qos_queue_list_;
-    std::auto_ptr<ConfigManagerNodeList> forwarding_class_list_;
-    std::auto_ptr<ConfigManagerDeviceVnList> device_vn_list_;
-    std::auto_ptr<ConfigManagerNodeList> bridge_domain_list_;
-    std::auto_ptr<ConfigManagerNodeList> slo_list_;
-    std::auto_ptr<ConfigManagerNodeList> policy_set_list_;
-    std::auto_ptr<ConfigManagerNodeList> mp_list_;
+    std::unique_ptr<ConfigManagerNodeList> vmi_list_;
+    std::unique_ptr<ConfigManagerNodeList> physical_interface_list_;
+    std::unique_ptr<ConfigManagerNodeList> logical_interface_list_;
+    std::unique_ptr<ConfigManagerNodeList> device_list_;
+    std::unique_ptr<ConfigManagerNodeList> sg_list_;
+    std::unique_ptr<ConfigManagerNodeList> tag_list_;
+    std::unique_ptr<ConfigManagerNodeList> vn_list_;
+    std::unique_ptr<ConfigManagerNodeList> vrf_list_;
+    std::unique_ptr<ConfigManagerNodeList> vm_list_;
+    std::unique_ptr<ConfigManagerNodeList> hc_list_;
+    std::unique_ptr<ConfigManagerNodeList> qos_config_list_;
+    std::unique_ptr<ConfigManagerNodeList> qos_queue_list_;
+    std::unique_ptr<ConfigManagerNodeList> forwarding_class_list_;
+    std::unique_ptr<ConfigManagerDeviceVnList> device_vn_list_;
+    std::unique_ptr<ConfigManagerNodeList> bridge_domain_list_;
+    std::unique_ptr<ConfigManagerNodeList> slo_list_;
+    std::unique_ptr<ConfigManagerNodeList> policy_set_list_;
+    std::unique_ptr<ConfigManagerNodeList> mp_list_;
 
     // Lists of IFMapNodes without corresponding oper db-tables
-    std::auto_ptr<ConfigManagerNodeList> global_vrouter_list_;
-    std::auto_ptr<ConfigManagerNodeList> bgp_router_config_list_;
-    std::auto_ptr<ConfigManagerNodeList> virtual_router_list_;
-    std::auto_ptr<ConfigManagerNodeList> global_qos_config_list_;
-    std::auto_ptr<ConfigManagerNodeList> network_ipam_list_;
-    std::auto_ptr<ConfigManagerNodeList> virtual_dns_list_;
-    std::auto_ptr<ConfigManagerNodeList> global_system_config_list_;
-    std::auto_ptr<ConfigManagerNodeList> project_list_;
+    std::unique_ptr<ConfigManagerNodeList> global_vrouter_list_;
+    std::unique_ptr<ConfigManagerNodeList> bgp_router_config_list_;
+    std::unique_ptr<ConfigManagerNodeList> virtual_router_list_;
+    std::unique_ptr<ConfigManagerNodeList> global_qos_config_list_;
+    std::unique_ptr<ConfigManagerNodeList> network_ipam_list_;
+    std::unique_ptr<ConfigManagerNodeList> virtual_dns_list_;
+    std::unique_ptr<ConfigManagerNodeList> global_system_config_list_;
+    std::unique_ptr<ConfigManagerNodeList> project_list_;
 
     uint64_t process_config_count_[kMaxTimeout + 1];
     boost::scoped_ptr<ConfigHelper> helper_;

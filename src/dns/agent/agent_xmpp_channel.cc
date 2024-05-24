@@ -48,18 +48,18 @@ void DnsAgentXmppChannel::ReceiveReq(const XmppStanza::XmppMessage *msg) {
         std::string source_name = msg->from;
         uint32_t xid;
         uint16_t code;
-        std::auto_ptr<DnsUpdateData> rcv_data(new DnsUpdateData());
+        std::unique_ptr<DnsUpdateData> rcv_data(new DnsUpdateData());
         DnsUpdateData *data = rcv_data.get();
         if (DnsAgentXmpp::DnsAgentXmppDecode(node, type, xid, code, data, source_name)) {
             if (type == DnsAgentXmpp::Update) {
-                HandleAgentUpdate(rcv_data);
+                HandleAgentUpdate(std::move(rcv_data));
             }
         }
     }
 }
 
 void DnsAgentXmppChannel::HandleAgentUpdate(
-    std::auto_ptr<DnsUpdateData> rcv_data) {
+    std::unique_ptr<DnsUpdateData> rcv_data) {
     DnsUpdateData *data = rcv_data.get();
     if (data->virtual_dns.empty() || data->zone.empty()) {
         // if key is not present, ignore the update

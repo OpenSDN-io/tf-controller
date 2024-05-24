@@ -41,7 +41,7 @@ protected:
     EventManager evm_;
     IFMapServer server_;
     DBTable *tbl_;
-    auto_ptr<IFMapUpdateQueue> queue_;
+    unique_ptr<IFMapUpdateQueue> queue_;
 };
 
 static IFMapUpdate *CreateUpdate(DBEntry *entry) {
@@ -58,13 +58,13 @@ TEST_F(IFMapUpdateQueueTest, Basic) {
     IFMapMarker *marker;
 
     key.id_name = "a";
-    auto_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
     key.id_name = "b";
-    auto_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
     key.id_name = "c";
-    auto_ptr<DBEntry> n3(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n3(tbl_->AllocEntry(&key));
     key.id_name = "d";
-    auto_ptr<DBEntry> n4(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n4(tbl_->AllocEntry(&key));
 
     IFMapUpdate *u1 = CreateUpdate(n1.get());
     IFMapUpdate *u2 = CreateUpdate(n2.get());
@@ -202,9 +202,9 @@ TEST_F(IFMapUpdateQueueTest, MarkerMerge) {
     IFMapMarker *marker;
 
     key.id_name = "a";
-    auto_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
     key.id_name = "b";
-    auto_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
 
     IFMapUpdate *u1 = CreateUpdate(n1.get());
     IFMapUpdate *u2 = CreateUpdate(n2.get());
@@ -269,9 +269,9 @@ TEST_F(IFMapUpdateQueueTest, MarkerSplitBefore) {
     IFMapMarker *marker;
 
     key.id_name = "a";
-    auto_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
     key.id_name = "b";
-    auto_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
 
     IFMapUpdate *u1 = CreateUpdate(n1.get());
     IFMapUpdate *u2 = CreateUpdate(n2.get());
@@ -315,9 +315,9 @@ TEST_F(IFMapUpdateQueueTest, MarkerSplitAfter) {
     IFMapMarker *marker;
 
     key.id_name = "a";
-    auto_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
     key.id_name = "b";
-    auto_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
 
     IFMapUpdate *u1 = CreateUpdate(n1.get());
     IFMapUpdate *u2 = CreateUpdate(n2.get());
@@ -373,9 +373,9 @@ TEST_F(IFMapUpdateQueueTest, MoveMarkerBefore) {
     IFMapMarker *marker;
 
     key.id_name = "a";
-    auto_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
     key.id_name = "b";
-    auto_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
 
     IFMapUpdate *u1 = CreateUpdate(n1.get());
     IFMapUpdate *u2 = CreateUpdate(n2.get());
@@ -410,9 +410,9 @@ TEST_F(IFMapUpdateQueueTest, MoveMarkerAfter) {
     IFMapMarker *marker;
 
     key.id_name = "a";
-    auto_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
     key.id_name = "b";
-    auto_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
 
     IFMapUpdate *u1 = CreateUpdate(n1.get());
     IFMapUpdate *u2 = CreateUpdate(n2.get());
@@ -444,9 +444,9 @@ TEST_F(IFMapUpdateQueueTest, Next) {
     IFMapTable::RequestKey key;
 
     key.id_name = "a";
-    auto_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
     key.id_name = "b";
-    auto_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
 
     IFMapUpdate *u1 = CreateUpdate(n1.get());
     IFMapUpdate *u2 = CreateUpdate(n2.get());
@@ -477,9 +477,9 @@ TEST_F(IFMapUpdateQueueTest, Previous) {
     IFMapTable::RequestKey key;
 
     key.id_name = "a";
-    auto_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
     key.id_name = "b";
-    auto_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
 
     IFMapUpdate *u1 = CreateUpdate(n1.get());
     IFMapUpdate *u2 = CreateUpdate(n2.get());
@@ -515,11 +515,11 @@ TEST_F(IFMapUpdateQueueTest, GetLast) {
     IFMapTable::RequestKey key;
 
     key.id_name = "a";
-    auto_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n1(tbl_->AllocEntry(&key));
     key.id_name = "b";
-    auto_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n2(tbl_->AllocEntry(&key));
     key.id_name = "c";
-    auto_ptr<DBEntry> n3(tbl_->AllocEntry(&key));
+    unique_ptr<DBEntry> n3(tbl_->AllocEntry(&key));
 
     IFMapUpdate *u1 = CreateUpdate(n1.get());
     IFMapUpdate *u2 = CreateUpdate(n2.get());

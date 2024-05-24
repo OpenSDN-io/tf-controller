@@ -186,8 +186,8 @@ private:
     Agent *agent_;
     DB *database_;
     DBGraph *graph_;
-    std::auto_ptr<IFMapDependencyTracker> tracker_;
-    std::auto_ptr<TaskTrigger> trigger_;
+    std::unique_ptr<IFMapDependencyTracker> tracker_;
+    std::unique_ptr<TaskTrigger> trigger_;
     TableMap table_map_;
     EventMap event_map_;
     ChangeList change_list_;

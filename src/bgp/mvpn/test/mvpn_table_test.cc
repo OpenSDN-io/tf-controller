@@ -155,7 +155,7 @@ protected:
 
 TEST_F(MvpnTableTest, AllocEntryStr) {
     string prefix_str("3-10.1.1.1:65535,9.8.7.6,224.1.2.3,192.168.1.1");
-    std::auto_ptr<DBEntry> route = blue_->AllocEntryStr(prefix_str);
+    std::unique_ptr<DBEntry> route = blue_->AllocEntryStr(prefix_str);
     EXPECT_EQ(prefix_str, route->ToString());
 }
 

@@ -221,7 +221,7 @@ protected:
     void FireHoldTimer() { sm_->hold_timer_->Fire(); }
 
 
-    auto_ptr<EventManager> evm_;
+    unique_ptr<EventManager> evm_;
 
     XmppServerTest *server_;
     XmppStateMachine *sm_;

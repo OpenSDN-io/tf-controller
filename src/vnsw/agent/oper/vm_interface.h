@@ -287,7 +287,7 @@ struct MetaDataIpState : public VmInterfaceState {
     bool DeleteL3(const Agent *agent, VmInterface *vmi) const;
     bool AddL3(const Agent *agent, VmInterface *vmi) const;
 
-    mutable std::auto_ptr<MetaDataIp> mdata_ip_;
+    mutable std::unique_ptr<MetaDataIp> mdata_ip_;
     bool ipv4_;
 };
 
@@ -1744,13 +1744,13 @@ private:
     mutable tbb::atomic<int> flow_count_;
 
     // Attributes
-    std::auto_ptr<MacVmBindingState> mac_vm_binding_state_;
-    std::auto_ptr<NextHopState> nexthop_state_;
-    std::auto_ptr<VrfTableLabelState> vrf_table_label_state_;
-    std::auto_ptr<MetaDataIpState> metadata_ip_state_;
-    std::auto_ptr<MetaDataIpState> metadata_ip6_state_;
-    std::auto_ptr<ResolveRouteState> resolve_route_state_;
-    std::auto_ptr<VmiRouteState> interface_route_state_;
+    std::unique_ptr<MacVmBindingState> mac_vm_binding_state_;
+    std::unique_ptr<NextHopState> nexthop_state_;
+    std::unique_ptr<VrfTableLabelState> vrf_table_label_state_;
+    std::unique_ptr<MetaDataIpState> metadata_ip_state_;
+    std::unique_ptr<MetaDataIpState> metadata_ip6_state_;
+    std::unique_ptr<ResolveRouteState> resolve_route_state_;
+    std::unique_ptr<VmiRouteState> interface_route_state_;
 
     // Lists
     SecurityGroupEntryList sg_list_;
@@ -1769,7 +1769,7 @@ private:
     LearntMacIpList learnt_mac_ip_list_;
 
     // Peer for interface routes
-    std::auto_ptr<LocalVmPortPeer> peer_;
+    std::unique_ptr<LocalVmPortPeer> peer_;
     Ip4Address vm_ip_service_addr_;
     VmInterface::DeviceType device_type_;
     VmInterface::VmiType vmi_type_;

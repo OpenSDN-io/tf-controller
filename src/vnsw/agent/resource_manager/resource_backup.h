@@ -48,7 +48,7 @@ public:
     void Init();
     ResourceSandeshMaps& sandesh_maps();
     static uint32_t ReadResourceDataFromFile(const std::string &file_name,
-                                             std::auto_ptr<uint8_t> *buf);
+                                             std::unique_ptr<uint8_t> *buf);
 
     Agent *agent() {return agent_;}
     ResourceManager *resource_manager() {return resource_manager_;}

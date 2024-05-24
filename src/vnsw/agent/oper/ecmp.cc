@@ -184,10 +184,10 @@ void EcmpData::AllocateEcmpPath(AgentRoute *rt, const AgentPath *path2) {
     // Create Component NH to be added to ECMP path
     DBEntryBase::KeyPtr key1 = path1_nh->GetDBRequestKey();
     NextHopKey *nh_key1 = static_cast<NextHopKey *>(key1.release());
-    std::auto_ptr<const NextHopKey> nh_akey1(nh_key1);
+    std::unique_ptr<const NextHopKey> nh_akey1(nh_key1);
     nh_key1->SetPolicy(false);
     ComponentNHKeyPtr component_nh_data1(new ComponentNHKey(path_->label(),
-                                                            nh_akey1));
+                                                            std::move(nh_akey1)));
 
     const NextHop* path2_nh = path2->ComputeNextHop(agent_);
     if (!composite_nh_policy) {
@@ -195,10 +195,10 @@ void EcmpData::AllocateEcmpPath(AgentRoute *rt, const AgentPath *path2) {
     }
     DBEntryBase::KeyPtr key2 = path2_nh->GetDBRequestKey();
     NextHopKey *nh_key2 = static_cast<NextHopKey *>(key2.release());
-    std::auto_ptr<const NextHopKey> nh_akey2(nh_key2);
+    std::unique_ptr<const NextHopKey> nh_akey2(nh_key2);
     nh_key2->SetPolicy(false);
     ComponentNHKeyPtr component_nh_data2(new ComponentNHKey(path2->label(),
-                                                            nh_akey2));
+                                                            std::move(nh_akey2)));
 
     ComponentNHKeyList component_nh_list;
     component_nh_list.push_back(component_nh_data2);
@@ -229,9 +229,9 @@ void EcmpData::AppendEcmpPath(AgentRoute *rt, AgentPath *path) {
     const NextHop* path_nh = path->ComputeNextHop(agent_);
     DBEntryBase::KeyPtr key = path_nh->GetDBRequestKey();
     NextHopKey *nh_key = static_cast<NextHopKey *>(key.release());
-    std::auto_ptr<const NextHopKey> nh_akey(nh_key);
+    std::unique_ptr<const NextHopKey> nh_akey(nh_key);
     nh_key->SetPolicy(false);
-    ComponentNHKeyPtr comp_nh_key_ptr(new ComponentNHKey(path->label(), nh_akey));
+    ComponentNHKeyPtr comp_nh_key_ptr(new ComponentNHKey(path->label(), std::move(nh_akey)));
 
     ComponentNHKeyList component_nh_key_list;
     const CompositeNH *comp_nh =
@@ -249,7 +249,7 @@ void EcmpData::AppendEcmpPath(AgentRoute *rt, AgentPath *path) {
                    composite_nh_policy,
                    component_nh_key_list,
                    vrf_name_);
-    nh_req.key = comp_nh_key;
+    nh_req.key = std::move(comp_nh_key);
     nh_req.data.reset(new CompositeNHData(component_nh_key_list));
     nh_req_.Swap(&nh_req);
 
@@ -464,9 +464,9 @@ void EcmpData::DeleteComponentNH(AgentRoute *rt, AgentPath *path) {
     assert(ecmp_path_);
     DBEntryBase::KeyPtr key = path->ComputeNextHop(agent_)->GetDBRequestKey();
     NextHopKey *nh_key = static_cast<NextHopKey *>(key.release());
-    std::auto_ptr<const NextHopKey> nh_akey(nh_key);
+    std::unique_ptr<const NextHopKey> nh_akey(nh_key);
     nh_key->SetPolicy(false);
-    ComponentNHKeyPtr comp_nh_key_ptr(new ComponentNHKey(path->label(), nh_akey));
+    ComponentNHKeyPtr comp_nh_key_ptr(new ComponentNHKey(path->label(), std::move(nh_akey)));
 
     ComponentNHKeyList component_nh_key_list;
     bool comp_nh_policy = false;

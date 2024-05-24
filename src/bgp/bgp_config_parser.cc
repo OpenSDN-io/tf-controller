@@ -25,7 +25,7 @@ using pugi::xml_attribute;
 using pugi::xml_document;
 using pugi::xml_node;
 using pugi::xml_parse_result;
-using std::auto_ptr;
+using std::unique_ptr;
 using std::istringstream;
 using std::list;
 using std::ostringstream;
@@ -280,7 +280,7 @@ static bool ParseSession(const string &identifier, const xml_node &node,
 static bool ParseServiceChain(const string &instance, const xml_node &node,
                               bool add_change, const string &sc_info,
                               BgpConfigParser::RequestList *requests) {
-    auto_ptr<autogen::ServiceChainInfo> property(
+    unique_ptr<autogen::ServiceChainInfo> property(
         new autogen::ServiceChainInfo());
     property->sc_head = true;
     assert(property->XmlParse(node));
@@ -323,7 +323,7 @@ static bool ParseInstanceRoutingPolicy(const string &instance,
     xml_attribute to = node.attribute("to");
     assert(to);
     string policy_name = to.value();
-    auto_ptr<autogen::RoutingPolicyType> attr(
+    unique_ptr<autogen::RoutingPolicyType> attr(
         new autogen::RoutingPolicyType());
     assert(attr->XmlParse(node));
     if (add_change) {
@@ -342,7 +342,7 @@ static bool ParseInstanceRoutingPolicy(const string &instance,
 static bool ParseStaticRoute(const string &instance, const xml_node &node,
                               bool add_change,
                               BgpConfigParser::RequestList *requests) {
-    auto_ptr<autogen::StaticRouteEntriesType> property(
+    unique_ptr<autogen::StaticRouteEntriesType> property(
         new autogen::StaticRouteEntriesType());
     assert(property->XmlParse(node));
 
@@ -359,7 +359,7 @@ static bool ParseStaticRoute(const string &instance, const xml_node &node,
 
 static bool ParseInstanceHasPnf(const string &instance, const xml_node &node,
     bool add_change, BgpConfigParser::RequestList *requests) {
-    auto_ptr<autogen::RoutingInstance::OolProperty> property(
+    unique_ptr<autogen::RoutingInstance::OolProperty> property(
         new autogen::RoutingInstance::OolProperty);
     property->data = (string(node.child_value()) == "true");
     if (add_change) {
@@ -377,7 +377,7 @@ static bool ParseBgpRouter(const string &instance, const xml_node &node,
                            bool add_change, string *nodename,
                            SessionMap *sessions,
                            BgpConfigParser::RequestList *requests) {
-    auto_ptr<autogen::BgpRouterParams> property(
+    unique_ptr<autogen::BgpRouterParams> property(
         new autogen::BgpRouterParams());
     xml_attribute name = node.attribute("name");
     assert(name);
@@ -473,7 +473,7 @@ static bool ParseInstanceTarget(const string &instance, const xml_node &node,
     RouteTarget::FromString(rtarget, &parse_err);
     assert(!parse_err);
 
-    auto_ptr<autogen::InstanceTargetType> params(
+    unique_ptr<autogen::InstanceTargetType> params(
         new autogen::InstanceTargetType());
     assert(params->XmlParse(node));
 
@@ -575,7 +575,7 @@ bool BgpConfigParser::ParseVirtualNetwork(const xml_node &node,
     string vn_name(node.attribute("name").value());
     assert(!vn_name.empty());
 
-    auto_ptr<autogen::VirtualNetwork::OolProperty> pbb_property(
+    unique_ptr<autogen::VirtualNetwork::OolProperty> pbb_property(
         new autogen::VirtualNetwork::OolProperty);
     pbb_property->data = false;
 
@@ -584,7 +584,7 @@ bool BgpConfigParser::ParseVirtualNetwork(const xml_node &node,
             (string(node.attribute("pbb-evpn-enable").value()) == "true");
     }
 
-    auto_ptr<autogen::VirtualNetworkType> property(
+    unique_ptr<autogen::VirtualNetworkType> property(
         new autogen::VirtualNetworkType());
     assert(property->XmlParse(node));
 
@@ -609,7 +609,7 @@ bool BgpConfigParser::ParseSubCluster(const xml_node &node,
     string subcluster_name(node.attribute("name").value());
     assert(!subcluster_name.empty());
 
-    auto_ptr<autogen::SubCluster::StringProperty> subcluster_property(
+    unique_ptr<autogen::SubCluster::StringProperty> subcluster_property(
         new autogen::SubCluster::StringProperty);
 
     if (node.child("sub-cluster-asn"))
@@ -623,7 +623,7 @@ bool BgpConfigParser::ParseSubCluster(const xml_node &node,
                                "sub-cluster-asn", requests);
     }
 
-    auto_ptr<autogen::SubCluster::NtProperty> id_property(
+    unique_ptr<autogen::SubCluster::NtProperty> id_property(
         new autogen::SubCluster::NtProperty);
     if (node.child("sub-cluster-id")) {
         std::stringstream sub_cluster_id(
@@ -652,7 +652,7 @@ bool BgpConfigParser::ParseRouteAggregate(const xml_node &node,
          child = child.next_sibling()) {
         if (strcmp(child.name(), "aggregate-route-entries") == 0) {
             if (add_change) {
-                auto_ptr<autogen::RouteListType>
+                unique_ptr<autogen::RouteListType>
                     aggregate_routes(new autogen::RouteListType());
                 assert(aggregate_routes->XmlParse(child));
                 MapObjectSetProperty("route-aggregate", aggregate_name,
@@ -689,7 +689,7 @@ bool BgpConfigParser::ParseRoutingPolicy(const xml_node &node,
     string policy_name(node.attribute("name").value());
     assert(!policy_name.empty());
 
-    auto_ptr<autogen::PolicyStatementType> policy_statement(
+    unique_ptr<autogen::PolicyStatementType> policy_statement(
         new autogen::PolicyStatementType());
     assert(policy_statement->XmlParse(node));
 
@@ -710,7 +710,7 @@ bool BgpConfigParser::ParseGlobalSystemConfig(const xml_node &node,
     for (xml_node child = node.first_child(); child;
             child = child.next_sibling()) {
         if (strcmp(child.name(), "graceful-restart-parameters") == 0) {
-            auto_ptr<autogen::GracefulRestartParametersType> gr_config(
+            unique_ptr<autogen::GracefulRestartParametersType> gr_config(
                     new autogen::GracefulRestartParametersType());
             assert(gr_config->XmlParse(child));
 
@@ -724,7 +724,7 @@ bool BgpConfigParser::ParseGlobalSystemConfig(const xml_node &node,
             }
         }
         if (strcmp(child.name(), "bgpaas-parameters") == 0) {
-            auto_ptr<autogen::BGPaaServiceParametersType> bgpaas_config(
+            unique_ptr<autogen::BGPaaServiceParametersType> bgpaas_config(
                     new autogen::BGPaaServiceParametersType());
             assert(bgpaas_config->XmlParse(child));
 
@@ -737,7 +737,7 @@ bool BgpConfigParser::ParseGlobalSystemConfig(const xml_node &node,
             }
         }
         if (strcmp(child.name(), "bgp-always-compare-med") == 0) {
-            auto_ptr<autogen::GlobalSystemConfig::OolProperty> property(
+            unique_ptr<autogen::GlobalSystemConfig::OolProperty> property(
                 new autogen::GlobalSystemConfig::OolProperty);
             property->data = (string(child.child_value()) == "true");
             if (add_change) {
@@ -749,7 +749,7 @@ bool BgpConfigParser::ParseGlobalSystemConfig(const xml_node &node,
             }
         }
         if (strcmp(child.name(), "enable-4byte-as") == 0) {
-            auto_ptr<autogen::GlobalSystemConfig::OolProperty> property(
+            unique_ptr<autogen::GlobalSystemConfig::OolProperty> property(
                 new autogen::GlobalSystemConfig::OolProperty);
             property->data = (string(child.child_value()) == "true");
             if (add_change) {
@@ -761,7 +761,7 @@ bool BgpConfigParser::ParseGlobalSystemConfig(const xml_node &node,
             }
         }
         if (strcmp(child.name(), "fast-convergence-parameters") == 0) {
-            auto_ptr<autogen::FastConvergenceParametersType> property(
+            unique_ptr<autogen::FastConvergenceParametersType> property(
                     new autogen::FastConvergenceParametersType());
             assert(property->XmlParse(child));
             if (add_change) {
@@ -773,7 +773,7 @@ bool BgpConfigParser::ParseGlobalSystemConfig(const xml_node &node,
             }
         }
         if (strcmp(child.name(), "rd-cluster-seed") == 0) {
-            auto_ptr<autogen::GlobalSystemConfig::NtProperty> property(
+            unique_ptr<autogen::GlobalSystemConfig::NtProperty> property(
                 new autogen::GlobalSystemConfig::NtProperty);
             property->data = atoi(child.child_value());
             if (add_change) {
@@ -794,7 +794,7 @@ bool BgpConfigParser::ParseGlobalQosConfig(const xml_node &node,
     for (xml_node child = node.first_child(); child;
             child = child.next_sibling()) {
         if (strcmp(child.name(), "control-traffic-dscp") == 0) {
-            auto_ptr<autogen::ControlTrafficDscpType> cfg(
+            unique_ptr<autogen::ControlTrafficDscpType> cfg(
                     new autogen::ControlTrafficDscpType());
             assert(cfg->XmlParse(child));
 
@@ -877,7 +877,7 @@ bool BgpConfigParser::Parse(const string &content)  {
     }
 
     while (!requests.empty()) {
-        auto_ptr<DBRequest> req(requests.front());
+        unique_ptr<DBRequest> req(requests.front());
         requests.pop_front();
 
         IFMapTable::RequestKey *key =

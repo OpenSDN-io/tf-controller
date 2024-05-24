@@ -45,7 +45,7 @@ class FlowMgmtRequest;
 class FlowEntryInfo;
 struct FlowUveFwPolicyInfo;
 struct FlowUveVnAcePolicyInfo;
-typedef std::auto_ptr<FlowEntryInfo> FlowMgmtEntryInfoPtr;
+typedef std::unique_ptr<FlowEntryInfo> FlowMgmtEntryInfoPtr;
 
 ////////////////////////////////////////////////////////////////////////////
 // This is helper struct to carry parameters of reverse-flow. When flow is
@@ -1097,7 +1097,7 @@ private:
     //Number of port that agent can bind on
     PortConfig port_config_;
     mutable tbb::recursive_mutex mutex_;
-    std::auto_ptr<TaskTrigger> task_trigger_;
+    std::unique_ptr<TaskTrigger> task_trigger_;
 };
 
 class PortTableManager {

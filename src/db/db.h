@@ -90,8 +90,8 @@ private:
     std::vector<DBPartition *> partitions_;
     TableMap tables_;
     GraphMap graph_map_;
-    std::auto_ptr<DBTableWalker> walker_;
-    std::auto_ptr<DBTableWalkMgr> walk_mgr_;
+    std::unique_ptr<DBTableWalker> walker_;
+    std::unique_ptr<DBTableWalkMgr> walk_mgr_;
 
     DISALLOW_COPY_AND_ASSIGN(DB);
 };

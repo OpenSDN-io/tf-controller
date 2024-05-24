@@ -149,10 +149,10 @@ DBTableBase *CryptTunnelTable::CreateTable(Agent *agent, DB *db, const std::stri
     return crypt_tunnel_table;
 };
 
-std::auto_ptr<DBEntry> CryptTunnelTable::AllocEntry(const DBRequestKey *k) const {
+std::unique_ptr<DBEntry> CryptTunnelTable::AllocEntry(const DBRequestKey *k) const {
     const CryptTunnelKey *key = static_cast<const CryptTunnelKey *>(k);
     CryptTunnelEntry *e = new CryptTunnelEntry(key->remote_ip_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(e));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(e));
 }
 
 DBEntry *CryptTunnelTable::Add(const DBRequest *req) {

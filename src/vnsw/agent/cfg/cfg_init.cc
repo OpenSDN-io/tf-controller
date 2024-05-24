@@ -44,13 +44,13 @@ SandeshTraceBufferPtr CfgTraceBuf(SandeshTraceBufferCreate("Config", 2000));
 
 AgentConfig::AgentConfig(Agent *agent)
         : agent_(agent) {
-    cfg_filter_ = std::auto_ptr<CfgFilter>(new CfgFilter(this));
+    cfg_filter_ = std::unique_ptr<CfgFilter>(new CfgFilter(this));
 
-    cfg_graph_ = std::auto_ptr<DBGraph>(new DBGraph());
-    cfg_mirror_table_ = std::auto_ptr<MirrorCfgTable>(new MirrorCfgTable(this));
+    cfg_graph_ = std::unique_ptr<DBGraph>(new DBGraph());
+    cfg_mirror_table_ = std::unique_ptr<MirrorCfgTable>(new MirrorCfgTable(this));
     agent_->set_mirror_cfg_table(cfg_mirror_table_.get());
 
-    cfg_intf_mirror_table_ = std::auto_ptr<IntfMirrorCfgTable>
+    cfg_intf_mirror_table_ = std::unique_ptr<IntfMirrorCfgTable>
        (new IntfMirrorCfgTable(this));
     agent_->set_interface_mirror_cfg_table(cfg_intf_mirror_table_.get());
 }
@@ -65,7 +65,7 @@ AgentConfig::~AgentConfig() {
 
 void AgentConfig::CreateDBTables(DB *db) {
     // Create parser once we know the db
-    cfg_parser_ = std::auto_ptr<IFMapAgentParser>(new IFMapAgentParser(db));
+    cfg_parser_ = std::unique_ptr<IFMapAgentParser>(new IFMapAgentParser(db));
     vnc_cfg_Agent_ModuleInit(db, cfg_graph_.get());
     vnc_cfg_Agent_ParserInit(db, cfg_parser_.get());
     bgp_schema_Agent_ModuleInit(db, cfg_graph_.get());

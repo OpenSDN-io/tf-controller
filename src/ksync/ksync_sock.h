@@ -501,7 +501,7 @@ private:
     // by defering them to this work queue, this queue gets 
     // processed in Agent::KSync context
     KSyncRxWorkQueue  rx_process_queue_;
-    static std::auto_ptr<KSyncSock> sock_;
+    static std::unique_ptr<KSyncSock> sock_;
     static pid_t pid_;
     static int vnsw_netlink_family_id_;
     // AgentSandeshContext used for KSync response handling

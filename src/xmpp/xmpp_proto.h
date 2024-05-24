@@ -59,11 +59,16 @@ public:
         std::string from;
         std::string to;
         std::string xmlns;
-        std::auto_ptr<XmlBase> dom;
+        std::unique_ptr<XmlBase> dom;
 
         bool IsValidType(XmppMessageType type) const {
             return (type > INVALID && type < RESERVED_STANZA);
         };
+    private:
+        XmppMessage(const XmppMessage&) = delete;
+        XmppMessage(XmppMessage&&) = delete;
+        const XmppMessage& operator = (const XmppMessage&) = delete;
+        const XmppMessage& operator = (XmppMessage&&) = delete;
     };
 
     struct XmppStreamMessage : XmppMessage {
@@ -212,7 +217,7 @@ private:
             const XmppConnection *connection, const std::string &ts,
             XmlBase *impl);
 
-    static std::auto_ptr<XmlBase> open_doc_;
+    static std::unique_ptr<XmlBase> open_doc_;
 
     XmppProto();
     ~XmppProto();

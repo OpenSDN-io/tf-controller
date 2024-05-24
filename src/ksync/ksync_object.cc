@@ -32,7 +32,7 @@ SandeshTraceBufferPtr KSyncErrorTraceBuf(
 KSyncObject::FwdRefTree  KSyncObject::fwd_ref_tree_;
 KSyncObject::BackRefTree  KSyncObject::back_ref_tree_;
 KSyncObjectManager *KSyncObjectManager::singleton_ = NULL;
-std::auto_ptr<KSyncEntry> KSyncObjectManager::default_defer_entry_;
+std::unique_ptr<KSyncEntry> KSyncObjectManager::default_defer_entry_;
 
 typedef std::map<uint32_t, std::string> VrouterErrorDescriptionMap;
 VrouterErrorDescriptionMap g_error_description =

@@ -120,7 +120,7 @@ public:
 
     typedef std::set<VirtualGatewayConfig, VirtualGatewayConfigCompare> Table;
 
-    VirtualGatewayConfigTable() : agent_(NULL), work_queue_(NULL) { }
+    VirtualGatewayConfigTable() : agent_(NULL), work_queue_(nullptr) { }
     ~VirtualGatewayConfigTable() { }
 
     void InitFromConfig(const boost::property_tree::ptree pt);
@@ -145,7 +145,7 @@ private:
 
     Agent *agent_;
     Table table_;
-    std::auto_ptr< WorkQueue<boost::shared_ptr<VirtualGatewayData> > > work_queue_;
+    std::unique_ptr< WorkQueue<boost::shared_ptr<VirtualGatewayData> > > work_queue_;
     DISALLOW_COPY_AND_ASSIGN(VirtualGatewayConfigTable);
 };
 

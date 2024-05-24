@@ -48,7 +48,7 @@ bool ResourceBackupManager::WorkQueueBackUpProcess(
 }
 
 uint32_t ResourceBackupManager::ReadResourceDataFromFile
-(const std::string &file_name, std::auto_ptr<uint8_t> *buf) {
+(const std::string &file_name, std::unique_ptr<uint8_t> *buf) {
     std::stringstream error_str;
     uint32_t size;
     std::ifstream input(file_name.c_str(), std::ofstream::binary);
@@ -62,7 +62,7 @@ uint32_t ResourceBackupManager::ReadResourceDataFromFile
         goto error;
     }
     size = (uint32_t) st.st_size;
-    *buf = std::auto_ptr<uint8_t> (new uint8_t [size]());
+    *buf = std::unique_ptr<uint8_t> (new uint8_t [size]());
     input.read((char *)((*buf).get()), size);
 
     if (!input.good()) {

@@ -123,7 +123,7 @@ private:
     iovec iov_;
 
     /// @brief A pointer to the Netlink message header
-    std::auto_ptr<msghdr> msg_ptr_;
+    std::unique_ptr<msghdr> msg_ptr_;
 };
 
 

@@ -148,10 +148,10 @@ uint32_t TagEntry::GetTypeVal(const std::string &name,
 
     return (tag_val >> kTagTypeBitShift);
 }
-std::auto_ptr<DBEntry> TagTable::AllocEntry(const DBRequestKey *k) const {
+std::unique_ptr<DBEntry> TagTable::AllocEntry(const DBRequestKey *k) const {
     const TagKey *key = static_cast<const TagKey *>(k);
     TagEntry *tag = new TagEntry(key->tag_uuid_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(tag));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(tag));
 }
 
 DBEntry *TagTable::OperDBAdd(const DBRequest *req) {

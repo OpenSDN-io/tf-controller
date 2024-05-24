@@ -266,11 +266,11 @@ void OperDB::CreateDBTables(DB *db) {
     acl_table->ListenerInit();
 
     route_walk_manager_ =
-        std::auto_ptr<AgentRouteWalkerManager>(new AgentRouteWalkerManager(agent_));
-    multicast_ = std::auto_ptr<MulticastHandler>(new MulticastHandler(agent_));
-    global_vrouter_ = std::auto_ptr<GlobalVrouter> (new GlobalVrouter(agent_));
+        std::unique_ptr<AgentRouteWalkerManager>(new AgentRouteWalkerManager(agent_));
+    multicast_ = std::unique_ptr<MulticastHandler>(new MulticastHandler(agent_));
+    global_vrouter_ = std::unique_ptr<GlobalVrouter> (new GlobalVrouter(agent_));
     route_preference_module_ =
-        std::auto_ptr<PathPreferenceModule>(new PathPreferenceModule(agent_));
+        std::unique_ptr<PathPreferenceModule>(new PathPreferenceModule(agent_));
     route_preference_module_->Init();
 
     ServiceInstanceTable *si_table =
@@ -291,23 +291,23 @@ void OperDB::CreateDBTables(DB *db) {
     agent_->set_physical_device_vn_table(dev_vn_table);
     profile_.reset(new AgentProfile(agent_, true));
 
-    bgp_as_a_service_ = std::auto_ptr<BgpAsAService>(new BgpAsAService(agent_));
+    bgp_as_a_service_ = std::unique_ptr<BgpAsAService>(new BgpAsAService(agent_));
     bgp_router_config_ =
-        std::auto_ptr<BgpRouterConfig> (new BgpRouterConfig(agent_));
+        std::unique_ptr<BgpRouterConfig> (new BgpRouterConfig(agent_));
 
-    vrouter_ = std::auto_ptr<VRouter> (new VRouter(agent_));
+    vrouter_ = std::unique_ptr<VRouter> (new VRouter(agent_));
     global_qos_config_ =
-        std::auto_ptr<GlobalQosConfig>(new GlobalQosConfig(agent_));
+        std::unique_ptr<GlobalQosConfig>(new GlobalQosConfig(agent_));
     global_system_config_ =
-        std::auto_ptr<GlobalSystemConfig>(new GlobalSystemConfig(agent_));
-    network_ipam_ = std::auto_ptr<OperNetworkIpam>
+        std::unique_ptr<GlobalSystemConfig>(new GlobalSystemConfig(agent_));
+    network_ipam_ = std::unique_ptr<OperNetworkIpam>
         (new OperNetworkIpam(agent_, domain_config_.get()));
-    virtual_dns_ = std::auto_ptr<OperVirtualDns>
+    virtual_dns_ = std::unique_ptr<OperVirtualDns>
         (new OperVirtualDns(agent_, domain_config_.get()));
-    tsn_elector_ = std::auto_ptr<TsnElector>(new TsnElector(agent_));
-    vxlan_routing_manager_= std::auto_ptr<VxlanRoutingManager>
+    tsn_elector_ = std::unique_ptr<TsnElector>(new TsnElector(agent_));
+    vxlan_routing_manager_= std::unique_ptr<VxlanRoutingManager>
         (new VxlanRoutingManager(agent_));
-    hbf_handler_= std::auto_ptr<HBFHandler>
+    hbf_handler_= std::unique_ptr<HBFHandler>
         (new HBFHandler(agent_));
 }
 

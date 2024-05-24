@@ -16,7 +16,7 @@
 #include "bgp/bgp_ribout_updates.h"
 #include "db/db.h"
 
-using std::auto_ptr;
+using std::unique_ptr;
 using std::make_pair;
 using std::map;
 using std::string;
@@ -383,7 +383,7 @@ public:
         CHECK_CONCURRENCY("bgp::SendUpdate");
 
         while (true) {
-            auto_ptr<WorkBase> wentry = partition_->WorkDequeue();
+            unique_ptr<WorkBase> wentry = partition_->WorkDequeue();
             if (!wentry.get())
                 break;
             if (!wentry->valid)
@@ -545,13 +545,13 @@ void BgpSenderPartition::MaybeStartWorker() {
 
 //
 // Dequeue the first WorkBase item from the work queue and return an
-// auto_ptr to it.  Clear out Worker related state if the work queue
+// unique_ptr to it.  Clear out Worker related state if the work queue
 // is empty.
 //
-auto_ptr<BgpSenderPartition::WorkBase> BgpSenderPartition::WorkDequeue() {
+unique_ptr<BgpSenderPartition::WorkBase> BgpSenderPartition::WorkDequeue() {
     CHECK_CONCURRENCY("bgp::SendUpdate");
 
-    auto_ptr<WorkBase> wentry;
+    unique_ptr<WorkBase> wentry;
     if (work_queue_.empty()) {
         worker_task_ = NULL;
         running_ = false;

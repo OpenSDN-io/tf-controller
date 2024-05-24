@@ -956,8 +956,8 @@ TEST_F(CfgTest, EcmpNH_18) {
     //Transition remote VM route to ECMP route
     DBEntryBase::KeyPtr key = nh->GetDBRequestKey();
     NextHopKey *nh_key = static_cast<NextHopKey *>(key.release());
-    std::auto_ptr<const NextHopKey> nh_akey(nh_key);
-    ComponentNHKeyPtr nh_data1(new ComponentNHKey(rt->GetActiveLabel(), nh_akey));
+    std::unique_ptr<const NextHopKey> nh_akey(nh_key);
+    ComponentNHKeyPtr nh_data1(new ComponentNHKey(rt->GetActiveLabel(), std::move(nh_akey)));
 
     ComponentNHKeyList comp_nh_list;
     //Insert new NH first and then existing route NH

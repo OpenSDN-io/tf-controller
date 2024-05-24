@@ -114,11 +114,11 @@ bool PolicySet::DBEntrySandesh(Sandesh *sresp, std::string &name) const {
     return true;
 }
 
-std::auto_ptr<DBEntry>
+std::unique_ptr<DBEntry>
 PolicySetTable::AllocEntry(const DBRequestKey *key) const {
     const PolicySetKey *psk = static_cast<const PolicySetKey *>(key);
     PolicySet *ps = new PolicySet(psk->uuid_);
-    return std::auto_ptr<DBEntry>(static_cast<DBEntry *>(ps));
+    return std::unique_ptr<DBEntry>(static_cast<DBEntry *>(ps));
 }
 
 static PolicySetKey* BuildKey(const boost::uuids::uuid &u) {
