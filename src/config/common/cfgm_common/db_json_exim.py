@@ -245,13 +245,15 @@ class DatabaseExim(object):
                 for cf_name in list(self.import_data['cassandra'][ks_name].keys()):
                     for row,cols in list(
                             self.import_data['cassandra'][ks_name][cf_name].items()):
-                        if self._api_args.cassandra_driver == 'thrift':
-                            for col_name, col_val_ts in list(cols.items()):
-                                self.driver.insert(row, {col_name: col_val_ts[0]},
-                                                   cf_name=cf_name)
-                        else:
+                        # in case of CQL cols is list of lists
+                        if isinstance(cols, list):
                             for element in cols:
                                 self.driver.insert(row, {element[0]: element[1]},
+                                                   cf_name=cf_name)
+                        else:
+                            # in case of Thrift cols is dict
+                            for col_name, col_val_ts in list(cols.items()):
+                                self.driver.insert(row, {col_name: col_val_ts[0]},
                                                    cf_name=cf_name)
             logger.info("Cassandra DB restored")
 
