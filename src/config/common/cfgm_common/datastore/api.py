@@ -70,7 +70,7 @@ OptionsDefault = {
     'ssl_enabled': False,
     'ca_certs': None,
     'pool_size': 0,
-    'use_workers': True,
+    'use_workers': False,
     'num_groups': None,
     'num_workers': None,
     'use_concurrency': True,
