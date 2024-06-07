@@ -31,14 +31,14 @@ cd_cmd = 'cd ' + Dir('.').path + ' && '
 cli_sdist_gen = env.Command(
     'dist/contrail_analytics_cli-%s.tar.gz' % env.GetPyVersion(),
     'setup.py',
-    cd_cmd + 'python setup.py sdist')
+    cd_cmd + 'python3  setup.py sdist')
 # install everything before building distribution
 env.Depends(cli_sdist_gen, cli_sdist_depends)
 
 env.Default(cli_sdist_gen)
 install_cmd = env.Command(None,
                         'setup.py',
-                        cd_cmd + 'python setup.py install %s' %
+                        cd_cmd + 'python3 setup.py install %s' %
                         env['PYTHON_INSTALL_OPT'])
 env.Depends(install_cmd, cli_sdist_depends)
 env.Depends('install', install_cmd)
