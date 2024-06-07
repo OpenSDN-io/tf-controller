@@ -121,7 +121,7 @@ protected:
                 c_session_manager_->GetPort());
         } else {
             bgp_server_ip_a_ = "127.0.0.22";
-            error_code ec;
+            boost::system::error_code ec;
             IpAddress bgp_ip_a = address::from_string(bgp_server_ip_a_, ec);
             a_session_manager_->Initialize(0, bgp_ip_a);
             BGP_DEBUG_UT("Created server at ip:port: " <<
