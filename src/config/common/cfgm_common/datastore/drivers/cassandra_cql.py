@@ -8,6 +8,7 @@ import importlib
 import itertools
 import math
 from multiprocessing import Process
+from multiprocessing import get_context
 from multiprocessing.queues import Queue
 import queue
 import ssl
@@ -931,6 +932,10 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
 
 # A cooperative queue with gevent
 class CoopQueue(Queue):
+    def __init__(self, maxsize=-1, ctx=None):
+        if ctx is None:
+            ctx = get_context()
+        super().__init__(maxsize, ctx=ctx)
     def get(self):
         while True:
             try:

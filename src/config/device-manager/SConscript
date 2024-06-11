@@ -126,7 +126,7 @@ sdist_depends.extend(dm_introspect_pkg)
 pyver = env.GetPyVersion()
 sdist_gen = env.Command(
     'dist/device_manager-%s.tar.gz' % pyver,
-    'setup.py', cd_cmd + 'python setup.py sdist')
+    'setup.py', cd_cmd + 'python3 setup.py sdist')
 
 env.Depends(generated_rule, [autogen_infra_sources, autogen_sources])
 env.Depends(abstract_generated_rule, [autogen_infra_sources, abstract_autogen_sources])
@@ -140,7 +140,7 @@ doc_files += env['CFGM_DOC_FILES']
 
 if 'install' in BUILD_TARGETS:
     install_cmd = env.Command(None, 'setup.py',
-                              cd_cmd + 'python setup.py install %s' %
+                              cd_cmd + 'python3 setup.py install %s' %
                               env['PYTHON_INSTALL_OPT'])
     env.Depends(install_cmd, sdist_depends)
     env.Alias('install', install_cmd)

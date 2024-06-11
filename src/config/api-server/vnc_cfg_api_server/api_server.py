@@ -2164,7 +2164,7 @@ class VncApiServer(object):
         self._random_collectors = self._args.collectors
         self._chksum = "";
         if self._args.collectors:
-            self._chksum = hashlib.md5(''.join(self._args.collectors)).hexdigest()
+            self._chksum = hashlib.md5(''.join(self._args.collectors).encode('utf-8')).hexdigest()
             self._random_collectors = random.sample(self._args.collectors, \
                                                     len(self._args.collectors))
 
@@ -3494,7 +3494,7 @@ class VncApiServer(object):
                     collectors = config.get('DEFAULTS', 'collectors')
                     if isinstance(collectors, string_types):
                         collectors = collectors.split()
-                        new_chksum = hashlib.md5("".join(collectors)).hexdigest()
+                        new_chksum = hashlib.md5("".join(collectors).encode()).hexdigest()
                         if new_chksum != self._chksum:
                             self._chksum = new_chksum
                             self._random_collectors = random.sample(collectors, len(collectors))

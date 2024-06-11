@@ -595,8 +595,10 @@ class ZookeeperClient(object):
         try:
             if value is None:
                 value = uuid.uuid4()
+            if isinstance(value, str):
+                value = value.encode()
             retry = self._retry.copy()
-            retry(self._zk_client.create, path, native_str(value),
+            retry(self._zk_client.create, path, value,
                   ephemeral=ephemeral, makepath=True)
         except kazoo.exceptions.NodeExistsError:
             current_value = self.read_node(path)

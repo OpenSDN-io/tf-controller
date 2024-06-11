@@ -50,7 +50,7 @@ from gevent import queue
 from netaddr import IPAddress
 from past.builtins import basestring
 from past.utils import old_div
-import pyhash
+import cityhash
 from sandesh_common.vns.constants import DEVICE_MANAGER_KEYSPACE_NAME
 from vnc_api.vnc_api import VirtualNetwork
 
@@ -5019,9 +5019,8 @@ class VirtualPortGroupDM(DBBaseDM):
                     {pi.get('uuid'): pi.get('attr').get('ae_num')})
 
     def get_esi(self):
-        hash_obj = pyhash.city_64()
-        unpacked = struct.unpack(
-            '>8B', struct.pack('>Q', hash_obj(native_str(self.uuid))))
+        hash_value = cityhash.CityHash64(native_str(self.uuid))
+        unpacked = struct.unpack('>8B', struct.pack('>Q', hash_value))
         self.esi = '00:%s:00' % (':'.join('%02x' % i for i in unpacked))
 
     def build_lag_pr_map(self):
