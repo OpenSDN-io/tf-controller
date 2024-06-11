@@ -103,14 +103,14 @@ sdist_depends.extend(sandesh_sources)
 pyver = env.GetPyVersion()
 sdist_gen = env.Command('dist/kube_manager-%s.tar.gz' % pyver,
                         'setup.py',
-                        cd_cmd + 'python3 setup.py sdist')
+                        cd_cmd + 'python setup.py sdist')
 
 env.Depends(sdist_gen, sdist_depends)
 env.Default(sdist_gen)
 
 if 'install' in BUILD_TARGETS:
     install_cmd = env.Command(None, 'setup.py',
-                              cd_cmd + 'python3 setup.py install %s' %
+                              cd_cmd + 'python setup.py install %s' %
                               env['PYTHON_INSTALL_OPT'])
     env.Depends(install_cmd, sdist_depends)
     env.Alias('install', install_cmd)
