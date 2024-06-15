@@ -838,64 +838,6 @@ env.Alias('controller/src/bgp:all-test', [
     'controller/src/bgp/l3vpn:flaky-test',
 ])
 
-# EVPN Related Tests
-evpn_test_suite = [
-    bgp_evpn_manager_test,
-    bgp_xmpp_evpn_test,
-    bgp_xmpp_evpn_mcast_test,
-]
-
-evpn_test = env.TestSuite('bgp-evpn-test', evpn_test_suite)
-env.Alias('src/bgp:evpn_test', evpn_test)
-
-#  Update Engine Tests
-update_test_suite = [
-    bgp_export_nostate_test,
-    bgp_export_rstate_test,
-    bgp_export_rtupdate_test,
-    bgp_export_uplist_test,
-    bgp_ribout_updates_test,
-    bgp_update_sender_test,
-    bgp_update_test,
-]
-
-update_test = env.TestSuite('bgp-update-test', update_test_suite)
-env.Alias('src/bgp:update_test', update_test)
-
-# Service Chain Related Tests
-sc_test_suite = [
-    bgp_condition_listener_test,
-    bgp_xmpp_rtarget_test,
-    routepath_replicator_random_test,
-    routepath_replicator_test,
-    service_chain_test1,
-    service_chain_test2,
-    service_chain_test3,
-    service_chain_test4,
-    static_route_test,
-    svc_static_route_intergration_test1_1,
-    svc_static_route_intergration_test1_2,
-    svc_static_route_intergration_test1_3,
-    svc_static_route_intergration_test1_4,
-    svc_static_route_intergration_test1_5,
-    svc_static_route_intergration_test1_6,
-    svc_static_route_intergration_test1_7,
-    svc_static_route_intergration_test1_8,
-    svc_static_route_intergration_test2_1,
-    svc_static_route_intergration_test2_2,
-    svc_static_route_intergration_test2_3,
-    svc_static_route_intergration_test2_4,
-    svc_static_route_intergration_test3_1,
-    svc_static_route_intergration_test3_2,
-    svc_static_route_intergration_test3_3,
-    svc_static_route_intergration_test3_4,
-    svc_static_route_intergration_test4_1,
-    svc_static_route_intergration_test4_2,
-]
-
-sc_test = env.TestSuite('bgp-sc-test', sc_test_suite)
-env.Alias('src/bgp:sc_test', sc_test)
-
 # Stress Tests
 envs = env.Dictionary()["ENV"]
 if 'BGP_STRESS_TEST_SUITE' in envs and envs['BGP_STRESS_TEST_SUITE'] != "0":
