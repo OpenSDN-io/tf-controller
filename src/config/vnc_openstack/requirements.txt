@@ -11,3 +11,4 @@ kazoo==2.7.0
 netaddr<1
 sandesh==0.1.dev0
 sandesh-common
+urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
