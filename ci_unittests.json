@@ -8,7 +8,8 @@
         "scons_test_targets" : [
             "src/contrail-analytics/contrail-collector:test",
             "src/contrail-analytics/contrail-opserver:test",
-            "src/contrail-analytics/contrail-query-engine:test"
+            "src/contrail-analytics/contrail-query-engine:test",
+            "src/contrail-analytics/tf-topology:test"
         ],
         "misc_test_targets" : [ ]
     },
