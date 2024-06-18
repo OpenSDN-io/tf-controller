@@ -285,7 +285,7 @@
           "src/contrail-analytics/contrail-collector:test",
           "src/contrail-analytics/contrail-opserver:test",
           "src/contrail-analytics/contrail-query-engine:test",
-          "src/contrail-api-client/schema:test",
+          "src/contrail-api-client/schema:test"
         ],
         "misc_test_targets" : [ ]
     }
