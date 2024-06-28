@@ -20,7 +20,7 @@ struct VirtualDnsRecordConfig;
 class DnsManager {
 public:
     static const int max_records_per_sandesh = 100;
-    static const int kEndOfConfigCheckTime = 3000; // msec
+    static const int kEndOfConfigCheckTime = 1000; // msec
     static const uint16_t kMaxRetransmitCount = 6;
     static const uint16_t kPendingRecordReScheduleTime = 1000; //msec
     static const uint16_t kNamedLoWaterMark = 8192; //pow(2,13);
@@ -76,6 +76,7 @@ public:
                         const std::string &view, const std::string &zone,
                         DnsItems &items, uint32_t retranmit_count);
     void UpdateAll();
+    void StartEndofConfigTimer();
     void BindEventHandler(BindStatus::Event ev);
 
     template <typename ConfigType>
@@ -128,7 +129,6 @@ private:
     void CancelPendingTimer();
     bool PendingTimerExpiry();
 
-    void StartEndofConfigTimer();
     void CancelEndofConfigTimer();
     bool EndofConfigTimerExpiry();
 

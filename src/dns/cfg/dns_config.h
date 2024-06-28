@@ -80,7 +80,8 @@ public:
         CFG_DELETE
     };
     static const std::string EventString[];
-
+    static const char *config_types[];
+    static uint32_t config_types_size;
     typedef boost::function<void(IFMapNodeProxy *,
                                  const std::string&, EventType)> Observer;
     struct Observers {

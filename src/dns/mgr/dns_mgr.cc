@@ -58,7 +58,6 @@ DnsManager::DnsManager()
         TimerManager::CreateTimer(*Dns::GetEventManager()->io_service(),
               "Check_EndofConfig_Timer",
               TaskScheduler::GetInstance()->GetTaskId("dns::Config"), 0);
-    StartEndofConfigTimer();
 
     // PreAllocate index 0 as it cannot be used as transaction id.
     idx_.AllocIndex();
@@ -449,6 +448,11 @@ void DnsManager::UpdateAll() {
             continue;
         NotifyAllDnsRecords(vdns, DnsConfig::CFG_ADD);
     }
+
+    DNS_OPERATIONAL_LOG(
+        g_vns_constants.CategoryNames.find(Category::DNSAGENT)->second,
+        SandeshLevel::SYS_NOTICE,
+        "Bulk sync has been done (the DB has been synced with named)");
 }
 
 void DnsManager::HandleUpdateResponse(uint8_t *pkt, std::size_t length) {

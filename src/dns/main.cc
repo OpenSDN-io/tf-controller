@@ -36,6 +36,7 @@
 #include <sandesh/common/vns_constants.h>
 #include <uve/uve.h>
 #include "xmpp/xmpp_sandesh.h"
+#include <config-client-mgr/config_amqp_client.h>
 
 namespace opt = boost::program_options;
 using namespace boost::asio::ip;
@@ -53,6 +54,104 @@ uint64_t start_time;
 TaskTrigger *dns_info_trigger;
 Timer *dns_info_log_timer;
 static Options options;
+
+static void WaitForIdle(long wait_seconds = 1200, bool running_only = false);
+static void WaitForIdle(long wait_seconds, bool running_only) {
+    static const long kTimeoutUsecs = 1000;
+    static long envWaitTime;
+
+    if (!envWaitTime) {
+        if (getenv("WAIT_FOR_IDLE")) {
+            envWaitTime = atoi(getenv("WAIT_FOR_IDLE"));
+        } else {
+            envWaitTime = wait_seconds;
+        }
+    }
+
+    if (envWaitTime > wait_seconds) wait_seconds = envWaitTime;
+
+    TaskScheduler *scheduler = TaskScheduler::GetInstance();
+    for (long i = 0; i < ((wait_seconds * 1000000)/kTimeoutUsecs); i++) {
+        if (scheduler->IsEmpty(running_only)) {
+            return;
+        }
+        usleep(kTimeoutUsecs);
+    }
+}
+
+static void PrintBulkSyncStats(DB *database) {
+    DNS_OPERATIONAL_LOG(
+        g_vns_constants.CategoryNames.find(Category::DNSAGENT)->second,
+        SandeshLevel::SYS_NOTICE, "EndOfRib point was reached, "
+        "IF-MAP objects have been created");
+    uint32_t ntypes = DnsConfigManager::config_types_size / sizeof(const char *);
+    for (uint32_t i=0; i<ntypes; i++) {
+        const char *type_name = DnsConfigManager::config_types[i];
+        IFMapTable *table = IFMapTable::FindTable(database, type_name);
+        std::stringstream msg_str;
+        msg_str << "The IF-MAP database table has been updated: "
+                << table->name()
+                << ", counting " << table->Size() << " elements";
+
+        DNS_OPERATIONAL_LOG(
+            g_vns_constants.CategoryNames.find(Category::DNSAGENT)->second,
+            SandeshLevel::SYS_NOTICE, msg_str.str().c_str());
+    }
+
+    {
+        std::stringstream msg_str;
+        msg_str << "VnniConfig has been updated after"
+                << " the bulk sync, the number of elements: "
+                << VnniConfig::vnni_config_.size();
+        DNS_OPERATIONAL_LOG(
+            g_vns_constants.CategoryNames.find(Category::DNSAGENT)->second,
+            SandeshLevel::SYS_NOTICE,
+            msg_str.str().c_str());
+    }
+
+    {
+        std::stringstream msg_str;
+        msg_str << "IpamConfig has been updated after"
+                << " the bulk sync, the number of elements: "
+                << IpamConfig::ipam_config_.size();
+        DNS_OPERATIONAL_LOG(
+            g_vns_constants.CategoryNames.find(Category::DNSAGENT)->second,
+            SandeshLevel::SYS_NOTICE,
+            msg_str.str().c_str());
+    }
+
+    {
+        std::stringstream msg_str;
+        msg_str << "VirtualDnsConfig has been updated after"
+                << " the bulk sync, the number of elements: "
+                << VirtualDnsConfig::virt_dns_config_.size();
+        DNS_OPERATIONAL_LOG(
+            g_vns_constants.CategoryNames.find(Category::DNSAGENT)->second,
+            SandeshLevel::SYS_NOTICE,
+            msg_str.str().c_str());
+    }
+
+    {
+        std::stringstream msg_str;
+        msg_str << "VirtualDnsRecordConfig has been updated after"
+                << " the bulk sync, the number of elements: "
+                << VirtualDnsRecordConfig::virt_dns_rec_config_.size();
+        DNS_OPERATIONAL_LOG(
+            g_vns_constants.CategoryNames.find(Category::DNSAGENT)->second,
+            SandeshLevel::SYS_NOTICE,
+            msg_str.str().c_str());
+    }
+
+    {
+        std::stringstream msg_str;
+        msg_str << "GlobalQosConfig has been updated after"
+                << " the bulk sync";
+        DNS_OPERATIONAL_LOG(
+            g_vns_constants.CategoryNames.find(Category::DNSAGENT)->second,
+            SandeshLevel::SYS_NOTICE,
+            msg_str.str().c_str());
+    }
+}
 
 bool DnsInfoLogTimer() {
     dns_info_trigger->Set();
@@ -276,8 +375,16 @@ int main(int argc, char *argv[]) {
 
     dns_manager.set_config_manager(config_client_manager);
     options.set_config_client_manager(config_client_manager);
+    DNS_OPERATIONAL_LOG(
+        g_vns_constants.CategoryNames.find(Category::DNSAGENT)->second,
+        SandeshLevel::SYS_NOTICE, "Bulk sync has been started");
     config_client_manager->Initialize();
-
+    config_client_manager->config_amqp_client()->set_terminate(true);
+    WaitForIdle();  // 20 mins
+    PrintBulkSyncStats(&config_db);
+    config_client_manager->config_amqp_client()->set_terminate(false);
+    config_client_manager->config_amqp_client()->StartRabbitMQReader();
+    dns_manager.StartEndofConfigTimer();
     Dns::GetEventManager()->Run();
     signal.Terminate();
     return 0;

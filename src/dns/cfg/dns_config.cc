@@ -15,13 +15,14 @@
 
 using namespace std;
 
-static const char *config_types[] = {
-    "virtual-DNS",
-    "virtual-DNS-record",
-    "network-ipam",
-    "virtual-network-network-ipam",
-    "global-qos-config",
-};
+const char *DnsConfigManager::config_types[] = {
+     "virtual-DNS",
+     "virtual-DNS-record",
+     "network-ipam",
+     "virtual-network-network-ipam",
+     "global-qos-config",
+ };
+uint32_t DnsConfigManager::config_types_size = sizeof(DnsConfigManager::config_types);
 
 const std::string DnsConfigManager::EventString[] = {
     "None",
@@ -64,7 +65,7 @@ DnsConfigManager::~DnsConfigManager() {
 void DnsConfigManager::Initialize(DB *db, DBGraph *db_graph) {
     db_ = db;
     db_graph_ = db_graph;
-    int ntypes = sizeof(config_types) / sizeof(const char *);
+    int ntypes = config_types_size / sizeof(const char *);
     listener_->Initialize(db, ntypes, config_types);
 }
 
