@@ -14,3 +14,4 @@ kazoo==2.7.0
 pycrypto==2.6.1
 future
 six
+urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
