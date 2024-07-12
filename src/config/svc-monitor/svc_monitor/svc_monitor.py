@@ -21,6 +21,7 @@ import gevent
 from gevent import monkey
 monkey.patch_all(thread=not 'unittest' in sys.modules)
 
+from gevent.signal import signal as gevent_signal
 from cfgm_common.zkclient import ZookeeperClient
 from six import StringIO
 from six.moves import configparser
@@ -544,7 +545,7 @@ class SvcMonitor(object):
                     collectors = config.get('DEFAULTS', 'collectors')
                     if isinstance(collectors, basestring):
                         collectors = collectors.split()
-                        new_chksum = hashlib.md5("".join(collectors)).hexdigest()
+                        new_chksum = hashlib.md5("".join(collectors).encode()).hexdigest()
                         if new_chksum != self._chksum:
                             self._chksum = new_chksum
                             config.random_collectors = random.sample(collectors, len(collectors))
@@ -938,12 +939,12 @@ def run_svc_monitor(sm_logger, args=None):
     monitor._conf_file = args._conf_file
     monitor._chksum = ""
     if args.collectors:
-        monitor._chksum = hashlib.md5("".join(args.collectors)).hexdigest()
+        monitor._chksum = hashlib.md5("".join(args.collectors).encode()).hexdigest()
 
     """ @sighup
     SIGHUP handler to indicate configuration changes
     """
-    gevent.signal(signal.SIGHUP, monitor.sighup_handler)
+    gevent_signal(signal.SIGHUP, monitor.sighup_handler)
 
     # Retry till API server is up
     connected = False

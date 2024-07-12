@@ -80,7 +80,7 @@ cd_cmd = 'cd ' + Dir('.').path + ' && '
 pyver = env.GetPyVersion()
 sdist_gen = env.Command('dist/svc_monitor-%s.tar.gz' % pyver,
                         sources,
-                        cd_cmd + 'python setup.py sdist')
+                        cd_cmd + 'python3 setup.py sdist')
 env.Alias(Dir('.').srcnode().path + ':sdist', sdist_gen)
 
 # Documentation
@@ -94,7 +94,7 @@ doc_files += env.SandeshGenDoc('snat_agent.sandesh')
 
 if 'install' in BUILD_TARGETS:
     install_cmd = env.Command(None, sources,
-                              cd_cmd + 'python setup.py install %s' %
+                              cd_cmd + 'python3 setup.py install %s' %
                               env['PYTHON_INSTALL_OPT'])
     env.Alias('install', install_cmd)
 

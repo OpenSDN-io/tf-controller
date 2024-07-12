@@ -354,7 +354,7 @@ class DeviceManager(object):
         self._chksum = ""
         if self._args.collectors:
             self._chksum = hashlib.md5(
-                ''.join(self._args.collectors)).hexdigest()
+                ''.join(self._args.collectors).encode()).hexdigest()
 
         # Register Plugins
         try:
@@ -565,7 +565,7 @@ class DeviceManager(object):
                     if type(collectors) is str:
                         collectors = collectors.split()
                         new_chksum = hashlib.md5(
-                            "".join(collectors)).hexdigest()
+                            "".join(collectors).encode()).hexdigest()
                         if new_chksum != self._chksum:
                             self._chksum = new_chksum
                             config.random_collectors = random.sample(

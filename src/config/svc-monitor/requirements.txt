@@ -2,9 +2,8 @@ bitarray
 contrail-api-client
 contrail-config-common
 future
-kazoo==2.7.0
+kazoo
 kombu
-requests >= 2.20.0
+requests
 sandesh==0.1.dev0
 sandesh-common
-six==1.14.0

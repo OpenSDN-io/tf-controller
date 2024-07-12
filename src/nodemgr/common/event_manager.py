@@ -89,7 +89,7 @@ class EventManager(object):
         self.random_collectors = list()
         if config.collectors:
             config.collectors.sort()
-            self.collector_chksum = hashlib.md5(("".join(config.collectors)).encode()).hexdigest()
+            self.collector_chksum = hashlib.md5("".join(config.collectors).encode()).hexdigest()
             self.random_collectors = random.sample(config.collectors, len(config.collectors))
 
         ConnectionState.init(

@@ -25,6 +25,7 @@ from gevent import monkey
 # monkey patch all as early as possible
 monkey.patch_all()
 
+from gevent.signal import signal as gevent_signal
 import hashlib
 import os
 import random
@@ -566,7 +567,7 @@ class SchemaTransformer(object):
                     if isinstance(collectors, string_types):
                         collectors = collectors.split()
                         new_chksum = hashlib.md5(
-                            "".join(collectors)).hexdigest()
+                            "".join(collectors).encode()).hexdigest()
                         if new_chksum != self._chksum:
                             self._chksum = new_chksum
                             config.random_collectors = \
@@ -847,12 +848,12 @@ def run_schema_transformer(st_logger, args):
     transformer._chksum = ""
     # checksum of collector list
     if args.collectors:
-        transformer._chksum = hashlib.md5("".join(args.collectors)).hexdigest()
+        transformer._chksum = hashlib.md5("".join(args.collectors).encode()).hexdigest()
 
     """ @sighup
     SIGHUP handler to indicate configuration changes
     """
-    gevent.signal(signal.SIGHUP, transformer.sighup_handler)
+    gevent_signal(signal.SIGHUP, transformer.sighup_handler)
 
     try:
         gevent.joinall(transformer._vnc_amqp._vnc_kombu.greenlets())

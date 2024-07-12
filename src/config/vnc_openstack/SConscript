@@ -43,14 +43,14 @@ cd_cmd = 'cd ' + Dir('.').path + ' && '
 sdist_depends = []
 sdist_depends.extend(source_rules)
 sdist_depends.extend(test_sources_rules)
-sdist_gen = env.Command('dist', 'setup.py', cd_cmd + 'python setup.py sdist')
+sdist_gen = env.Command('dist', 'setup.py', cd_cmd + 'python3 setup.py sdist')
 
 env.Depends(sdist_gen, sdist_depends)
 env.Default(sdist_gen)
 
 if 'install' in BUILD_TARGETS:
     install_cmd = env.Command(None, 'setup.py',
-                              cd_cmd + 'python setup.py install %s' %
+                              cd_cmd + 'python3 setup.py install %s' %
                               env['PYTHON_INSTALL_OPT'])
     env.Depends(install_cmd, sdist_depends)
     env.Alias('install', install_cmd)

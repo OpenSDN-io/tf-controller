@@ -152,7 +152,7 @@ class AnsibleConf(AnsibleBase):
         forced_cfg_push = self.physical_router.forced_cfg_push
         try:
             config_size = len(config_str)
-            current_config_hash = md5(config_str).hexdigest()
+            current_config_hash = md5(config_str.encode()).hexdigest()
             if self.last_config_hash is None or (
                     current_config_hash != self.last_config_hash or
                     forced_cfg_push):

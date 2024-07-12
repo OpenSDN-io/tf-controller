@@ -16,6 +16,7 @@ from cfgm_common.kombu_amqp import KombuAmqpClient
 from cfgm_common.vnc_object_db import VncObjectDBClient
 from cfgm_common.zkclient import ZookeeperClient
 import gevent
+from gevent.signal import signal as gevent_signal
 from gevent import monkey
 import psutil
 
@@ -247,9 +248,9 @@ def main(args_str=None):
     if 'host_ip' not in args:
         args.host_ip = socket.gethostbyname(socket.getfqdn())
 
-    gevent.signal(signal.SIGHUP, sighup_handler)
-    gevent.signal(signal.SIGTERM, sigterm_handler)
-    gevent.signal(signal.SIGINT, sigterm_handler)
+    gevent_signal(signal.SIGHUP, sighup_handler)
+    gevent_signal(signal.SIGTERM, sigterm_handler)
+    gevent_signal(signal.SIGINT, sigterm_handler)
 
     if args.dm_run_mode == 'Full':
         dm_logger = DeviceManagerLogger(args, http_server_port=-1)

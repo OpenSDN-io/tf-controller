@@ -38,7 +38,7 @@ sdist_depends = []
 sdist_depends.extend(setup_sources_rules)
 sdist_depends.extend(local_sources_rules)
 sdist_gen = env.Command('dist', setup_sources + local_sources,
-                        cd_cmd + 'python setup.py sdist')
+                        cd_cmd + 'python3 setup.py sdist')
 env.Alias('controller/src/config/ironic-notification-manager:sdist', sdist_gen)
 env.Depends(sdist_gen, sdist_depends)
 env.Default(sdist_gen)
@@ -50,7 +50,7 @@ doc_files += env['CFGM_DOC_FILES']
 if 'install_ironic_notification_manager' in BUILD_TARGETS:
     env.Alias('install_ironic_notification_manager',
               env.Command(None, setup_sources + local_sources,
-                          cd_cmd + 'python setup.py install %s' %
+                          cd_cmd + 'python3 setup.py install %s' %
                           env['PYTHON_INSTALL_OPT']))
 
 env.Alias('install', env.Install(env['INSTALL_CONF'],

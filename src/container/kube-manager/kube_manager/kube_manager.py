@@ -5,6 +5,8 @@
 """
 Kubernetes network manager.
 """
+from gevent import monkey
+monkey.patch_all(ssl=False)
 
 import random
 import os

@@ -150,7 +150,7 @@ class IronicNotificationManager(object):
         self.random_collectors = self._args.collectors
         if self._args.collectors:
             self._chksum = \
-                hashlib.md5("".join(self._args.collectors)).hexdigest()
+                hashlib.md5("".join(self._args.collectors).encode()).hexdigest()
             self.random_collectors = \
                 random.sample(self._args.collectors, len(self._args.collectors))
         if 'host_ip' in self._args:

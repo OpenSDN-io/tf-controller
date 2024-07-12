@@ -1,18 +1,34 @@
-#
-# Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
-#
-from builtins import next
-from datetime import datetime
+from gevent import monkey
+monkey.patch_all()
+
 import json
 import requests
 import socket
 import time
 import sys
-
+from datetime import datetime
 from six import StringIO
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.poolmanager import PoolManager
+import ssl
 
 from cfgm_common.utils import cgitb_hook
 
+def create_custom_ssl_context():
+    context = ssl.create_default_context()
+    context.options |= ssl.OP_NO_SSLv3
+    context.check_hostname = False  # Disable hostname checking
+    context.verify_mode = ssl.CERT_NONE  # Disable certificate verification
+    return context
+
+class SSLAdapter(HTTPAdapter):
+    def __init__(self, ssl_context=None, **kwargs):
+        self.ssl_context = ssl_context
+        super().__init__(**kwargs)
+
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs['ssl_context'] = self.ssl_context
+        return super().init_poolmanager(*args, **kwargs)
 
 class KubeMonitor(object):
 
@@ -73,6 +89,9 @@ class KubeMonitor(object):
             'Accept': 'application/json; charset="UTF-8"'
         }
         self.verify = False
+        self.ssl_context = create_custom_ssl_context()
+        self.session = requests.Session()
+        self.session.mount('https://', SSLAdapter(ssl_context=self.ssl_context))
 
         self.timeout = int(self.args.kube_timer_interval) if self.args.kube_timer_interval else None
         self.resource_version = None
@@ -113,7 +132,7 @@ class KubeMonitor(object):
             # this is only for base class which instance is used as kube config
             self.base_url = self.url + "/openapi/v2"
             self._is_kube_api_server_alive(wait=True)
-            resp = requests.get(
+            resp = self.session.get(
                 self.base_url,
                 headers=self.headers,
                 verify=self.verify)
@@ -237,7 +256,7 @@ class KubeMonitor(object):
         params = None
         if resource_version:
             params = {"resourceVersion": resource_version}
-        resp = requests.get(url, headers=self.headers, verify=self.verify, params=params)
+        resp = self.session.get(url, headers=self.headers, verify=self.verify, params=params)
         try:
             resp.raise_for_status()
             jdata = resp.json()
@@ -249,8 +268,7 @@ class KubeMonitor(object):
             resp.close()
         for entry in initial_entries:
             entry_url = self.get_entry_url(entry)
-            resp = requests.get(entry_url, headers=self.headers,
-                                verify=self.verify)
+            resp = self.session.get(entry_url, headers=self.headers, verify=self.verify)
             try:
                 resp.raise_for_status()
                 # Construct the event and initiate processing.
@@ -295,10 +313,7 @@ class KubeMonitor(object):
         self._log(
             "%s - Start Watching request %s (%s)(timeout=%s)"
             % (self.name, url, params, self.timeout))
-        resp = requests.get(url, params=params,
-                            stream=True, headers=self.headers,
-                            verify=self.verify,
-                            timeout=self.timeout)
+        resp = self.session.get(url, params=params, stream=True, headers=self.headers, verify=self.verify, timeout=self.timeout)
         try:
             resp.raise_for_status()
         except Exception:
@@ -325,8 +340,7 @@ class KubeMonitor(object):
                                               k8s_url_resource, resource_name)
 
         try:
-            resp = requests.get(url, stream=True,
-                                headers=self.headers, verify=self.verify)
+            resp = self.session.get(url, stream=True, headers=self.headers, verify=self.verify)
             if resp.status_code == 200:
                 json_data = json.loads(resp.raw.read())
             resp.close()
@@ -335,10 +349,9 @@ class KubeMonitor(object):
 
         return json_data
 
-    def patch_resource(
-            self, resource_type, resource_name,
-            merge_patch, namespace=None, sub_resource_name=None,
-            api_group=None, api_version=None):
+    def patch_resource(self, resource_type, resource_name,
+                       merge_patch, namespace=None, sub_resource_name=None,
+                       api_group=None, api_version=None):
         api_group, api_version, k8s_url_resource = \
             self._get_k8s_api_resource(resource_type, api_group, api_version)
 
@@ -356,9 +369,7 @@ class KubeMonitor(object):
         headers.update(self.headers)
 
         try:
-            resp = requests.patch(url, headers=headers,
-                                  data=json.dumps(merge_patch),
-                                  verify=self.verify)
+            resp = self.session.patch(url, headers=headers, data=json.dumps(merge_patch), verify=self.verify)
             if resp.status_code != 200:
                 resp.close()
                 return
@@ -389,9 +400,7 @@ class KubeMonitor(object):
         headers.update(self.headers)
 
         try:
-            resp = requests.post(url, headers=headers,
-                                 data=json.dumps(body_params),
-                                 verify=self.verify)
+            resp = self.session.post(url, headers=headers, data=json.dumps(body_params), verify=self.verify)
             if resp.status_code not in [200, 201]:
                 resp.close()
                 return None
