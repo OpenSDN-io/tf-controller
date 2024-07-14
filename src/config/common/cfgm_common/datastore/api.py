@@ -11,6 +11,7 @@ from sandesh_common.vns import constants as vns_constants
 from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
 from pysandesh.gen_py.process_info.ttypes import ConnectionType as ConnType
+from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 
 
 # Defines the global keyspaces and columns familly names/options.
@@ -133,6 +134,8 @@ class API(Trace):
             # prefer to use OptionDefault values.
             dict([(k, v) for k, v in options.items() if v is not None]))
         self.options = OptionsType(**self.options)
+
+        self.options.logger('datastore.API.__init__', level=SandeshLevel.SYS_NOTICE)
 
         self._server_list = server_list
         self._conn_state = ConnectionStatus.INIT

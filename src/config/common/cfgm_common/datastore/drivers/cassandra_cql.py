@@ -400,6 +400,7 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
                     error, utils.detailed_traceback()))
 
     def _Init_Cluster(self):
+        self.options.logger("initializing cassandra cluster", level=SandeshLevel.SYS_NOTICE)
         self.report_status_init()
 
         self._cql_select = self._handle_exceptions(self._cql_select, 'SELECT')
@@ -408,8 +409,11 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
         self._Get_Range = self._handle_exceptions(self._Get_Range, 'RANGE')
         self._Get_Count = self._handle_exceptions(self._Get_Count, 'COUNT')
 
+        self.options.logger("CassandraDriverCQL.__init__Cluster before create", level=SandeshLevel.SYS_NOTICE)
         self._cluster = self.create_cluster()
+        self.options.logger("CassandraDriverCQL.__init__Cluster created", level=SandeshLevel.SYS_NOTICE)
         self._cluster.connect()
+        self.options.logger("CassandraDriverCQL.__init__Cluster connected", level=SandeshLevel.SYS_NOTICE)
 
         PoolClass = Pool if self.options.use_workers else DummyPool
         self.pool = PoolClass(

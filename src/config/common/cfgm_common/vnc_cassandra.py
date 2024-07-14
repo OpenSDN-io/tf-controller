@@ -4,13 +4,7 @@ from __future__ import unicode_literals
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import next
-from builtins import chr
-from builtins import str
-from builtins import range
-from builtins import object
 import copy
-import os
 
 import gevent
 from pprint import pformat
@@ -102,6 +96,9 @@ class VncCassandraClient(object):
     # end get_db_info
 
     def __init__(self, server_list, cassandra_driver, **options):
+        self._logger = options["logger"]
+        self._logger('VNCCassandra started with driver {}'.format(cassandra_driver),
+                     level=SandeshLevel.SYS_NOTICE)
 
         if cassandra_driver == 'cql':
             driverClass = CassandraDriverCQL
@@ -122,10 +119,6 @@ class VncCassandraClient(object):
                 "datastore driver not selected, see `cassandra_driver`.")
 
         self._cassandra_driver = driverClass(server_list, **options)
-
-        self._logger = self._cassandra_driver.options.logger
-        self._logger('VNCCassandra started with driver {}'.format(driverClass),
-                     level=SandeshLevel.SYS_INFO)
 
         self._cache_uuid_to_fq_name = {}
 
