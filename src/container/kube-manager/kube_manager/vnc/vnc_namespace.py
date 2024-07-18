@@ -7,7 +7,6 @@ VNC service management for kubernetes.
 """
 from __future__ import print_function
 
-from builtins import str
 import uuid
 
 import cfgm_common

@@ -5,7 +5,6 @@
 """
 Database for Kubernetes objects.
 """
-from builtins import str
 import json
 
 from cfgm_common.vnc_db import DBBase

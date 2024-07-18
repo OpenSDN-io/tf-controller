@@ -717,9 +717,8 @@ class TestBasic(test_case.NeutronBackendTestCase):
         vpg_zk_element_fq_name = ['default-global-system-config',
                                   fabric_name,
                                   pi_uuid[0]]
-        vpg_zk_element_fq_name_str = ':'.join(vpg_zk_element_fq_name)
-        self.assertEqual(mock_zk.get_vpg_from_id(vpg_zk_index),
-                         vpg_zk_element_fq_name_str)
+        self.assertEqual(':'.join(vpg_zk_element_fq_name),
+                         mock_zk.get_vpg_from_id(vpg_zk_index))
 
         # Make sure VPG has VMI associated
         vpg_obj = self._vnc_lib.virtual_port_group_read(id=vpg_obj.uuid)
@@ -894,9 +893,8 @@ class TestBasic(test_case.NeutronBackendTestCase):
         vpg_zk_element_fq_name = ['default-global-system-config',
                                   fabric_name,
                                   pi_uuid[0]]
-        vpg_zk_element_fq_name_str = ':'.join(vpg_zk_element_fq_name)
-        self.assertEqual(mock_zk.get_vpg_from_id(vpg_zk_index),
-                         vpg_zk_element_fq_name_str)
+        self.assertEqual(':'.join(vpg_zk_element_fq_name),
+                         mock_zk.get_vpg_from_id(vpg_zk_index))
 
         # verify PIs are added
         vpg_data = self._vnc_lib.virtual_port_group_read(id=vpgs[0]['uuid'])

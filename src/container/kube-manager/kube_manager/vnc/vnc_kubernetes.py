@@ -7,7 +7,6 @@ VNC management for kubernetes.
 """
 from __future__ import print_function
 
-from builtins import str
 from datetime import datetime
 from six import StringIO
 import gevent

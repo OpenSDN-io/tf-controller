@@ -3,6 +3,7 @@ bitstring
 netaddr
 gevent
 greenlet
+keystoneauth1
 contrail-config-common
 contrail-api-client
 future

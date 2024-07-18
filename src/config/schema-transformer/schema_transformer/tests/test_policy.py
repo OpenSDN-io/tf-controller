@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 
-from builtins import str
 import uuid
 
 from cfgm_common.exceptions import BadRequest

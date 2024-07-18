@@ -5,24 +5,17 @@ from __future__ import unicode_literals
 #
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from builtins import object
 import gevent
 import gevent.queue
 import gevent.pywsgi
 import gevent.monkey
 gevent.monkey.patch_all()
 import os
-import sys
 import logging
 import json
 from pprint import pprint
-import functools
 import socket
 import time
-import errno
-import re
 import copy
 import uuid
 import six
@@ -30,26 +23,22 @@ import fcntl
 import tempfile
 import threading
 import contextlib
-try:
-    from collections import OrderedDict, defaultdict
-except ImportError:
-    from ordereddict import OrderedDict, defaultdict
+from collections import defaultdict
 import queue
-from collections import deque
 from collections import namedtuple
-import kombu
 import kazoo
 from kazoo.client import KazooState
 from copy import deepcopy
-from datetime import datetime
 from vnc_api import vnc_api
 from novaclient import exceptions as nc_exc
 
 from cfgm_common.tests.cassandra_fake_impl import NotFoundException
 from cfgm_common.exceptions import ResourceExistsError, OverQuota
 
+
 def stub(*args, **kwargs):
     pass
+
 
 class FakeApiConfigLog(object):
     _all_logs = []
@@ -66,6 +55,7 @@ class FakeApiConfigLog(object):
             pprint(x)
             print("\n")
 # class FakeApiConfigLog
+
 
 class FakeWSGIHandler(gevent.pywsgi.WSGIHandler):
     logger = logging.getLogger('FakeWSGIHandler')
@@ -1010,7 +1000,6 @@ class FakeKazooClient(object):
         pass
     # end close
 
-
     def create(self, path, value='', *args, **kwargs):
         scrubbed_path = zk_scrub_path(path)
         if scrubbed_path in self._values:
@@ -1020,25 +1009,18 @@ class FakeKazooClient(object):
     # end create
 
     def create_node(self, path, value='', *args, **kwargs):
-        scrubbed_path = zk_scrub_path(path)
-        if scrubbed_path in self._values:
-            raise ResourceExistsError(
-                path, str(self._values[scrubbed_path][0]), 'zookeeper')
-        self._values[scrubbed_path] = (value, ZnodeStat(time.time()*1000))
+        self.create(path, value=value)
     # end create
 
     def read_node(self, path):
-        try:
-            return self._values[zk_scrub_path(path)]
-        except KeyError:
+        scrubbed_path = zk_scrub_path(path)
+        if scrubbed_path not in self._values:
             raise kazoo.exceptions.NoNodeError()
-    # end get
+        return self._values[scrubbed_path]
+    # end read_node
 
     def get(self, path):
-        try:
-            return self._values[zk_scrub_path(path)]
-        except KeyError:
-            raise kazoo.exceptions.NoNodeError()
+        return self.read_node(path)
     # end get
 
     def set(self, path, value):
@@ -1068,34 +1050,24 @@ class FakeKazooClient(object):
     def exists(self, path):
         scrubbed_path = zk_scrub_path(path)
         if scrubbed_path in self._values:
-            return self._values[scrubbed_path]
+            return self._values[scrubbed_path][1]
         return None
     # end exists
 
     def delete_node(self, path, recursive=False):
         scrubbed_path = zk_scrub_path(path)
         if not recursive:
-            try:
-                del self._values[scrubbed_path]
-            except KeyError:
+            if scrubbed_path not in self._values:
                 raise kazoo.exceptions.NoNodeError()
+            del self._values[scrubbed_path]
         else:
             for path_key in list(self._values.keys()):
                 if scrubbed_path in path_key:
                     del self._values[path_key]
-    # end delete
+    # end delete_node
 
     def delete(self, path, recursive=False):
-        scrubbed_path = zk_scrub_path(path)
-        if not recursive:
-            try:
-                del self._values[scrubbed_path]
-            except KeyError:
-                raise kazoo.exceptions.NoNodeError()
-        else:
-            for path_key in list(self._values.keys()):
-                if scrubbed_path in path_key:
-                    del self._values[path_key]
+        self.delete_node(path, recursive=recursive)
     # end delete
 
     @contextlib.contextmanager
@@ -1185,19 +1157,17 @@ class ZookeeperClientMock(object):
     # end alloc_from_str
 
     def delete(self, path):
-        try:
-            del self._values[path]
-        except KeyError:
+        if path not in self._values:
             raise kazoo.exceptions.NoNodeError()
+        del self._values[path]
     # end delete
 
     def read(self, path, include_timestamp=False):
-        try:
-            if include_timestamp:
-                return self._values[path]
-            return self._values[path][0]
-        except Exception as err:
+        if path not in self._values or self._values[path] is None:
             raise NotFoundException
+        if include_timestamp:
+            return self._values[path]
+        return self._values[path][0]
     # end read
 
     def get_children(self, path):
@@ -1205,10 +1175,9 @@ class ZookeeperClientMock(object):
     # end get_children
 
     def read_node(self, path, include_timestamp=False):
-        try:
-            return self.read(path, include_timestamp)
-        except NotFoundException:
+        if path not in self._values or self._values[path] is None:
             return None
+        return self.read(path, include_timestamp)
     # end read_node
 
     def create_node(self, path, value=''):
@@ -1220,10 +1189,9 @@ class ZookeeperClientMock(object):
 
     def delete_node(self, path, recursive=False):
         if not recursive:
-            try:
-                del self._values[path]
-            except KeyError:
+            if path not in self._values:
                 raise kazoo.exceptions.NoNodeError()
+            del self._values[path]
         else:
             for path_key in list(self._values.keys()):
                 if path in path_key:

@@ -1,11 +1,7 @@
 from __future__ import print_function
 
-from builtins import object
-from builtins import range
-from builtins import str
 import sys
 import uuid
-
 
 from cfgm_common.tests import test_common
 from gevent import sleep

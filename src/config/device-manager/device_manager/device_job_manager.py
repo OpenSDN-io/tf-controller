@@ -3,9 +3,6 @@
 #
 
 import ast
-from builtins import map
-from builtins import object
-from builtins import str
 import json
 import os
 import signal

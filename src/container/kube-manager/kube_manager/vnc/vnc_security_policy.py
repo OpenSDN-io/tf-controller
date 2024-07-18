@@ -6,7 +6,6 @@
 VNC Security Policy management for kubernetes
 """
 
-from builtins import str
 from enum import Enum
 import json
 

@@ -3,10 +3,6 @@ from __future__ import unicode_literals
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from builtins import zip
-from builtins import str
-from builtins import range
-from builtins import object
 from future.utils import native_str
 import os
 import gevent
@@ -26,7 +22,6 @@ from cfgm_common.exceptions import (
     OverQuota,
     ResourceExhaustionError,
     ResourceExistsError)
-from gevent.lock import BoundedSemaphore
 
 import datetime
 import uuid
@@ -185,7 +180,6 @@ class IndexAllocator(object):
                 if alloc['start'] <= idx <= alloc['end']:
                     return alloc['end'] - idx + size
                 size += alloc['end'] - alloc['start'] + 1
-            pass
         else:
             for alloc in alloc_list:
                 if alloc['start'] <= idx <= alloc['end']:
@@ -595,10 +589,9 @@ class ZookeeperClient(object):
         try:
             if value is None:
                 value = uuid.uuid4()
-            if isinstance(value, str):
-                value = value.encode()
+            bvalue = value.encode() if isinstance(value, str) else value
             retry = self._retry.copy()
-            retry(self._zk_client.create, path, value,
+            retry(self._zk_client.create, path, bvalue,
                   ephemeral=ephemeral, makepath=True)
         except kazoo.exceptions.NodeExistsError:
             current_value = self.read_node(path)
@@ -613,25 +606,27 @@ class ZookeeperClient(object):
             retry(self._zk_client.delete, path, recursive=recursive)
         except kazoo.exceptions.NoNodeError:
             pass
-
     # end delete_node
 
     def update_node(self, path, value):
-        try:
-            retry = self._retry.copy()
-            retry(self._zk_client.set, path, native_str(value))
-        except kazoo.exceptions.NoNodeError:
-            pass
+        if isinstance(value, str):
+            value = value.encode()
+        retry = self._retry.copy()
+        retry(self._zk_client.set, path, value)
     # end update_node
 
     def read_node(self, path, include_timestamp=False):
         try:
             retry = self._retry.copy()
             value = retry(self._zk_client.get, path)
+            if value is None:
+                return None
+            if isinstance(value[0], bytes):
+                value = (value[0].decode(), value[1])
             if include_timestamp:
                 return value
             return value[0]
-        except Exception:
+        except kazoo.exceptions.NoNodeError:
             return None
     # end read_node
 
@@ -639,16 +634,13 @@ class ZookeeperClient(object):
         try:
             retry = self._retry.copy()
             return retry(self._zk_client.get_children, path)
-        except Exception:
+        except kazoo.exceptions.NoNodeError:
             return []
     # end read_node
 
     def exists(self, path):
-        try:
-            retry = self._retry.copy()
-            return retry(self._zk_client.exists, path)
-        except Exception:
-            return []
+        retry = self._retry.copy()
+        return retry(self._zk_client.exists, path)
     # end exists
 
     def _sandesh_connection_info_update(self, status, message):

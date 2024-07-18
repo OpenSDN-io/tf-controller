@@ -14,7 +14,7 @@ timeout-decorator
 docker
 inflection
 jsonschema
-pyhash
+cityhash
 contrail-config-common
 vine
 sandesh==0.1.dev0

@@ -2,8 +2,6 @@
 # Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
-
 import cfgm_common as common
 from vnc_api.gen.resource_client import RouteTarget
 from vnc_api.gen.resource_xsd import InstanceTargetType

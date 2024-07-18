@@ -18,9 +18,6 @@ from __future__ import unicode_literals
 #
 # @author: Sylvain Afchain, eNovance.
 
-from builtins import object
-from builtins import range
-
 from future import standard_library
 standard_library.install_aliases()  # noqa
 import requests

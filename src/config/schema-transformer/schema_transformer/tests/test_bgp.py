@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 
-from builtins import range
 from unittest import skip
 import uuid
 

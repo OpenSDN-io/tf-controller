@@ -542,6 +542,14 @@ class DatabaseManager(object):
         self._zk_client.start()
     # end __init__
 
+    def _zk_get(self, path):
+        value = self._zk_client.get(path)
+        if value is None:
+            return value
+        if isinstance(value[0], bytes):
+            return (value[0].decode(), value[1])
+        return value
+
     def _make_ssl_socket_factory(self, ca_certs, validate=True):
         # copy method from pycassa library because no other method
         # to override ssl version
@@ -631,7 +639,7 @@ class DatabaseManager(object):
         num_bad_rts = 0
         for id in self._zk_client.get_children(base_path) or []:
             rt_zk_path = os.path.join(base_path, id)
-            res_fq_name_str = self._zk_client.get(rt_zk_path)[0]
+            res_fq_name_str = self._zk_get(rt_zk_path)[0]
             id = int(id)
             zk_set.add((id, res_fq_name_str))
             if id < get_bgp_rtgt_min_id(self.global_asn):
@@ -780,7 +788,7 @@ class DatabaseManager(object):
         logger.debug("Doing recursive zookeeper read from %s", base_path)
         zk_all_sgs = {}
         for sg_id in self._zk_client.get_children(base_path) or []:
-            sg_val = self._zk_client.get(base_path + '/' + sg_id)[0]
+            sg_val = self._zk_get(base_path + '/' + sg_id)[0]
 
             # sg-id of 0 is reserved
             if int(sg_id) == 0:
@@ -848,7 +856,7 @@ class DatabaseManager(object):
         logger.debug("Doing recursive zookeeper read from %s", base_path)
         zk_all_vns = {}
         for vn_id in self._zk_client.get_children(base_path) or []:
-            vn_fq_name_str = self._zk_client.get(base_path + '/' + vn_id)[0]
+            vn_fq_name_str = self._zk_get(base_path + '/' + vn_id)[0]
             # VN-id in zk starts from 0, in cassandra starts from 1
             zk_all_vns[int(vn_id) + VN_ID_MIN_ALLOC] = vn_fq_name_str
 
@@ -1214,7 +1222,7 @@ class DatabaseManager(object):
                 if not addrs:
                     continue
                 for addr in addrs:
-                    iip_uuid = self._zk_client.get(
+                    iip_uuid = self._zk_get(
                         subnet_path + '/' + pfxlen + '/' + addr)
                     if iip_uuid is not None:
                         zk_all_vns[vn_fq_name_str][subnet_key].append(
@@ -1318,7 +1326,7 @@ class DatabaseManager(object):
             id_str = "%(#)010d" % {'#': id}
             rt_zk_path = os.path.join(self.base_rtgt_id_zk_path, id_str)
             try:
-                zk_fq_name_str = self._zk_client.get(rt_zk_path)[0]
+                zk_fq_name_str = self._zk_get(rt_zk_path)[0]
             except kazoo.exceptions.NoNodeError:
                 msg = ("Cannot read zookeeper RT ID %s for RT %s(%s)" %
                        (rt_zk_path, fq_name_str, uuid))
@@ -1507,7 +1515,7 @@ class DatabaseManager(object):
         for prouter_name in prouters_with_ae_id or []:
             prouter_path = base_path + '/' + prouter_name
             for ae_id in self._zk_client.get_children(prouter_path) or []:
-                vpg_name = self._zk_client.get(prouter_path + '/' + ae_id)[0]
+                vpg_name = self._zk_get(prouter_path + '/' + ae_id)[0]
                 if zk_all_ae_id.get(prouter_name) is None:
                         zk_all_ae_id[prouter_name] = defaultdict(list)
                 zk_all_ae_id[prouter_name][vpg_name].append(ae_id)
@@ -2506,7 +2514,7 @@ class DatabaseCleaner(DatabaseManager):
         for id, fq_name_uuids in list(duplicate_ids.items()):
             id_str = "%(#)010d" % {'#': id}
             try:
-                zk_fq_name_str = self._zk_client.get(path % id_str)[0]
+                zk_fq_name_str = self._zk_get(path % id_str)[0]
             except kazoo.exceptions.NoNodeError:
                 zk_fq_name_str = None
             uuids_to_deallocate |= {uuid for fq_name_str, uuid in fq_name_uuids
@@ -2548,7 +2556,7 @@ class DatabaseCleaner(DatabaseManager):
         for id, fq_name_uuids in list(duplicate_ids.items()):
             id_str = "%(#)010d" % {'#': id - VN_ID_MIN_ALLOC}
             try:
-                zk_fq_name_str = self._zk_client.get(path % id_str)[0]
+                zk_fq_name_str = self._zk_get(path % id_str)[0]
             except kazoo.exceptions.NoNodeError:
                 zk_fq_name_str = None
             uuids_to_deallocate |= {uuid for fq_name_str, uuid in fq_name_uuids
@@ -3255,7 +3263,7 @@ class DatabaseHealer(DatabaseManager):
             id_str = "%(#)010d" % {'#': id}
             if not self._args.execute:
                 try:
-                    zk_fq_name_str = self._zk_client.get(zk_path % id_str)[0]
+                    zk_fq_name_str = self._zk_get(zk_path % id_str)[0]
                     if fq_name_str != zk_fq_name_str:
                         logger.info("Would update id %s from %s to %s",
                                     zk_path % id_str, zk_fq_name_str,
@@ -3265,17 +3273,17 @@ class DatabaseHealer(DatabaseManager):
                                 zk_path % id_str, fq_name_str)
             else:
                 try:
-                    zk_fq_name_str = self._zk_client.get(zk_path % id_str)[0]
+                    zk_fq_name_str = self._zk_get(zk_path % id_str)[0]
                     if fq_name_str != zk_fq_name_str:
                         logger.info("Updating id %s from %s to %s",
                                     zk_path % id_str, zk_fq_name_str,
                                     fq_name_str)
                         self._zk_client.delete(zk_path % id_str)
-                        self._zk_client.set(zk_path % id_str, str(fq_name_str))
+                        self._zk_client.set(zk_path % id_str, fq_name_str.encode())
                 except kazoo.exceptions.NoNodeError:
                     logger.info("Adding missing id %s for %s",
                                 zk_path % id_str, fq_name_str)
-                    self._zk_client.create(zk_path % id_str, str(fq_name_str))
+                    self._zk_client.create(zk_path % id_str, fq_name_str.encode())
 
     @healer
     def heal_subnet_addr_alloc(self):
@@ -3307,7 +3315,7 @@ class DatabaseHealer(DatabaseManager):
                     logger.info("Would create zk: %s", path)
                 else:
                     logger.info("Creating zk path: %s", path)
-                    self._zk_client.create(path, ip_addr[0], makepath=True)
+                    self._zk_client.create(path, ip_addr[0].encode(), makepath=True)
 
         # Re-create missing IP addresses in zk
         for vn, sn_key in cassandra_all_vn_sn:
@@ -3326,9 +3334,9 @@ class DatabaseHealer(DatabaseManager):
                 else:
                     logger.info("Creating zk path: %s %s", path, ip_addr)
                     try:
-                        self._zk_client.create(path, ip_addr[0], makepath=True)
+                        self._zk_client.create(path, ip_addr[0].encode(), makepath=True)
                     except kazoo.exceptions.NodeExistsError as e:
-                        iip_uuid = self._zk_client.get(path)[0]
+                        iip_uuid = self._zk_get(path)[0]
                         logger.warn("Creating zk path: %s (%s). "
                                     "Addr lock already exists for IIP %s",
                                     path, ip_addr, iip_uuid)

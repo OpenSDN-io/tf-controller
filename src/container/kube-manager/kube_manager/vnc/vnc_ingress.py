@@ -7,7 +7,6 @@ VNC Ingress management for kubernetes.
 """
 from __future__ import print_function
 
-from builtins import str
 import copy
 from six import StringIO
 import uuid

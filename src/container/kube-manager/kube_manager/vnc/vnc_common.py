@@ -2,8 +2,6 @@
 # Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
-
 from kube_manager.vnc.vnc_kubernetes_config import VncKubernetesConfig as vnc_kube_config
 
 

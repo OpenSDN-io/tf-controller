@@ -5,11 +5,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-from builtins import range
-from builtins import str
 import copy
 from unittest import skip
-
 
 from cfgm_common import get_lr_internal_vn_name
 from cfgm_common.exceptions import RefsExistError

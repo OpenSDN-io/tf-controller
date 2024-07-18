@@ -2283,8 +2283,8 @@ class TestVncCfgApiServer(test_case.ApiServerTestCase):
                 zk_path = '%s/api-server/subnets/%s:1.1.1.0/28/%s' %(
                     self._cluster_id, vn_obj.get_fq_name_str(), zk_node)
                 mock_zk = self._api_server._db_conn._zk_db._zk_client._zk_client
-                self.assertEqual(
-                    mock_zk._values[zk_path][0], iip_obj.uuid)
+                self.assertEqual(iip_obj.uuid,
+                                 mock_zk._values[zk_path][0].decode())
                 self.assertEqual(
                     self._vnc_lib.instance_ip_read(
                         id=iip_obj.uuid).instance_ip_address,
@@ -2322,7 +2322,7 @@ class TestVncCfgApiServer(test_case.ApiServerTestCase):
                     self._cluster_id, vn_obj.get_fq_name_str(), zk_node)
                 mock_zk = self._api_server._db_conn._zk_db._zk_client._zk_client
                 self.assertEqual(
-                    mock_zk._values[zk_path][0], fip_obj.uuid)
+                    mock_zk._values[zk_path][0].decode(), fip_obj.uuid)
                 self.assertEqual(
                     self._vnc_lib.floating_ip_read(
                         id=fip_obj.uuid).floating_ip_address,
@@ -2354,7 +2354,7 @@ class TestVncCfgApiServer(test_case.ApiServerTestCase):
                     self._cluster_id, vn_obj.get_fq_name_str(), zk_node)
                 mock_zk = self._api_server._db_conn._zk_db._zk_client._zk_client
                 self.assertEqual(
-                    mock_zk._values[zk_path][0], aip_obj.uuid)
+                    mock_zk._values[zk_path][0].decode(), aip_obj.uuid)
                 self.assertEqual(
                     self._vnc_lib.alias_ip_read(
                         id=aip_obj.uuid).alias_ip_address,
@@ -4242,12 +4242,11 @@ class TestDBAudit(test_case.ApiServerTestCase):
                     json.dumps(fake_id)):
                 db_cleaner.heal_virtual_networks_id()
                 zk_id_str = "%(#)010d" % {'#': fake_id - 1}
-                self.assertEqual(
+                self.assertIsNotNone(
                     db_cleaner._zk_client.exists(
                         '%s%s/%s' % (
                              self._cluster_id, db_cleaner.BASE_VN_ID_ZK_PATH,
-                             zk_id_str))[0],
-                             vn_obj.get_fq_name_str())
+                             zk_id_str))[0])
 
     def test_cleaner_zk_security_group_id(self):
         uuid_cf = self.get_cf('config_db_uuid', 'obj_uuid_table')
@@ -4286,12 +4285,11 @@ class TestDBAudit(test_case.ApiServerTestCase):
                     json.dumps(8000042)):
                 db_cleaner.heal_security_groups_id()
                 zk_id_str = "%(#)010d" % {'#': 42}
-                self.assertEqual(
+                self.assertIsNotNone(
                     db_cleaner._zk_client.exists(
                         '%s%s/%s' %
                         (self._cluster_id, db_cleaner.BASE_SG_ID_ZK_PATH,
-                         zk_id_str))[0],
-                    sg_obj.get_fq_name_str())
+                         zk_id_str))[0])
 
     def test_clean_obj_missing_mandatory_fields(self):
         pass

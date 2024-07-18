@@ -15,8 +15,6 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-from builtins import object
-from builtins import str
 
 # Import kazoo.client before monkey patching
 from cfgm_common.zkclient import ZookeeperClient
@@ -25,7 +23,6 @@ from gevent import monkey
 # monkey patch all as early as possible
 monkey.patch_all()
 
-from gevent.signal import signal as gevent_signal
 import hashlib
 import os
 import random
@@ -37,6 +34,7 @@ import time
 from cfgm_common import vnc_cgitb
 from cfgm_common.exceptions import NoIdError, ResourceExhaustionError
 from cfgm_common.vnc_db import DBBase
+from gevent.signal import signal as gevent_signal
 from past.utils import old_div
 from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
@@ -848,7 +846,8 @@ def run_schema_transformer(st_logger, args):
     transformer._chksum = ""
     # checksum of collector list
     if args.collectors:
-        transformer._chksum = hashlib.md5("".join(args.collectors).encode()).hexdigest()
+        transformer._chksum = (
+            hashlib.md5("".join(args.collectors).encode()).hexdigest())
 
     """ @sighup
     SIGHUP handler to indicate configuration changes

@@ -3,8 +3,6 @@
 #
 
 import base64
-from builtins import object
-from builtins import str
 import glob
 import os
 import re

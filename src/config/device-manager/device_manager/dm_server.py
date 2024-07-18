@@ -3,7 +3,6 @@ from __future__ import absolute_import
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
 import os
 import random
 import signal
@@ -16,8 +15,8 @@ from cfgm_common.kombu_amqp import KombuAmqpClient
 from cfgm_common.vnc_object_db import VncObjectDBClient
 from cfgm_common.zkclient import ZookeeperClient
 import gevent
-from gevent.signal import signal as gevent_signal
 from gevent import monkey
+from gevent.signal import signal as gevent_signal
 import psutil
 
 from .device_job_manager import DeviceJobManager

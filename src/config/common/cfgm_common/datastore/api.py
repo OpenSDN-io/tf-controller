@@ -135,8 +135,6 @@ class API(Trace):
             dict([(k, v) for k, v in options.items() if v is not None]))
         self.options = OptionsType(**self.options)
 
-        self.options.logger('datastore.API.__init__', level=SandeshLevel.SYS_NOTICE)
-
         self._server_list = server_list
         self._conn_state = ConnectionStatus.INIT
 

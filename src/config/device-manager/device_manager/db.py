@@ -10,9 +10,6 @@ for device specific configuration manager
 from __future__ import absolute_import
 from __future__ import division
 
-from builtins import map
-from builtins import range
-from builtins import str
 import copy
 import json
 import re
@@ -44,13 +41,13 @@ from cfgm_common.vnc_db import DBBase
 from cfgm_common.vnc_db import FeatureFlagBase
 from cfgm_common.vnc_object_db import VncObjectDBClient
 from cfgm_common.zkclient import IndexAllocator
+import cityhash
 from future.utils import native_str
 import gevent
 from gevent import queue
 from netaddr import IPAddress
 from past.builtins import basestring
 from past.utils import old_div
-import cityhash
 from sandesh_common.vns.constants import DEVICE_MANAGER_KEYSPACE_NAME
 from vnc_api.vnc_api import VirtualNetwork
 

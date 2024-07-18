@@ -1,5 +1,5 @@
-gevent<1.5.0
-greenlet<2.0.0
+gevent
+greenlet
 python-novaclient==16.0.0
 keystoneauth1<5.1.0
 kombu==4.0.2

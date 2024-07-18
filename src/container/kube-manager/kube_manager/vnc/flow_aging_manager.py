@@ -6,8 +6,6 @@
 Flow aging service management functions.
 """
 
-from builtins import str
-
 from cfgm_common.exceptions import NoIdError
 from vnc_api.gen.resource_client import GlobalVrouterConfig
 from vnc_api.gen.resource_xsd import FlowAgingTimeout, FlowAgingTimeoutList

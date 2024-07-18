@@ -9,10 +9,10 @@ import sys
 from datetime import datetime
 from six import StringIO
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.poolmanager import PoolManager
 import ssl
 
 from cfgm_common.utils import cgitb_hook
+
 
 def create_custom_ssl_context():
     context = ssl.create_default_context()
@@ -20,6 +20,7 @@ def create_custom_ssl_context():
     context.check_hostname = False  # Disable hostname checking
     context.verify_mode = ssl.CERT_NONE  # Disable certificate verification
     return context
+
 
 class SSLAdapter(HTTPAdapter):
     def __init__(self, ssl_context=None, **kwargs):
@@ -29,6 +30,7 @@ class SSLAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
         kwargs['ssl_context'] = self.ssl_context
         return super().init_poolmanager(*args, **kwargs)
+
 
 class KubeMonitor(object):
 

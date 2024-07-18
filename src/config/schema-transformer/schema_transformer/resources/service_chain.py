@@ -2,11 +2,9 @@
 # Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
 import copy
 import json
 import uuid
-
 
 from cfgm_common.uve.virtual_network.ttypes import UveServiceChain
 from cfgm_common.uve.virtual_network.ttypes import UveServiceChainData

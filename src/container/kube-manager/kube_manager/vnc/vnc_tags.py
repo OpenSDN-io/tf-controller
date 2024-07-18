@@ -6,8 +6,6 @@
 VNC Tags management for kubernetes
 """
 
-from builtins import str
-
 from cfgm_common.exceptions import RefsExistError, NoIdError
 from vnc_api.gen.resource_client import (
     Tag

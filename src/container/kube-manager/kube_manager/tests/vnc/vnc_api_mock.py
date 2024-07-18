@@ -1,4 +1,3 @@
-from builtins import str
 import copy
 import functools
 import json

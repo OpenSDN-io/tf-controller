@@ -5,7 +5,6 @@
 """
 This file contains implementation of data model for kube manager.
 """
-from builtins import str
 import json
 from bitstring import BitArray
 

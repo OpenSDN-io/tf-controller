@@ -100,8 +100,8 @@ class TestRouteTarget(STTestCase, VerifyRouteTarget):
             *db_manage._parse_args('check --cluster_id %s' % self._cluster_id))
         path = '%s%s%s' % (
             self._cluster_id, db_checker.BASE_RTGT_ID_ZK_PATH, rt_id_str)
-        self.assertEqual(db_checker._zk_client.get(path)[0],
-                         ':'.join(ri_fq_name))
+        self.assertEqual(':'.join(ri_fq_name),
+                         db_checker._zk_client.get(path)[0].decode())
         with db_checker._zk_client.patch_path(path):
             errors = db_checker.check_route_targets_id()
             error_types = [type(x) for x in errors]
@@ -148,8 +148,8 @@ class TestRouteTarget(STTestCase, VerifyRouteTarget):
                                    self._cluster_id))
         path = '%s%s%s' % (
             self._cluster_id, db_checker.BASE_RTGT_ID_ZK_PATH, rt_id_str)
-        self.assertEqual(db_checker._zk_client.get(path)[0],
-                         ':'.join(ri_fq_name))
+        self.assertEqual(':'.join(ri_fq_name),
+                         db_checker._zk_client.get(path)[0].decode())
         with db_checker._zk_client.patch_path(path):
             errors = db_checker.check_route_targets_id()
             error_types = [type(x) for x in errors]

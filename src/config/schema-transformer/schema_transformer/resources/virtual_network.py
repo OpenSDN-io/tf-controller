@@ -2,14 +2,7 @@
 # Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import object
-try:
-    # python2.7
-    from collections import OrderedDict
-except Exception:
-    # python2.6
-    from ordereddict import OrderedDict
-from builtins import str
+from collections import OrderedDict
 import copy
 import itertools
 import sys

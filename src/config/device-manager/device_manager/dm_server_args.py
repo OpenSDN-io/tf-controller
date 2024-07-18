@@ -6,7 +6,6 @@ from future import standard_library  # noqa
 standard_library.install_aliases()  # noqa
 
 import argparse # noqa
-# from builtins import str
 
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from pysandesh.sandesh_base import Sandesh, SandeshConfig

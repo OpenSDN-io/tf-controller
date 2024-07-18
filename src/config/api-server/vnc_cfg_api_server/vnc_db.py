@@ -538,8 +538,8 @@ class VncZkClient(object):
 
         # Initialize the Aggregated Ethernet allocator
         self._vpg_id_allocator = IndexAllocator(self._zk_client,
-                                               _vpg_id_alloc_path,
-                                               self._VPG_MAX_ID)
+                                                _vpg_id_alloc_path,
+                                                self._VPG_MAX_ID)
 
         # Initialize the virtual network ID allocator
         self._vn_id_allocator = IndexAllocator(self._zk_client,
@@ -552,9 +552,11 @@ class VncZkClient(object):
                                                self._SG_MAX_ID)
         # 0 is not a valid sg id any more. So, if it was previously allocated,
         # delete it and reserve it
-        if self._sg_id_allocator.read(0) != '__reserved__':
-            self._sg_id_allocator.delete(0)
-        self._sg_id_allocator.reserve(0, '__reserved__')
+        sg_id0 = self._sg_id_allocator.read(0)
+        if sg_id0 != '__reserved__':
+            if sg_id0 is not None:
+                self._sg_id_allocator.delete(0)
+            self._sg_id_allocator.reserve(0, '__reserved__')
 
         # Initialize tag type ID allocator
         self._tag_type_id_allocator = IndexAllocator(

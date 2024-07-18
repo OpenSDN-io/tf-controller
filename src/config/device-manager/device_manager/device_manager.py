@@ -12,9 +12,7 @@ from __future__ import absolute_import
 from future import standard_library # noqa
 standard_library.install_aliases() # noqa
 
-from builtins import object # noqa
-from builtins import str
-import hashlib
+import hashlib # noqa
 import random
 import time
 import traceback

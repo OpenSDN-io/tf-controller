@@ -218,7 +218,6 @@ class DatabaseExim(object):
                     non_empty_errors_cassandra.append(
                         'Keyspace %s CF %s already has entries.' %(ks, cf))
 
-
         zookeeper = kazoo.client.KazooClient(
             self._api_args.zk_server_ip,
             timeout=400,
@@ -266,7 +265,7 @@ class DatabaseExim(object):
                 if path.split('/')[1] in self._zk_ignore_list:
                     continue
                 value = path_value_ts[1][0]
-                zookeeper.create(path, native_str(value), makepath=True)
+                zookeeper.create(path, value.decode(), makepath=True)
             logger.info("Zookeeper DB restored")
             zookeeper.stop()
 
