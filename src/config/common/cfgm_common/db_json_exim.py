@@ -265,7 +265,7 @@ class DatabaseExim(object):
                 if path.split('/')[1] in self._zk_ignore_list:
                     continue
                 value = path_value_ts[1][0]
-                zookeeper.create(path, value.decode(), makepath=True)
+                zookeeper.create(path, value.encode(), makepath=True)
             logger.info("Zookeeper DB restored")
             zookeeper.stop()
 

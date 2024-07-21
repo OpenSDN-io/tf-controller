@@ -1079,7 +1079,7 @@ class FakeKazooClient(object):
         orig_nodes = {}
         paths_to_patch = []
         # collect path(s) to patch...
-        for node in list(self._values.keys()):
+        for node in self._values.keys():
             if recursive: # simulate wipe of node with path and descendants
                 if node.startswith(scrubbed_path):
                     paths_to_patch.append(node)

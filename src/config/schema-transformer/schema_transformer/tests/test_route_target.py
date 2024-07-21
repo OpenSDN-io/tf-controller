@@ -172,8 +172,8 @@ class TestRouteTarget(STTestCase, VerifyRouteTarget):
                 db_checker.BASE_RTGT_ID_ZK_PATH,
                 new_rt_id_str,
             )
-            self.assertEqual(db_checker._zk_client.get(new_path)[0],
-                             ':'.join(ri_fq_name))
+            self.assertEqual(':'.join(ri_fq_name),
+                             db_checker._zk_client.get(new_path)[0].decode())
     # end test_db_manage_zk_route_target_missing
 
     def test_route_target_of_virtual_network_deleted(self):

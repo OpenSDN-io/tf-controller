@@ -8,6 +8,5 @@ subprocess32
 jsonschema
 inflection
 pycrypto
-vine
 pyroute2
 sandesh==0.1.dev0
