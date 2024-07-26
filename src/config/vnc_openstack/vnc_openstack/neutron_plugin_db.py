@@ -6902,7 +6902,10 @@ class DBInterface(object):
                 for sp in trunk_q['sub_ports']:
                     _set_sub_ports(trunk, trunk_port, sp)
 
-            trunk.set_id_perms(IdPermsType(enable=True))
+            id_perms = IdPermsType(enable=True)
+            if 'description' in trunk_q:
+                id_perms.description = trunk_q['description']
+            trunk.set_id_perms(id_perms)
             trunk.set_perms2(PermType2(owner=project.uuid))
 
             if 'tags' in trunk_q:
@@ -6914,13 +6917,18 @@ class DBInterface(object):
             except NoIdError:
                 self._raise_contrail_exception('TrunkNotFound',
                                                trunk_id=id)
+            # unwrap dict from dict if presented
+            if 'trunk' in trunk_q:
+                trunk_q = trunk_q.get('trunk')
             if 'name' in trunk_q:
                 trunk.display_name = trunk_q['name']
 
             id_perms = trunk.get_id_perms()
             if 'admin_state_up' in trunk_q:
                 id_perms.enable = trunk_q['admin_state_up']
-                trunk.set_id_perms(id_perms)
+            if 'description' in trunk_q:
+                id_perms.description = trunk_q['description']
+            trunk.set_id_perms(id_perms)
 
             if 'sub_ports' in trunk_q:
                 try:
@@ -7034,8 +7042,9 @@ class DBInterface(object):
     def trunk_create(self, context, trunk_q):
 
         trunk_obj = self._trunk_neutron_to_vnc(trunk_q, CREATE)
+        trunk_id = None
         try:
-            self._resource_create('virtual_port_group', trunk_obj)
+            trunk_id = self._resource_create('virtual_port_group', trunk_obj)
         except BadRequest as e:
             self._raise_contrail_exception(
                 'BadRequest', resource='virtual_port_group', msg=str(e))
@@ -7043,7 +7052,8 @@ class DBInterface(object):
             self._raise_contrail_exception('TrunkPortInUse',
                                            port_id=trunk_q.get('port_id'))
 
-        ret_trunk_q = self._trunk_vnc_to_neutron(trunk_obj)
+        ret_trunk = self._vnc_lib.virtual_port_group_read(id=trunk_id)
+        ret_trunk_q = self._trunk_vnc_to_neutron(ret_trunk)
         return ret_trunk_q
 
     @wait_for_api_server_connection
