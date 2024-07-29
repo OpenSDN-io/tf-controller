@@ -18,6 +18,7 @@ class VncObjectDBClient(object):
                  obj_cache_entries=0, obj_cache_exclude_types=None,
                  debug_obj_cache_types=None, connection=None,
                  db_engine='cassandra', ssl_enabled=False, ca_certs=None,
+                 zk_servers=None,
                  # TODO(sahid): For projects that are using
                  # VncObjectDBClient like: kube-manager,
                  # db-loader, schema_transformer, device_manager,
@@ -43,7 +44,8 @@ class VncObjectDBClient(object):
                     ca_certs=ca_certs,
                     cassandra_driver=cassandra_driver,
                     num_workers=num_workers,
-                    num_groups=num_groups)
+                    num_groups=num_groups,
+                    zk_servers=zk_servers)
             else:
                 msg = ("Contrail API server does not support database backend "
                        "'%s'" % db_engine)

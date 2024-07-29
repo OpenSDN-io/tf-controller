@@ -353,28 +353,30 @@ class TestCassandraDriverCQL(unittest.TestCase):
     def test_safe_drop_keyspace(self):
         session = mock.MagicMock()
         self.drv._cluster.connect.return_value = session
-        self.drv.safe_drop_keyspace(datastore_api.OBJ_UUID_CF_NAME)
+        self.drv.safe_drop_keyspace(datastore_api.UUID_KEYSPACE_NAME)
         self.assertCql(
             """
-            DROP KEYSPACE "obj_uuid_table"
-            """,
+            DROP KEYSPACE "{}"
+            """.format(datastore_api.UUID_KEYSPACE_NAME),
             session.execute)
 
     def test_safe_create_keyspace(self):
         session = mock.MagicMock()
         self.drv._cluster.connect.return_value = session
-        self.drv.safe_create_keyspace(datastore_api.OBJ_UUID_CF_NAME)
+        self.drv._zk_client = mock.MagicMock()
+        self.drv.safe_create_keyspace(keyspace=datastore_api.UUID_KEYSPACE_NAME)
         self.assertCql(
             """
-            CREATE KEYSPACE IF NOT EXISTS "obj_uuid_table"
-              WITH REPLICATION = {
+            CREATE KEYSPACE IF NOT EXISTS "{}"
+              WITH REPLICATION = {{
                 'class': 'SimpleStrategy',
                 'replication_factor': '2'
-            }""",
+            }}""".format(datastore_api.UUID_KEYSPACE_NAME),
             session.execute)
 
     def test_ensure_keyspace_replication(self):
         session = mock.MagicMock()
+        self.drv._zk_client = mock.MagicMock()
         self.drv._cluster.connect.return_value = session
         self.drv.ensure_keyspace_replication(
             datastore_api.OBJ_UUID_CF_NAME)
@@ -389,20 +391,22 @@ class TestCassandraDriverCQL(unittest.TestCase):
 
     def test_safe_create_table(self):
         session = self.drv.get_cf(datastore_api.OBJ_UUID_CF_NAME)
-        self.drv.safe_create_table(datastore_api.OBJ_UUID_CF_NAME)
+        self.drv._zk_client = mock.MagicMock()
+        self.drv.safe_create_table(cf_name=datastore_api.OBJ_UUID_CF_NAME)
         self.assertCql(
             """
-            CREATE TABLE IF NOT EXISTS "obj_uuid_table" (
+            CREATE TABLE IF NOT EXISTS "{}" (
               key blob,
               column1 blob,
               value text,
             PRIMARY KEY (key, column1)
             ) WITH COMPACT STORAGE AND CLUSTERING ORDER BY (column1 ASC)
-            """,
+            """.format(datastore_api.OBJ_UUID_CF_NAME),
             session.execute)
 
     def test_ensure_table_properties(self):
         session = self.drv.get_cf(datastore_api.OBJ_UUID_CF_NAME)
+        self.drv._zk_client = mock.MagicMock()
         self.drv.ensure_table_properties(datastore_api.OBJ_UUID_CF_NAME)
         self.assertCql(
             """
