@@ -22,7 +22,8 @@ class TestTrunk(test_case.NeutronBackendTestCase):
             vnc_api.Project('project-%s' % self.id()))
         self.project = self._vnc_lib.project_read(id=self.project_id)
 
-    def _add_subports(self, project_id, trunk_id, port_id, vlan_tag=None):
+    def _add_subports(self, project_id, trunk_id, port_id,
+                      segmentation_type="vlan", vlan_tag=None):
         extra_res_fields = {
             'sub_ports': [
                 {
@@ -30,6 +31,9 @@ class TestTrunk(test_case.NeutronBackendTestCase):
                 }
             ]
         }
+        if segmentation_type:
+            extra_res_fields['sub_ports'][0]['segmentation_type'] = \
+                segmentation_type
         if vlan_tag:
             extra_res_fields['sub_ports'][0]['segmentation_id'] = vlan_tag
 
@@ -118,6 +122,7 @@ class TestTrunk(test_case.NeutronBackendTestCase):
                 sub_vmi_obj)
             sub_vmi_dict['port_id'] = sub_port_id
             sub_vmi_dict['segmentation_id'] = 10
+            sub_vmi_dict['segmentation_type'] = 'vlan'
             sub_ports.append(sub_vmi_dict)
 
         context = {'operation': 'CREATE',
@@ -172,7 +177,9 @@ class TestTrunk(test_case.NeutronBackendTestCase):
 
         neutron_trunk = self._add_subports(self.project_id,
                                            trunk_dict['id'],
-                                           sub_port_id)
+                                           sub_port_id,
+                                           segmentation_type='vlan',
+                                           vlan_tag=10)
         self.assertEquals(neutron_trunk['sub_ports'][0].get('port_id'),
                           sub_port.uuid)
 
