@@ -6855,6 +6855,13 @@ class DBInterface(object):
                                                trunk_id=id,
                                                port_id=sp_id)
 
+            if 'segmentation_id' not in sub_port_dict or \
+                    'segmentation_type' not in sub_port_dict:
+                msg = "Missing segmentation information. Must specify both " \
+                      "segmentation_id and segmentation_type"
+                self._raise_contrail_exception('BadRequest',
+                                               resource='trunk', msg=msg)
+
             if ('segmentation_type' in sub_port_dict and
                     sub_port_dict['segmentation_type'] != 'vlan'):
                 msg = "Segmentation type %s is not supported" \
