@@ -35,32 +35,32 @@ class NetworkMonitor(KubeMonitor):
                 "%s - Could not get CRD list.  CRD INFO = %s"
                 % (self.name, crd_info))
             return
-        else:
-            self.logger.debug(
-                "%s - Retrieved following CRD info = %s"
-                % (self.name, crd_info))
-            if not crd_info or \
-                    'metadata' not in crd_info or \
-                    'network-attachment-definitions.k8s.cni.cncf.io' \
-                    not in crd_info['metadata']['name']:
-                # Create Networks CRD - networks.kubernetes.cni.cncf.io
-                self.logger.debug("%s - Creating Network CRD" % (self.name))
-                network_crd_body = self.create_network_crd_yaml()
-                resp = self.post_resource(
-                    resource_type=self.crd_resource_type,
-                    resource_name='', body_params=network_crd_body)
-                if not resp:
-                    return
-                msg = ""
-                try:
-                    while True:
-                        line = next(resp)
-                        if not line:
-                            break
-                        msg += line
-                except StopIteration:
-                    pass
-                self.logger.debug("%s - Creating Network CRD response - %s" % (self.name, msg))
+
+        self.logger.debug(
+            "%s - Retrieved following CRD info = %s"
+            % (self.name, crd_info))
+        if not crd_info or \
+                'metadata' not in crd_info or \
+                'network-attachment-definitions.k8s.cni.cncf.io' \
+                not in crd_info['metadata']['name']:
+            # Create Networks CRD - networks.kubernetes.cni.cncf.io
+            self.logger.debug("%s - Creating Network CRD" % (self.name))
+            network_crd_body = self.create_network_crd_yaml()
+            resp = self.post_resource(
+                resource_type=self.crd_resource_type,
+                resource_name='', body_params=network_crd_body)
+            if not resp:
+                return
+            msg = ""
+            try:
+                while True:
+                    line = next(resp)
+                    if not line:
+                        break
+                    msg += line.decode()
+            except StopIteration:
+                pass
+            self.logger.debug("%s - Creating Network CRD response - %s" % (self.name, msg))
 
     def create_network_crd_yaml(self):
         api_group = self.k8s_api_resources[self.crd_resource_type]['group']

@@ -26,4 +26,5 @@ class KubeNetworkManagerDB(VncObjectDBClient):
             reset_config=False, credential=cred,
             ssl_enabled=args.cassandra_use_ssl,
             ca_certs=args.cassandra_ca_certs,
-            cassandra_driver=args.cassandra_driver)
+            cassandra_driver=args.cassandra_driver,
+            zk_servers=args.zk_server_ip)

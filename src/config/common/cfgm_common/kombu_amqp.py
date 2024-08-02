@@ -3,9 +3,6 @@ from __future__ import unicode_literals
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
-from past.builtins import basestring
-from builtins import object
 from gevent import monkey
 monkey.patch_all()
 
@@ -14,6 +11,7 @@ import kombu
 import re
 import socket
 import ssl
+import traceback
 from gevent.event import Event
 from gevent.lock import Semaphore
 from gevent.queue import Queue
@@ -91,7 +89,7 @@ class KombuAmqpClient(object):
     # end remove_consumer
 
     def publish(self, message, exchange, routing_key=None, **kwargs):
-        if message is not None and isinstance(message, basestring) and \
+        if message is not None and isinstance(message, str) and \
                 len(message) == 0:
             message = None
         msg = 'KombuAmqpClient: Publishing message to exchange %s, routing_key %s' % (exchange, routing_key)
@@ -122,11 +120,12 @@ class KombuAmqpClient(object):
     # end stop
 
     def _delete_consumer(self, consumer):
-        msg = 'KombuAmqpClient: Removing queue %s' % consumer.queue.name
+        queue = consumer['queue']
+        msg = 'KombuAmqpClient: Removing queue %s' % queue.name
         self._logger(msg, level=SandeshLevel.SYS_DEBUG)
-        consumer.queue.maybe_bind(self._connection)
+        queue.maybe_bind(self._connection)
         try:
-            consumer.queue.delete(if_unused=True, nowait=False)
+            queue.delete(if_unused=True, nowait=False)
         except self._connection.channel_errors:
             pass
     # end _delete_consumer
@@ -137,8 +136,8 @@ class KombuAmqpClient(object):
         while not valid:
             consumer_candidate_list = list(self._consumers.keys())
             # This code can yield the CPU to another greenlet
-            consumer_list = [kombu.Consumer(self._connection, queues=c.queue,
-                        callbacks=[c.callback] if c.callback else None)
+            consumer_list = [kombu.Consumer(self._connection, queues=c['queue'],
+                        callbacks=[c['callback']] if 'callback' in c else None)
                         for c in list(self._consumers.values())]
             # Other greenlets can add more entries to self._consumers here
             # so check to see if the self._consumers has changed.
@@ -191,12 +190,14 @@ class KombuAmqpClient(object):
                     self._consumers_changed = False
                     self._consumer_lock.acquire()
             except errors as e:
-                msg = 'KombuAmqpClient: Connection error in Kombu amqp consumer greenlet: %s' % str(e)
+                msg = 'KombuAmqpClient: Connection error in Kombu amqp consumer greenlet: %s\n' % str(e)
+                msg += traceback.format_exc()
                 self._logger(msg, level=SandeshLevel.SYS_WARN)
                 self._connected = False
                 gevent.sleep(0.1)
             except Exception as e:
-                msg = 'KombuAmqpClient: Error in Kombu amqp consumer greenlet: %s' % str(e)
+                msg = 'KombuAmqpClient: Error in Kombu amqp consumer greenlet: %s\n' % str(e)
+                msg += traceback.format_exc()
                 self._logger(msg, level=SandeshLevel.SYS_ERR)
                 self._connected = False
                 gevent.sleep(0.1)

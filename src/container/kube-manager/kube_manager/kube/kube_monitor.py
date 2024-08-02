@@ -323,7 +323,7 @@ class KubeMonitor(object):
             raise
         # Get handle to events for this monitor.
         self.kube_api_resp = resp
-        self.kube_api_stream_handle = resp.iter_lines(chunk_size=256, delimiter='\n')
+        self.kube_api_stream_handle = resp.iter_lines(chunk_size=256, delimiter=b'\n')
         self._log("%s - Watches %s (%s)" % (self.name, url, params))
 
     def get_resource(self, resource_type, resource_name,
@@ -379,7 +379,7 @@ class KubeMonitor(object):
             self._log("%s - %s" % (self.name, e), level='error')
             return
 
-        return resp.iter_lines(chunk_size=10, delimiter='\n')
+        return resp.iter_lines(chunk_size=10, delimiter=b'\n')
 
     def post_resource(self, resource_type, resource_name,
                       body_params, namespace=None, sub_resource_name=None,
@@ -410,7 +410,7 @@ class KubeMonitor(object):
             self._log("%s - %s" % (self.name, e), level='error')
             return None
 
-        return resp.iter_lines(chunk_size=10, delimiter='\n')
+        return resp.iter_lines(chunk_size=10, delimiter=b'\n')
 
     def _schedule_vnc_sync(self):
         self._last_schedule_time = time.time()
