@@ -417,7 +417,7 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
         self.options.logger("CassandraDriverCQL.__init__Cluster created",
                             level=SandeshLevel.SYS_NOTICE)
         self._cluster.connect()
-        self.options.logger("CassandraDriverCQL.__init__Cluster connected",
+        self.options.logger("CassandraDriverCQL.__init__Cluster DB connected",
                             level=SandeshLevel.SYS_NOTICE)
 
         # get hostname to create ZookeeperClient
@@ -436,6 +436,8 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
             self.worker,
             self.initializer)
 
+        self.options.logger("CassandraDriverCQL.__init__Cluster init KS",
+                            level=SandeshLevel.SYS_NOTICE)
         existing_keyspaces = self._get_keyspaces()
         # Initializes RW keyspaces
         for ks, cf_dict in self.options.rw_keyspaces.items():
@@ -446,6 +448,9 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
                 self.safe_create_keyspace(keyspace)
                 self.ensure_keyspace_replication(keyspace)
 
+        self.options.logger("CassandraDriverCQL.__init__Cluster wait for "
+                            "KS = {}".format(self.options.ro_keyspaces),
+                            level=SandeshLevel.SYS_NOTICE)
         # Ensures RO keyspaces are initialized
         while not self.are_keyspaces_ready(self.options.ro_keyspaces):
             self.options.logger("waiting for keyspaces '{}' to be ready "
@@ -454,6 +459,8 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
                                 level=SandeshLevel.SYS_INFO)
             # Let's a chance to an other greenthread to be scheduled.
             gevent.sleep(1)
+        self.options.logger("CassandraDriverCQL.__init__Cluster KS are ready",
+                            level=SandeshLevel.SYS_NOTICE)
 
         existing_tables = []
         # The CFs are flatten in a dict with the keyspaces' session
@@ -464,6 +471,8 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
             self._get_keyspace_tables(ks, existing_tables)
             for cf_name in cf_dict:
                 self.create_session(self.keyspace(ks), cf_name)
+        self.options.logger("CassandraDriverCQL.__init__Cluster CF are ready",
+                            level=SandeshLevel.SYS_NOTICE)
 
         # Now we create the tables/CFs if not already alive.
         for cf_name in self._cf_dict:
