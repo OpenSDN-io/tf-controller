@@ -176,7 +176,9 @@ def launch_kube_manager(test_id, conf_sections, kube_api_skip, event_queue,
 #end launch_kube_manager
 
 def retry_exc_handler(tries_remaining, exception, delay):
-    print("Caught '%s', %d tries remaining, sleeping for %s seconds" % (exception, tries_remaining, delay), file=sys.stderr)
+    # too verbose and useless
+    #print("Caught '%s', %d tries remaining, sleeping for %s seconds" % (exception, tries_remaining, delay), file=sys.stderr)
+    pass
 # end retry_exc_handler
 
 def retries(max_tries, delay=1, backoff=2, exceptions=(Exception,), hook=None):

@@ -4,10 +4,6 @@ from __future__ import unicode_literals
 #
 # Util to manage RBAC group and rules (add, delete etc)",
 #
-import argparse
-import uuid as __uuid
-import os
-import re
 
 from vnc_api.vnc_api import *
 from vnc_api.gen.resource_xsd import *

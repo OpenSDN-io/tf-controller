@@ -398,10 +398,9 @@ class RoutingInstanceST(ResourceBaseST):
             evpn_v4_info = self.fill_service_info(evpn_v4_info, 4, remote_vn,
                                                   service_instance, v4_address,
                                                   source_ri, service_chain_id)
-            if head:
-                evpn_v4_info.sc_head = True
-
             if evpn_v4_info:
+                if head:
+                    evpn_v4_info.sc_head = True
                 evpn_v4_info.set_retain_as_path(retain_as_path)
             self.evpn_service_chain_info = evpn_v4_info
             self.obj.set_evpn_service_chain_information(evpn_v4_info)
@@ -410,11 +409,10 @@ class RoutingInstanceST(ResourceBaseST):
             evpn_v6_info = self.fill_service_info(evpn_v6_info, 6, remote_vn,
                                                   service_instance, v6_address,
                                                   source_ri, service_chain_id)
-            if head:
-                evpn_v6_info.sc_head = True
             if evpn_v6_info:
+                if head:
+                    evpn_v6_info.sc_head = True
                 evpn_v6_info.set_retain_as_path(retain_as_path)
-
             self.evpn_v6_service_chain_info = evpn_v6_info
             self.obj.set_evpn_ipv6_service_chain_information(evpn_v6_info)
 

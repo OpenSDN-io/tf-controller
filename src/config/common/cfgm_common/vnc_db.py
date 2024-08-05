@@ -7,9 +7,7 @@ This file contains implementation of database model for contrail config daemons
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from builtins import object
 from future.utils import with_metaclass
-from past.builtins import basestring
 from collections import OrderedDict
 from six import StringIO
 from vnc_api.gen.resource_client import *
@@ -328,7 +326,7 @@ class DBBase(object, with_metaclass(DBBaseMeta)):
             raise NoIdError('')
         obj_type = obj_type or cls.obj_type
         if uuid is None:
-            if isinstance(fq_name, basestring):
+            if isinstance(fq_name, str):
                 fq_name = fq_name.split(':')
             uuid = cls._object_db.fq_name_to_uuid(obj_type, fq_name)
         obj_dict = cls.read_obj(uuid, obj_type, fields)

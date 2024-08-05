@@ -2,9 +2,6 @@
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 
-import sys
-if 'threading' in sys.modules:
-    del sys.modules['threading']
 import json
 from cliff.command import Command
 import xmltodict

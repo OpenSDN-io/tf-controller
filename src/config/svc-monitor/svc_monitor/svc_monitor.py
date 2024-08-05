@@ -7,16 +7,7 @@ Service monitor to instantiate/scale/monitor services like firewall, LB, ...
 """
 from __future__ import absolute_import
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
-from past.builtins import basestring
-
 import sys
-if sys.version_info[0] < 3:
-    reload(sys)
-    sys.setdefaultencoding('UTF8')
 import gevent
 from gevent import monkey
 monkey.patch_all(thread=not 'unittest' in sys.modules)
@@ -34,9 +25,6 @@ import hashlib
 
 import os
 
-import logging
-import logging.handlers
-
 import cfgm_common
 from cfgm_common import importutils
 from cfgm_common import svc_info
@@ -47,10 +35,9 @@ from cfgm_common.exceptions import ResourceExhaustionError
 from vnc_api.utils import AAA_MODE_VALID_VALUES
 from .config_db import *
 
-from pysandesh.sandesh_base import Sandesh, SandeshSystem, SandeshConfig
+from pysandesh.sandesh_base import Sandesh, SandeshConfig
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
-from sandesh_common.vns.ttypes import Module
 
 from vnc_api.vnc_api import *
 
@@ -543,7 +530,7 @@ class SvcMonitor(object):
             if 'DEFAULTS' in config.sections():
                 try:
                     collectors = config.get('DEFAULTS', 'collectors')
-                    if isinstance(collectors, basestring):
+                    if isinstance(collectors, str):
                         collectors = collectors.split()
                         new_chksum = hashlib.md5("".join(collectors).encode()).hexdigest()
                         if new_chksum != self._chksum:
@@ -891,9 +878,9 @@ def parse_args(args_str):
     args = parser.parse_args(remaining_argv)
     args._conf_file = saved_conf_file
     args.config_sections = config
-    if isinstance(args.cassandra_server_list, basestring):
+    if isinstance(args.cassandra_server_list, str):
         args.cassandra_server_list = args.cassandra_server_list.split()
-    if isinstance(args.collectors, basestring):
+    if isinstance(args.collectors, str):
         args.collectors = args.collectors.split()
     if args.region_name and args.region_name.lower() == 'none':
         args.region_name = None
