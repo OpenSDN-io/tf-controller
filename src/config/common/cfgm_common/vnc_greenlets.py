@@ -3,11 +3,8 @@ from __future__ import unicode_literals
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 
-import os
-import socket
 from pysandesh.sandesh_base import *
 from pysandesh.sandesh_logger import *
-from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 
 from cfgm_common.uve.greenlets import ttypes as sandesh
 import gc

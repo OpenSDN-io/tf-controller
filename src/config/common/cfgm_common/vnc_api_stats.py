@@ -4,8 +4,6 @@ from __future__ import unicode_literals
 # Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import object
-from builtins import str
 from datetime import datetime
 
 import bottle

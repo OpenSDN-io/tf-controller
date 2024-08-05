@@ -10,10 +10,6 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 
-from builtins import str
-from builtins import range
-from past.builtins import basestring
-from builtins import object
 from gevent import monkey
 monkey.patch_all()
 from gevent import hub
@@ -24,9 +20,6 @@ import gevent.pywsgi
 gevent.pywsgi.MAX_REQUEST_LINE = 65535
 
 import sys
-if sys.version_info[0] < 3:
-    reload(sys)
-    sys.setdefaultencoding('UTF8')
 from six import string_types
 from six.moves import reload_module
 from six.moves.configparser import SafeConfigParser, NoOptionError
@@ -60,24 +53,7 @@ from cfgm_common import SG_NO_RULE_FQ_NAME
 from cfgm_common.uve.vnc_api.ttypes import VncApiLatencyStats, VncApiLatencyStatsLog
 
 import time
-import requests
-import xml.etree.ElementTree as etree
-from functools import partial
 
-"""
-Following is needed to silence warnings on every request when keystone
-    auth_token middleware + Sandesh is used. Keystone or Sandesh alone
-    do not produce these warnings.
-
-Exception AttributeError: AttributeError(
-    "'_DummyThread' object has no attribute '_Thread__block'",)
-    in <module 'threading' from '/usr/lib64/python2.7/threading.pyc'> ignored
-
-See http://stackoverflow.com/questions/13193278/understand-python-threading-bug
-for more information.
-"""
-import threading
-threading._DummyThread._Thread__stop = lambda x: 42
 
 CONFIG_VERSION = '1.0'
 
@@ -518,7 +494,7 @@ class VncApiServer(object):
                     raise cfgm_common.exceptions.HttpError(400, err_msg)
 
                 for device_id in device_list:
-                    if not isinstance(device_id, basestring):
+                    if not isinstance(device_id, str):
                         err_msg = "malformed request param: device_list, " \
                                   "expects list of string device_uuids," \
                                   " found device_uuid %s" % device_id
@@ -790,7 +766,7 @@ class VncApiServer(object):
         elif xsd_type == 'string' and simple_type == 'ServiceInterfaceType':
             cls._validate_serviceinterface_type(value)
         else:
-            if not isinstance(value, basestring):
+            if not isinstance(value, str):
                 raise ValueError('%s: string value expected instead of %s' %(
                     type_name, value))
             if restrictions and value not in restrictions:
