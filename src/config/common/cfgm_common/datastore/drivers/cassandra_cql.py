@@ -438,27 +438,17 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
 
         self.options.logger("CassandraDriverCQL.__init__Cluster init KS",
                             level=SandeshLevel.SYS_NOTICE)
-        existing_keyspaces = self._get_keyspaces()
+        self.existing_keyspaces = self._get_keyspaces()
         # Initializes RW keyspaces
         for ks, cf_dict in self.options.rw_keyspaces.items():
             keyspace = self.keyspace(ks)
-            if self.options.reset_config:
-                self.safe_drop_keyspace(keyspace)
-            if keyspace not in existing_keyspaces:
-                self.safe_create_keyspace(keyspace)
-                self.ensure_keyspace_replication(keyspace)
+            self._cassandra_ensure_keyspace(keyspace)
 
-        self.options.logger("CassandraDriverCQL.__init__Cluster wait for "
-                            "KS = {}".format(self.options.ro_keyspaces),
-                            level=SandeshLevel.SYS_NOTICE)
         # Ensures RO keyspaces are initialized
-        while not self.are_keyspaces_ready(self.options.ro_keyspaces):
-            self.options.logger("waiting for keyspaces '{}' to be ready "
-                                "before to continue...".format(
-                                    self.options.ro_keyspaces),
-                                level=SandeshLevel.SYS_INFO)
-            # Let's a chance to an other greenthread to be scheduled.
-            gevent.sleep(1)
+        for ks, _ in self.options.ro_keyspaces.items():
+            keyspace = self.keyspace(ks)
+            self._cassandra_wait_for_keyspace(keyspace)
+
         self.options.logger("CassandraDriverCQL.__init__Cluster KS are ready",
                             level=SandeshLevel.SYS_NOTICE)
 
@@ -617,6 +607,24 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
         if rows:
             temp_tables = [str(row[0]) for row in rows]
             tables_list += temp_tables
+
+    def _cassandra_ensure_keyspace(self, keyspace_name):
+        if self.options.reset_config and \
+                keyspace_name in self.existing_keyspaces:
+            self.safe_drop_keyspace(keyspace_name)
+        if self.options.reset_config or \
+                keyspace_name not in self.existing_keyspaces:
+            self.safe_create_keyspace(keyspace_name)
+            self.ensure_keyspace_replication(keyspace_name)
+
+    def _cassandra_wait_for_keyspace(self, keyspace):
+        # Wait for keyspace to be created by another process
+        while keyspace not in self.existing_keyspaces:
+            gevent.sleep(1)
+            self.options.logger(
+                "Waiting for keyspace %s to be created" % keyspace,
+                level=SandeshLevel.SYS_NOTICE)
+            self.existing_keyspaces = self._get_keyspaces()
 
     def safe_create_keyspace(self, keyspace, props=REPLICATION_PROPERTIES):
         """Create keyspace if does not already exist."""
