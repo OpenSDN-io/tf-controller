@@ -228,7 +228,7 @@ class TestRouteTarget(STTestCase, VerifyRouteTarget):
 
         # create node in ZK
         zkc.create_node(node_collision_path,
-                        "6a77156f-e062-4d6b-b228-05a173b612e3")
+                        b"6a77156f-e062-4d6b-b228-05a173b612e3")
 
         # is colliding node present
         rts = zkc.get_children(rt_path)
