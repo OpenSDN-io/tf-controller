@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from future.utils import native_str
 import os
 import gevent
 import logging
@@ -78,7 +77,7 @@ class IndexAllocator(object):
 
         self._zookeeper_client = zookeeper_client
         self._path = path
-        self._in_use = bitarray(native_str('0'))
+        self._in_use = bitarray('0')
         self._reverse = reverse
         for idx in self._zookeeper_client.get_children(path):
             idx_int = self._get_bit_from_zk_index(int(idx))
@@ -165,7 +164,7 @@ class IndexAllocator(object):
             for alloc in alloc_list:
                 size -= alloc['end'] - alloc['start'] + 1
                 if size < 0:
-                    return alloc['end']+size + 1
+                    return alloc['end'] + size + 1
 
         raise ResourceExhaustionError(
             'Cannot get zk index from bit %s' % (idx))
@@ -589,7 +588,9 @@ class ZookeeperClient(object):
         try:
             if value is None:
                 value = uuid.uuid4()
-            bvalue = value.encode() if isinstance(value, str) else value
+            # IndexAllocator works with int type and code may pass int type here
+            # but the same code reads it as a string after
+            bvalue = str(value).encode() if not isinstance(value, bytes) else value
             retry = self._retry.copy()
             retry(self._zk_client.create, path, bvalue,
                   ephemeral=ephemeral, makepath=True)
@@ -609,10 +610,9 @@ class ZookeeperClient(object):
     # end delete_node
 
     def update_node(self, path, value):
-        if isinstance(value, str):
-            value = value.encode()
+        bvalue = str(value).encode() if not isinstance(value, bytes) else value
         retry = self._retry.copy()
-        retry(self._zk_client.set, path, value)
+        retry(self._zk_client.set, path, bvalue)
     # end update_node
 
     def read_node(self, path, include_timestamp=False):
@@ -621,11 +621,9 @@ class ZookeeperClient(object):
             value = retry(self._zk_client.get, path)
             if value is None:
                 return None
-            if isinstance(value[0], bytes):
-                value = (value[0].decode(), value[1])
             if include_timestamp:
-                return value
-            return value[0]
+                return (value[0].decode(), value[1])
+            return value[0].decode()
         except kazoo.exceptions.NoNodeError:
             return None
     # end read_node
