@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 #Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
 #

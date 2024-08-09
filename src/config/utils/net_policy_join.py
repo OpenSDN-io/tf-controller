@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 """
 net_policy_join.py [options] net1_uuid net2_uuid
 
