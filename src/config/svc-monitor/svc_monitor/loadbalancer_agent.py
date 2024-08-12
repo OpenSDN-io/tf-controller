@@ -1,11 +1,11 @@
 from __future__ import absolute_import
-from builtins import str
 from vnc_api.vnc_api import *
 
 from cfgm_common import importutils
 from cfgm_common import exceptions as vnc_exc
 from cfgm_common import svc_info
-from cfgm_common import PERMS_RWX, PERMS_NONE, PERMS_RX
+from cfgm_common import PERMS_RWX, PERMS_RX
+import traceback
 
 from .agent import Agent
 from .config_db import ServiceApplianceSM, ServiceApplianceSetSM, \
@@ -142,7 +142,7 @@ class LoadbalancerAgent(Agent):
                     for pool in pools:
                         driver.delete_health_monitor(hm, pool)
             except Exception:
-                pass
+                self._svc_mon.logger.error(traceback.format_exc())
             self._object_db.healthmonitor_remove(hm_id)
         for lb_id, config_data, driver_data in self._object_db.loadbalancer_list():
             if LoadbalancerSM.get(lb_id):
@@ -171,7 +171,7 @@ class LoadbalancerAgent(Agent):
             try:
                 config.remove_section(sas.name)
             except Exception:
-                pass
+                self._svc_mon.logger.error(traceback.format_exc())
             config.add_section(sas.name)
             for kvp in sas.kvpairs or []:
                 config.set(sas.name, kvp['key'], kvp['value'])
@@ -253,7 +253,7 @@ class LoadbalancerAgent(Agent):
             else:
                 driver.update_pool(pool.last_sent, p)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         if p['loadbalancer_version'] == 'v1':
             self._object_db.pool_config_insert(p['id'], p)
         return p
@@ -268,7 +268,7 @@ class LoadbalancerAgent(Agent):
             elif m != member.last_sent:
                 driver.update_member(member.last_sent, m)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         return m
     # end loadbalancer_member_add
 
@@ -282,7 +282,7 @@ class LoadbalancerAgent(Agent):
             elif v != vip.last_sent:
                 driver.update_vip(vip.last_sent, v)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         return v
     # end  virtual_ip_add
 
@@ -292,7 +292,7 @@ class LoadbalancerAgent(Agent):
         try:
             driver.delete_vip(v)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
     # end delete_virtual_ip
 
     def loadbalancer_add(self, loadbalancer):
@@ -307,7 +307,7 @@ class LoadbalancerAgent(Agent):
             elif lb != loadbalancer.last_sent:
                 driver.update_loadbalancer(loadbalancer.last_sent, lb)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         self._object_db.loadbalancer_config_insert(lb['id'], lb)
         return lb
 
@@ -319,7 +319,7 @@ class LoadbalancerAgent(Agent):
         try:
             driver.suspend_loadbalancer(lb)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         self._object_db.loadbalancer_remove(lb['id'])
         self._delete_driver_for_loadbalancer(lb['id'])
 
@@ -330,7 +330,7 @@ class LoadbalancerAgent(Agent):
         try:
             driver.delete_loadbalancer(lb)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         self._object_db.loadbalancer_remove(lb['id'])
         self._delete_driver_for_loadbalancer(lb['id'])
 
@@ -343,7 +343,7 @@ class LoadbalancerAgent(Agent):
             elif ll != listener.last_sent:
                 driver.update_listener(listener.last_sent, ll)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         return ll
 
     def delete_listener(self, listener):
@@ -353,7 +353,7 @@ class LoadbalancerAgent(Agent):
             if driver is not None:
                 driver.delete_listener(ll)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
 
     def delete_loadbalancer_member(self, obj):
         m = obj.last_sent
@@ -362,7 +362,7 @@ class LoadbalancerAgent(Agent):
             if driver is not None:
                 driver.delete_member(m)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
     # end delete_loadbalancer_member
 
     def delete_loadbalancer_pool(self, obj):
@@ -372,7 +372,7 @@ class LoadbalancerAgent(Agent):
             if driver is not None:
                 driver.delete_pool(p)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         if p['loadbalancer_version'] == 'v1':
             self._object_db.pool_remove(p['id'])
         self._delete_driver_for_pool(p['id'])
@@ -407,7 +407,7 @@ class LoadbalancerAgent(Agent):
                 for pool in update_pools:
                     driver.update_health_monitor(old_hm, hm, pool)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         if hm['provider'] == 'native':
             self._object_db.health_monitor_config_insert(hm['id'], hm)
         return hm
@@ -426,7 +426,7 @@ class LoadbalancerAgent(Agent):
                 for pool in pools:
                     driver.delete_health_monitor(hm, pool)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         self._object_db.healthmonitor_remove(hm['id'])
     # end suspend_loadbalancer_health_monitor
 
@@ -445,7 +445,7 @@ class LoadbalancerAgent(Agent):
                 for pool in pools:
                     driver.delete_health_monitor(hm, pool)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
         self._object_db.healthmonitor_remove(hm['id'])
     # end delete_loadbalancer_health_monitor
 
@@ -716,4 +716,4 @@ class LoadbalancerAgent(Agent):
         try:
             self._send_lb_config_uve(lb_id, deleted)
         except Exception:
-            pass
+            self._svc_mon.logger.error(traceback.format_exc())
