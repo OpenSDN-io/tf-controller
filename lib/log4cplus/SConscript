@@ -10,7 +10,7 @@ else:
   stdoption = 'CXXFLAGS=-std=c++11 '
 
 config_opts = (stdoption + '--prefix=' + str(Dir('#/build')) +
-       ' --enable-static=yes')
+       ' --enable-static=yes --enable-thread-pool=no  --enable-threads=yes')
 
 cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
        '/configure' + ' ' + config_opts + '; make clean; make; make install)')
@@ -18,7 +18,7 @@ cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
 version = '.9.0.1'
 libs = [ str(File('#/build/lib/liblog4cplus' + env['LIBSUFFIX'])) ]
 shlibs = [ str(File('#/build/lib/liblog4cplus-2.1' + env['SHLIBSUFFIX'] +
-                    version)) ]
+                    version)), str(File('#/build/lib/liblog4cplus' + env['SHLIBSUFFIX'])) ]
 
 headers = [
     '#/build/include/log4cplus/appender.h',
