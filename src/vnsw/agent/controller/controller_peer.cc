@@ -2385,6 +2385,13 @@ bool AgentXmppChannel::ControllerSendV4V6UnicastRouteCommon(AgentRoute *route,
                              Agent::RouteTableType type,
                              const EcmpLoadBalance &ecmp_load_balance,
                              uint32_t native_vrf_id) {
+    if (route->vrf()) {
+        const std::string vrf_name = route->vrf()->GetName();
+        if (VxlanRoutingManager::IsVxlanAvailable(agent_) &&
+            VxlanRoutingManager::IsRoutingVrf(vrf_name, agent_)) {
+            return true;
+        }
+    }
 
     static int id = 0;
     ItemType item;
