@@ -21,11 +21,10 @@ TunnelNHKey* VxlanRoutingManager::AllocateTunnelNextHopKey(
     const Ip4Address rtr_dip = dip.to_v4();
 
     const std::vector<IpAddress> nh_addresses(1, dip);
-    bool is_ext_type5 = IsExternalType5(nh_addresses, agent_);
     bool is_zero_mac = dmac.IsZero();
 
     MacAddress rtr_dmac;
-    if (is_ext_type5 && !is_zero_mac) {
+    if (!is_zero_mac) {
         rtr_dmac = dmac;
     } else {
         rtr_dmac = NbComputeMac(rtr_dip, agent_);

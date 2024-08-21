@@ -1,9 +1,4 @@
 template <class ItType>
-bool VxlanRoutingManager::IsExternalType5(ItType *item, const Agent *agent) {
-    return IsExternalType5(ItemNexthopsToVector(item), agent);
-}
-
-template <class ItType>
 std::vector<IpAddress> VxlanRoutingManager::ItemNexthopsToVector(ItType *item) {
     std::vector<IpAddress> nh_addr;
     const uint32_t n_items = item->entry.next_hops.next_hop.size();
