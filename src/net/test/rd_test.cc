@@ -20,14 +20,14 @@ TEST_F(RouteDistinguisherTest, ConstructorType1_0) {
 }
 
 TEST_F(RouteDistinguisherTest, ConstructorType1_1) {
-    RouteDistinguisher rd(5, 0x01020304, 1);
+    RouteDistinguisher rd(static_cast<uint16_t>(5), 0x01020304, 1);
     EXPECT_FALSE(rd.IsZero());
     EXPECT_EQ(1, rd.Type());
     EXPECT_EQ("0.5.3.4:1", rd.ToString());
 }
 
 TEST_F(RouteDistinguisherTest, ConstructorType1_2) {
-    RouteDistinguisher rd(1000, 0x01020304, 1);
+    RouteDistinguisher rd(static_cast<uint16_t>(1000), 0x01020304, 1);
     EXPECT_FALSE(rd.IsZero());
     EXPECT_EQ(1, rd.Type());
     EXPECT_EQ("3.232.3.4:1", rd.ToString());

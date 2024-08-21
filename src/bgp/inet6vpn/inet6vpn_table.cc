@@ -6,9 +6,11 @@
 
 #include "bgp/ipeer.h"
 #include "bgp/bgp_server.h"
+#include "bgp/bgp_peer.h"
 #include "bgp/bgp_update.h"
 #include "bgp/inet6/inet6_table.h"
 #include "bgp/routing-instance/routing_instance.h"
+#include "net/rd.h"
 
 Inet6VpnTable::Inet6VpnTable(DB *db, const std::string &name)
     : BgpTable(db, name) {
@@ -57,12 +59,29 @@ DBTableBase *Inet6VpnTable::CreateTable(DB *db, const std::string &name) {
 static RouteDistinguisher GenerateDistinguisher(
         const BgpTable *src_table, const BgpPath *src_path) {
     const RouteDistinguisher &source_rd = src_path->GetAttr()->source_rd();
-    if (!source_rd.IsZero())
+    if (!src_path->GetPeer() || !(src_path->GetPeer()->IsRouterTypeBGPaaS())){
+        if (!source_rd.IsZero())
         return source_rd;
 
-    assert(!src_path->GetPeer() || !src_path->GetPeer()->IsXmppPeer());
-    const RoutingInstance *src_instance = src_table->routing_instance();
-    return *src_instance->GetRD();
+        assert(!src_path->GetPeer() || !src_path->GetPeer()->IsXmppPeer());
+        const RoutingInstance *src_instance = src_table->routing_instance();
+        return *src_instance->GetRD();
+    }
+    uint16_t peer_port_id = 0;
+    as_t asn_num = src_path->GetAttr()->neighbor_as();
+
+    std::string ri_name = src_table->routing_instance()->name();
+    for (const BgpPeer *peer = src_path->GetPeer()->server()->FindNextPeer(); peer != NULL;
+         peer = src_path->GetPeer()->server()->FindNextPeer(peer->peer_name())) {
+            if ((peer->peer_name().find(ri_name)!= std::string::npos)&&
+            (peer->peer_address_string().find(src_path->GetPeer()->ToString())!= std::string::npos)){
+                peer_port_id = peer->peer_port();
+                asn_num = peer->peer_as();
+                break;
+            }
+    }
+    RouteDistinguisher new_source_rd = RouteDistinguisher(true, asn_num, peer_port_id);
+    return new_source_rd;
 }
 
 BgpRoute *Inet6VpnTable::RouteReplicate(BgpServer *server, BgpTable *src_table,
@@ -88,9 +107,12 @@ BgpRoute *Inet6VpnTable::RouteReplicate(BgpServer *server, BgpTable *src_table,
         dest_route->ClearDelete();
     }
 
+    BgpAttrDB *attr_db = server->attr_db();
+
     BgpAttrPtr new_attr =
         server->attr_db()->ReplaceExtCommunityAndLocate(src_path->GetAttr(),
                                                         community);
+    new_attr = attr_db->ReplaceSourceRdAndLocate(new_attr.get(), rd);
 
     // Check whether there's already a path with the given peer and path id.
     BgpPath *dest_path =

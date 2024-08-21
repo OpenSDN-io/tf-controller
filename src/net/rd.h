@@ -25,6 +25,7 @@ public:
     RouteDistinguisher(uint32_t address, uint16_t vrf_id);
     RouteDistinguisher(uint16_t cluster_seed, uint32_t address,
                        uint16_t vrf_id);
+    RouteDistinguisher(bool is_bgpaas, uint32_t asn, uint16_t vmi_index);
     RouteDistinguisher(const RouteDistinguisher &rhs) {
         memcpy(data_, rhs.data_, kSize);
     }
