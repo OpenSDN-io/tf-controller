@@ -769,21 +769,6 @@ private:
     void AdvertiseBGPaaSRoute(const IpAddress& prefix_ip, uint32_t prefix_len,
         const AgentPath* path, EvpnAgentRouteTable *evpn_table);
 
-    /// @brief Checks whether IP prefixes correspond to external
-    /// EVPN Type5 tunnel routes.
-    /// @return true if all nh_addresses points to local comute nodes
-    /// (fabric policy VRF). Otherwise returns false.
-    static bool IsExternalType5(const std::vector<IpAddress>& nh_addreses,
-        const Agent *agent);
-
-    /// @brief Checks whether a route with the given prefix and prefix len
-    /// is available in the given EVPN table and is external.
-    static bool IsExternalType5(EvpnAgentRouteTable *rt_table,
-        const IpAddress& ip_addr,
-        uint32_t plen,
-        uint32_t ethernet_tag,
-        const Peer* peer);
-
     /// @brief Returns the MAC address for the IP of a given
     /// neighbouring compute
     static MacAddress NbComputeMac(const Ip4Address& compute_ip,
@@ -847,11 +832,6 @@ private:
         const AgentPath* path);
 
     /// Templates
-
-    /// @brief Checks whether nexthops in the given autogen item point to
-    /// external network
-    template <class ItType>
-    static bool IsExternalType5(ItType *item, const Agent *agent);
 
     /// @brief Converts item's (EnetItemType for EVPN / ItemType for Inet)
     /// nexthops into the list of IP addresses (IpAddress)
