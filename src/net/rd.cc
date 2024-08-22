@@ -27,6 +27,12 @@ RouteDistinguisher::RouteDistinguisher(uint32_t address, uint16_t vrf_id) {
     put_value(data_ + 6, 2, vrf_id);
 }
 
+RouteDistinguisher::RouteDistinguisher(bool is_bgpaas, uint32_t asn, uint16_t vmi_index) {
+    put_value(data_, 2, Type4ByteASBased);
+    put_value(data_ + 2, 4, asn);
+    put_value(data_ + 6, 2, vmi_index);
+}
+
 RouteDistinguisher::RouteDistinguisher(uint16_t cluster_seed, uint32_t address,
                                        uint16_t vrf_id) {
     put_value(data_, 2, TypeIpAddressBased);

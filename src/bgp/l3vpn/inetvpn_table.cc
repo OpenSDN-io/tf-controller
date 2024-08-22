@@ -8,7 +8,9 @@
 #include "bgp/bgp_server.h"
 #include "bgp/bgp_update.h"
 #include "bgp/inet/inet_table.h"
+#include "bgp/bgp_peer.h"
 #include "bgp/routing-instance/routing_instance.h"
+#include "net/rd.h"
 
 using std::unique_ptr;
 using std::string;
@@ -59,12 +61,28 @@ DBTableBase *InetVpnTable::CreateTable(DB *db, const string &name) {
 static RouteDistinguisher GenerateDistinguisher(
         const BgpTable *src_table, const BgpPath *src_path) {
     const RouteDistinguisher &source_rd = src_path->GetAttr()->source_rd();
-    if (!source_rd.IsZero())
+    if (!src_path->GetPeer() || !(src_path->GetPeer()->IsRouterTypeBGPaaS())){
+        if (!source_rd.IsZero())
         return source_rd;
 
-    assert(!src_path->GetPeer() || !src_path->GetPeer()->IsXmppPeer());
-    const RoutingInstance *src_instance = src_table->routing_instance();
-    return *src_instance->GetRD();
+        assert(!src_path->GetPeer() || !src_path->GetPeer()->IsXmppPeer());
+        const RoutingInstance *src_instance = src_table->routing_instance();
+        return *src_instance->GetRD();
+    }
+    boost::system::error_code ec;
+    Ip4Address addr = Ip4Address::from_string(src_path->GetPeer()->ToString(), ec);
+    if ((ec.value() != 0)) {
+        if (!source_rd.IsZero())
+        return source_rd;
+
+        assert(!src_path->GetPeer() || !src_path->GetPeer()->IsXmppPeer());
+        const RoutingInstance *src_instance = src_table->routing_instance();
+        return *src_instance->GetRD();
+    } else {
+        int vrf_id = 0;
+        RouteDistinguisher new_source_rd = RouteDistinguisher(addr.to_ulong(), vrf_id);
+        return new_source_rd;
+    }
 }
 
 BgpRoute *InetVpnTable::RouteReplicate(BgpServer *server,
@@ -92,10 +110,12 @@ BgpRoute *InetVpnTable::RouteReplicate(BgpServer *server,
         dest_route->ClearDelete();
     }
 
+    BgpAttrDB *attr_db = server->attr_db();
+
     BgpAttrPtr new_attr =
         server->attr_db()->ReplaceExtCommunityAndLocate(src_path->GetAttr(),
                                                         community);
-
+    new_attr = attr_db->ReplaceSourceRdAndLocate(new_attr.get(), rd);
     // Check whether there's already a path with the given peer and path id.
     BgpPath *dest_path =
         dest_route->FindSecondaryPath(src_rt, src_path->GetSource(),
