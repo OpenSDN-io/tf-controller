@@ -3,7 +3,7 @@ monkey.patch_all()
 
 import bottle
 import uwsgi
-import api_server
+from . import api_server
 
 
 def get_apiserver():
