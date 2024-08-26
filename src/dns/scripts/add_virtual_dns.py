@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 #Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -9,7 +9,6 @@ standard_library.install_aliases()
 from builtins import object
 import sys
 import argparse
-from six.moves import configparser
 
 from provision_dns import DnsProvisioner
 from requests.exceptions import ConnectionError

@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-from six.moves import configparser
+import configparser
 import logging
 
 import requests
@@ -42,7 +42,7 @@ class KubernetesCert(object):
         self.beta_url = "%s/apis/extensions/v1beta1" % (self.url)
 
     def parse_args(self):
-        config = configparser.SafeConfigParser()
+        config = configparser.ConfigParser(strict=False)
         config.read(self.auth_conf)
 
         self.kubernetes_token = config.get('KUBERNETES', 'kubernetes_token')

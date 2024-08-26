@@ -10,7 +10,7 @@ from gevent import monkey
 monkey.patch_all()
 import sys
 import argparse
-import ConfigParser
+import configparser
 import socket
 import hashlib
 import random
@@ -337,7 +337,7 @@ def parse_args(args_str):
     sandesh_opts = SandeshConfig.get_default_options()
 
     if args.conf_file:
-        config = ConfigParser.SafeConfigParser()
+        config = configparser.ConfigParser(strict=False)
         config.read(args.conf_file)
         defaults.update(dict(config.items("DEFAULTS")))
         if 'KEYSTONE' in config.sections():

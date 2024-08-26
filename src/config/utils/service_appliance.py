@@ -83,7 +83,7 @@ class SAProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
             if 'KEYSTONE' in config.sections():

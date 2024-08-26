@@ -3,9 +3,8 @@
 #
 from __future__ import absolute_import
 
-from builtins import object
-from builtins import str
 import collections
+import configparser
 from pprint import pformat
 
 import bottle
@@ -13,7 +12,6 @@ from cfgm_common import jsonutils as json
 from cfgm_common.utils import CacheContainer
 from future import standard_library
 import six
-from six.moves import configparser
 
 from .neutron_plugin_db import DBInterface
 

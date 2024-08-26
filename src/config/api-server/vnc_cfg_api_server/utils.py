@@ -14,7 +14,7 @@ import argparse
 from ast import literal_eval
 import base64
 from cfgm_common import jsonutils as json
-from six.moves.configparser import SafeConfigParser
+from configparser import ConfigParser
 from six import string_types, PY3
 import vnc_api.gen.resource_xsd
 from . import vnc_quota
@@ -160,7 +160,7 @@ def parse_args(args_str):
     config = None
     saved_conf_file = args.conf_file
     if args.conf_file:
-        config = SafeConfigParser({'admin_token': None}, allow_no_value=True)
+        config = ConfigParser({'admin_token': None}, strict=False, allow_no_value=True)
         config.read(args.conf_file)
         if 'DEFAULTS' in config.sections():
             defaults.update(dict(config.items("DEFAULTS")))

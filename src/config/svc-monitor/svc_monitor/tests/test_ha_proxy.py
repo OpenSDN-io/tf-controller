@@ -4,7 +4,7 @@ from builtins import str
 from builtins import range
 import mock
 from mock import patch
-from six.moves import configparser
+import configparser
 import unittest
 from cfgm_common.vnc_db import DBBase
 from svc_monitor import config_db

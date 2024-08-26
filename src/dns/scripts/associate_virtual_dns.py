@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 #Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -9,9 +9,8 @@ standard_library.install_aliases()
 from builtins import object
 import sys
 import argparse
-from six.moves import configparser
 
-sys.path.insert(1, sys.path[0]+'/../api-venv/lib/python2.7/site-packages')
+sys.path.insert(1, sys.path[0]+'/../api-venv/lib/python3.6/site-packages')
 from vnc_api.vnc_api import *
 from provision_dns import DnsProvisioner
 from requests.exceptions import ConnectionError

@@ -9,7 +9,6 @@ standard_library.install_aliases()
 from builtins import object
 import sys
 import argparse
-import configparser
 
 from requests.exceptions import ConnectionError
 from vnc_api.vnc_api import *

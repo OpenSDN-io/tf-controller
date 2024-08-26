@@ -6,6 +6,7 @@ from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
+import configparser
 import os
 import sys
 import errno
@@ -65,7 +66,7 @@ class ServicePolicyCmd(object):
         if not args.conf_file:
             args.conf_file = '/etc/contrail/contrail-svc-monitor.conf'
 
-        config = ConfigParser.SafeConfigParser()
+        config = configparser.ConfigParser(strict=False)
         ret = config.read([args.conf_file])
         if args.conf_file not in ret:
             print("Error: Unable to read the config file %s" % args.conf_file)

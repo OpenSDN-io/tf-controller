@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-from six.moves import configparser
+import configparser
 import logging
 import requests
 import json
@@ -27,7 +27,7 @@ class CloudstackCertManager(object):
                                               self.cloudstack_api_context)
 
     def parse_args(self):
-        config = configparser.SafeConfigParser()
+        config = configparser.ConfigParser(strict=False)
         config.read(self.auth_conf)
 
         self.cloudstack_api_protocol = config.get('CLOUDSTACK',

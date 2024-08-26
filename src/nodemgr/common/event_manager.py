@@ -2,7 +2,7 @@
 # Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
 #
 
-from six.moves.configparser import NoOptionError, SafeConfigParser
+from configparser import NoOptionError, ConfigParser
 import copy
 import gevent
 import hashlib
@@ -563,7 +563,7 @@ class EventManager(object):
 
     def nodemgr_sighup_handler(self):
         collector_list = list()
-        config = SafeConfigParser()
+        config = ConfigParser(strict=False)
         config.read([self.config.config_file_path])
         if 'COLLECTOR' in config.sections():
             try:

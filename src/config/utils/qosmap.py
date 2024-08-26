@@ -48,7 +48,7 @@ class QosmapProv(object):
         self.scheduling = []
         scheduling = ""
         bandwidth = ""
-        config = configparser.SafeConfigParser()
+        config = configparser.ConfigParser(strict=False)
         config.read([self.conf_file])
         if self._args.interface_list:
             self.ifname_list = self._args.interface_list

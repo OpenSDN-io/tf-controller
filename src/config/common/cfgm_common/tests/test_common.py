@@ -12,8 +12,8 @@ from past.builtins import basestring
 from builtins import object
 from future.utils import native_str
 import sys
-from six.moves.configparser import RawConfigParser
-from six.moves.configparser import DuplicateSectionError
+from configparser import RawConfigParser
+from configparser import DuplicateSectionError
 import gevent.monkey
 gevent.monkey.patch_all()
 import os
