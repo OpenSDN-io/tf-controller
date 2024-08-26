@@ -22,7 +22,7 @@ gevent.pywsgi.MAX_REQUEST_LINE = 65535
 import sys
 from six import string_types
 from six.moves import reload_module
-from six.moves.configparser import SafeConfigParser, NoOptionError
+from configparser import ConfigParser, NoOptionError
 import functools
 import hashlib
 import itertools
@@ -3463,7 +3463,7 @@ class VncApiServer(object):
     # sighup handler for applying new configs
     def sighup_handler(self):
         if self._args.conf_file:
-            config = SafeConfigParser()
+            config = ConfigParser(strict=False)
             config.read(self._args.conf_file)
             if 'DEFAULTS' in config.sections():
                 try:

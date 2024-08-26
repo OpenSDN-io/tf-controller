@@ -8,10 +8,8 @@ Physical router configuration implementation.
 This file contains implementation of managing physical router configuration
 based on intent configuration.
 """
-from __future__ import absolute_import
-from future import standard_library # noqa
-standard_library.install_aliases() # noqa
 
+from configparser import ConfigParser, NoOptionError
 import hashlib # noqa
 import random
 import time
@@ -26,7 +24,6 @@ from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
 from pysandesh.gen_py.process_info.ttypes import ConnectionType as ConnType
 # Import kazoo.client before monkey patching
 import requests
-from six.moves.configparser import NoOptionError, SafeConfigParser
 from vnc_api.vnc_api import VncApi
 
 from .ansible_base import AnsibleBase
@@ -555,7 +552,7 @@ class DeviceManager(object):
     # sighup handler for applying new configs
     def sighup_handler(self):
         if self._args.conf_file:
-            config = SafeConfigParser()
+            config = ConfigParser(strict=False)
             config.read(self._args.conf_file)
             if 'DEFAULTS' in config.sections():
                 try:

@@ -9,7 +9,7 @@ import sys
 
 import argparse
 from enum import Enum
-from six.moves import configparser
+import configparser
 from six import string_types
 
 from pysandesh.sandesh_base import Sandesh, SandeshConfig
@@ -161,7 +161,7 @@ def parse_args(args_str=None):
         'auth_tenant': 'admin',
     }
 
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(strict=False)
     if args.config_file:
         config.read(args.config_file)
         if 'VNC' in config.sections():

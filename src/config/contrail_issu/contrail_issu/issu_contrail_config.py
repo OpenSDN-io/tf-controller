@@ -7,7 +7,7 @@ import sys
 if sys.version_info[0] < 3:
     reload(sys) # noqa
     sys.setdefaultencoding('UTF8')
-from six.moves import configparser
+import configparser
 from six import string_types
 import argparse
 import logging
@@ -132,7 +132,7 @@ def parse_args(args_str=None):
         help="Specify config file", metavar="FILE")
     args, remaining_argv = conf_parser.parse_known_args(args_str.split())
     if args.conf_file:
-        config = configparser.SafeConfigParser()
+        config = configparser.ConfigParser(strict=False)
         config.read(args.conf_file)
         defaults.update(dict(config.items("DEFAULTS")))
 

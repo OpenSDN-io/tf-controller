@@ -7,6 +7,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 from builtins import object
+import configparser
 import os
 import sys
 import errno
@@ -52,7 +53,7 @@ class ContrailConfigCmd(object):
 
         args.conf_file = '/etc/contrail/api_server.conf'
         if args.conf_file:
-            config = ConfigParser.SafeConfigParser()
+            config = configparser.ConfigParser()
             config.read([args.conf_file])
             global_defaults.update(dict(config.items("DEFAULTS")))
 

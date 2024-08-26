@@ -5,7 +5,6 @@
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import object
 import sys
 import argparse
 import configparser
@@ -62,7 +61,7 @@ class MxProvisioner(object):
         }
 
         if args.conf_file:
-            config = configparser.SafeConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read([args.conf_file])
             defaults.update(dict(config.items("DEFAULTS")))
 

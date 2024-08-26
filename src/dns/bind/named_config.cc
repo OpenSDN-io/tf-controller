@@ -144,7 +144,7 @@ void NamedConfig::UpdateNamedConf(const VirtualDnsConfig *updated_vdns) {
     } else {
         std::stringstream str;
         // execute the helper script to apply named config
-        str << "python /etc/contrail/dns/applynamedconfig.py";
+        str << "python3 /etc/contrail/dns/applynamedconfig.py";
         int res = system(str.str().c_str());
         if (res) {
             LOG(ERROR, "Applying named configuration failed");

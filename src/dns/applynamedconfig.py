@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 #
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
@@ -16,11 +17,9 @@ o contrail-named-base.conf will be merged with contrail-named.conf
 
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
-import sys
 import os
 import subprocess
-from six.moves import configparser
+import configparser
 import logging
 
 def setup_logger(log_file):
@@ -41,7 +40,7 @@ def parse_own_config():
     config = {
         'log_file': '/var/log/contrail/contrail-dns.log',
     }
-    file_config = configparser.SafeConfigParser()
+    file_config = configparser.ConfigParser(strict=False)
     file_config.read('/etc/contrail/contrail-dns.conf')
     config.update(dict(file_config.items("DEFAULT")))
     return config
@@ -68,7 +67,7 @@ def parse_contrail_dns_conf():
     subprocess.call(["sed -i 's/[;#].*$//g' /etc/contrail/dns/contrail-dns-temp.conf"], shell=True)
 
     # parse contrail-dns.conf
-    dns_config = configparser.SafeConfigParser()
+    dns_config = configparser.ConfigParser(strict=False)
     dns_config.read('/etc/contrail/dns/contrail-dns-temp.conf')
 
     # remove the temp file

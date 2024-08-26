@@ -9,7 +9,7 @@ standard_library.install_aliases()
 import os
 import sys
 import argparse
-from six.moves import configparser
+import configparser
 import platform
 import re
 import subprocess
@@ -120,7 +120,7 @@ class TorAgentBaseCleanup(ContrailSetup):
 
     def delete_torid_config(self, tor_id):
         tor_conf_file = '/etc/contrail/contrail-tor-agent-' + tor_id + '.conf'
-        config = configparser.SafeConfigParser()
+        config = configparser.ConfigParser(strict=False)
         config.read(tor_conf_file)
         self.tor_name = config.get('TOR', 'tor_name')
         self.tor_vendor_name = config.get('TOR', 'tor_vendor_name')

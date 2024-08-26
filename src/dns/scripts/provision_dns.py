@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 #Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
@@ -11,7 +11,7 @@ import re
 import sys
 import socket
 
-sys.path.insert(1, sys.path[0]+'/../api-venv/lib/python2.7/site-packages')
+sys.path.insert(1, sys.path[0]+'/../api-venv/lib/python3.6/site-packages')
 from vnc_api.vnc_api import *
 
 class DnsProvisioner(object):

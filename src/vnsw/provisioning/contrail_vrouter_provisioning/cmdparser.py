@@ -11,7 +11,7 @@ import re
 import ast
 import logging
 import argparse
-from six.moves import configparser
+import configparser
 
 log = logging.getLogger('contrail_vrouter_provisioning.cmdparser')
 
@@ -106,7 +106,7 @@ class ComputeArgsParser(object):
                 os.makedirs(conf_dir)
             with open(conf_file, 'w') as fd:
                 fd.write('')
-        self.config = configparser.SafeConfigParser()
+        self.config = configparser.ConfigParser(strict=False)
         self.config.read([conf_file])
 
     def evaluate(self, data):

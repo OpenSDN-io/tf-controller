@@ -44,7 +44,9 @@ from pysandesh.sandesh_base import Sandesh, SandeshConfig
 import requests
 from six import string_types
 from six.moves import reload_module
-from six.moves.configparser import NoOptionError, SafeConfigParser
+
+from configparser import ConfigParser, NoOptionError
+
 from vnc_api.vnc_api import VncApi
 
 from .db import SchemaTransformerDB
@@ -557,7 +559,7 @@ class SchemaTransformer(object):
 
     def sighup_handler(self):
         if self._conf_file:
-            config = SafeConfigParser()
+            config = ConfigParser(strict=False)
             config.read(self._conf_file)
             if 'DEFAULTS' in config.sections():
                 try:
@@ -656,7 +658,7 @@ def parse_args(args_str):
 
     saved_conf_file = args.conf_file
     if args.conf_file:
-        config = SafeConfigParser()
+        config = ConfigParser(strict=False)
         config.read(args.conf_file)
         defaults.update(dict(config.items("DEFAULTS")))
         if ('SECURITY' in config.sections() and

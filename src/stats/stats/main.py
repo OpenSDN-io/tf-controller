@@ -1,6 +1,7 @@
 """The main module for statistics sending package."""
 import logging
 from argparse import ArgumentParser
+from configparser import ConfigParser
 from datetime import datetime, timedelta
 from json import dump, dumps, load
 from os import getenv
@@ -11,8 +12,6 @@ except ImportError:
     from urllib2 import HTTPError, URLError, Request, urlopen
 from time import sleep
 from traceback import format_exc
-
-from six.moves.configparser import ConfigParser
 
 from vnc_api.vnc_api import VncApi
 
@@ -27,7 +26,7 @@ def parse_args():
 
 def parse_config(args):
     """Parse configuration file for stats service."""
-    config = ConfigParser()
+    config = ConfigParser(strict=False)
     config.read(args.config_file)
     log_file = config.get("DEFAULT", "log_file")
     log_lev_map = {"SYS_EMERG": logging.CRITICAL,

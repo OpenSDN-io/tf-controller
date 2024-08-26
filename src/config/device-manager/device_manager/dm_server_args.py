@@ -6,10 +6,10 @@ from future import standard_library  # noqa
 standard_library.install_aliases()  # noqa
 
 import argparse # noqa
+from configparser import ConfigParser
 
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from pysandesh.sandesh_base import Sandesh, SandeshConfig
-from six.moves.configparser import SafeConfigParser
 
 
 def check_maxbytes_range(arg):
@@ -266,7 +266,7 @@ def parse_args(args_str):
 
     saved_conf_file = args.conf_file
     if args.conf_file:
-        config = SafeConfigParser()
+        config = ConfigParser(strict=False)
         config.read(args.conf_file)
         defaults.update(dict(config.items("DEFAULTS")))
         if ('SECURITY' in config.sections() and

@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object
-from six.moves import configparser
+import configparser
 import logging
 
 from .tls import TLS
@@ -51,7 +51,7 @@ class BarbicanCertManager(object):
         return self.session
 
     def parse_args(self, auth_conf=None):
-        config = configparser.SafeConfigParser()
+        config = configparser.ConfigParser(strict=False)
         if (auth_conf):
             self.auth_conf = auth_conf
         else:

@@ -7,7 +7,7 @@ import os
 import sys
 import time
 
-from six.moves.configparser import SafeConfigParser
+from configparser import ConfigParser
 from vnc_api import vnc_api
 
 __version__ = "1.2"
@@ -433,7 +433,7 @@ class FabricVPGValidator(object):
 
 
 def _parse_args(args_str):
-    keystone_auth_parser = SafeConfigParser()
+    keystone_auth_parser = ConfigParser(strict=False)
     conf_file = keystone_auth_parser.read(
         '/etc/contrail/contrail-keystone-auth.conf')
 

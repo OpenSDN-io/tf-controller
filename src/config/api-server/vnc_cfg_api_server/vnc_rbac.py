@@ -13,7 +13,7 @@ import uuid
 import string
 import re
 import copy
-from six.moves.configparser import SafeConfigParser
+from configparser import ConfigParser
 from .provision_defaults import *
 from cfgm_common.exceptions import *
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
@@ -44,7 +44,7 @@ class VncRbac(object):
         return id_perms.get('user_visible', True) is not False or is_admin
 
     def read_default_rbac_rules(self, conf_file):
-        config = SafeConfigParser()
+        config = ConfigParser(strict=False)
         config.read(conf_file)
         raw_rules = {}
         if 'default-domain' in config.sections():

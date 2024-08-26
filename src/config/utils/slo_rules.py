@@ -10,7 +10,6 @@ from builtins import str
 from builtins import object
 import sys
 import argparse
-import configparser
 import json
 
 from requests.exceptions import ConnectionError

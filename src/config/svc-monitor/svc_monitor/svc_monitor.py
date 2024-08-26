@@ -15,7 +15,7 @@ monkey.patch_all(thread=not 'unittest' in sys.modules)
 from gevent.signal import signal as gevent_signal
 from cfgm_common.zkclient import ZookeeperClient
 from six import StringIO
-from six.moves import configparser
+import configparser
 import requests
 import argparse
 import signal
@@ -525,7 +525,7 @@ class SvcMonitor(object):
 
     def sighup_handler(self):
         if self._conf_file:
-            config = configparser.ConfigParser()
+            config = configparser.ConfigParser(strict=False)
             config.read(self._conf_file)
             if 'DEFAULTS' in config.sections():
                 try:
@@ -758,7 +758,7 @@ def parse_args(args_str):
     sandeshopts = SandeshConfig.get_default_options()
 
     saved_conf_file = args.conf_file
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(strict=False)
     if args.conf_file:
         config.read(args.conf_file)
         defaults.update(dict(config.items("DEFAULTS")))
