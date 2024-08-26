@@ -698,7 +698,8 @@ class LoadbalancerAgent(Agent):
                 uve_lb_pool = LoadbalancerConfig()
                 for member_id in pool.members:
                     member = LoadbalancerMemberSM.get(member_id)
-                    members.append(member.uuid)
+                    if member:
+                        members.append(member.uuid)
                 uve_lb_pool.member_uuid = members
                 uve_lb.pool[pool_uuid] = uve_lb_pool
         if pool_found == True:
@@ -710,7 +711,6 @@ class LoadbalancerAgent(Agent):
             uve_lb.pool = {}
             uve_trace = UveLoadbalancerConfigTrace(data=uve_lb, sandesh=sandesh)
             uve_trace.send(sandesh=sandesh)
-        return
 
     def send_lb_config_uve(self, lb_id, deleted):
         try:

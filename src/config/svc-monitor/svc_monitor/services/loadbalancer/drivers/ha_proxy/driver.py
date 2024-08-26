@@ -51,7 +51,9 @@ class OpencontrailLoadbalancerDriver(
                 return
 
     def _get_interface_address(self, vmi):
-        for iip_id in  vmi.instance_ips:
+        if not vmi:
+            return None
+        for iip_id in vmi.instance_ips:
             instance_ip = InstanceIpSM.get(iip_id)
             return instance_ip.address
         return None
