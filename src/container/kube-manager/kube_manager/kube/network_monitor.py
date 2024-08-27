@@ -51,16 +51,7 @@ class NetworkMonitor(KubeMonitor):
                 resource_name='', body_params=network_crd_body)
             if not resp:
                 return
-            msg = ""
-            try:
-                while True:
-                    line = next(resp)
-                    if not line:
-                        break
-                    msg += line.decode()
-            except StopIteration:
-                pass
-            self.logger.debug("%s - Creating Network CRD response - %s" % (self.name, msg))
+            self.logger.debug("%s - Creating Network CRD response - %s" % (self.name, resp))
 
     def create_network_crd_yaml(self):
         api_group = self.k8s_api_resources[self.crd_resource_type]['group']

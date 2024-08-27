@@ -1,9 +1,6 @@
 from __future__ import absolute_import
-from builtins import str
-from builtins import range
 from svc_monitor.config_db import *
 from os.path import dirname, exists, join
-import logging
 import yaml
 
 try:
@@ -198,7 +195,7 @@ def set_v1_frontend_backend(pool, custom_attr_dict, custom_attrs):
         'mode %s' % PROTO_MAP_V1[vip.params['protocol']],
     ]
 
-    if 'connection_limit' in vip.params and vip.params['connection_limit'] > 0:
+    if vip.params.get('connection_limit') and vip.params['connection_limit'] > 0:
          lconf.append('maxconn %d' % vip.params['connection_limit'])
 
     if vip.params['protocol'] == PROTO_HTTP or \
@@ -301,7 +298,7 @@ def set_v2_frontend_backend(lb, custom_attr_dict, custom_attrs):
             'mode %s' % PROTO_MAP_V2[ll.params['protocol']],
         ]
 
-        if 'connection_limit' in ll.params and ll.params['connection_limit'] > 0:
+        if ll.params.get('connection_limit') and ll.params['connection_limit'] > 0:
             conf.append('maxconn %d' % ll.params['connection_limit'])
 
         if ll.params['protocol'] == PROTO_HTTP:

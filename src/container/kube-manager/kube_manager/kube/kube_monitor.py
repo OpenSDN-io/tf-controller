@@ -7,11 +7,9 @@ import socket
 import time
 import sys
 from datetime import datetime
-from six import StringIO
 from requests.adapters import HTTPAdapter
 import ssl
-
-from cfgm_common.utils import cgitb_hook
+import traceback
 
 
 def create_custom_ssl_context():
@@ -138,25 +136,21 @@ class KubeMonitor(object):
                 self.base_url,
                 headers=self.headers,
                 verify=self.verify)
-            try:
-                resp.raise_for_status()
-                json_data = resp.json()['definitions']
-                for key in json_data.keys():
-                    if 'x-kubernetes-group-version-kind' in json_data[key]:
-                        k8s_resource = \
-                            json_data[key]['x-kubernetes-group-version-kind'][0]
-                        kind_lower = k8s_resource['kind'].lower()
-                        if kind_lower in self.k8s_api_resources.keys():
-                            self.k8s_api_resources[kind_lower]['version'] = \
-                                k8s_resource['version']
-                            self.k8s_api_resources[kind_lower]['kind'] = \
-                                k8s_resource['kind']
-                            self.k8s_api_resources[kind_lower]['group'] = \
-                                k8s_resource['group']
-            except Exception:
-                raise
-            finally:
-                resp.close()
+            resp.raise_for_status()
+            json_data = resp.json()['definitions']
+            for key in json_data.keys():
+                if 'x-kubernetes-group-version-kind' not in json_data[key]:
+                    continue
+                k8s_resource = \
+                    json_data[key]['x-kubernetes-group-version-kind'][0]
+                kind_lower = k8s_resource['kind'].lower()
+                if kind_lower in self.k8s_api_resources.keys():
+                    self.k8s_api_resources[kind_lower]['version'] = \
+                        k8s_resource['version']
+                    self.k8s_api_resources[kind_lower]['kind'] = \
+                        k8s_resource['kind']
+                    self.k8s_api_resources[kind_lower]['group'] = \
+                        k8s_resource['group']
 
         # Resource Info corresponding to this monitor.
         self.resource_type = resource_type
@@ -259,27 +253,18 @@ class KubeMonitor(object):
         if resource_version:
             params = {"resourceVersion": resource_version}
         resp = self.session.get(url, headers=self.headers, verify=self.verify, params=params)
-        try:
-            resp.raise_for_status()
-            jdata = resp.json()
-            initial_entries = jdata['items']
-            resource_version = jdata.get('metadata', {}).get('resourceVersion')
-        except Exception:
-            raise
-        finally:
-            resp.close()
+        resp.raise_for_status()
+        jdata = resp.json()
+        initial_entries = jdata['items']
+        resource_version = jdata.get('metadata', {}).get('resourceVersion')
+
         for entry in initial_entries:
             entry_url = self.get_entry_url(entry)
             resp = self.session.get(entry_url, headers=self.headers, verify=self.verify)
-            try:
-                resp.raise_for_status()
-                # Construct the event and initiate processing.
-                event = {'object': resp.json(), 'type': 'ADDED'}
-                self.process_event(event)
-            except Exception:
-                raise
-            finally:
-                resp.close()
+            resp.raise_for_status()
+            # Construct the event and initiate processing.
+            event = {'object': resp.json(), 'type': 'ADDED'}
+            self.process_event(event)
         self.resource_version = resource_version
         self.resource_version_valid = bool(self.resource_version)
         self._log("%s - Done init url=%s, resource_version=%s"
@@ -293,6 +278,7 @@ class KubeMonitor(object):
 
         if self.kube_api_resp:
             self.kube_api_resp.close()
+            self.kube_api_resp = None
 
         # Check if kubernetes api service is up. If not, wait till its up.
         self._is_kube_api_server_alive(wait=True)
@@ -316,11 +302,8 @@ class KubeMonitor(object):
             "%s - Start Watching request %s (%s)(timeout=%s)"
             % (self.name, url, params, self.timeout))
         resp = self.session.get(url, params=params, stream=True, headers=self.headers, verify=self.verify, timeout=self.timeout)
-        try:
-            resp.raise_for_status()
-        except Exception:
-            resp.close()
-            raise
+        resp.raise_for_status()
+
         # Get handle to events for this monitor.
         self.kube_api_resp = resp
         self.kube_api_stream_handle = resp.iter_lines(chunk_size=256, delimiter=b'\n')
@@ -342,12 +325,11 @@ class KubeMonitor(object):
                                               k8s_url_resource, resource_name)
 
         try:
-            resp = self.session.get(url, stream=True, headers=self.headers, verify=self.verify)
+            resp = self.session.get(url, headers=self.headers, verify=self.verify)
             if resp.status_code == 200:
-                json_data = json.loads(resp.raw.read())
-            resp.close()
+                json_data = resp.json()
         except (OSError, IOError, socket.error) as e:
-            self._log("%s - %s" % (self.name, e), level='error')
+            self._log("IOError: %s - %s" % (self.name, e), level='error')
 
         return json_data
 
@@ -370,16 +352,16 @@ class KubeMonitor(object):
                    'Content-Type': 'application/strategic-merge-patch+json'}
         headers.update(self.headers)
 
+        # TODO: check for result - now it's not used
         try:
             resp = self.session.patch(url, headers=headers, data=json.dumps(merge_patch), verify=self.verify)
             if resp.status_code != 200:
-                resp.close()
-                return
+                return None
         except (OSError, IOError, socket.error) as e:
-            self._log("%s - %s" % (self.name, e), level='error')
-            return
+            self._log("IOError: %s - %s" % (self.name, e), level='error')
+            return None
 
-        return resp.iter_lines(chunk_size=10, delimiter=b'\n')
+        return resp.text
 
     def post_resource(self, resource_type, resource_name,
                       body_params, namespace=None, sub_resource_name=None,
@@ -404,13 +386,12 @@ class KubeMonitor(object):
         try:
             resp = self.session.post(url, headers=headers, data=json.dumps(body_params), verify=self.verify)
             if resp.status_code not in [200, 201]:
-                resp.close()
                 return None
         except (OSError, IOError, socket.error) as e:
-            self._log("%s - %s" % (self.name, e), level='error')
+            self._log("IOError: %s - %s" % (self.name, e), level='error')
             return None
 
-        return resp.iter_lines(chunk_size=10, delimiter=b'\n')
+        return resp.text
 
     def _schedule_vnc_sync(self):
         self._last_schedule_time = time.time()
@@ -442,25 +423,24 @@ class KubeMonitor(object):
             line = next(self.kube_api_stream_handle)
             if line:
                 self._process_event(json.loads(line))
+            else:
+                self._log("empty line received")
         except StopIteration:
-            pass
-        except requests.HTTPError as e:
-            if e.response.status_code == 410:
-                # means "Gone response from kube api"
-                # and requires to re-request resources w/o resourceVersion set
-                self._log("%s - invalidate resourceVersion %s (response 410)"
-                          % (self.name, self.resource_version), level='error')
-                self.resource_version_valid = False
+            self._log("stop iteration %s" % self.name)
+        except requests.HTTPError:
+            # means "Gone response from kube api"
+            # and requires to re-request resources w/o resourceVersion set
+            self._log("HTTPError: %s - invalidate resourceVersion %s (response 410)"
+                      % (self.name, self.resource_version), level='error')
+            self.resource_version_valid = False
         except (OSError, IOError, socket.error,
                 requests.exceptions.ChunkedEncodingError) as e:
-            self._log("%s - %s" % (self.name, e), level='error')
+            self._log("IOError %s - %s" % (self.name, e), level='error')
         except ValueError:
             self._log("Invalid JSON data from response stream:%s" % line, level='error')
         except Exception as e:
-            string_buf = StringIO()
-            cgitb_hook(file=string_buf, format="text")
-            err_msg = string_buf.getvalue()
-            self._log("%s - %s - %s" % (self.name, e, err_msg), level='error')
+            self._log("%s - %s" % (self.name, e), level='error')
+            self._log(str(traceback.format_exception(*sys.exc_info())))
 
     def event_callback(self):
         while True:
