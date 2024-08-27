@@ -250,6 +250,7 @@ public:
 
 private:
     friend class ReplicationTest;
+    friend class BGPaaSRDTest;
     friend class RtReplicated;
     friend class TableState;
 
