@@ -94,7 +94,7 @@ public:
         FlowStatsCollector *fsc_;
     };
 
-    FlowStatsCollector(boost::asio::io_service &io, int intvl,
+    FlowStatsCollector(boost::asio::io_context &io, int intvl,
                        uint32_t flow_cache_timeout,
                        AgentUveBase *uve, uint32_t instance_id,
                        FlowAgingTableKey *key,

@@ -86,7 +86,7 @@ VrfRouteImport VrfRouteImport::FromString(const string &str,
     string second(rest.substr(0, pos));
     Ip4Address addr = Ip4Address::from_string(second, ec);
     char *endptr;
-    if (ec.value() != 0) {
+    if (ec.failed()) {
         // Not an IP address.
         if (errorp != NULL) {
             *errorp = make_error_code(boost::system::errc::invalid_argument);

@@ -21,10 +21,10 @@ class Icmpv6ErrorProto : public Proto {
         uint32_t interface_errors;
     };
 
-    Icmpv6ErrorProto(Agent *agent, boost::asio::io_service &io);
+    Icmpv6ErrorProto(Agent *agent, boost::asio::io_context &io);
     virtual ~Icmpv6ErrorProto();
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
 
     void increment_drops() { stats_.drops++; }
     void increment_interface_errors() { stats_.interface_errors++; }

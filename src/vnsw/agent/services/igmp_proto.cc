@@ -9,7 +9,7 @@
 #include "oper/multicast.h"
 #include "services/igmp_proto.h"
 
-IgmpProto::IgmpProto(Agent *agent, boost::asio::io_service &io) :
+IgmpProto::IgmpProto(Agent *agent, boost::asio::io_context &io) :
     Proto(agent, "Agent::Services", PktHandler::IGMP, io),
     task_name_("Agent::Services"), io_(io) {
 
@@ -50,7 +50,7 @@ void IgmpProto::Shutdown() {
 }
 
 ProtoHandler *IgmpProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                           boost::asio::io_service &io) {
+                                           boost::asio::io_context &io) {
     return new IgmpHandler(agent(), info, io);
 }
 

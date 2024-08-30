@@ -336,8 +336,8 @@ TEST_F(BgpYamlConfigManagerTest, GroupResolvePeerType) {
 
 void GlobalSetUp() {
     LoggingInit();
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpYamlConfigManager *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpYamlConfigManager, BgpServer*>():
 }
 
 int main(int argc, char **argv) {

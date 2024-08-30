@@ -12,6 +12,7 @@
 #include "bgp/routing-instance/rtarget_group_mgr.h"
 #include "bgp/test/bgp_server_test_util.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 
 
 using namespace boost::asio;
@@ -654,6 +655,8 @@ class TestEnvironment : public ::testing::Environment {
 
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 }
 
 static void TearDown() {

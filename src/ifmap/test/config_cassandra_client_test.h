@@ -198,7 +198,10 @@ class ConfigCassandraPartitionTest : public ConfigCassandraPartition {
 public:
     ConfigCassandraPartitionTest(ConfigCassandraClient *client, size_t idx)
         : ConfigCassandraPartition(client, idx) {
+        std::cout<<"Creating ConfigCassandraPartitionTest: client=" << client << ", idx=" << idx <<", this = " << this << std::endl;
     }
+
+    virtual ~ConfigCassandraPartitionTest(){};
 
     virtual void HandleObjectDelete(const std::string &uuid, bool add_change) {
         std::vector<std::string> tokens;

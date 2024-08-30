@@ -587,9 +587,8 @@ protected:
     boost::property_tree::ptree &tree() { return tree_; }
     template <typename ValueType>
     bool GetValueFromTree(ValueType &var, const std::string &val) {
-        boost::optional<ValueType> opt;
-
-        if (opt = tree_.get_optional<ValueType>(val)) {
+        boost::optional<ValueType> opt = tree_.get_optional<ValueType>(val);
+        if (opt) {
             var = opt.get();
             return true;
         }

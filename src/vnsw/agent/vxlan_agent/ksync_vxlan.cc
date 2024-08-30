@@ -31,7 +31,7 @@
 KSyncEntry *KSyncVxlan::defer_entry_;
 
 KSyncVxlan::KSyncVxlan(Agent *agent) :
-    agent_(agent), bridge_obj_(NULL), port_obj_(NULL), vrf_obj_(NULL) {
+    agent_(agent), bridge_obj_(nullptr), port_obj_(nullptr), vrf_obj_(nullptr) {
 }
 
 KSyncVxlan::~KSyncVxlan() {
@@ -83,8 +83,8 @@ void KSyncVxlan::Init() {
 }
 
 void KSyncVxlan::Shutdown() {
-    bridge_obj_.reset(NULL);
-    port_obj_.reset(NULL);
-    vrf_obj_.reset(NULL);
+    bridge_obj_.reset(nullptr);
+    port_obj_.reset(nullptr);
+    vrf_obj_.reset(nullptr);
     KSyncObjectManager::Shutdown();
 }

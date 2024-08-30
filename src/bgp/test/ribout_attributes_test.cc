@@ -10,6 +10,7 @@
 #include "bgp/extended-community/mac_mobility.h"
 #include "bgp/inet/inet_route.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 
 class BgpPeerMock : public IPeer {
 public:
@@ -338,6 +339,8 @@ TEST_F(RibOutAttributesTest, SequenceNumber2) {
 static void SetUp() {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 }
 
 static void TearDown() {

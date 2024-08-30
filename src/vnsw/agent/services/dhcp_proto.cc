@@ -16,7 +16,7 @@
 using namespace boost::asio;
 using boost::asio::ip::udp;
 
-DhcpProto::DhcpProto(Agent *agent, boost::asio::io_service &io,
+DhcpProto::DhcpProto(Agent *agent, boost::asio::io_context &io,
                      bool run_with_vrouter) :
     Proto(agent, "Agent::Services", PktHandler::DHCP, io),
     run_with_vrouter_(run_with_vrouter), ip_fabric_interface_(NULL),
@@ -31,7 +31,7 @@ DhcpProto::DhcpProto(Agent *agent, boost::asio::io_service &io,
     if (dhcp_relay_mode_) {
         boost::system::error_code ec;
         dhcp_server_socket_.open(udp::v4(), ec);
-        assert(ec == 0);
+        assert(!ec);
         dhcp_server_socket_.bind(udp::endpoint(udp::v4(), DHCP_SERVER_PORT), ec);
         if (ec) {
             DHCP_TRACE(Error, "Error creating DHCP socket : " << ec);
@@ -111,7 +111,7 @@ void DhcpProto::SendDhcpIpc(uint8_t *dhcp, std::size_t len) {
 }
 
 ProtoHandler *DhcpProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                           boost::asio::io_service &io) {
+                                           boost::asio::io_context &io) {
     return new DhcpHandler(agent(), info, io);
 }
 

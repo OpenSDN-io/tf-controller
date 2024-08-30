@@ -134,10 +134,10 @@ public:
     };
 
     void Shutdown();
-    IgmpProto(Agent *agent, boost::asio::io_service &io);
+    IgmpProto(Agent *agent, boost::asio::io_context &io);
     virtual ~IgmpProto();
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
 
     void IgmpProtoInit(void);
 
@@ -167,7 +167,7 @@ private:
     void ReadHandler(const boost::system::error_code &error, std::size_t len);
 
     const std::string task_name_;
-    boost::asio::io_service &io_;
+    boost::asio::io_context &io_;
 
     DBTableBase::ListenerId vn_listener_id_;
 

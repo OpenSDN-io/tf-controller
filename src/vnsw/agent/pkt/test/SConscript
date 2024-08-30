@@ -80,7 +80,7 @@ env.TestSuite('agent:pkt-flaky-test', pkt_flaky_test_suite)
 env.Alias('controller/src/vnsw/agent/pkt:flaky_test', flaky_test)
 
 test = env.TestSuite('agent-test', pkt_test_suite)
-env.TestSuite('agent:pkt', pkt_test_suite)
+env.Alias('agent:pkt', test)
 env.Alias('controller/src/vnsw/agent/pkt:test', test)
 Return('pkt_test_suite')
 

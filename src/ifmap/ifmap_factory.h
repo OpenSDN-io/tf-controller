@@ -16,9 +16,13 @@ class IFMapServer;
 class IFMapXmppChannel;
 class XmppChannel;
 
-class IFMapFactory : public Factory<IFMapFactory> {
-    FACTORY_TYPE_N3(IFMapFactory, IFMapXmppChannel, XmppChannel *,
-                    IFMapServer *, IFMapChannelManager *);
+struct IfmapStaticObjectFactory : public StaticObjectFactory {
 };
+
+using IfmapXmppChannelRec =
+    IfmapStaticObjectFactory::FactoryRecord<IFMapXmppChannel,
+        XmppChannel *,
+        IFMapServer *,
+        IFMapChannelManager *>;
 
 #endif  // __IFMAP__IFMAP_FACTORY_H__

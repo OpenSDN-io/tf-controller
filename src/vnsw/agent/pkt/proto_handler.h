@@ -28,7 +28,7 @@ struct vlanhdr {
 class ProtoHandler {
 public:
     ProtoHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                 boost::asio::io_service &io);
+                 boost::asio::io_context &io);
     virtual ~ProtoHandler();
 
     virtual bool Run() = 0;
@@ -90,7 +90,7 @@ public:
 protected:
     Agent   *agent_;
     boost::shared_ptr<PktInfo> pkt_info_;
-    boost::asio::io_service &io_;
+    boost::asio::io_context &io_;
 
 private:
     void FillUdpHdr(udphdr *udp, uint16_t len,

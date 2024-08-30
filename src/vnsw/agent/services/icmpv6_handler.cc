@@ -27,7 +27,7 @@ const Ip6Address Icmpv6Handler::kSolicitedNodeIpSuffixMask(kSuffix);
 const uint8_t Icmpv6Handler::kIPv6AddrUnspecifiedBytes[IPV6_ADDR_SIZE_BYTES] = { 0 };
 
 Icmpv6Handler::Icmpv6Handler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                             boost::asio::io_service &io)
+                             boost::asio::io_context &io)
     : ProtoHandler(agent, info, io), icmp_(pkt_info_->transp.icmp6) {
     // payload length - length of ipv6 extension headers
     if (icmp_)

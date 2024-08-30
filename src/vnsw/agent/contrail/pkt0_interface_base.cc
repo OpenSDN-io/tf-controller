@@ -43,7 +43,7 @@ void Pkt0Socket::CreateMockAgent(const std::string& guid)
 
 
 Pkt0Interface::Pkt0Interface(const std::string &name,
-                             boost::asio::io_service *io) :
+                             boost::asio::io_context *io) :
     name_(name), tap_fd_(-1), input_(*io), read_buff_(NULL), pkt_handler_(NULL) {
     memset(mac_address_, 0, sizeof(mac_address_));
 }
@@ -118,7 +118,7 @@ int Pkt0Interface::Send(uint8_t *buff, uint16_t buff_len,
 }
 
 Pkt0RawInterface::Pkt0RawInterface(const std::string &name,
-                                   boost::asio::io_service *io) :
+                                   boost::asio::io_context *io) :
     Pkt0Interface(name, io) {
 }
 
@@ -127,7 +127,7 @@ Pkt0RawInterface::~Pkt0RawInterface() {
 
 
 Pkt0Socket::Pkt0Socket(const std::string &name,
-    boost::asio::io_service *io):
+    boost::asio::io_context *io):
     connected_(false), socket_(*io), timer_(NULL),
     read_buff_(NULL), pkt_handler_(NULL), name_(name){
 }
@@ -156,7 +156,7 @@ void Pkt0Socket::CreateUnixSocket() {
         LOG(DEBUG, "Error binding to the socket " << sAgentSocketPath
                 << ": " << ec.message());
     }
-    assert(ec == 0);
+    assert(!ec);
 }
 
 void Pkt0Socket::InitControlInterface() {
@@ -205,7 +205,7 @@ bool Pkt0Socket::OnTimeout() {
     local::datagram_protocol::endpoint ep(sVrouterSocketPath);
     boost::system::error_code ec;
     socket_.connect(ep, ec);
-    if (ec != 0) {
+    if (ec.failed()) {
         TAP_TRACE(Err, "Error connecting to vrouter unix socket " +
                        ec.message());
         return true;

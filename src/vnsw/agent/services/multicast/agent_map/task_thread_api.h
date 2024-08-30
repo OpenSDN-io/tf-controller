@@ -10,27 +10,27 @@
 typedef struct thread_ {
     struct thread_ *next;
     struct thread_ *prev;
-} thread;
+} task_thread;
 
 #define THREAD_TO_STRUCT(function, structure, member)                   \
-    static inline structure * (function)(thread *address) {             \
+    static inline structure * (function)(task_thread *address) {             \
         if (address) {                                                  \
             return (structure *)((char*)address - offsetof(structure, member));\
         }                                                               \
         return NULL;                                                    \
     }
 
-extern void thread_new_circular_thread(thread *head);
-extern boolean thread_circular_thread_empty(thread *head);
-extern boolean thread_circular_thread_head(thread *head, thread *node);
-extern boolean thread_node_on_thread(const thread *node);
-extern thread *thread_circular_top(thread *head);
-extern void thread_circular_add_top(thread *head, thread *node);
-extern void thread_circular_add_bottom(thread *head, thread *node);
-extern thread *thread_next_node(thread *node);
-extern thread *thread_circular_thread_next(thread *head, thread *node);
-extern thread *thread_circular_dequeue_top(thread *head);
-extern void thread_remove(thread *node);
+extern void thread_new_circular_thread(task_thread *head);
+extern boolean thread_circular_thread_empty(task_thread *head);
+extern boolean thread_circular_thread_head(task_thread *head, task_thread *node);
+extern boolean thread_node_on_thread(const task_thread *node);
+extern task_thread *thread_circular_top(task_thread *head);
+extern void thread_circular_add_top(task_thread *head, task_thread *node);
+extern void thread_circular_add_bottom(task_thread *head, task_thread *node);
+extern task_thread *thread_next_node(task_thread *node);
+extern task_thread *thread_circular_thread_next(task_thread *head, task_thread *node);
+extern task_thread *thread_circular_dequeue_top(task_thread *head);
+extern void thread_remove(task_thread *node);
 
 #define FOR_ALL_CIRCULAR_THREAD_ENTRIES(head, current)                  \
     for ((current) = thread_next_node(head);                            \

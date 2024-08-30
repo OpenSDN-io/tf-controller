@@ -19,7 +19,7 @@
 
 static void UpdateStats(FlowEvent *event, FlowStats *stats);
 
-FlowProto::FlowProto(Agent *agent, boost::asio::io_service &io) :
+FlowProto::FlowProto(Agent *agent, boost::asio::io_context &io) :
     Proto(agent, kTaskFlowEvent, PktHandler::FLOW, io),
     add_tokens_("Add Tokens", this, agent->flow_add_tokens()),
     ksync_tokens_("KSync` Tokens", this, agent->flow_ksync_tokens()),
@@ -186,7 +186,7 @@ uint16_t FlowProto::FlowTableIndex(const IpAddress &sip, const IpAddress &dip,
 }
 
 FlowHandler *FlowProto::AllocProtoHandler(PktInfoPtr info,
-                                          boost::asio::io_service &io) {
+                                          boost::asio::io_context &io) {
     uint32_t index = FlowTableIndex(info->ip_saddr, info->ip_daddr,
                                     info->ip_proto, info->sport, info->dport,
                                     info->agent_hdr.cmd_param);

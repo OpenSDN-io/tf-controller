@@ -4021,8 +4021,8 @@ TEST_F(BgpConfigTest, BgpNeighborConfigCopyValues) {
 int main(int argc, char **argv) {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpIfmapConfigManager *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
     ::testing::InitGoogleTest(&argc, argv);
     int error = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();

@@ -195,7 +195,7 @@ gmpp_destroy_packet (gmp_packet *packet)
     gmp_report_group_record *group_record;
     gmp_report_packet *report_packet;
     gmp_query_packet *query_packet;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     /* Clean up based on the packet type. */
 

@@ -191,7 +191,7 @@ private:
 };
 
 IFMapServer::IFMapServer(DB *db, DBGraph *graph,
-                         boost::asio::io_service *io_service)
+                         boost::asio::io_context *io_service)
         : db_(db), graph_(graph),
           queue_(new IFMapUpdateQueue(this)),
           exporter_(new IFMapExporter(this)),

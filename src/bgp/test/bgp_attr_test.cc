@@ -22,6 +22,7 @@
 #include "control-node/control_node.h"
 #include "net/community_type.h"
 #include "net/mac_address.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using boost::assign::list_of;
 using boost::system::error_code;
@@ -3256,6 +3257,8 @@ TEST_F(BgpAttrTest, EdgeForwardingDBConcurrency) {
 static void SetUp() {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 }
 
 static void TearDown() {

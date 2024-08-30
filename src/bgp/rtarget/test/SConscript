@@ -37,7 +37,6 @@ if etcd_incl:
     env.Prepend(LIBS = ['etcdql','protobuf', 'grpc++', 'grpc', 'z'])
 
 env.Prepend(LIBS = ['control_test', 'bgptest', 'bgp', 'peer_sandesh',
-                    'bgp_test_factory',
                     'control_node', 'dbtest', 'bgp_schema', 'ifmap_vnc',
                     'task_test', 'ifmap_test_util', 'ifmap_test_util_server',
                     'ifmapio', 'ifmap_server', 'ifmap_common', 'config_client_mgr',
@@ -50,8 +49,8 @@ env.Append(LIBS = ['bgp_inet', 'bgp_l3vpn'])
 env.Append(LIBS = ['bgp_inet6', 'bgp_inet6vpn'])
 env.Append(LIBS = ['routing_instance', 'rtarget', 'route', 'routing_policy', 'net'])
 env.Append(LIBS = ['extended_community', 'origin_vn', 'security_group', 'tunnel_encap'])
-env.Append(LIBS = ['xmpp', 'xmpp_unicast', 
-                   'xmpp_multicast', 'xmpp_enet', 'xml', 'pugixml',
+env.Append(LIBS = ['bgp_xmpp', 'xmpp', 'xmpp_unicast', 
+                   'xmpp_multicast', 'xmpp_enet', 'xmpp_mvpn', 'xml', 'pugixml',
                    'boost_regex', 'boost_program_options'])
 
 if platform.system() == 'Darwin':
@@ -72,7 +71,6 @@ else:
     env.Prepend(LINKFLAGS =
                 ['-Wl,--whole-archive',
                  '-rdynamic',
-                 '-lbgp_test_factory',
                  '-lbgp_inet',
                  '-lbgp_ermvpn',
                  '-lbgp_mvpn',

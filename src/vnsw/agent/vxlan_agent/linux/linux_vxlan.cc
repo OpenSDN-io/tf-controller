@@ -43,7 +43,7 @@ void KSyncLinuxVxlan::Init() {
 }
 
 static void Execute(const string &str) {
-    cout << str << endl;
+    std::cout << str << std::endl;
     if (system(str.c_str()) < 0) {
         LOG(ERROR, "Error executing command : " << str);
     }
@@ -140,12 +140,12 @@ KSyncEntry *KSyncLinuxBridgeObject::DBToKSyncEntry(const DBEntry *e) {
  ****************************************************************************/
 KSyncLinuxPortEntry::KSyncLinuxPortEntry(KSyncLinuxPortObject *obj,
                                          const Interface *intrface) :
-    KSyncVxlanPortEntry(obj, intrface), old_bridge_(NULL) {
+    KSyncVxlanPortEntry(obj, intrface), old_bridge_(nullptr) {
 }
 
 KSyncLinuxPortEntry::KSyncLinuxPortEntry(KSyncVxlanPortObject *obj,
                                          const KSyncLinuxPortEntry *entry) :
-    KSyncVxlanPortEntry(obj, entry), old_bridge_(NULL) {
+    KSyncVxlanPortEntry(obj, entry), old_bridge_(nullptr) {
 }
 
 bool KSyncLinuxPortEntry::Add() {
@@ -176,7 +176,7 @@ bool KSyncLinuxPortEntry::Change() {
 }
 
 bool KSyncLinuxPortEntry::Delete() {
-    if (old_bridge_ == NULL)
+    if (old_bridge_ == nullptr)
         return true;
 
     std::stringstream s;
@@ -212,7 +212,7 @@ KSyncEntry *KSyncLinuxPortObject::DBToKSyncEntry(const DBEntry *e) {
         assert(0);
         break;
     }
-    return NULL;
+    return nullptr;
 }
 
 /****************************************************************************
@@ -245,7 +245,7 @@ bool KSyncLinuxFdbEntry::Add() {
     char buff[64];
     MacToStr(buff, mac());
 
-    if (port() != NULL) {
+    if (port() != nullptr) {
         std::stringstream s;
         s << "bridge fdb add " << buff << " dev " << port()->port_name()
             << " master";
@@ -271,7 +271,7 @@ bool KSyncLinuxFdbEntry::Delete() {
     char buff[64];
     MacToStr(buff, mac());
 
-    if (port() != NULL) {
+    if (port() != nullptr) {
         std::stringstream s;
         s << "bridge fdb del " << buff << " dev " << port()->port_name()
             << " master";

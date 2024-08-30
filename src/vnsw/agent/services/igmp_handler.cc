@@ -13,7 +13,7 @@
 #include <services/igmp_proto.h>
 
 IgmpHandler::IgmpHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                         boost::asio::io_service &io)
+                         boost::asio::io_context &io)
     : ProtoHandler(agent, info, io), igmp_(pkt_info_->transp.igmp) {
     if (pkt_info_->ip) {
         igmp_len_ = ntohs(pkt_info_->ip->ip_len) - (pkt_info_->ip->ip_hl * 4);

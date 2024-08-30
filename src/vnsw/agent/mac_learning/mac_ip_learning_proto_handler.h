@@ -17,7 +17,7 @@ class MacIpLearningProtoHandler : public ProtoHandler {
 public:
     MacIpLearningProtoHandler(Agent *agent,
                             boost::shared_ptr<PktInfo> info,
-                            boost::asio::io_service &io);
+                            boost::asio::io_context &io);
     virtual ~MacIpLearningProtoHandler() {}
     bool Run();
 private:

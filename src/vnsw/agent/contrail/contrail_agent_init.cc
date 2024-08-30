@@ -8,11 +8,10 @@
 #include <boost/functional/forward_adapter.hpp>
 
 #include <cmn/agent_cmn.h>
-#include <cmn/agent_factory.h>
 #include <init/agent_param.h>
 
 #include <cfg/cfg_init.h>
-
+#include <oper/instance_manager.h>
 #include <oper/operdb_init.h>
 #include <controller/controller_init.h>
 #include <vrouter/ksync/ksync_init.h>
@@ -25,6 +24,8 @@
 #include <port_ipc/port_ipc_handler.h>
 
 #include "contrail_agent_init.h"
+
+#include <cmn/agent_factory.h>
 
 ContrailAgentInit::ContrailAgentInit() : ContrailInitCommon() {
 }
@@ -44,33 +45,48 @@ void ContrailAgentInit::ProcessOptions
 /****************************************************************************
  * Initialization routines
 ****************************************************************************/
+
 void ContrailAgentInit::FactoryInit() {
+    AgentStaticObjectFactory::LinkImpl<FlowStatsCollector,
+        FlowStatsCollector,
+        boost::asio::io_context &,
+        int,
+        uint32_t,
+        AgentUveBase *,
+        uint32_t,
+        FlowAgingTableKey *,
+        FlowStatsManager *,
+        FlowStatsCollectorObject *>();
+
+    AgentStaticObjectFactory::LinkImpl<SessionStatsCollector,
+        SessionStatsCollector,
+        boost::asio::io_context &,
+        AgentUveBase *,
+        uint32_t,
+        FlowStatsManager *,
+        SessionStatsCollectorObject *>();
+
     if (agent()->tsn_enabled() == false) {
-        AgentObjectFactory::Register<AgentUveBase>
-            (boost::forward_adapter<boost::factory<AgentUveStats *> >
-                (boost::factory<AgentUveStats *>()));
+        AgentStaticObjectFactory::LinkImpl<AgentUveBase, AgentUveStats,
+            Agent*, uint64_t, uint32_t, uint32_t>();
     } else {
-        AgentObjectFactory::Register<AgentUveBase>
-            (boost::forward_adapter<boost::factory<AgentUve *> >(boost::factory<AgentUve *>()));
+        AgentStaticObjectFactory::LinkImpl<AgentUveBase, AgentUve,
+            Agent*, uint64_t, uint32_t, uint32_t>();
     }
-    if (agent_param()->vrouter_on_nic_mode() || agent_param()->vrouter_on_host_dpdk()) {
-#ifdef AGENT_VROUTER_TCP
-        AgentObjectFactory::Register<KSync>
-            (boost::forward_adapter<boost::factory<KSyncTcp *> >(boost::factory<KSyncTcp *>()));
-#else
-        AgentObjectFactory::Register<KSync>
-            (boost::forward_adapter<boost::factory<KSyncUds *> >(boost::factory<KSyncUds *>()));
-#endif
-    } else {
-        AgentObjectFactory::Register<KSync>
-            (boost::forward_adapter<boost::factory<KSync *> >(boost::factory<KSync *>()));
+
+    #ifdef AGENT_VROUTER_TCP
+    #define AGENT_KSYNC_TCP true
+    #else
+    #define AGENT_KSYNC_TCP false
+    #endif
+    using AgentKSyncX = std::conditional<AGENT_KSYNC_TCP,KSyncTcp,KSyncUds>::type;
+
+    if (agent_param()->vrouter_on_nic_mode() ||
+        agent_param()->vrouter_on_host_dpdk()) {
+            AgentStaticObjectFactory::LinkImpl<KSync, AgentKSyncX, Agent*>();
+        } else {
+            AgentStaticObjectFactory::LinkImpl<KSync, KSync, Agent*>();
     }
-    AgentObjectFactory::Register<FlowStatsCollector>
-        (boost::forward_adapter<boost::factory<FlowStatsCollector *> >
-            (boost::factory<FlowStatsCollector *>()));
-    AgentObjectFactory::Register<SessionStatsCollector>
-        (boost::forward_adapter<boost::factory<SessionStatsCollector *> >
-            (boost::factory<SessionStatsCollector *>()));
 }
 
 void ContrailAgentInit::CreateModules() {
@@ -91,10 +107,13 @@ void ContrailAgentInit::CreateModules() {
     }
     agent()->pkt()->set_control_interface(pkt0_.get());
 
-    uve_.reset(AgentObjectFactory::Create<AgentUveBase>
-               (agent(), AgentUveBase::kBandwidthInterval,
-                agent()->params()->vmi_vm_vn_uve_interval_msecs(),
-                AgentUveBase::kIncrementalInterval));
+
+    uve_.reset(AgentStaticObjectFactory::Create<AgentUveBase>(
+        agent(),
+        AgentUveBase::kBandwidthInterval,
+        agent()->params()->vmi_vm_vn_uve_interval_msecs(),
+        AgentUveBase::kIncrementalInterval));
+
     agent()->set_uve(uve_.get());
 
     if (agent()->tsn_enabled() == false) {
@@ -106,12 +125,12 @@ void ContrailAgentInit::CreateModules() {
     flow_stats_manager_.reset(new FlowStatsManager(agent()));
     agent()->set_flow_stats_manager(flow_stats_manager_.get());
 
-    if (!agent_param()->cat_is_dpdk_mocked()) {
-        ksync_.reset(AgentObjectFactory::Create<KSync>(agent()));
+
+    if (agent_param()->cat_is_dpdk_mocked()) {
+        ksync_.reset();
+    } else {
+        ksync_.reset(AgentStaticObjectFactory::Create<KSync>(agent()));
         agent()->set_ksync(ksync_.get());
-    }
-    else {
-      ksync_.reset();
     }
 
     std::string newkPortsDir =  PortIpcHandler::kPortsDir;

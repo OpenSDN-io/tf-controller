@@ -15,9 +15,10 @@ env.Append(CPPPATH = [env['TOP'] + '/tools/sandesh/library/common'])
 env.Append(LIBPATH = env['TOP'] + '/bgp/extended-community')
 env.Append(LIBPATH = env['TOP'] + '/net')
 env.Append(LIBPATH = env['TOP'] + '/schema')
+env.Append(LIBPATH = env['TOP'] + '/bgp')
 
 env.Prepend(LIBS = ['gunit', 'extended_community', 'boost_regex', 'net',
-                    'xmpp_unicast'])
+                    'xmpp_unicast', 'bgp_xmpp', 'xmpp_mvpn'])
 
 default_gateway_test = env.UnitTest('default_gateway_test',
                                     ['default_gateway_test.cc'])

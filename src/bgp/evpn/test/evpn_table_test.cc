@@ -10,6 +10,7 @@
 #include "bgp/bgp_factory.h"
 #include "bgp/origin-vn/origin_vn.h"
 #include "bgp/test/bgp_server_test_util.h"
+#include "bgp/test/bgp_config_mock.h"
 #include "control-node/control_node.h"
 
 using namespace std;
@@ -2094,8 +2095,10 @@ int main(int argc, char **argv) {
     bgp_log_test::init();
     ::testing::InitGoogleTest(&argc, argv);
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<EvpnManager>(
-        boost::factory<EvpnManagerMock *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
+    BgpStaticObjectFactory::LinkImpl<EvpnManager, 
+        EvpnManagerMock, EvpnTable*>();
     int result = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();
     return result;

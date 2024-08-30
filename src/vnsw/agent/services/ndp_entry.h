@@ -36,7 +36,7 @@ typedef boost::function<bool(NdpEntry*)> EvValidate;
 // Represents each NDP entry maintained by the Icmpv6 module
 class NdpEntry : public sc::state_machine<NdpEntry, fsm::NoState> {
 public:
-    NdpEntry(boost::asio::io_service &io, Icmpv6Handler *handler,
+    NdpEntry(boost::asio::io_context &io, Icmpv6Handler *handler,
              NdpKey &key, const VrfEntry *vrf, const Interface *itf);
     virtual ~NdpEntry();
 
@@ -150,7 +150,7 @@ private:
     std::pair<int, int> last_notification_out_;
     std::string last_notification_out_error_;
     uint64_t last_notification_out_at_;
-    boost::asio::io_service &io_;
+    boost::asio::io_context &io_;
     NdpKey key_;
     const VrfEntry *nh_vrf_;
     boost::intrusive_ptr<Icmpv6Handler> handler_;

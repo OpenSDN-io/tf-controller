@@ -1328,8 +1328,9 @@ class TestEnvironment : public ::testing::Environment {
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    XmppObjectFactory::Register<XmppServerConnection>(
-        boost::factory<XmppServerConnectionTest *>());
+    XmppStaticObjectFactory::LinkImpl<XmppServerConnection,
+        XmppServerConnectionTest, XmppServer *,
+        const XmppChannelConfig *>();
 }
 
 static void TearDown() {

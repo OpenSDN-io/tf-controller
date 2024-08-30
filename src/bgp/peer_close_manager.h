@@ -38,7 +38,7 @@ class PeerCloseInfo;
 class PeerCloseManager {
 public:
     PeerCloseManager(IPeerClose *peer_close,
-                     boost::asio::io_service *io_service);
+                     boost::asio::io_context *io_service);
     explicit PeerCloseManager(IPeerClose *peer_close);
     virtual ~PeerCloseManager();
 

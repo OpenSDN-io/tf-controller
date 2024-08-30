@@ -2405,10 +2405,10 @@ static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
 
-    BgpObjectFactory::Register<RTargetGroupMgr>(
-        boost::factory<RTargetGroupMgrTest *>());
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
+    BgpStaticObjectFactory::LinkImpl<RTargetGroupMgr,
+        RTargetGroupMgrTest, BgpServer *>();
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
 }
 
 static void TearDown() {

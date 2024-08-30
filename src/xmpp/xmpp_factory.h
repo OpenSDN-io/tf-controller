@@ -18,15 +18,33 @@ class XmppServer;
 class XmppServerConnection;
 class XmppStateMachine;
 
-class XmppObjectFactory : public Factory<XmppObjectFactory> {
-    FACTORY_TYPE_N2(XmppObjectFactory, XmppServerConnection,
-                    XmppServer *, const XmppChannelConfig *);
-    FACTORY_TYPE_N2(XmppObjectFactory, XmppClientConnection,
-                    XmppClient *, const XmppChannelConfig *);
-    FACTORY_TYPE_N4(XmppObjectFactory, XmppStateMachine,
-                    XmppConnection *, bool, bool, int);
-    FACTORY_TYPE_N1(XmppObjectFactory, XmppChannelMux, XmppConnection *);
-    FACTORY_TYPE_N1(XmppObjectFactory, XmppLifetimeManager, int);
+struct XmppStaticObjectFactory : public StaticObjectFactory {
 };
 
+using XmppServerConnectionRec =
+    XmppStaticObjectFactory::FactoryRecord<XmppServerConnection,
+        XmppServer *,
+        const XmppChannelConfig *>;
+
+using XmppClientConnectionRec =
+    XmppStaticObjectFactory::FactoryRecord<XmppClientConnection,
+        XmppClient *,
+        const XmppChannelConfig *>;
+
+using XmppStateMachineRec =
+    XmppStaticObjectFactory::FactoryRecord<XmppStateMachine,
+        XmppConnection *,
+        bool,
+        bool,
+        int>;
+
+using XmppChannelMuxRec =
+    XmppStaticObjectFactory::FactoryRecord<XmppChannelMux,
+        XmppConnection*>;
+
+using XmppLifetimeManagerRec =
+    XmppStaticObjectFactory::FactoryRecord<XmppLifetimeManager,
+        int>;
+
 #endif /* defined(__ctrlplane__xmpp_factory__) */
+

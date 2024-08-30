@@ -15,10 +15,10 @@ typedef boost::bimap<BFDState, std::string> BFDStateNames;
 
 static BFDStateNames kBFDStateNames =
         boost::assign::list_of<BFDStateNames::relation>
-        (kAdminDown, "AdminDown")
-        (kDown,      "Down")
-        (kInit,      "Init")
-        (kUp,        "Up");
+        (kAdminDown, std::string("AdminDown"))
+        (kDown,      std::string("Down"))
+        (kInit,      std::string("Init"))
+        (kUp,        std::string("Up"));
 
 std::ostream &operator<<(std::ostream &out, BFDState state) {
     try {
@@ -30,7 +30,7 @@ std::ostream &operator<<(std::ostream &out, BFDState state) {
     return out;
 }
 
-boost::optional<BFDState> BFDStateFromString(const char *str) {
+boost::optional<BFDState> BFDStateFromString(const std::string& str) {
     try {
         return boost::optional<BFDState>(kBFDStateNames.right.at(str));
     } catch (std::out_of_range &) {}

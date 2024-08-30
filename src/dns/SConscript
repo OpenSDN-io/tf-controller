@@ -78,7 +78,8 @@ env.Alias('install', env.Install(env['INSTALL_MESSAGE_DOC'] +
     '/contrail-dns/', doc_files))
 
 DnsEnv = env.Clone()
-DnsEnv.CppDisableExceptions()
+DnsEnv.CppEnableExceptions()
+DnsEnv.Append(CCFLAGS = ['-fexceptions'])
 Export('DnsEnv')
 
 subdirs = [

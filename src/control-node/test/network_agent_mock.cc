@@ -975,8 +975,8 @@ void NetworkAgentMock::Initialize() {
     if (init_) return;
     init_ = true;
 
-    XmppObjectFactory::Register<XmppChannelMux>(
-        boost::factory<XmppChannelMuxTest *>());
+    XmppStaticObjectFactory::LinkImpl<XmppChannelMux,
+        XmppChannelMuxTest,XmppConnection*>();
 }
 
 NetworkAgentMock::NetworkAgentMock(EventManager *evm, const string &hostname,

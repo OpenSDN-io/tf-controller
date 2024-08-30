@@ -75,7 +75,7 @@ bool GmpIntf::set_gmp_querying(bool querying) {
 
 GmpProto::GmpProto(GmpType::Type type, Agent *agent,
                             const std::string &task_name, int instance,
-                            boost::asio::io_service &io) :
+                            boost::asio::io_context &io) :
     type_(type), agent_(agent), name_(task_name), instance_(instance), io_(io) {
 
     task_map_ = NULL;
@@ -803,7 +803,7 @@ bool GmpProto::SendPacket(GmpIntf *gif, uint8_t *pkt, uint32_t pkt_len,
 
 GmpProto *GmpProtoManager::CreateGmpProto(GmpType::Type type, Agent *agent,
                             const std::string &task_name, int instance,
-                            boost::asio::io_service &io) {
+                            boost::asio::io_context &io) {
 
     GmpProto *proto_inst = new GmpProto(type, agent, task_name, instance, io);
     if (!proto_inst) {

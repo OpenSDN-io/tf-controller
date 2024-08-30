@@ -21,6 +21,7 @@
 #include "control-node/control_node.h"
 #include "io/test/event_manager_test.h"
 #include "bgp/bgp_session.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using namespace std;
 using std::string;
@@ -498,10 +499,12 @@ class TestEnvironment : public ::testing::Environment {
 };
 
 static void SetUp() {
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
     BgpServerTest::GlobalSetUp();
 }
 

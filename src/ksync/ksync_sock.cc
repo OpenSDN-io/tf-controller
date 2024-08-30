@@ -647,7 +647,7 @@ bool KSyncSock::SendAsyncImpl(IoContext *ioc) {
 /////////////////////////////////////////////////////////////////////////////
 // KSyncSockNetlink routines
 /////////////////////////////////////////////////////////////////////////////
-KSyncSockNetlink::KSyncSockNetlink(boost::asio::io_service &ios, int protocol)
+KSyncSockNetlink::KSyncSockNetlink(boost::asio::io_context &ios, int protocol)
     : sock_(ios, protocol) {
     ReceiveBuffForceSize set_rcv_buf;
     set_rcv_buf = KSYNC_SOCK_RECV_BUFF_SIZE;
@@ -762,7 +762,7 @@ void KSyncSockNetlink::Receive(mutable_buffers_1 buf) {
 // KSyncSockUdp routines
 /////////////////////////////////////////////////////////////////////////////
 //Udp socket class for interacting with kernel
-KSyncSockUdp::KSyncSockUdp(boost::asio::io_service &ios, int port) :
+KSyncSockUdp::KSyncSockUdp(boost::asio::io_context &ios, int port) :
     sock_(ios, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 0)),
     server_ep_(boost::asio::ip::address::from_string("127.0.0.1"), port) {
 }

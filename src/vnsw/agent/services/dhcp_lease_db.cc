@@ -15,7 +15,7 @@ using namespace pugi;
 DhcpLeaseDb::DhcpLeaseDb(const Ip4Address &subnet, uint8_t plen,
                          const std::vector<Ip4Address> &reserve_addresses,
                          const std::string &lease_filename,
-                         boost::asio::io_service &io) :
+                         boost::asio::io_context &io) :
     subnet_(subnet), plen_(plen),
     max_lease_update_count_(0), lease_update_count_(0),
     lease_timeout_(kDhcpLeaseTimer), lease_filename_(lease_filename) {

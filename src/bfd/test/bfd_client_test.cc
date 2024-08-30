@@ -4,6 +4,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/ip/address.hpp>
+#include <boost/optional/optional_io.hpp>
 
 #include "base/regex.h"
 #include "bfd/bfd_client.h"
@@ -396,7 +397,7 @@ TEST_F(ClientTest, BasicSingleHop3) {
         TASK_UTIL_EXPECT_GE(session->Stats().tx_count, 2);
         ss.str("");
         ss << session->local_state();
-        TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss.str().c_str()));
+        TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss.str()));
     }
 
     task_util::WaitForIdle();
@@ -414,7 +415,7 @@ TEST_F(ClientTest, BasicSingleHop3) {
 
         ss2.str("");
         ss2 << session->local_state();
-        TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss2.str().c_str()));
+        TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss2.str()));
     }
 
     client_.DeleteSession(client_key1);
@@ -582,7 +583,7 @@ TEST_F(ClientTest, BasicSingleHop_CfgChange_MinRxInterval) {
     TASK_UTIL_EXPECT_GE(session->Stats().rx_count, 2);
     TASK_UTIL_EXPECT_GE(session->Stats().tx_count, 2);
     ss << session->local_state();
-    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss.str().c_str()));
+    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss.str()));
 
     task_util::WaitForIdle();
     Server *server_test = client_test_.GetConnection()->GetServer();
@@ -593,7 +594,7 @@ TEST_F(ClientTest, BasicSingleHop_CfgChange_MinRxInterval) {
     TASK_UTIL_EXPECT_GE(session_test->Stats().rx_count, 2);
     TASK_UTIL_EXPECT_GE(session_test->Stats().tx_count, 2);
     ss2 << session_test->local_state();
-    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss2.str().c_str()));
+    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss2.str()));
 
     // Config update bfd.RequiredMinRxInterval
     SessionConfig sc_updt;
@@ -660,7 +661,7 @@ TEST_F(ClientTest, BasicSingleHop_CfgChange_DesiredMinTxInterval) {
     TASK_UTIL_EXPECT_GE(session->Stats().rx_count, 2);
     TASK_UTIL_EXPECT_GE(session->Stats().tx_count, 2);
     ss << session->local_state();
-    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss.str().c_str()));
+    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss.str()));
 
     task_util::WaitForIdle();
     Server *server_test = client_test_.GetConnection()->GetServer();
@@ -671,7 +672,7 @@ TEST_F(ClientTest, BasicSingleHop_CfgChange_DesiredMinTxInterval) {
     TASK_UTIL_EXPECT_GE(session_test->Stats().rx_count, 2);
     TASK_UTIL_EXPECT_GE(session_test->Stats().tx_count, 2);
     ss2 << session->local_state();
-    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss2.str().c_str()));
+    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss2.str()));
 
     // Config update bfd.DesiredMinTxInterval
     SessionConfig sc_updt;
@@ -736,7 +737,7 @@ TEST_F(ClientTest, BasicSingleHop_CfgChange_DetectionTime) {
     TASK_UTIL_EXPECT_GE(session->Stats().rx_count, 2);
     TASK_UTIL_EXPECT_GE(session->Stats().tx_count, 2);
     ss << session->local_state();
-    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss.str().c_str()));
+    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss.str()));
 
     task_util::WaitForIdle();
     Server *server_test = client_test_.GetConnection()->GetServer();
@@ -747,7 +748,7 @@ TEST_F(ClientTest, BasicSingleHop_CfgChange_DetectionTime) {
     TASK_UTIL_EXPECT_GE(session_test->Stats().rx_count, 2);
     TASK_UTIL_EXPECT_GE(session_test->Stats().tx_count, 2);
     ss2 << session_test->local_state();
-    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss2.str().c_str()));
+    TASK_UTIL_EXPECT_EQ(kUp, BFDStateFromString(ss2.str()));
 
     ASSERT_EQ(session->detection_time(), boost::posix_time::milliseconds(3000));
     ASSERT_EQ(session_test->detection_time(),

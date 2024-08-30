@@ -17,7 +17,7 @@ class Pkt0Interface: public VrouterControlInterface {
 public:
     typedef std::vector<boost::asio::const_buffer> buffer_list;
 
-    Pkt0Interface(const std::string &name, boost::asio::io_service *io);
+    Pkt0Interface(const std::string &name, boost::asio::io_context *io);
     virtual ~Pkt0Interface();
 
     virtual void InitControlInterface();
@@ -50,7 +50,7 @@ protected:
 
 class Pkt0RawInterface : public Pkt0Interface {
 public:
-    Pkt0RawInterface(const std::string &name, boost::asio::io_service *io);
+    Pkt0RawInterface(const std::string &name, boost::asio::io_context *io);
     virtual ~Pkt0RawInterface();
 
     void InitControlInterface();
@@ -68,7 +68,7 @@ public:
     static void CreateMockAgent(const string&);
 
     Pkt0Socket(const std::string &name,
-               boost::asio::io_service *io);
+               boost::asio::io_context *io);
     ~Pkt0Socket();
 
     virtual void InitControlInterface();

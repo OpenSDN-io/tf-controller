@@ -15,7 +15,7 @@ MacLearningModule::MacLearningModule(Agent *agent):
 
 void MacLearningModule::Init() {
     EventManager *event = agent_->event_manager();
-    boost::asio::io_service &io = *event->io_service();
+    boost::asio::io_context &io = *event->io_service();
 
     mac_learning_proto_.reset(new MacLearningProto(agent_, io));
     agent_->set_mac_learning_proto(mac_learning_proto_.get());

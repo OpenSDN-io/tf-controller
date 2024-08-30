@@ -247,7 +247,7 @@ XmppClientConnection *XmppClient::FindConnection(const string &address) {
 XmppClientConnection *XmppClient::CreateConnection(
     const XmppChannelConfig *config) {
     XmppClientConnection *connection =
-        XmppObjectFactory::Create<XmppClientConnection>(this, config);
+        XmppStaticObjectFactory::Create<XmppClientConnection>(this, config);
     Endpoint endpoint = connection->endpoint();
     ConnectionMap::iterator loc;
     bool result;

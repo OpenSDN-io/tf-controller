@@ -62,9 +62,9 @@
  */
 typedef struct gmpr_instance_ {
     uint32_t rinst_magic;             /* Magic number for robustness */
-    thread rinst_thread;          /* Link on global instance thread */
-    thread rinst_client_thread;        /* Head of client thread */
-    thread rinst_startup_intf_thread;    /* Head of intfs starting up */
+    task_thread rinst_thread;          /* Link on global instance thread */
+    task_thread rinst_client_thread;        /* Head of client task_thread */
+    task_thread rinst_startup_intf_thread;    /* Head of intfs starting up */
 
     gmpx_patroot *rinst_intfs;        /* Tree of interfaces */
     gmpx_patroot *rinst_global_state_root; /* Root of global state tree */
@@ -141,7 +141,7 @@ typedef struct gmpr_intf_ {
     uint32_t rintf_oif_group_count;    /* Number of output groups */
     gmpx_intf_id rintf_id;        /* Interface ID */
     gmpx_patroot *rintf_host_root;    /* Root of host entries */
-    thread rintf_startup_thread;    /* Entry on instance startup thread */
+    task_thread rintf_startup_thread;    /* Entry on instance startup thread */
 
     /* Query stuff */
 
@@ -177,7 +177,7 @@ typedef struct gmpr_intf_ {
 
     /* Transmission stuff */
 
-    thread rintf_xmit_head;        /* Head of xmit groups */
+    task_thread rintf_xmit_head;        /* Head of xmit groups */
     boolean rintf_xmit_pending;        /* TRUE if we have a pending xmit */
     boolean rintf_send_gen_query;    /* TRUE if we should send gen query */
 
@@ -235,7 +235,7 @@ typedef enum {
 
 typedef struct gmpr_notify_block_ {
     gmpr_notification_type gmpr_notify_type; /* Notification type */
-    thread gmpr_notify_thread;        /* Entry on client notify thread */
+    task_thread gmpr_notify_thread;        /* Entry on client notify thread */
 } gmpr_notify_block;
 
 THREAD_TO_STRUCT(gmpr_thread_to_notify_block, gmpr_notify_block,
@@ -270,8 +270,8 @@ typedef struct gmpr_group_ {
 
     gmpr_intf *rgroup_intf;        /* Pointer back to interface */
     gmpx_patnode rgroup_intf_patnode;    /* Node on interface tree of groups */
-    thread rgroup_host_group_head;    /* Head of host group thread */
-    thread rgroup_oif_thread;        /* Entry on OIF group thread */
+    task_thread rgroup_host_group_head;    /* Head of host group thread */
+    task_thread rgroup_oif_thread;        /* Entry on OIF group thread */
     struct gmpr_ogroup_ *rgroup_oif_group; /* OIF group pointer */
 
     /* Group state */
@@ -299,7 +299,7 @@ typedef struct gmpr_group_ {
 
     /* Transmission stuff */
 
-    thread rgroup_xmit_thread;        /* Entry on intf transmit list */
+    task_thread rgroup_xmit_thread;        /* Entry on intf transmit list */
     boolean rgroup_send_gss_query;    /* We need to send a GSS query */
     boolean rgroup_send_group_query;    /* We need to send a group query */
 } gmpr_group;
@@ -329,12 +329,12 @@ typedef struct gmpr_group_addr_entry_
     gmpr_group *rgroup_addr_group;    /* Owning group */
     gmpx_timer *rgroup_addr_timer;    /* Timer */
     uint8_t rgroup_addr_rexmit_count;    /* Query retransmission count */
-    thread rgroup_addr_oif_thread;    /* Entry on OIF thread */
+    task_thread rgroup_addr_oif_thread;    /* Entry on OIF thread */
     struct gmpr_ogroup_addr_entry_ *rgroup_addr_oif_addr; /* OIF address */
 
     /* Host stuff */
 
-    thread rgroup_host_addr_head;    /* Head of host address thread */
+    task_thread rgroup_host_addr_head;    /* Head of host address thread */
 
     /* Wasted space */
 
@@ -384,8 +384,8 @@ typedef struct gmpr_ogroup_ {
                     /* Notification blocks */
     boolean rogroup_send_full_notif[GMPX_MAX_RTR_CLIENTS];
                         /* TRUE if we should send full notif */
-    thread rogroup_global_thread;    /* Entry on global state thread */
-    thread rogroup_oif_head;        /* Head of input groups contributing */
+    task_thread rogroup_global_thread;    /* Entry on global state thread */
+    task_thread rogroup_oif_head;        /* Head of input groups contributing */
 
     /* Group state */
 
@@ -418,7 +418,7 @@ typedef struct gmpr_ogroup_addr_entry_
 {
     gmp_addr_list_entry rogroup_addr_entry;    /* Address entry */
     gmpr_ogroup *rogroup_addr_group;    /* Owning group */
-    thread rogroup_addr_oif_head;    /* Head of contributing sources */
+    task_thread rogroup_addr_oif_head;    /* Head of contributing sources */
 
     /* Notification stuff */
 
@@ -443,11 +443,11 @@ typedef struct gmpr_client_ {
     uint32_t rclient_magic;        /* Magic number for robustness */
     gmpr_instance *rclient_instance;    /* Owning instance */
     ordinal_t rclient_ordinal;        /* Client ordinal */
-    thread rclient_thread;        /* Link on instance client thread */
+    task_thread rclient_thread;        /* Link on instance client thread */
     void *rclient_context;        /* Client context */
 
-    thread rclient_notif_head;        /* Head of group notifications */
-    thread rclient_host_notif_head;    /* Head of host notifications */
+    task_thread rclient_notif_head;        /* Head of group notifications */
+    task_thread rclient_host_notif_head;    /* Head of host notifications */
     gmpr_client_context rclient_cb_context; /* Client callback */
     gmpr_notify_block rclient_refresh_end_notif; /* End-refresh notification */
 
@@ -510,7 +510,7 @@ typedef struct gmpr_host_group_ {
     gmpr_host *rhgroup_host;        /* Host pointer */
     gmp_addr_list rhgroup_addrs;    /* List of sources */
     gmp_addr_list rhgroup_deleted;    /* Deleted sources awaiting notify  */
-    thread rhgroup_thread;        /* Entry on main group thread */
+    task_thread rhgroup_thread;        /* Entry on main group thread */
     gmpr_group *rhgroup_group;        /* Pointer to main group entry */
     gmpx_timer *rhgroup_timer;        /* Host group timer */
     gmpr_notify_block rhgroup_notify[GMPX_MAX_RTR_CLIENTS];
@@ -550,7 +550,7 @@ gmpr_host_group_active (gmpr_host_group *host_group)
  */
 typedef struct gmpr_host_group_addr_ {
     gmp_addr_list_entry rhga_addr_ent;    /* Address entry */
-    thread rhga_thread;            /* Entry on main addr entry thread */
+    task_thread rhga_thread;            /* Entry on main addr entry thread */
     gmpr_group_addr_entry *rhga_source;    /* Pointer to main addr entry */
     gmpr_notify_block rhga_notify[GMPX_MAX_RTR_CLIENTS];
                     /* Notification block */
@@ -570,7 +570,7 @@ THREAD_TO_STRUCT(gmpr_thread_to_host_group_addr_entry, gmpr_host_group_addr,
  *
  * We keep a global linkage into the state across all interfaces and
  * groups.  Looking up in the global table based on group leads to a
- * thread of all group entries within that instance that match the
+ * task_thread of all group entries within that instance that match the
  * group address.  This is done so that the
  * gmp_router_which_interfaces() call can be implemented; it returns
  * all of the interfaces on which the entry was heard.
@@ -582,7 +582,7 @@ THREAD_TO_STRUCT(gmpr_thread_to_host_group_addr_entry, gmpr_host_group_addr,
 typedef struct gmpr_global_group_ {
     patnode global_group_node;        /* Entry on global tree */
     gmp_addr_string global_group_addr;    /* Group address */
-    thread global_group_head;        /* Head of thread of groups */
+    task_thread global_group_head;        /* Head of thread of groups */
 } gmpr_global_group;
 
 GMPX_PATNODE_TO_STRUCT(gmpr_patnode_to_global_group, gmpr_global_group,
@@ -1012,7 +1012,7 @@ extern gmpx_block_tag gmpr_host_notification_tag;
 extern gmpx_block_tag gmpr_global_group_tag;
 extern gmpx_block_tag gmpr_intf_list_tag;
 extern gmpx_block_tag gmpr_intf_group_tag;
-extern thread gmpr_global_instance_thread;
+extern task_thread gmpr_global_instance_thread;
 extern gmpx_patroot *gmpr_global_intf_tree[];
 
 

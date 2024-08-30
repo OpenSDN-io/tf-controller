@@ -618,7 +618,7 @@ gmpr_get_intf_list (gmp_instance_id instance_id, uint8_t *group_addr,
     gmpr_instance *instance;
     gmpr_global_group *global_group;
     gmpr_client_intf_list *intf_list_head, *cur_intf_list;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmpr_ogroup *group;
     gmp_addr_cat_entry *cat_entry;
 

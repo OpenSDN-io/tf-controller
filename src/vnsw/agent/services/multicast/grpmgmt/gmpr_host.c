@@ -137,7 +137,7 @@ gmpr_alert_host_clients (gmpr_instance *instance)
 {
     gmpr_client *client;
     gmpr_client_context *cli_ctx;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     /* Bail if not doing host tracking. */
 
@@ -536,7 +536,7 @@ gmpr_flush_host_notifications_client (gmpr_client *client)
 {
     gmpr_notify_block *notification;
 
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     /* Walk the client notification list. */
 
@@ -671,7 +671,7 @@ gmpr_host_group_notify_clients (gmpr_host_group *host_group)
 {
     gmpr_instance *instance;
     gmpr_client *client;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     instance = host_group->rhgroup_host->rhost_intf->rintf_instance;
 
@@ -702,7 +702,7 @@ gmpr_host_source_notify_clients (gmpr_host_group_addr *host_group_addr)
 {
     gmpr_instance *instance;
     gmpr_client *client;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmpr_host_group *host_group;
 
     host_group = host_group_addr->rhga_host_group;
@@ -1020,7 +1020,7 @@ gmpr_client_host_notification *
 gmpr_client_get_host_notification (gmpr_client *client,
 			   gmpr_client_host_notification *last_notification)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmpr_host_group *host_group;
     gmpr_host *host;
     gmpr_instance *instance;
@@ -1797,7 +1797,7 @@ gmpr_host_source_expiry (gmpx_timer *timer, void *context)
 void
 gmpr_host_notify_oif_map_change(gmpr_group *group)
 {
-    thread *group_thread_ptr;
+    task_thread *group_thread_ptr;
     gmpr_host_group *host_group;
     gmp_addr_list_entry *addr_entry;
     gmpr_host_group_addr *host_group_addr;

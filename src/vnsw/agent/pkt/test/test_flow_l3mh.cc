@@ -130,7 +130,7 @@ TEST_F(FlowTest, FlowStickiness_2) {
     AddArp(fabric_gw_ip_2_.to_string().c_str(), "0f:0e:0d:0c:0b:0a",
            eth_name_2_.c_str());
     client->WaitForIdle();
-    /* Add remote VN route to vrf5 */
+    // Add remote VN route to vrf5
     CreateRemoteRoute("vrf5", remote_vm4_ip, remote_router_ip_address, 8, "vn3");
 
     TestFlow flow[] = {
@@ -292,13 +292,14 @@ TEST_F(FlowTest, FlowStickiness_CompNh) {
     Ip4Address ip = Ip4Address::from_string("11.1.1.5");
     InetUnicastRouteEntry *rt = RouteGet("vrf5", ip, 32);
     EXPECT_TRUE(rt != NULL);
-    // Very composite nh for 11.1.1.5
+    // Verify composite nh for 11.1.1.5
     EXPECT_TRUE(rt->GetActiveNextHop()->GetType() == NextHop::COMPOSITE);
 
     char vm_ip[80] = "11.1.1.5";
     uint32_t mpls_label_2 = rt->GetActiveLabel();
-    uint32_t eth_intf_id_ = EthInterfaceGet("vnet1")->id();
-    TxIpMplsPacket(eth_intf_id_, remote_router_ip_address,
+    uint32_t eth_intf_id = EthInterfaceGet("vnet1")->id();
+
+    TxIpMplsPacket(eth_intf_id, remote_router_ip_address,
                    agent_->router_id().to_string().c_str(),
                    mpls_label_2, remote_vm1_ip, vm_ip, 1, 10);
 
@@ -310,7 +311,8 @@ TEST_F(FlowTest, FlowStickiness_CompNh) {
     EXPECT_TRUE(entry->data().component_nh_idx !=
             CompositeNH::kInvalidComponentNHIdx);
     // For ecmp flow underlay_gw_index_ is set to component_nh_idx
-    EXPECT_TRUE(entry->data().component_nh_idx == entry->data().underlay_gw_index_);
+    //EXPECT_TRUE(entry->data().component_nh_idx == entry->data().underlay_gw_index_);
+    EXPECT_EQ(entry->data().component_nh_idx, entry->data().underlay_gw_index_);
     DeleteVmportEnv(port_input, 3, true);
     DeleteRemoteRoute("vrf5", remote_vm1_ip);
     client->WaitForIdle();

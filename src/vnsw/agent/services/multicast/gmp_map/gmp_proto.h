@@ -139,7 +139,7 @@ public:
     };
 
     GmpProto(GmpType::Type type, Agent *agent, const std::string &task_name,
-                            int instance, boost::asio::io_service &io);
+                            int instance, boost::asio::io_context &io);
     ~GmpProto();
     GmpIntf *CreateIntf();
     bool DeleteIntf(GmpIntf *gif);
@@ -187,7 +187,7 @@ private:
     Agent *agent_;
     const std::string &name_;
     int instance_;
-    boost::asio::io_service &io_;
+    boost::asio::io_context &io_;
 
     DBTableBase::ListenerId vn_listener_id_;
     DBTableBase::ListenerId itf_listener_id_;
@@ -211,7 +211,7 @@ class GmpProtoManager {
 public:
     static GmpProto *CreateGmpProto(GmpType::Type type, Agent *agent,
                             const std::string &name, int instance,
-                            boost::asio::io_service &io);
+                            boost::asio::io_context &io);
     static bool DeleteGmpProto(GmpProto *gmp_proto);
 
     friend class GmpProto;

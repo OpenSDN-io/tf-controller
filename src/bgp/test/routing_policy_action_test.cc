@@ -11,6 +11,7 @@
 #include "bgp/routing-policy/routing_policy_action.h"
 #include "bgp/rtarget/rtarget_address.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using boost::assign::list_of;
 using std::find;
@@ -384,6 +385,8 @@ TEST_F(UpdateExtCommunityTest, ValidSubClusterHexString) {
 static void SetUp() {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 }
 
 static void TearDown() {

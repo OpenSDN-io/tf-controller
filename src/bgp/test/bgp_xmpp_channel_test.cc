@@ -202,8 +202,8 @@ public:
 protected:
     virtual void SetUp() {
         ConcurrencyScope scope("bgp::Config");
-        BgpObjectFactory::Register<BgpMembershipManager>(
-                boost::factory<BgpMembershipManagerTest *>());
+        BgpStaticObjectFactory::LinkImpl<BgpMembershipManager,
+        BgpMembershipManagerTest, BgpServer*>();
         server_.reset(new BgpServer(&evm_));
         enc_.reset(new XmppDocumentMock("agent.contrailsystems.com"));
 
@@ -722,8 +722,8 @@ class TestEnvironment : public ::testing::Environment {
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
 }
 
 static void TearDown() {

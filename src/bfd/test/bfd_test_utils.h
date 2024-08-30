@@ -45,9 +45,9 @@ class TestCommunicatorManager {
     typedef boost::function<void(const ControlPacket *)> callback;
     typedef std::map<boost::asio::ip::address, callback> Servers;
     Servers servers;
-    boost::asio::io_service *io_service;
+    boost::asio::io_context *io_service;
 
-    explicit TestCommunicatorManager(boost::asio::io_service *io_service)
+    explicit TestCommunicatorManager(boost::asio::io_context *io_service)
             : io_service(io_service) {}
 
 

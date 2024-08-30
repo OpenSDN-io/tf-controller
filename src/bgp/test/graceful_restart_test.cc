@@ -2065,14 +2065,14 @@ static void SetUp() {
     BgpServerTest::GlobalSetUp();
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<PeerCloseManager>(
-        boost::factory<PeerCloseManagerTest *>());
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
-    XmppObjectFactory::Register<XmppStateMachine>(
-        boost::factory<XmppStateMachineTest *>());
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineTest *>());
+    BgpStaticObjectFactory::LinkImpl<PeerCloseManager,
+        PeerCloseManagerTest, IPeerClose*>();
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
+    XmppStaticObjectFactory::LinkImpl<XmppStateMachine,
+        XmppStateMachineTest,XmppConnection*,bool,bool,int>();
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
 }
 
 static void TearDown() {

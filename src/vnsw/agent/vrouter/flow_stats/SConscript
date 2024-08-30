@@ -7,6 +7,9 @@ import sys
 Import('AgentEnv')
 env = AgentEnv.Clone()
 
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
+
 FlowStatsSandeshGenFiles = env.SandeshGenCpp('flow_stats.sandesh')
 FlowStatsSandeshGenSrcs = env.ExtractCpp(FlowStatsSandeshGenFiles)
 FlowStatsSandeshGenObjs = env.Object(FlowStatsSandeshGenSrcs)

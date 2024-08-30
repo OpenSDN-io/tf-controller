@@ -9,6 +9,9 @@ if platform.system() == 'Darwin':
 Import('AgentEnv')
 env = AgentEnv.Clone()
 
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
+
 SandeshGenFiles = env.SandeshGenCpp('pkt.sandesh')
 SandeshGenSrcs = env.ExtractCpp(SandeshGenFiles)
 

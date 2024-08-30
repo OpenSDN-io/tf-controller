@@ -2,6 +2,8 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <utility>
+
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -35,7 +37,7 @@
 #include <vrouter/flow_stats/flow_stats_types.h>
 
 bool flow_ageing_debug_ = false;
-FlowStatsCollector::FlowStatsCollector(boost::asio::io_service &io, int intvl,
+FlowStatsCollector::FlowStatsCollector(boost::asio::io_context &io, int intvl,
                                        uint32_t flow_cache_timeout,
                                        AgentUveBase *uve,
                                        uint32_t instance_id,
@@ -1190,9 +1192,12 @@ FlowStatsCollectorObject::FlowStatsCollectorObject(Agent *agent,
     FlowAgingTableKey *key = &(req->key);
     for (int i = 0; i < kMaxCollectors; i++) {
         uint32_t instance_id = mgr->AllocateIndex();
+        boost::asio::io_context& io_ref =
+            const_cast<boost::asio::io_context&>
+            (*agent->event_manager()->io_service());
         collectors[i].reset(
-            AgentObjectFactory::Create<FlowStatsCollector>(
-                *(agent->event_manager()->io_service()),
+            AgentStaticObjectFactory::CreateRef<FlowStatsCollector>(
+                io_ref,
                 req->flow_stats_interval, req->flow_cache_timeout,
                 agent->uve(), instance_id, key, mgr, this));
     }

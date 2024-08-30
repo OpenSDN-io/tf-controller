@@ -62,7 +62,7 @@ void OverlayPingReq::HandleRequest() const {
     Agent *agent = Agent::GetInstance();
     boost::uuids::uuid vn_uuid = StringToUuid(get_vn_uuid());
     IpAddress sip(IpAddress::from_string(get_source_ip(), ec));
-    if (ec != 0) {
+    if (ec.failed()) {
         err_str = "Invalid source IP";
         goto error;
     }
@@ -73,7 +73,7 @@ void OverlayPingReq::HandleRequest() const {
     }
 
     IpAddress dip(IpAddress::from_string(get_dest_ip(), ec));
-    if (ec != 0) {
+    if (ec.failed()) {
         err_str = "Invalid destination IP";
         goto error;
     }

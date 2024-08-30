@@ -60,7 +60,7 @@ enum Diagnostic {
 };
 
 std::ostream &operator<<(std::ostream &, enum BFDState);
-boost::optional<BFDState> BFDStateFromString(const char *);
+boost::optional<BFDState> BFDStateFromString(const std::string& s);
 
 struct SessionIndex {
 public:

@@ -376,7 +376,7 @@ typedef uint32_t bv_bitnum_t;        /* Bit number */
 typedef struct bit_vector_ {
     bvx_patroot *bv_root;        /* Patricia root */
     uint32_t bv_entry_count;        /* Number of attached entries */
-    thread bv_nonfull_head;        /* Head of non-full entries */
+    task_thread bv_nonfull_head;        /* Head of non-full entries */
     bv_bitnum_t bv_callback_ord;    /* Ordinal of callback bit */
     bv_bitnum_t bv_freed_ord;        /* Ordinal of a freed entry */
     boolean bv_fastvects;        /* Perform fast vector operations */

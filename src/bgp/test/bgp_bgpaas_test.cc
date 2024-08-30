@@ -1485,10 +1485,13 @@ class TestEnvironment : public ::testing::Environment {
 static void SetUp() {
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
-    BgpObjectFactory::Register<BgpPeerClose>(
-        boost::factory<BgpPeerCloseTest *>());
+
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
+    BgpStaticObjectFactory::LinkImpl<BgpPeerClose,
+        BgpPeerCloseTest, BgpPeer *>();
     BgpServerTest::GlobalSetUp();
 }
 

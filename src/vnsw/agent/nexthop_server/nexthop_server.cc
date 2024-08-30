@@ -14,7 +14,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
-NexthopDBServer::NexthopDBServer(boost::asio::io_service &io,
+NexthopDBServer::NexthopDBServer(boost::asio::io_context &io,
                                  const std::string &path)
   : io_service_(io), endpoint_path_(path), nexthop_table_(), client_table_()
 {

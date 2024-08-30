@@ -62,7 +62,7 @@ bool KSyncVxlanBridgeEntry::Sync(DBEntry *e) {
 }
 
 KSyncEntry *KSyncVxlanBridgeEntry::UnresolvedReference() {
-    return NULL;
+    return nullptr;
 }
 
 KSyncVxlanBridgeObject::KSyncVxlanBridgeObject(KSyncVxlan *ksync) :

@@ -195,8 +195,8 @@ int main(int argc, char **argv) {
     bgp_log_test::init();
     ::testing::InitGoogleTest(&argc, argv);
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpIfmapConfigManager *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
     int result = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();
     return result;

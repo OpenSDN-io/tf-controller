@@ -3,6 +3,7 @@
  */
 
 #include "bgp/test/bgp_ribout_updates_test.h"
+#include "bgp/test/bgp_config_mock.h"
 
 
 using namespace std;
@@ -2421,10 +2422,12 @@ TEST_F(RibOutUpdatesTest, PeerDequeueSplitMerge1) {
 
 static void SetUp() {
     bgp_log_test::init();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpMessageBuilder>(
-        boost::factory<BgpMessageBuilderMock *>());
+    BgpStaticObjectFactory::LinkImpl<BgpMessageBuilder,
+        BgpMessageBuilderMock>();
 }
 
 static void TearDown() {

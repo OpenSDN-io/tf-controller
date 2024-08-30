@@ -4,21 +4,34 @@
 
 #include "xmpp_factory.h"
 
-template <>
-XmppObjectFactory *Factory<XmppObjectFactory>::singleton_ = NULL;
-
 #include "xmpp_connection.h"
-FACTORY_STATIC_REGISTER(XmppObjectFactory, XmppServerConnection,
-                        XmppServerConnection);
-FACTORY_STATIC_REGISTER(XmppObjectFactory, XmppClientConnection,
-                        XmppClientConnection);
-FACTORY_STATIC_REGISTER(XmppObjectFactory, XmppChannelMux,
-                        XmppChannelMux);
+template<> XmppServerConnectionRec::FunctionType
+    XmppServerConnectionRec::create_func_ = nullptr;
+template<> XmppServerConnectionRec::DefaultLinkType
+    XmppServerConnectionRec::default_link_{};
+
+template<> XmppClientConnectionRec::FunctionType
+    XmppClientConnectionRec::create_func_ = nullptr;
+template<> XmppClientConnectionRec::DefaultLinkType
+    XmppClientConnectionRec::default_link_{};
+
+template<> XmppStateMachineRec::FunctionType
+    XmppStateMachineRec::create_func_ = nullptr;
+template<> XmppStateMachineRec::DefaultLinkType
+    XmppStateMachineRec::default_link_{};
+
+template<> XmppChannelMuxRec::FunctionType
+    XmppChannelMuxRec::create_func_ = nullptr;
+template<> XmppChannelMuxRec::DefaultLinkType
+    XmppChannelMuxRec::default_link_{};
 
 #include "xmpp_lifetime.h"
-FACTORY_STATIC_REGISTER(XmppObjectFactory, XmppLifetimeManager,
-                        XmppLifetimeManager);
+template<> XmppLifetimeManagerRec::FunctionType
+    XmppLifetimeManagerRec::create_func_ = nullptr;
+template<> XmppLifetimeManagerRec::DefaultLinkType
+    XmppLifetimeManagerRec::default_link_{};
 
-#include "xmpp_state_machine.h"
-FACTORY_STATIC_REGISTER(XmppObjectFactory, XmppStateMachine,
-                        XmppStateMachine);
+//
+//
+//
+

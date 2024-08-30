@@ -51,7 +51,7 @@ public:
 
     DhcpLeaseDb(const Ip4Address &subnet, uint8_t plen,
                 const std::vector<Ip4Address> &reserve_addresses,
-                const std::string &lease_filename, boost::asio::io_service &io);
+                const std::string &lease_filename, boost::asio::io_context &io);
     virtual ~DhcpLeaseDb();
 
     // update subnet details

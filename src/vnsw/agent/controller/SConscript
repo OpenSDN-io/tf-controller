@@ -11,6 +11,9 @@ SandeshGenFiles = env.SandeshGenCpp('controller.sandesh')
 SandeshGenSrcs = env.ExtractCpp(SandeshGenFiles)
 sandesh_objs = AgentEnv.BuildExceptionCppObj(env, SandeshGenSrcs)
 
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
+
 vnswctrl = env.Library('vnswctrl',
                        sandesh_objs +
                        [

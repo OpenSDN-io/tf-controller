@@ -84,7 +84,7 @@ void VirtualGatewayConfigTable::BuildSubnetList
             boost::algorithm::trim(str);
             ++it;
             ec = Ip4PrefixParse(str, &addr, &plen);
-            if (ec != 0 || plen >= 32) {
+            if (ec.failed() || plen >= 32) {
                 LOG(ERROR, "Error in config file. Invalid gateway "
                     "ip_block/route " << str);
                 continue;

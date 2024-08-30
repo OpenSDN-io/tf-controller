@@ -162,7 +162,7 @@ void KSync::NetlinkInit() {
     bool use_work_queue = false;
 
     event_mgr = agent_->event_manager();
-    boost::asio::io_service &io = *event_mgr->io_service();
+    boost::asio::io_context &io = *event_mgr->io_service();
 
     KSyncSockNetlink::Init(io, NETLINK_GENERIC, use_work_queue,
                            agent_->params()->ksync_thread_cpu_pin_policy());
@@ -619,7 +619,7 @@ void KSyncUds::InitFlowMem() {
 void KSyncUds::UdsInit() {
     EventManager *event_mgr;
     event_mgr = agent_->event_manager();
-    boost::asio::io_service &io = *event_mgr->io_service();
+    boost::asio::io_context &io = *event_mgr->io_service();
     boost::system::error_code ec;
 
     string ksync_agent_vrouter_sock_path = KSYNC_AGENT_VROUTER_SOCK_PATH;

@@ -14,6 +14,7 @@
 #include "bgp/bgp_session.h"
 #include "control-node/control_node.h"
 #include "config-client-mgr/config_client_manager.h"
+#include "bgp/test/bgp_config_mock.h"
 
 // Use this test to mock BgpPeer and test selected functionality in BgpPeer as
 // desired. e.g. EndOfRibSendTimerExpired() API.
@@ -585,8 +586,10 @@ INSTANTIATE_TEST_CASE_P(BgpPeerTestWithParams, BgpPeerParamTest,
 static void SetUp() {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineMock *>());
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineMock, BgpPeer *>();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 }
 
 static void TearDown() {

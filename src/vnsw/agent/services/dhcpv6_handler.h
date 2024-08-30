@@ -264,7 +264,7 @@ public:
     };
 
     Dhcpv6Handler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                  boost::asio::io_service &io);
+                  boost::asio::io_context &io);
     virtual ~Dhcpv6Handler();
 
     bool Run();

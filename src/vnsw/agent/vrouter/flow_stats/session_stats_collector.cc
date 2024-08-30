@@ -8,7 +8,6 @@
 #include <uve/stats_collector.h>
 #include <uve/interface_uve_stats_table.h>
 #include <sandesh/common/flow_types.h>
-#include <cmn/agent_factory.h>
 #include <init/agent_param.h>
 #include <vrouter/flow_stats/session_stats_collector.h>
 #include <vrouter/ksync/ksync_init.h>
@@ -17,6 +16,7 @@
 #include <oper/global_vrouter.h>
 #include <vrouter/flow_stats/flow_stats_collector.h>
 #include <vrouter/flow_stats/flow_stats_types.h>
+#include <cmn/agent_factory.h>
 
 // setting work queue max size as 4M
 #define DEFAULT_SSC_REQUEST_QUEUE_SIZE 4*1024*1024
@@ -26,7 +26,7 @@ SandeshTraceBufferPtr SessionStatsTraceBuf(SandeshTraceBufferCreate(
     "SessionStats", 4000));
 
 bool session_debug_ = false;
-SessionStatsCollector::SessionStatsCollector(boost::asio::io_service &io,
+SessionStatsCollector::SessionStatsCollector(boost::asio::io_context &io,
                                        AgentUveBase *uve,
                                        uint32_t instance_id,
                                        FlowStatsManager *aging_module,
@@ -2095,9 +2095,12 @@ SessionStatsCollectorObject::SessionStatsCollectorObject(Agent *agent,
                                                    FlowStatsManager *mgr) {
     for (int i = 0; i < kMaxSessionCollectors; i++) {
         uint32_t instance_id = mgr->AllocateIndex();
+        boost::asio::io_context& io_ref =
+            const_cast<boost::asio::io_context&>
+            (*agent->event_manager()->io_service());
         collectors[i].reset(
-            AgentObjectFactory::Create<SessionStatsCollector>(
-                *(agent->event_manager()->io_service()),
+            AgentStaticObjectFactory::CreateRef<SessionStatsCollector>(
+                io_ref,
                 agent->uve(), instance_id, mgr, this));
     }
 }

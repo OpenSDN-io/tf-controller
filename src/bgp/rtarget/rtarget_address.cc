@@ -70,7 +70,7 @@ RouteTarget RouteTarget::FromString(const string &str,
     Ip4Address addr = Ip4Address::from_string(second, ec);
     int offset = 6;
     char *endptr;
-    if (ec.value() != 0) {
+    if (ec.failed()) {
         bool is_as4 = false;
         // Not an IP address, try ASN.
         if (second.c_str()[pos - 1] == 'L') {

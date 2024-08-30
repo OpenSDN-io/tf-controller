@@ -9,7 +9,7 @@
 
 BindResolver *BindResolver::resolver_;
 
-void BindResolver::Init(boost::asio::io_service &io,
+void BindResolver::Init(boost::asio::io_context &io,
                         const std::vector<DnsServer> &dns_servers,
                         uint16_t client_port, Callback cb, uint8_t dscp) {
     assert(resolver_ == NULL);
@@ -23,7 +23,7 @@ void BindResolver::Shutdown() {
     }
 }
 
-BindResolver::BindResolver(boost::asio::io_service &io,
+BindResolver::BindResolver(boost::asio::io_context &io,
                            const std::vector<DnsServer> &dns_servers,
                            uint16_t client_port, Callback cb,
                            uint8_t dscp)

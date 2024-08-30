@@ -468,14 +468,15 @@ void BgpServerTest::GlobalSetUp(void) {
     std::srand(std::time(0));
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpPeer>(
-        boost::factory<BgpPeerTest *>());
-    BgpObjectFactory::Register<PeerManager>(
-        boost::factory<PeerManagerTest *>());
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpIfmapConfigManager *>());
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineTest *>());
-    XmppObjectFactory::Register<XmppStateMachine>(
-        boost::factory<XmppStateMachineTest *>());
+    BgpStaticObjectFactory::LinkImpl<BgpPeer, BgpPeerTest,
+        BgpServer *, RoutingInstance *,
+        const BgpNeighborConfig *>();
+    BgpStaticObjectFactory::LinkImpl<PeerManager,
+        PeerManagerTest, RoutingInstance*>();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
+    XmppStaticObjectFactory::LinkImpl<XmppStateMachine,
+        XmppStateMachineTest,XmppConnection*,bool,bool,int>();
 }

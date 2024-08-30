@@ -406,7 +406,7 @@ igmp_format_v1_packet (gmp_role role, gmp_packet *gen_packet,
     igmp_v1v2_pkt *v1v2_pkt;
     igmp_hdr *pkt_hdr;
     gmp_query_packet *query_pkt;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmp_report_group_record *group_record;
     gmp_report_packet *report_pkt;
     uint32_t formatted_len;
@@ -492,7 +492,7 @@ igmp_format_v2_packet (gmp_role role, gmp_packet *gen_packet,
     igmp_hdr *pkt_hdr;
     gmp_query_packet *query_pkt;
     gmp_report_packet *report_pkt;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmp_report_group_record *group_record;
     uint32_t max_resp;
     uint32_t formatted_len;
@@ -764,7 +764,7 @@ igmp_format_v3_report (gmp_role role, gmp_packet *gen_packet,
     gmp_addr_list *addr_list;
     uint8_t *byte_ptr;
     gmp_addr_cat_entry *cat_entry;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     boolean group_done;
 
     /* Format a report packet. */

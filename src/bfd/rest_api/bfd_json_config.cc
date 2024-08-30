@@ -252,7 +252,7 @@ bool JsonStateMap::ValidateJsonDocument(const contrail_rapidjson::Value& documen
             return false;
 
         error_code ec;
-        if (ec != boost::system::errc::success)
+        if (ec.failed())
             return false;
         if (!BFDStateFromString(it->value.GetString()))
             return false;

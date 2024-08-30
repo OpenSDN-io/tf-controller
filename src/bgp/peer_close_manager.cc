@@ -44,7 +44,7 @@
 
 // Create an instance of PeerCloseManager with back reference to parent IPeer
 PeerCloseManager::PeerCloseManager(IPeerClose *peer_close,
-                                   boost::asio::io_service *io_service) :
+                                   boost::asio::io_context *io_service) :
         peer_close_(peer_close), gr_timer_(NULL),
         event_queue_(new WorkQueue<Event *>(
                      TaskScheduler::GetInstance()->GetTaskId(

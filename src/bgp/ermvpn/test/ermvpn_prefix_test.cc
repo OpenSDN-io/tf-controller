@@ -7,6 +7,7 @@
 #include "bgp/bgp_server.h"
 #include "bgp/ermvpn/ermvpn_table.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 #include "testing/gunit.h"
 
 using std::string;
@@ -548,6 +549,8 @@ int main(int argc, char **argv) {
     bgp_log_test::init();
     ::testing::InitGoogleTest(&argc, argv);
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
     int result = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();
     return result;

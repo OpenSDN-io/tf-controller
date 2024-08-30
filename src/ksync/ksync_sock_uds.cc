@@ -39,7 +39,7 @@ private:
 
 string KSyncSockUds::sockpath_= KSYNC_AGENT_VROUTER_SOCK_PATH;
 
-KSyncSockUds::KSyncSockUds(boost::asio::io_service &ios) :
+KSyncSockUds::KSyncSockUds(boost::asio::io_context &ios) :
     sock_(ios),
     server_ep_(sockpath_),
     rx_buff_(NULL),
@@ -56,7 +56,7 @@ retry:;
         sleep(1);
         goto retry;
     }
-    socket_ = sock_.native();
+    socket_ = sock_.native_handle();
     connected_ = true;
     rx_buff_   = new char[10*kBufLen];
     rx_buff_q_ = new char[10*kBufLen];
@@ -94,7 +94,7 @@ retry:;
                     sleep(1);
                     goto retry;
                 }
-                socket_ = sock_.native();
+                socket_ = sock_.native_handle();
                 connected_ = true;
             }
             continue;

@@ -804,8 +804,8 @@ class TestEnvironment : public ::testing::Environment {
 
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpIfmapConfigManager *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
 }
 
 static void TearDown() {
@@ -884,6 +884,7 @@ INSTANTIATE_TEST_CASE_P(ReplicatorRandomTestWithParams, ReplicationTest,
 
 int main(int argc, char **argv) {
     bgp_log_test::init();
+    gargc = argc; gargv = argv;
     ::testing::InitGoogleTest(&argc, argv);
     ::testing::AddGlobalTestEnvironment(new TestEnvironment());
     SetUp();

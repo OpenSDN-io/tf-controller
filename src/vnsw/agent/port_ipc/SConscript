@@ -7,11 +7,8 @@ import platform
 Import('AgentEnv')
 env = AgentEnv.Clone()
 
-except_env = env.Clone()
-cflags = except_env['CCFLAGS']
-if '-fno-exceptions' in cflags:
-    cflags.remove('-fno-exceptions')
-except_env.Replace(CCFLAGS=cflags)
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
 
 SandeshGenFiles = env.SandeshGenCpp('port_ipc.sandesh')
 SandeshGenSrcs = env.ExtractCpp(SandeshGenFiles)
@@ -21,10 +18,10 @@ os_dependent_sources = ['nix/port_ipc_handler_os_impl.cc']
 
 port_ipc_sources = [
     'config_stale_cleaner.cc',
-    except_env.Object('port_ipc_handler.cc'),
+    'port_ipc_handler.cc',
     'port_subscribe_table.cc',
     'rest_common.cc',
-    except_env.Object('rest_server.cc')
+    'rest_server.cc'
 ] + os_dependent_sources
 
 libport_ipc = env.Library('port_ipc', sandesh_objs + port_ipc_sources)

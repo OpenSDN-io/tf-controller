@@ -51,11 +51,11 @@ public:
         uint32_t error;
     };
 
-    Dhcpv6Proto(Agent *agent, boost::asio::io_service &io,
+    Dhcpv6Proto(Agent *agent, boost::asio::io_context &io,
                 bool run_with_vrouter);
     virtual ~Dhcpv6Proto();
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
     void Shutdown();
 
     const Duid *server_duid() const { return &server_duid_; }

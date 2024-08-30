@@ -19,6 +19,7 @@
 #include "bgp/bgp_update_sender.h"
 #include "bgp/l3vpn/inetvpn_table.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using namespace std;
 
@@ -559,8 +560,10 @@ static void SetUp() {
     bgp_log_test::init();
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpMessageBuilder>(
-        boost::factory<BgpMessageBuilderMock *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
+    BgpStaticObjectFactory::LinkImpl<BgpMessageBuilder,
+        BgpMessageBuilderMock>();
 }
 
 static void TearDown() {

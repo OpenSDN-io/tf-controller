@@ -485,7 +485,7 @@ void AgentParam::BuildAddrList(const string &val, AddressList& addr_list) {
         if (str.find('/') != std::string::npos) {
             boost::system::error_code ec =
                 Ip4PrefixParse(str, &addr, &plen);
-            if (ec != 0 || vhost_.plen_ >= 32) {
+            if (ec.failed() || vhost_.plen_ >= 32) {
                 LOG(ERROR, "Error in parsing address " << *it);
             } else {
                 addr_list.push_back(addr);
@@ -509,7 +509,7 @@ void AgentParam::ParseVirtualHostArguments
     string ip;
     if (GetOptValue<string>(var_map, ip, "VIRTUAL-HOST-INTERFACE.ip")) {
         ec = Ip4PrefixParse(ip, &vhost_.addr_, &vhost_.plen_);
-        if (ec != 0 || vhost_.plen_ >= 32) {
+        if (ec.failed() || vhost_.plen_ >= 32) {
             cout << "Error parsing vhost ip argument from <" << ip << ">\n";
         }
     }
@@ -563,7 +563,7 @@ void AgentParam::ParseHypervisorArguments
             if (var_map.count("HYPERVISOR.xen_ll_ip")) {
                 string ip = var_map["HYPERVISOR.xen_ll_ip"].as<string>();
                 ec = Ip4PrefixParse(ip, &xen_ll_.addr_, &xen_ll_.plen_);
-                if (ec != 0 || xen_ll_.plen_ >= 32) {
+                if (ec.failed() || xen_ll_.plen_ >= 32) {
                     cout << "Error in argument <" << config_file_
                             << ">. Error parsing Xen Link-local ip-address from <"
                             << ip << ">\n";

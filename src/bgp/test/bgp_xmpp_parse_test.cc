@@ -10,6 +10,7 @@
 #include "bgp/bgp_xmpp_channel.h"
 #include "xml/xml_pugi.h"
 #include "testing/gunit.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using std::unique_ptr;
 using std::ifstream;
@@ -474,6 +475,8 @@ TEST_F(BgpXmppParseTest, EnetItemError13) {
 
 int main(int argc, char **argv) {
     bgp_log_test::init();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

@@ -187,7 +187,7 @@ public:
     };
 
 
-    SessionStatsCollector(boost::asio::io_service &io, AgentUveBase *uve,
+    SessionStatsCollector(boost::asio::io_context &io, AgentUveBase *uve,
                           uint32_t instance_id, FlowStatsManager *fsm,
                           SessionStatsCollectorObject *obj);
     virtual ~SessionStatsCollector();

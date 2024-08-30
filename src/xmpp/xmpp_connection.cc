@@ -57,9 +57,9 @@ XmppConnection::XmppConnection(TcpServer *server,
       to_(config->ToAddr),
       auth_enabled_(config->auth_enabled),
       dscp_value_(config->dscp_value), xmlns_(config->xmlns),
-      state_machine_(XmppObjectFactory::Create<XmppStateMachine>(
+      state_machine_(XmppStaticObjectFactory::Create<XmppStateMachine>(
           this, config->ClientOnly(), config->auth_enabled, config->xmpp_hold_time)),
-      mux_(XmppObjectFactory::Create<XmppChannelMux>(this)) {
+      mux_(XmppStaticObjectFactory::Create<XmppChannelMux>(this)) {
     ostringstream oss;
     oss << FromString() << ":" << endpoint().address().to_string();
     uve_key_str_ = oss.str();

@@ -7,7 +7,7 @@
 #include <services/icmp_error_proto.h>
 #include <services/icmp_error_handler.h>
 
-IcmpErrorProto::IcmpErrorProto(Agent *agent, boost::asio::io_service &io) :
+IcmpErrorProto::IcmpErrorProto(Agent *agent, boost::asio::io_context &io) :
     Proto(agent, "Agent::Services", PktHandler::ICMP_ERROR, io) {
     // limit the number of entries in the workqueue
     work_queue_.SetSize(agent->params()->services_queue_limit());
@@ -18,7 +18,7 @@ IcmpErrorProto::~IcmpErrorProto() {
 }
 
 ProtoHandler *IcmpErrorProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                                boost::asio::io_service &io) {
+                                                boost::asio::io_context &io) {
     return new IcmpErrorHandler(agent(), this, info, &io);
 }
 

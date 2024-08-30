@@ -484,7 +484,7 @@ BgpServer::BgpServer(EventManager *evm)
       bgp_identifier_u32_(0),
       hold_time_(0),
       gr_helper_disable_(false),
-      lifetime_manager_(BgpObjectFactory::Create<BgpLifetimeManager>(this,
+      lifetime_manager_(BgpStaticObjectFactory::Create<BgpLifetimeManager>(this,
           TaskScheduler::GetInstance()->GetTaskId("bgp::Config"))),
       deleter_(new DeleteActor(this)),
       destroyed_(false),
@@ -503,12 +503,12 @@ BgpServer::BgpServer(EventManager *evm)
       ovnpath_db_(new OriginVnPathDB(this)),
       pmsi_tunnel_db_(new PmsiTunnelDB(this)),
       attr_db_(new BgpAttrDB(this)),
-      session_mgr_(BgpObjectFactory::Create<BgpSessionManager>(evm, this)),
+      session_mgr_(BgpStaticObjectFactory::Create<BgpSessionManager>(evm, this)),
       update_sender_(new BgpUpdateSender(this)),
-      inst_mgr_(BgpObjectFactory::Create<RoutingInstanceMgr>(this)),
-      policy_mgr_(BgpObjectFactory::Create<RoutingPolicyMgr>(this)),
-      rtarget_group_mgr_(BgpObjectFactory::Create<RTargetGroupMgr>(this)),
-      membership_mgr_(BgpObjectFactory::Create<BgpMembershipManager>(this)),
+      inst_mgr_(BgpStaticObjectFactory::Create<RoutingInstanceMgr>(this)),
+      policy_mgr_(BgpStaticObjectFactory::Create<RoutingPolicyMgr>(this)),
+      rtarget_group_mgr_(BgpStaticObjectFactory::Create<RTargetGroupMgr>(this)),
+      membership_mgr_(BgpStaticObjectFactory::Create<BgpMembershipManager>(this)),
       inet_condition_listener_(new BgpConditionListener(this)),
       inet6_condition_listener_(new BgpConditionListener(this)),
       evpn_condition_listener_(new BgpConditionListener(this)),
@@ -519,16 +519,16 @@ BgpServer::BgpServer(EventManager *evm)
       evpn_replicator_(new RoutePathReplicator(this, Address::EVPN)),
       inet6vpn_replicator_(new RoutePathReplicator(this, Address::INET6VPN)),
       inet_service_chain_mgr_(
-          BgpObjectFactory::Create<IServiceChainMgr, SCAddress::INET>(this)),
+          BgpStaticObjectFactory::Create<IServiceChainMgr, SCAddress::INET>(this)),
       inet6_service_chain_mgr_(
-          BgpObjectFactory::Create<IServiceChainMgr, SCAddress::INET6>(this)),
+          BgpStaticObjectFactory::Create<IServiceChainMgr, SCAddress::INET6>(this)),
       evpn_service_chain_mgr_(
-          BgpObjectFactory::Create<IServiceChainMgr, SCAddress::EVPN>(this)),
+          BgpStaticObjectFactory::Create<IServiceChainMgr, SCAddress::EVPN>(this)),
       evpn6_service_chain_mgr_(
-          BgpObjectFactory::Create<IServiceChainMgr, SCAddress::EVPN6>(this)),
+          BgpStaticObjectFactory::Create<IServiceChainMgr, SCAddress::EVPN6>(this)),
       global_config_(new BgpGlobalSystemConfig()),
       global_qos_(new BgpGlobalQosConfig()),
-      config_mgr_(BgpObjectFactory::Create<BgpConfigManager>(this)),
+      config_mgr_(BgpStaticObjectFactory::Create<BgpConfigManager>(this)),
       updater_(new ConfigUpdater(this)) {
     bgp_count_ = 0;
     num_up_peer_ = 0;
@@ -679,7 +679,7 @@ const string &BgpServer::localname() const {
     return config_mgr_->localname();
 }
 
-boost::asio::io_service *BgpServer::ioservice() {
+boost::asio::io_context *BgpServer::ioservice() {
     return session_manager()->event_manager()->io_service();
 }
 

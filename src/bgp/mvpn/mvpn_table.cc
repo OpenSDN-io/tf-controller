@@ -101,7 +101,7 @@ void MvpnTable::CreateManager() {
     MvpnProjectManager *pm = GetProjectManager();
     if (!pm)
         return;
-    manager_ = BgpObjectFactory::Create<MvpnManager>(this, pm->table());
+    manager_ = BgpStaticObjectFactory::Create<MvpnManager>(this, pm->table());
     manager_->Initialize();
 
     // Notify all routes in the table for further evaluation.

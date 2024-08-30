@@ -22,7 +22,7 @@ public:
     static const Ip6Address kSolicitedNodeIpSuffixMask;
     static const uint8_t kIPv6AddrUnspecifiedBytes[IPV6_ADDR_SIZE_BYTES];
     Icmpv6Handler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                  boost::asio::io_service &io);
+                  boost::asio::io_context &io);
     virtual ~Icmpv6Handler();
 
     bool Run();

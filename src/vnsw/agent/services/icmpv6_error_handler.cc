@@ -19,7 +19,7 @@ extern SandeshTraceBufferPtr Icmpv6TraceBuf;
 
 Icmpv6ErrorHandler::Icmpv6ErrorHandler(Agent *agent, Icmpv6ErrorProto *proto,
                                        boost::shared_ptr<PktInfo> info,
-                                       boost::asio::io_service *io) :
+                                       boost::asio::io_context *io) :
     ProtoHandler(agent, info, *io), proto_(proto) {
 }
 

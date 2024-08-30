@@ -81,7 +81,6 @@ bool FlowHandler::Run() {
                      flow_proto_->GetTable(flow_table_index_));
     std::unique_ptr<FlowTaskMsg> ipc;
     bool allow_reentrant = true;
-
     if (pkt_info_->type == PktType::INVALID) {
         info.SetPktInfo(pkt_info_);
         info.l3_flow = IsL3ModeFlow();

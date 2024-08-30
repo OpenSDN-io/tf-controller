@@ -71,7 +71,7 @@ RoutingPolicy *RoutingPolicyMgr::CreateRoutingPolicy(
         return policy;
     }
 
-    policy = BgpObjectFactory::Create<RoutingPolicy>(
+    policy = BgpStaticObjectFactory::Create<RoutingPolicy>(
         config->name(), server_, this, config);
     routing_policies_.insert(std::make_pair(config->name(), policy));
     policy->ProcessConfig();

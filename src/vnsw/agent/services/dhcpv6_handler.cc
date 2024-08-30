@@ -224,7 +224,7 @@ Dhcpv6CategoryMap g_dhcpv6_category_map =
         (DHCPV6_OPTION_IPv6_ADDRESS_ANDSF, Dhcpv6Handler::OneIPv6Plus);
 
 Dhcpv6Handler::Dhcpv6Handler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                             boost::asio::io_service &io)
+                             boost::asio::io_context &io)
         : DhcpHandlerBase(agent, info, io),
           msg_type_(DHCPV6_UNKNOWN), out_msg_type_(DHCPV6_UNKNOWN),
           rapid_commit_(false), reconfig_accept_(false),

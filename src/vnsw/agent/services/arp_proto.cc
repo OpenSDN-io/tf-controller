@@ -16,7 +16,7 @@
 #include "services_init.h"
 #include "mac_learning/mac_learning_proto.h"
 
-ArpProto::ArpProto(Agent *agent, boost::asio::io_service &io,
+ArpProto::ArpProto(Agent *agent, boost::asio::io_context &io,
                    bool run_with_vrouter) :
     Proto(agent, "Agent::Services", PktHandler::ARP, io),
     run_with_vrouter_(run_with_vrouter), ip_fabric_interface_index_(-1),
@@ -60,7 +60,7 @@ void ArpProto::Shutdown() {
 }
 
 ProtoHandler *ArpProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                          boost::asio::io_service &io) {
+                                          boost::asio::io_context &io) {
     return new ArpHandler(agent(), info, io);
 }
 

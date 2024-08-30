@@ -37,7 +37,7 @@ KSyncVxlanPortEntry::KSyncVxlanPortEntry(KSyncVxlanPortObject *obj,
 KSyncVxlanPortEntry::KSyncVxlanPortEntry(KSyncVxlanPortObject *obj,
                                          const Interface *intrface) :
     KSyncDBEntry(), type_(intrface->type()), port_name_(intrface->name()),
-    bridge_(NULL), ksync_obj_(obj) {
+    bridge_(nullptr), ksync_obj_(obj) {
 }
 
 KSyncVxlanPortEntry::~KSyncVxlanPortEntry() {
@@ -66,12 +66,13 @@ bool KSyncVxlanPortEntry::Sync(DBEntry *e) {
     }
 
     VmInterface *vm_interface = static_cast<VmInterface *>(e);
-    KSyncVxlanBridgeEntry *bridge = NULL;
+    KSyncVxlanBridgeEntry *bridge = nullptr;
     const VnEntry *vn = static_cast<const VnEntry *>(vm_interface->vn());
-    const VxLanId *vxlan = NULL;
-    if (vn)
-        vxlan = vn->vxlan_id();
-    if (vxlan != NULL) {
+    const VxLanId *vxlan = nullptr;
+    if (vn) {
+        vxlan = vn->vxlan_id_ref();
+    }
+    if (vxlan != nullptr) {
         KSyncVxlanBridgeObject *bridge_obj = ksync_obj_->ksync()->bridge_obj();
         KSyncEntry *key = bridge_obj->DBToKSyncEntry(vxlan);
         bridge = static_cast<KSyncVxlanBridgeEntry *>
@@ -79,7 +80,7 @@ bool KSyncVxlanPortEntry::Sync(DBEntry *e) {
         delete key;
         assert(bridge);
     } else {
-        bridge_ = NULL;
+        bridge_ = nullptr;
     }
 
     if (bridge_ != bridge) {
@@ -92,10 +93,10 @@ bool KSyncVxlanPortEntry::Sync(DBEntry *e) {
 
 KSyncEntry *KSyncVxlanPortEntry::UnresolvedReference() {
     if (type_ != Interface::VM_INTERFACE) {
-        return NULL;
+        return nullptr;
     }
 
-    if (bridge_ == NULL) {
+    if (bridge_ == nullptr) {
         return KSyncVxlan::defer_entry();
     }
 
@@ -103,7 +104,7 @@ KSyncEntry *KSyncVxlanPortEntry::UnresolvedReference() {
         return bridge_;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 KSyncVxlanPortObject::KSyncVxlanPortObject(KSyncVxlan *ksync) :

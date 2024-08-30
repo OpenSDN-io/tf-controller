@@ -10,7 +10,8 @@ import os
 Import('BuildEnv')
 
 env = BuildEnv.Clone()
-env.CppDisableExceptions()
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
 
 env.Append(CPPPATH = env['TOP'])
 env.Append(CPPPATH = [env['TOP'] + '/ifmap'])

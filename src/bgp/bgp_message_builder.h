@@ -43,6 +43,7 @@ class BgpMessageBuilder : public MessageBuilder {
 public:
     BgpMessageBuilder();
     virtual Message *Create() const;
+    virtual ~BgpMessageBuilder(){};
 
 private:
     DISALLOW_COPY_AND_ASSIGN(BgpMessageBuilder);

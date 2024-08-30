@@ -344,7 +344,7 @@ gmpr_free_ogroup_addr_entry (gmp_addr_list_entry *addr_entry)
 {
     gmpr_ogroup_addr_entry *ogroup_addr_entry;
     gmpr_group_addr_entry *group_addr_entry;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     ogroup_addr_entry = gmpr_addr_entry_to_ogroup_entry(addr_entry);
 
@@ -446,7 +446,7 @@ gmpr_free_group_addr_entry (gmp_addr_list_entry *addr_entry)
     gmpr_host_group_addr *host_group_addr_entry;
     gmpr_group *group;
     gmpr_intf *intf;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     group_addr_entry = gmpr_addr_entry_to_group_entry(addr_entry);
 
@@ -811,7 +811,7 @@ gmpr_destroy_ogroup (gmpr_ogroup *ogroup)
 {
     gmpr_group *group;
     gmpr_intf *intf;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmpr_instance *instance;
 
     intf = ogroup->rogroup_intf;
@@ -872,7 +872,7 @@ gmpr_destroy_group (gmpr_group *group)
 {
     gmpr_host_group *host_group;
     gmpr_intf *intf;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmpr_instance *instance;
 
     intf = group->rgroup_intf;
@@ -1000,7 +1000,7 @@ gmpr_enqueue_group_xmit (gmpr_group *group)
 gmpr_group *
 gmpr_first_group_xmit (gmpr_intf *intf)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmpr_group *group;
 
     thread_ptr = thread_circular_top(&intf->rintf_xmit_head);
@@ -2171,7 +2171,7 @@ gmpr_update_intf_output_groups (gmpr_intf *intf)
 {
     gmpr_ogroup *ogroup;
     gmpr_group *group;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     /* Walk all output groups on the interface. */
 

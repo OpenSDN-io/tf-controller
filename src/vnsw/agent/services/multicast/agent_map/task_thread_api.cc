@@ -10,7 +10,7 @@ extern "C" {
 }
 #endif
 
-void thread_new_circular_thread(thread *head)
+void thread_new_circular_thread(task_thread *head)
 {
     if (!head) {
         return;
@@ -22,22 +22,22 @@ void thread_new_circular_thread(thread *head)
     return;
 }
 
-boolean thread_circular_thread_empty(thread *head)
+boolean thread_circular_thread_empty(task_thread *head)
 {
     return (head->next == head) ? TRUE : FALSE;
 }
 
-boolean thread_circular_thread_head(thread *head, thread *node)
+boolean thread_circular_thread_head(task_thread *head, task_thread *node)
 {
     return (head == node) ? TRUE : FALSE;
 }
 
-boolean thread_node_on_thread(const thread *node)
+boolean thread_node_on_thread(const task_thread *node)
 {
     return (node->next) ? TRUE : FALSE;
 }
 
-thread *thread_circular_top(thread *head)
+task_thread *thread_circular_top(task_thread *head)
 {
     if (head->next == head) {
         return NULL;
@@ -46,7 +46,7 @@ thread *thread_circular_top(thread *head)
     return head->next;
 }
 
-void thread_circular_add_top(thread *head, thread *node)
+void thread_circular_add_top(task_thread *head, task_thread *node)
 {
     node->next = head->next;
     node->prev = head;
@@ -56,17 +56,17 @@ void thread_circular_add_top(thread *head, thread *node)
     return;
 }
 
-void thread_circular_add_bottom(thread *head, thread *node)
+void thread_circular_add_bottom(task_thread *head, task_thread *node)
 {
     thread_circular_add_top(head->prev, node);
 }
 
-thread *thread_next_node(thread *node)
+task_thread *thread_next_node(task_thread *node)
 {
     return node->next;
 }
 
-thread *thread_circular_thread_next(thread *head, thread *node)
+task_thread *thread_circular_thread_next(task_thread *head, task_thread *node)
 {
     if (!node) {
         return (head->next == head) ? NULL : head->next;
@@ -75,7 +75,7 @@ thread *thread_circular_thread_next(thread *head, thread *node)
     return (node->next == head) ? NULL : node->next;
 }
 
-void thread_remove(thread *node)
+void thread_remove(task_thread *node)
 {
     if (!node->next) {
         return;
@@ -88,9 +88,9 @@ void thread_remove(thread *node)
     node->prev = NULL;
 }
 
-thread *thread_circular_dequeue_top(thread *head)
+task_thread *thread_circular_dequeue_top(task_thread *head)
 {
-    thread *current = NULL;
+    task_thread *current = NULL;
 
     if (head->next == head) {
         return NULL;

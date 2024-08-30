@@ -8,7 +8,7 @@
 #include "services/services_init.h"
 #include "oper/route_common.h"
 
-ArpEntry::ArpEntry(boost::asio::io_service &io, ArpHandler *handler,
+ArpEntry::ArpEntry(boost::asio::io_context &io, ArpHandler *handler,
                    ArpKey &key, const VrfEntry *vrf, State state,
                    const Interface *itf)
     : io_(io), key_(key), nh_vrf_(vrf), state_(state), retry_count_(0),

@@ -261,10 +261,10 @@ class TestEnvironment : public ::testing::Environment {
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    XmppObjectFactory::Register<XmppLifetimeManager>(
-        boost::factory<XmppLifetimeManagerTest *>());
-    XmppObjectFactory::Register<XmppStateMachine>(
-        boost::factory<XmppStateMachineTest *>());
+    XmppStaticObjectFactory::LinkImpl<XmppLifetimeManager,
+        XmppLifetimeManagerTest, int>();
+    XmppStaticObjectFactory::LinkImpl<XmppStateMachine,
+        XmppStateMachineTest,XmppConnection*,bool,bool,int>();
 }
 
 static void TearDown() {

@@ -124,6 +124,7 @@ class ConfigJsonParserTest : public ::testing::Test {
         db_(TaskScheduler::GetInstance()->GetTaskId("db::IFMapTable")),
         ifmap_server_(new IFMapServer(&db_, &graph_, evm_.io_service())),
         config_client_manager_(new ConfigClientManager(&evm_,
+            ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(),
             "localhost", "config-test", config_options_)),
         ifmap_sandesh_context_(new IFMapSandeshContext(ifmap_server_.get())),
         validate_done_(false) {
@@ -297,22 +298,12 @@ class ConfigJsonParserTest : public ::testing::Test {
     }
 
     uint32_t GetConfigCassandraPartitionUUIDReadRetryCount(string uuid ) {
-        ConfigCassandraClientTest *config_cassandra_client =
-            dynamic_cast<ConfigCassandraClientTest *>(
-                    config_client_manager_.get()->config_db_client());
-        ConfigCassandraClientPartitionTest *config_cassandra_partition =
-            dynamic_cast<ConfigCassandraClientPartitionTest *>(
-                    config_cassandra_client->GetPartition(uuid));
-        return(config_cassandra_partition->GetUUIDReadRetryCount(uuid));
+        return GetConfigCassandraPartition(uuid)->GetUUIDReadRetryCount(uuid);
     }
 
     void SetUUIDRetryTimeInMSec(string uuid, int time) {
-        ConfigCassandraClientTest *config_cassandra_client =
-            dynamic_cast<ConfigCassandraClientTest *>(
-                    config_client_manager_.get()->config_db_client());
         ConfigCassandraClientPartitionTest *config_cassandra_partition =
-            dynamic_cast<ConfigCassandraClientPartitionTest *>(
-                    config_cassandra_client->GetPartition(uuid));
+            GetConfigCassandraPartition(uuid);
         config_cassandra_partition->SetRetryTimeInMSec(time);
     }
 
@@ -2653,12 +2644,21 @@ int main(int argc, char **argv) {
     LoggingInit();
     ControlNode::SetDefaultSchedulingPolicy();
     ConfigAmqpClient::set_disable(true);
-    ConfigFactory::Register<ConfigCassandraClient>(
-        boost::factory<ConfigCassandraClientTest *>());
-    ConfigFactory::Register<ConfigCassandraPartition>(
-        boost::factory<ConfigCassandraClientPartitionTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParser *>());
+
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraPartition,
+        ConfigCassandraClientPartitionTest,
+        ConfigCassandraClient *,
+        size_t>();
+
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraClient,
+        ConfigCassandraClientTest,
+        ConfigClientManager *,
+        EventManager *,
+        const ConfigClientOptions &,
+        int>();
+
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParser>();
     int status = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();
     return status;

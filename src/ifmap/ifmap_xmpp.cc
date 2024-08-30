@@ -382,8 +382,10 @@ IFMapXmppChannel *IFMapChannelManager::FindChannel(std::string tostring) {
 
 IFMapXmppChannel *IFMapChannelManager::CreateIFMapXmppChannel(
         XmppChannel *channel) {
-    IFMapXmppChannel *ifmap_chnl = IFMapFactory::Create<IFMapXmppChannel>(
-                                       channel, ifmap_server_, this);
+    IFMapXmppChannel *ifmap_chnl = IfmapStaticObjectFactory::
+        Create<IFMapXmppChannel>(channel,
+            ifmap_server_,
+            this);
     tbb::mutex::scoped_lock lock(channel_map_mutex_);
     channel_map_.insert(std::make_pair(channel, ifmap_chnl));
     return ifmap_chnl;

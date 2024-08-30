@@ -399,9 +399,9 @@ env.SConscript('contrail/SConscript', exports=['AgentEnv', 'BuildEnv'],
                duplicate=0)
 
 # TODO(md): Currently not supported on FreeBSD
-if platform.system() != 'FreeBSD':
-    env.SConscript('vxlan_agent/SConscript', exports=['AgentEnv', 'BuildEnv'],
-                   duplicate=0)
+#if platform.system() != 'FreeBSD':
+#    env.SConscript('vxlan_agent/SConscript', exports=['AgentEnv', 'BuildEnv'],
+#                   duplicate=0)
 
 env.SConscript('test-xml/SConscript', exports=['AgentEnv', 'BuildEnv'],
                duplicate=0)

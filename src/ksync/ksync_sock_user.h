@@ -90,7 +90,7 @@ public:
         KSYNC_MAX_ENTRY_TYPE
     };
 
-    KSyncSockTypeMap(boost::asio::io_service &ios) : KSyncSock(), sock_(ios), ksync_error_() {
+    KSyncSockTypeMap(boost::asio::io_context &ios) : KSyncSock(), sock_(ios), ksync_error_() {
         block_msg_processing_ = false;
         is_incremental_index_ = false;
     }
@@ -181,7 +181,7 @@ public:
     static int RouteCount();
     static int VxLanCount();
     static KSyncSockTypeMap *GetKSyncSockTypeMap() { return singleton_; };
-    static void Init(boost::asio::io_service &ios);
+    static void Init(boost::asio::io_context &ios);
     static void Shutdown();
     static vr_flow_entry *FlowMmapAlloc(int size);
     static void FlowMmapFree();

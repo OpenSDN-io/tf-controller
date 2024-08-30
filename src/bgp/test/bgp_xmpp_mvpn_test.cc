@@ -202,7 +202,7 @@ protected:
                           Address::Family family = Address::MVPN) {
         RoutingInstanceMgr *rim = server->routing_instance_mgr();
         TASK_UTIL_EXPECT_TRUE(rim->GetRoutingInstance(name) != NULL);
-        RoutingInstance *rtinstance = rim->GetRoutingInstance(name);
+        ::RoutingInstance *rtinstance = rim->GetRoutingInstance(name);
         TASK_UTIL_EXPECT_TRUE(rtinstance->GetTable(family) != NULL);
         BgpTable *table = rtinstance->GetTable(family);
         return table;
@@ -213,7 +213,7 @@ protected:
                                 Address::Family family = Address::MVPN) const {
         RoutingInstanceMgr *rim = server->routing_instance_mgr();
         TASK_UTIL_EXPECT_TRUE(rim->GetRoutingInstance(name) != NULL);
-        const RoutingInstance *rtinstance = rim->GetRoutingInstance(name);
+        const ::RoutingInstance *rtinstance = rim->GetRoutingInstance(name);
         TASK_UTIL_EXPECT_TRUE(rtinstance->GetTable(family) != NULL);
         const BgpTable *table = rtinstance->GetTable(family);
         return table;
@@ -692,12 +692,12 @@ static void SetUp() {
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineTest *>());
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
-    XmppObjectFactory::Register<XmppStateMachine>(
-        boost::factory<XmppStateMachineTest *>());
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
+    XmppStaticObjectFactory::LinkImpl<XmppStateMachine,
+        XmppStateMachineTest,XmppConnection*,bool,bool,int>();
 }
 
 static void TearDown() {

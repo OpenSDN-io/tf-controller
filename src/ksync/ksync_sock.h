@@ -517,7 +517,7 @@ private:
 //netlink socket class for interacting with kernel
 class KSyncSockNetlink : public KSyncSock {
 public:
-    KSyncSockNetlink(boost::asio::io_service &ios, int protocol);
+    KSyncSockNetlink(boost::asio::io_context &ios, int protocol);
     virtual ~KSyncSockNetlink();
 
     virtual uint32_t GetSeqno(char *data);
@@ -533,7 +533,7 @@ public:
 
     static void NetlinkDecoder(char *data, SandeshContext *ctxt);
     static void NetlinkBulkDecoder(char *data, SandeshContext *ctxt, bool more);
-    static void Init(boost::asio::io_service &ios, int protocol, bool use_work_queue,
+    static void Init(boost::asio::io_context &ios, int protocol, bool use_work_queue,
                      const std::string &cpu_pin_policy);
 private:
     boost::asio::netlink::raw::socket sock_;
@@ -542,7 +542,7 @@ private:
 //udp socket class for interacting with user vrouter
 class KSyncSockUdp : public KSyncSock {
 public:
-    KSyncSockUdp(boost::asio::io_service &ios, int port);
+    KSyncSockUdp(boost::asio::io_context &ios, int port);
     virtual ~KSyncSockUdp() { }
 
     virtual uint32_t GetSeqno(char *data);
@@ -556,7 +556,7 @@ public:
     virtual std::size_t SendTo(KSyncBufferList *iovec, uint32_t seq_no);
     virtual void Receive(boost::asio::mutable_buffers_1);
 
-    static void Init(boost::asio::io_service &ios, int port,
+    static void Init(boost::asio::io_context &ios, int port,
                      const std::string &cpu_pin_policy);
 private:
     boost::asio::ip::udp::socket sock_;
@@ -567,7 +567,7 @@ private:
 #define KSYNC_AGENT_VROUTER_SOCK_PATH "/var/run/vrouter/dpdk_netlink"
 class KSyncSockUds : public KSyncSock {
 public:
-    KSyncSockUds(boost::asio::io_service &ios);
+    KSyncSockUds(boost::asio::io_context &ios);
     virtual ~KSyncSockUds() {
         delete rx_buff_;
         delete rx_buff_q_;
@@ -585,7 +585,7 @@ public:
     virtual void Receive(boost::asio::mutable_buffers_1);
     virtual bool Run(void);
 
-    static void Init(boost::asio::io_service &ios,
+    static void Init(boost::asio::io_context &ios,
                      const std::string &cpu_pin_policy,
                      const std::string &sockpathvr="");
 private:

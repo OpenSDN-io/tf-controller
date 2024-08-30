@@ -563,7 +563,7 @@ uint32_t RoutingInstanceMgr::SendTableStatsUve() {
 
 RoutingInstance *RoutingInstanceMgr::CreateRoutingInstance(
     const BgpInstanceConfig *config) {
-    RoutingInstance *rtinstance = BgpObjectFactory::Create<RoutingInstance>(
+    RoutingInstance *rtinstance = BgpStaticObjectFactory::Create<RoutingInstance>(
         config->name(), server_, this, config);
     uint32_t ri_index = config->index();
     if (config->name() == BgpConfigManager::kMasterInstance) {
@@ -1940,11 +1940,11 @@ IStaticRouteMgr *RoutingInstance::LocateStaticRouteMgr(
         return manager;
     if (family == Address::INET) {
         inet_static_route_mgr_.reset(
-            BgpObjectFactory::Create<IStaticRouteMgr, Address::INET>(this));
+            BgpStaticObjectFactory::Create<IStaticRouteMgr, Address::INET>(this));
         return inet_static_route_mgr_.get();
     } else if (family == Address::INET6) {
         inet6_static_route_mgr_.reset(
-            BgpObjectFactory::Create<IStaticRouteMgr, Address::INET6>(this));
+            BgpStaticObjectFactory::Create<IStaticRouteMgr, Address::INET6>(this));
         return inet6_static_route_mgr_.get();
     }
     return NULL;
@@ -1958,13 +1958,13 @@ IRouteAggregator *RoutingInstance::LocateRouteAggregator(
     if (family == Address::INET) {
         GetTable(family)->LocatePathResolver();
         inet_route_aggregator_.reset(
-            BgpObjectFactory::Create<IRouteAggregator, Address::INET>(this));
+            BgpStaticObjectFactory::Create<IRouteAggregator, Address::INET>(this));
         inet_route_aggregator_->Initialize();
         return inet_route_aggregator_.get();
     } else if (family == Address::INET6) {
         GetTable(family)->LocatePathResolver();
         inet6_route_aggregator_.reset(
-            BgpObjectFactory::Create<IRouteAggregator, Address::INET6>(this));
+            BgpStaticObjectFactory::Create<IRouteAggregator, Address::INET6>(this));
         inet6_route_aggregator_->Initialize();
         return inet6_route_aggregator_.get();
     }
@@ -2013,7 +2013,7 @@ size_t RoutingInstance::peer_manager_size() const {
 
 PeerManager *RoutingInstance::LocatePeerManager() {
     if (!peer_manager_)
-        peer_manager_.reset(BgpObjectFactory::Create<PeerManager>(this));
+        peer_manager_.reset(BgpStaticObjectFactory::Create<PeerManager>(this));
     return peer_manager_.get();
 }
 

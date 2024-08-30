@@ -136,7 +136,7 @@ gmph_destroy_client (gmph_client *client)
 void
 gmph_destroy_instance_clients (gmph_instance *instance)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmph_client *client;
 
     /* Walk all clients on the instance. */
@@ -204,7 +204,7 @@ gmph_destroy_client_group (gmph_client_group *client_group,
 void
 gmph_destroy_group_client_groups (gmph_group *group)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmph_client_group *client_group;
 
     /* Walk all client groups associated with the group. */

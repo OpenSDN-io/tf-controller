@@ -37,8 +37,8 @@ protected:
         thread_(&evm_),
         db_(TaskScheduler::GetInstance()->GetTaskId("db::IFMapTable")),
         server_(new IFMapServer(&db_, &db_graph_, evm_.io_service())),
-        config_client_manager_(new ConfigClientManager(&evm_, "localhost",
-                       "config-test", config_options_)) {
+        config_client_manager_(new ConfigClientManager(&evm_,
+        ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(), "localhost", "config-test", config_options_)) {
         config_cassandra_client_ = dynamic_cast<ConfigCassandraClientTest *>(
             config_client_manager_->config_db_client());
     }
@@ -569,12 +569,20 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     LoggingInit();
     ControlNode::SetDefaultSchedulingPolicy();
-    ConfigFactory::Register<ConfigCassandraClient>(
-        boost::factory<ConfigCassandraClientTest *>());
-    ConfigFactory::Register<ConfigCassandraPartition>(
-        boost::factory<ConfigCassandraPartitionTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParser *>());
+
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraClient,
+        ConfigCassandraClientTest,
+        ConfigClientManager *,
+        EventManager *,
+        const ConfigClientOptions &,
+        int>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraPartition,
+        ConfigCassandraPartitionTest,
+        ConfigCassandraClient *,
+        size_t>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParser>();
+
     bool success = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();
     return success;

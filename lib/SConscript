@@ -13,7 +13,7 @@ subdirs = [
     'SimpleAmqpClient',
     'openvswitch',
     'ipfix',
-    'tbb',
+    'tbb'
 ]
 
 etcd_incl = os.environ.get('CONTRAIL_ETCD_INCL')

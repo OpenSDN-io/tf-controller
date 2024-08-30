@@ -968,7 +968,7 @@ bv_find_clear_bit (bit_vector *bv)
 {
     bv_entry *bv_ent;
     bv_bitnum_t bitnum, ret_bitnum;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     bv_bitnum_t missing_bitnum;
     boolean found_missing;
 

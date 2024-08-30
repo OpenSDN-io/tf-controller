@@ -510,7 +510,7 @@ BgpXmppChannel::BgpXmppChannel(XmppChannel *channel,
             boost::bind(&BgpXmppChannel::MembershipResponseHandler, this, _1)),
       lb_mgr_(new LabelBlockManager()) {
     close_manager_.reset(
-        BgpObjectFactory::Create<PeerCloseManager>(peer_close_.get()));
+        BgpStaticObjectFactory::Create<PeerCloseManager>(static_cast<IPeerClose*>(peer_close_.get())));
     if (bgp_server) {
         eor_receive_timer_ =
             TimerManager::CreateTimer(*bgp_server->ioservice(),

@@ -195,9 +195,9 @@ typedef struct gmp_addr_list_ {
     void *addr_context;            /* Context for alloc/free */
     gmp_addr_vect addr_vect;        /* Address vector */
     gmpx_patroot *addr_list_root;    /* Root of patricia tree */
-    thread addr_list_head;        /* Head of address thread */
+    task_thread addr_list_head;        /* Head of address thread */
     int addr_count;            /* Number of addresses in list */
-    thread addr_list_xmit_head;        /* Head of transmit list */
+    task_thread addr_list_xmit_head;        /* Head of transmit list */
     int xmit_addr_count;        /* Number of addresses in xmit list */
 } gmp_addr_list;
 
@@ -206,8 +206,8 @@ typedef struct gmp_addr_list_ {
 typedef struct gmp_addr_list_entry_ {
     gmp_addr_list *addr_ent_list;    /* Pointer to owning address list */
     gmpx_patnode addr_ent_patnode;    /* Patricia tree node */
-    thread addr_ent_thread;        /* Entry on list thread */
-    thread addr_ent_xmit_thread;    /* Entry on transmit thread */
+    task_thread addr_ent_thread;        /* Entry on list thread */
+    task_thread addr_ent_xmit_thread;    /* Entry on transmit thread */
     ordinal_t addr_ent_ord;        /* Address ordinal */
 } gmp_addr_list_entry;
 
@@ -265,7 +265,7 @@ typedef struct gmp_query_packet_ {
  * Each group record includes an address list of sources (if any.)
  */
 typedef struct gmp_report_packet_ {
-    thread gmp_report_group_head;    /* Head of thread of group records */
+    task_thread gmp_report_group_head;    /* Head of thread of group records */
     uint32_t gmp_report_group_count;    /* Number of group records */
 } gmp_report_packet;
 
@@ -297,7 +297,7 @@ typedef enum {
  */
 typedef struct gmp_report_group_record_ {
     void *gmp_rpt_group_id;        /* Opaque group ID */
-    thread gmp_rpt_thread;        /* Entry on thread */
+    task_thread gmp_rpt_thread;        /* Entry on thread */
     gmp_report_rectype gmp_rpt_type;    /* Record type */
     gmp_addr_string gmp_rpt_group;    /* Group address */
     gmp_addr_list *gmp_rpt_xmit_srcs;    /* List of source addresses (xmit) */
@@ -342,7 +342,7 @@ struct gmp_packet_ {
  * routines use it as well.
  */
 struct gmp_addr_thread_ {
-    thread gmp_addr_thread_head;    /* Head of address thread */
+    task_thread gmp_addr_thread_head;    /* Head of address thread */
     uint32_t gmp_addr_thread_count;    /* Count of entries */
 };
 
@@ -353,7 +353,7 @@ struct gmp_addr_thread_ {
  * An entry in an address thread.
  */
 struct gmp_addr_thread_entry_ {
-    thread gmp_adth_thread;        /* Entry on address thread */
+    task_thread gmp_adth_thread;        /* Entry on address thread */
     gmp_addr_string gmp_adth_addr;    /* Address */
 };
 THREAD_TO_STRUCT(gmp_adth_thread_to_thread_entry, gmp_addr_thread_entry,

@@ -254,7 +254,7 @@ protected:
                   int localpref = 0) {
         boost::system::error_code error;
         PrefixT nlri = PrefixT::FromString(prefix, &error);
-        TASK_UTIL_EXPECT_FALSE(error != 0);
+        TASK_UTIL_EXPECT_TRUE(!error);
 
         DBRequest request;
         request.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
@@ -279,7 +279,7 @@ protected:
     void DeleteRoute(const string &instance_name, const string &prefix) {
         boost::system::error_code error;
         PrefixT nlri = PrefixT::FromString(prefix, &error);
-        TASK_UTIL_EXPECT_FALSE(error != 0);
+        TASK_UTIL_EXPECT_TRUE(!error);
 
         DBRequest request;
         request.oper = DBRequest::DB_ENTRY_DELETE;
@@ -347,7 +347,7 @@ protected:
 
         boost::system::error_code error;
         PrefixT nlri = PrefixT::FromString(prefix, &error);
-        TASK_UTIL_EXPECT_FALSE(error != 0);
+        TASK_UTIL_EXPECT_TRUE(!error);
 
         ConditionMatchT *match =
             static_cast<ConditionMatchT *>(match_.get());
@@ -367,7 +367,7 @@ protected:
 
         boost::system::error_code error;
         PrefixT nlri = PrefixT::FromString(prefix, &error);
-        TASK_UTIL_EXPECT_FALSE(error != 0);
+        TASK_UTIL_EXPECT_TRUE(!error);
 
         ConditionMatchT *match =
             static_cast<ConditionMatchT *>(match_.get());
@@ -607,8 +607,8 @@ class TestEnvironment : public ::testing::Environment {
 };
 
 static void SetUp() {
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpIfmapConfigManager *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
     ControlNode::SetDefaultSchedulingPolicy();
 }
 

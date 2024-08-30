@@ -1506,12 +1506,13 @@ TEST_F(BgpMembershipTest, WalkWithPendingWalkDeathTest) {
 
 static void SetUp() {
     bgp_log_test::init();
-    BgpObjectFactory::Register<BgpPeer>(
-        boost::factory<BgpTestPeer *>());
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpIfmapConfigManager *>());
-    BgpObjectFactory::Register<BgpMembershipManager>(
-        boost::factory<BgpMembershipManagerTest *>());
+    BgpStaticObjectFactory::LinkImpl<BgpPeer, BgpTestPeer,
+        BgpServer *, RoutingInstance *,
+        const BgpNeighborConfig *>();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
+    BgpStaticObjectFactory::LinkImpl<BgpMembershipManager, 
+        BgpMembershipManagerTest, BgpServer*>();
     ControlNode::SetDefaultSchedulingPolicy();
 }
 
