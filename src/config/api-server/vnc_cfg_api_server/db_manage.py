@@ -2178,6 +2178,7 @@ class DatabaseCleaner(DatabaseManager):
     # end cleaner
 
     def _remove_config_object(self, type, uuids):
+        logger = self._logger
         uuid_table = self._cf_dict['obj_uuid_table']
 
         for uuid in uuids:
@@ -2191,11 +2192,14 @@ class DatabaseCleaner(DatabaseManager):
                         uuid_table.remove(backref_uuid, columns=[ref_str])
                     except pycassa.NotFoundException:
                         continue
-            except pycassa.NotFoundException:
+            #NOTE: pycassa is deprecated
+            except pycassa.NotFoundException as e:
+                logger.debug("UUID %s not found in obj_uuid_table: %s", uuid, str(e))
                 pass
             try:
                 uuid_table.remove(uuid)
-            except pycassa.NotFoundException:
+            except pycassa.NotFoundException as e:
+                logger.debug("Failed to remove UUID %s from obj_uuid_table: %s", uuid, str(e))
                 continue
 
     @cleaner

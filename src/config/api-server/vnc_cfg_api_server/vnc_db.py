@@ -57,6 +57,7 @@ import uuid
 import datetime
 
 import os
+import traceback
 
 from .provision_defaults import *
 from cfgm_common.exceptions import *
@@ -528,7 +529,13 @@ class VncZkClient(object):
                 self._zk_client.set_lost_cb(self.reconnect_zk)
                 break
             except gevent.event.Timeout as e:
-                pass
+                self._sandesh._logger.warn(
+                    f"Timeout occurred while trying to connect to Zookeeper for client {client_name}: {str(e)}"
+                )
+                self._sandesh._logger.warn(
+                    f"Traceback:\n{traceback.format_exc()}"
+                )
+
 
         if reset_config:
             self._zk_client.delete_node(self._subnet_path, True)
@@ -1798,33 +1805,69 @@ class VncDbClient(object):
                                     self._zk_db._zk_client.create_node(
                                         tagged_vn_validation_znode,
                                         value=vlan_id)
-                                except ResourceExistsError:
-                                    pass
+                                except ResourceExistsError as e:
+                                    self.config_log(
+                                        f"Node {tagged_vn_validation_znode} already exists: {str(e)}",
+                                        level=SandeshLevel.SYS_WARN
+                                    )
+                                    self.config_log(
+                                        f"Traceback:\n{traceback.format_exc()}",
+                                        level=SandeshLevel.SYS_WARN
+                                    )
                                 try:
                                     self._zk_db._zk_client.create_node(
                                         tagged_vlan_validation_znode,
                                         value=obj_uuid)
-                                except ResourceExistsError:
-                                    pass
+                                except ResourceExistsError as e:
+                                    self.config_log(
+                                        f"Node {tagged_vlan_validation_znode} already exists: {str(e)}",
+                                        level=SandeshLevel.SYS_WARN
+                                    )
+                                    self.config_log(
+                                        f"Traceback:\n{traceback.format_exc()}",
+                                        level=SandeshLevel.SYS_WARN
+                                    )
                                 try:
                                     self._zk_db._zk_client.create_node(
                                         tagged_fabric_vn_validation_znode,
                                         value=vlan_id)
-                                except ResourceExistsError:
-                                    pass
+                                except ResourceExistsError as e:
+                                    self.config_log(
+                                        f"Node {tagged_fabric_vn_validation_znode} already exists: {str(e)}",
+                                        level=SandeshLevel.SYS_WARN
+                                    )
+                                    self.config_log(
+                                        f"Traceback:\n{traceback.format_exc()}",
+                                        level=SandeshLevel.SYS_WARN
+                                    )
                                 try:
                                     self._zk_db._zk_client.create_node(
                                         tagged_fabric_vlan_validation_znode,
                                         value=vn_uuid)
-                                except ResourceExistsError:
-                                    pass
+                                except ResourceExistsError as e:
+                                    self.config_log(
+                                        f"Node {tagged_fabric_vlan_validation_znode} already exists: {str(e)}",
+                                        level=SandeshLevel.SYS_WARN
+                                    )
+                                    self.config_log(
+                                        f"Traceback:\n{traceback.format_exc()}",
+                                        level=SandeshLevel.SYS_WARN
+                                    )
                         # Remove vpg annotations
                         self._remove_vpg_annotations(vpg_dict, obj_uuid)
                         (ok, res) = self._object_db.object_update(
                             'virtual_port_group', vpg_uuid, vpg_dict)
                         if not ok:
                             return
-                    except ResourceExistsError:
+                    except ResourceExistsError as e:
+                        self.config_log(
+                            f"Node {untagged_validation_znode} or {tagged_validation_znode} already exists: {str(e)}",
+                            level=SandeshLevel.SYS_WARN
+                        )
+                        self.config_log(
+                            f"Traceback:\n{traceback.format_exc()}",
+                            level=SandeshLevel.SYS_WARN
+                        )
                         return
 
                 elif obj_type == 'physical_router':
@@ -2242,9 +2285,16 @@ class VncDbClient(object):
                 ref_fq_name = self.uuid_to_fq_name(ref_uuid)
                 self._msgbus.dbe_publish('UPDATE-IMPLICIT', obj_type,
                                          ref_uuid, ref_fq_name)
-            except NoIdError:
-                # ignore if the object disappeared
-                pass
+            except NoIdError as e:
+                self.config_log(
+                    f"Object with UUID {ref_uuid} not found during implicit update for {obj_type}: {str(e)}",
+                    level=SandeshLevel.SYS_WARN
+                )
+                self.config_log(
+                    f"Traceback:\n{traceback.format_exc()}",
+                    level=SandeshLevel.SYS_WARN
+                )
+
     # end _dbe_publish_update_implicit
 
     @dbe_trace('update')
@@ -2326,9 +2376,17 @@ class VncDbClient(object):
                     if count is not None and collected >= count:
                         marker = obj_uuid
                         break
-                except NoIdError:
-                    # uuid no longer valid. Deleted?
-                    pass
+                except NoIdError as e:
+                    #NOTE: uuid no longer valid. Deleted?
+                    self.config_log(
+                        f"UUID {obj_uuid} not found during collect_shared: {str(e)}",
+                        level=SandeshLevel.SYS_WARN
+                    )
+                    self.config_log(
+                        f"Traceback:\n{traceback.format_exc()}",
+                        level=SandeshLevel.SYS_WARN
+                    )
+
 
             return shared_result, marker
         # end collect_shared

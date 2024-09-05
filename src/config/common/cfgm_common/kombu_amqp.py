@@ -126,8 +126,11 @@ class KombuAmqpClient(object):
         queue.maybe_bind(self._connection)
         try:
             queue.delete(if_unused=True, nowait=False)
-        except self._connection.channel_errors:
-            pass
+        except self._connection.channel_errors as e:
+            msg = f"Failed to delete queue {queue.name} due to channel error: {str(e)}"
+            self._logger(msg, level=SandeshLevel.SYS_WARN)
+            self._logger(f"Traceback:\n{traceback.format_exc()}", level=SandeshLevel.SYS_WARN)
+
     # end _delete_consumer
 
     def _create_consumer_list(self):
@@ -186,7 +189,9 @@ class KombuAmqpClient(object):
                         try:
                             self._connection.drain_events(timeout=1)
                         except socket.timeout:
-                            pass
+                            msg = 'KombuAmqpClient: socket.timeout occurred while draining events, no events to process.'
+                            self._logger(msg, level=SandeshLevel.SYS_DEBUG)
+
                     self._consumers_changed = False
                     self._consumer_lock.acquire()
             except errors as e:
