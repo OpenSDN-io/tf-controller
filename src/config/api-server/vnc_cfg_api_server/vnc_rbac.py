@@ -189,7 +189,7 @@ class VncRbac(object):
     # op is one of 'CRUD'
     def validate_request(self, request, obj_type=None):
         app = request.environ['bottle.app']
-        if app.config.local_auth or self._server_mgr.is_auth_disabled():
+        if app.config.get('local_auth') or self._server_mgr.is_auth_disabled():
             return (True, '')
         if not self.rbac_enabled():
             return (True, '')
