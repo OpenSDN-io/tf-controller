@@ -356,21 +356,21 @@ class DeviceManager(object):
             DeviceConf.register_plugins()
         except DeviceConf.PluginsRegistrationFailed as e:
             self.logger.error("Exception: " + str(e))
-        except Exception as e:
+        except Exception:
             tb = traceback.format_exc()
             self.logger.error(
-                "Internal error while registering plugins: " + str(e) + tb)
+                "Internal error while registering plugins: " + tb)
 
         # Register Ansible Plugins
         try:
             AnsibleBase.register_plugins()
         except AnsibleBase.PluginsRegistrationFailed as e:
             self.logger.error("Exception: " + str(e))
-        except Exception as e:
+        except Exception:
             tb = traceback.format_exc()
             self.logger.error(
                 "Internal error while registering ansible plugins: " +
-                str(e) + tb)
+                tb)
 
         # Register Feature Plugins
         try:
@@ -381,7 +381,7 @@ class DeviceManager(object):
             tb = traceback.format_exc()
             self.logger.error(
                 "Internal error while registering feature plugins: " +
-                str(e) + tb)
+                tb)
             raise e
 
         # Retry till API server is up
@@ -551,22 +551,27 @@ class DeviceManager(object):
 
     # sighup handler for applying new configs
     def sighup_handler(self):
-        if self._args.conf_file:
-            config = ConfigParser(strict=False)
-            config.read(self._args.conf_file)
-            if 'DEFAULTS' in config.sections():
-                try:
-                    collectors = config.get('DEFAULTS', 'collectors')
-                    if type(collectors) is str:
-                        collectors = collectors.split()
-                        new_chksum = hashlib.md5(
-                            "".join(collectors).encode()).hexdigest()
-                        if new_chksum != self._chksum:
-                            self._chksum = new_chksum
-                            config.random_collectors = random.sample(
-                                collectors, len(collectors))
-                        # Reconnect to achieve loadbalance irrespective of list
-                        self.logger.sandesh_reconfig_collectors(config)
-                except NoOptionError:
-                    pass
+        if not self._args.conf_file:
+            return
+        config = ConfigParser(strict=False)
+        config.read(self._args.conf_file)
+        if 'DEFAULTS' not in config.sections():
+            return
+        try:
+            collectors = config.get('DEFAULTS', 'collectors')
+            if type(collectors) is str:
+                collectors = collectors.split()
+                new_chksum = hashlib.md5(
+                    "".join(collectors).encode()).hexdigest()
+                if new_chksum != self._chksum:
+                    self._chksum = new_chksum
+                    config.random_collectors = random.sample(
+                        collectors, len(collectors))
+                # Reconnect to achieve loadbalance irrespective of list
+                self.logger.sandesh_reconfig_collectors(config)
+        except NoOptionError:
+            self.logger.warn(
+                "Option 'collectors' not found in configuration file: " +
+                self._args.conf_file
+            )
     # end sighup_handler
