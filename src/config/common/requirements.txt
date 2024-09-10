@@ -1,5 +1,5 @@
 bitarray
-bottle
+bottle<0.13
 cassandra-driver
 contrail-api-client
 future
