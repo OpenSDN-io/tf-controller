@@ -237,14 +237,15 @@ class VncApiServer(object):
         obj = super(VncApiServer, cls).__new__(cls)
         obj.api_bottle = bottle.Bottle()
         obj.route('/', 'GET', obj.homepage_http_get)
-
-        obj.api_bottle.error(400, callback=error_400)
-        obj.api_bottle.error(403, callback=error_403)
-        obj.api_bottle.error(404, callback=error_404)
-        obj.api_bottle.error(405, callback=error_405)
-        obj.api_bottle.error(409, callback=error_409)
-        obj.api_bottle.error(500, callback=error_500)
-        obj.api_bottle.error(503, callback=error_503)
+        obj.api_bottle.error_handler = {
+                400: error_400,
+                403: error_403,
+                404: error_404,
+                405: error_405,
+                409: error_409,
+                500: error_500,
+                503: error_503,
+            }
 
         cls._generate_resource_crud_methods(obj)
         cls._generate_resource_crud_uri(obj)
@@ -4315,7 +4316,7 @@ class VncApiServer(object):
         apiConfig.user = get_request().headers.get('X-User-Name')
         apiConfig.project = get_request().headers.get('X-Project-Name')
         apiConfig.domain = get_request().headers.get('X-Domain-Name', 'None')
-        if apiConfig.domain is None or apiConfig.domain.lower() == 'none':
+        if apiConfig.domain.lower() == 'none':
             apiConfig.domain = 'default-domain'
         if int(get_request().headers.get('Content-Length', 0)) > 0:
             try:

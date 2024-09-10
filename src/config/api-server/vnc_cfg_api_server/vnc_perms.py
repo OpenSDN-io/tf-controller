@@ -200,7 +200,7 @@ class VncPermissions(object):
 
     def check_perms_write(self, request, id):
         app = request.environ['bottle.app']
-        if app.config.get('local_auth') or self._server_mgr.is_auth_disabled():
+        if app.config.local_auth or self._server_mgr.is_auth_disabled():
             return (True, '')
 
         if self._rbac:
@@ -213,7 +213,7 @@ class VncPermissions(object):
 
     def check_perms_read(self, request, id, obj_dict=None):
         app = request.environ['bottle.app']
-        if app.config.get('local_auth') or self._server_mgr.is_auth_disabled():
+        if app.config.local_auth or self._server_mgr.is_auth_disabled():
             return (True, '')
 
         if obj_dict is None:
@@ -231,7 +231,7 @@ class VncPermissions(object):
 
     def check_perms_link(self, request, id):
         app = request.environ['bottle.app']
-        if app.config.get('local_auth') or self._server_mgr.is_auth_disabled():
+        if app.config.local_auth or self._server_mgr.is_auth_disabled():
             return (True, '')
 
         if self._rbac:
@@ -244,7 +244,7 @@ class VncPermissions(object):
 
     def check_perms_delete(self, request, obj_type, obj_uuid, parent_uuid):
         app = request.environ['bottle.app']
-        if app.config.get('local_auth') or self._server_mgr.is_auth_disabled():
+        if app.config.local_auth or self._server_mgr.is_auth_disabled():
             return (True, '')
 
         if self._rbac:
@@ -272,7 +272,7 @@ class VncPermissions(object):
             return 'RWX'
 
         app = request.environ['bottle.app']
-        if app.config.get('local_auth') or self._server_mgr.is_auth_disabled():
+        if app.config.local_auth or self._server_mgr.is_auth_disabled():
             return 'RWX'
 
         if self._rbac:
