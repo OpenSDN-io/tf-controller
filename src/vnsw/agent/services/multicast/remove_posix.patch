@@ -324,7 +324,7 @@ index e0fd9b6f3..320ec35cf 100644
 @@ -266,7 +266,7 @@ typedef struct gmp_query_packet_ {
   */
  typedef struct gmp_report_packet_ {
-     thread gmp_report_group_head;	/* Head of thread of group records */
+     task_thread gmp_report_group_head;	/* Head of thread of group records */
 -    u_int32_t gmp_report_group_count;	/* Number of group records */
 +    uint32_t gmp_report_group_count;	/* Number of group records */
  } gmp_report_packet;
@@ -333,7 +333,7 @@ index e0fd9b6f3..320ec35cf 100644
 @@ -343,7 +343,7 @@ struct gmp_packet_ {
   */
  struct gmp_addr_thread_ {
-     thread gmp_addr_thread_head;	/* Head of address thread */
+     task_thread gmp_addr_thread_head;	/* Head of address thread */
 -    u_int32_t gmp_addr_thread_count;	/* Count of entries */
 +    uint32_t gmp_addr_thread_count;	/* Count of entries */
  };
@@ -1193,7 +1193,7 @@ index 47e9efdc9..7a6d6f957 100644
 -    u_int32_t ivl;
 +    uint32_t ivl;
      int intf_count;
-     thread *thread_ptr;
+     task_thread *thread_ptr;
  
 @@ -463,7 +463,7 @@ gmpr_restart_query_timer (gmpr_intf *intf)
   * smooth things out.)
@@ -1246,9 +1246,9 @@ index 44092735c..35b402499 100644
  typedef struct gmpr_instance_ {
 -    u_int32_t rinst_magic;	     	/* Magic number for robustness */
 +    uint32_t rinst_magic;	     	/* Magic number for robustness */
-     thread rinst_thread;	  	/* Link on global instance thread */
-     thread rinst_client_thread;		/* Head of client thread */
-     thread rinst_startup_intf_thread;	/* Head of intfs starting up */
+     task_thread rinst_thread;	  	/* Link on global instance thread */
+     task_thread rinst_client_thread;		/* Head of client thread */
+     task_thread rinst_startup_intf_thread;	/* Head of intfs starting up */
 @@ -69,17 +69,17 @@ typedef struct gmpr_instance_ {
      gmpx_patroot *rinst_intfs;		/* Tree of interfaces */
      gmpx_patroot *rinst_global_state_root; /* Root of global state tree */
@@ -1282,7 +1282,7 @@ index 44092735c..35b402499 100644
 +    uint32_t rintf_oif_group_count;	/* Number of output groups */
      gmpx_intf_id rintf_id;		/* Interface ID */
      gmpx_patroot *rintf_host_root;	/* Root of host entries */
-     thread rintf_startup_thread;	/* Entry on instance startup thread */
+     task_thread rintf_startup_thread;	/* Entry on instance startup thread */
 @@ -146,33 +146,33 @@ typedef struct gmpr_intf_ {
      /* Query stuff */
  
@@ -1349,7 +1349,7 @@ index 44092735c..35b402499 100644
      gmpx_timer *rgroup_addr_timer;	/* Timer */
 -    u_int8_t rgroup_addr_rexmit_count;	/* Query retransmission count */
 +    uint8_t rgroup_addr_rexmit_count;	/* Query retransmission count */
-     thread rgroup_addr_oif_thread;	/* Entry on OIF thread */
+     task_thread rgroup_addr_oif_thread;	/* Entry on OIF thread */
      struct gmpr_ogroup_addr_entry_ *rgroup_addr_oif_addr; /* OIF address */
  
 @@ -440,7 +440,7 @@ EMBEDDED_STRUCT_TO_STRUCT(gmpr_addr_entry_to_ogroup_entry,
@@ -1360,7 +1360,7 @@ index 44092735c..35b402499 100644
 +    uint32_t rclient_magic;		/* Magic number for robustness */
      gmpr_instance *rclient_instance;	/* Owning instance */
      ordinal_t rclient_ordinal;		/* Client ordinal */
-     thread rclient_thread;		/* Link on instance client thread */
+     task_thread rclient_thread;		/* Link on instance client thread */
 @@ -516,7 +516,7 @@ typedef struct gmpr_host_group_ {
      gmpr_notify_block rhgroup_notify[GMPX_MAX_RTR_CLIENTS];
  					/* Notification block */
@@ -1667,7 +1667,7 @@ index 725b565f9..40959f567 100644
      igmp_v1v2_pkt *v1v2_pkt;
      igmp_hdr *pkt_hdr;
 @@ -409,14 +409,14 @@ igmp_format_v1_packet (gmp_role role, gmp_packet *gen_packet,
-     thread *thread_ptr;
+     task_thread *thread_ptr;
      gmp_report_group_record *group_record;
      gmp_report_packet *report_pkt;
 -    u_int formatted_len;
@@ -1722,7 +1722,7 @@ index 725b565f9..40959f567 100644
      igmp_hdr *pkt_hdr;
 @@ -497,15 +494,15 @@ igmp_format_v2_packet (gmp_role role, gmp_packet *gen_packet,
      gmp_report_packet *report_pkt;
-     thread *thread_ptr;
+     task_thread *thread_ptr;
      gmp_report_group_record *group_record;
 -    u_int32_t max_resp;
 -    u_int formatted_len;
@@ -1874,7 +1874,7 @@ index 725b565f9..40959f567 100644
 -    u_int8_t *byte_ptr;
 +    uint8_t *byte_ptr;
      gmp_addr_cat_entry *cat_entry;
-     thread *thread_ptr;
+     task_thread *thread_ptr;
      boolean group_done;
 @@ -780,7 +773,7 @@ igmp_format_v3_report (gmp_role role, gmp_packet *gen_packet,
  		sizeof(igmp_v3_rpt_rcrd) + IPV4_ADDR_LEN);
@@ -2700,7 +2700,7 @@ index d4fd1f568..7b7ec3c02 100644
      bvx_patroot *bv_root;		/* Patricia root */
 -    u_int32_t bv_entry_count;		/* Number of attached entries */
 +    uint32_t bv_entry_count;		/* Number of attached entries */
-     thread bv_nonfull_head;		/* Head of non-full entries */
+     task_thread bv_nonfull_head;		/* Head of non-full entries */
      bv_bitnum_t bv_callback_ord;	/* Ordinal of callback bit */
      bv_bitnum_t bv_freed_ord;		/* Ordinal of a freed entry */
 diff --git a/src/vnsw/agent/services/multicast/stubs/bitvector/bitvector_private.h b/src/vnsw/agent/services/multicast/stubs/bitvector/bitvector_private.h
@@ -2709,7 +2709,7 @@ index d4b32b2db..d961c59bf 100644
 +++ b/src/vnsw/agent/services/multicast/stubs/bitvector/bitvector_private.h
 @@ -64,7 +64,7 @@
  typedef struct bv_entry_ {
-     thread bv_ent_nonfull_thread;	/* Entry on non-full-entry thread */
+     task_thread bv_ent_nonfull_thread;	/* Entry on non-full-entry thread */
      bvx_patnode bv_ent_node;		/* Patricia node */
 -    u_int8_t bv_key[sizeof(bv_bitnum_t)]; /* Patricia key */
 +    uint8_t bv_key[sizeof(bv_bitnum_t)]; /* Patricia key */

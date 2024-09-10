@@ -89,10 +89,10 @@ public:
         BFD::Server *server_;
     };
 
-    BfdProto(Agent *agent, boost::asio::io_service &io);
+    BfdProto(Agent *agent, boost::asio::io_context &io);
     virtual ~BfdProto();
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
     void Shutdown() {
         delete client_;
         client_ = NULL;

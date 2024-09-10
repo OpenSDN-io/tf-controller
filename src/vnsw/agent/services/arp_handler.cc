@@ -16,7 +16,7 @@
 #include "mac_learning/mac_learning_proto.h"
 
 ArpHandler::ArpHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                       boost::asio::io_service &io)
+                       boost::asio::io_context &io)
     : ProtoHandler(agent, info, io), arp_(NULL), arp_tpa_(0) {
         refcount_ = 0;
 }

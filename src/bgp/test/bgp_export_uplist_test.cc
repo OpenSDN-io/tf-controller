@@ -3,6 +3,7 @@
  */
 
 #include "bgp/test/bgp_export_test.h"
+#include "bgp/test/bgp_config_mock.h"
 
 
 using namespace std;
@@ -1272,6 +1273,8 @@ TEST_F(BgpExportUpdateListTest, LeaveClear72) {
 
 static void SetUp() {
     bgp_log_test::init();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
 }

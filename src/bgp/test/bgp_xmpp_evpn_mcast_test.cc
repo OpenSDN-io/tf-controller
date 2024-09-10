@@ -1596,10 +1596,10 @@ static void SetUp() {
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineTest *>());
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
 }
 static void TearDown() {
     BgpServer::Terminate();

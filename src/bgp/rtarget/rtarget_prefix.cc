@@ -89,7 +89,7 @@ RTargetPrefix RTargetPrefix::FromString(const string &str, error_code *errorp) {
     error_code rtarget_err;
     RouteTarget rtarget;
     rtarget = RouteTarget::FromString(rtargetstr, &rtarget_err);
-    if (rtarget_err != 0) {
+    if (rtarget_err.failed()) {
         if (errorp != NULL)
             *errorp = rtarget_err;
         return prefix;

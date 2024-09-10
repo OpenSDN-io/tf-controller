@@ -60,7 +60,7 @@ public:
     typedef std::deque<ClientHistoryInfo> ClientHistory;
     typedef ClientMap::size_type CmSz_t;
     typedef IndexMap::size_type ImSz_t;
-    IFMapServer(DB *db, DBGraph *graph, boost::asio::io_service *io_service);
+    IFMapServer(DB *db, DBGraph *graph, boost::asio::io_context *io_service);
     virtual ~IFMapServer();
 
     // Must be called after the __ifmap__ tables are registered with the
@@ -85,7 +85,7 @@ public:
     IFMapUpdateSender *sender() { return sender_.get(); }
     IFMapExporter *exporter() { return exporter_.get(); }
     IFMapVmUuidMapper *vm_uuid_mapper() { return vm_uuid_mapper_.get(); }
-    boost::asio::io_service *io_service() { return io_service_; }
+    boost::asio::io_context *io_service() { return io_service_; }
     void set_config_manager(ConfigClientManager *manager) {
         config_manager_ = manager;
     }
@@ -161,7 +161,7 @@ private:
     ClientMap client_map_;
     IndexMap index_map_;
     WorkQueue<QueueEntry> work_queue_;
-    boost::asio::io_service *io_service_;
+    boost::asio::io_context *io_service_;
     ConfigClientManager *config_manager_;
     IFMapChannelManager *ifmap_channel_manager_;
     ClientHistory client_history_;

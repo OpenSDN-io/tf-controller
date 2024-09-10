@@ -346,7 +346,7 @@ void EvpnTable::CreateEvpnManager() {
     if (IsVpnTable())
         return;
     assert(!evpn_manager_);
-    evpn_manager_ = BgpObjectFactory::Create<EvpnManager>(this);
+    evpn_manager_ = BgpStaticObjectFactory::Create<EvpnManager>(this);
     evpn_manager_->Initialize();
 }
 

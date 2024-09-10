@@ -15,7 +15,7 @@
 
 IcmpErrorHandler::IcmpErrorHandler(Agent *agent, IcmpErrorProto *proto,
                                    boost::shared_ptr<PktInfo> info,
-                                   boost::asio::io_service *io) :
+                                   boost::asio::io_context *io) :
     ProtoHandler(agent, info, *io), proto_(proto) {
 }
 

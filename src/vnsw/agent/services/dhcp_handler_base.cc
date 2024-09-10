@@ -22,7 +22,7 @@
 using namespace boost::assign;
 
 DhcpHandlerBase::DhcpHandlerBase(Agent *agent, boost::shared_ptr<PktInfo> info,
-                                 boost::asio::io_service &io)
+                                 boost::asio::io_context &io)
         : ProtoHandler(agent, info, io), vm_itf_(NULL), vm_itf_index_(-1),
           option_(NULL), flags_(), dns_enable_(true),
           host_routes_level_(Invalid) {

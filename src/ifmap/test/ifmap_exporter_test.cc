@@ -67,7 +67,7 @@ public:
 
 class IFMapServerTest : public IFMapServer {
 public:
-    IFMapServerTest(DB *db, DBGraph *graph, boost::asio::io_service *io_service)
+    IFMapServerTest(DB *db, DBGraph *graph, boost::asio::io_context *io_service)
         : IFMapServer(db, graph, io_service) {
     }
     void SetSender(IFMapUpdateSender *sender) {
@@ -83,6 +83,7 @@ protected:
         server_(new IFMapServerTest(&db_, &db_graph_, evm_.io_service())),
         exporter_(server_->exporter()),
         config_client_manager_(new ConfigClientManager(&evm_,
+            ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(),
             "localhost", "config-test", config_options_)) {
         config_cassandra_client_ = dynamic_cast<ConfigCassandraClientTest *>(
             config_client_manager_->config_db_client());
@@ -1286,10 +1287,16 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     LoggingInit();
     ControlNode::SetDefaultSchedulingPolicy();
-    ConfigFactory::Register<ConfigCassandraClient>(
-        boost::factory<ConfigCassandraClientTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParser *>());
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraClient,
+        ConfigCassandraClientTest,
+        ConfigClientManager *,
+        EventManager *,
+        const ConfigClientOptions &,
+        int>();
+
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParser>();
+
     bool success = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();
     return success;

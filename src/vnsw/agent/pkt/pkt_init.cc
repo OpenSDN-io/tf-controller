@@ -28,7 +28,7 @@ PktModule::~PktModule() {
 }
 
 void PktModule::Init(bool run_with_vrouter) {
-    boost::asio::io_service &io = *agent_->event_manager()->io_service();
+    boost::asio::io_context &io = *agent_->event_manager()->io_service();
 
     pkt_handler_.reset(new PktHandler(agent_, this));
 

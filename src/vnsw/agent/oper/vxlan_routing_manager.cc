@@ -398,6 +398,11 @@ void VxlanRoutingManager::VnNotify(DBTablePartBase *partition, DBEntryBase *e) {
         return;
     }
 
+    // if the VN had been deleted previously
+    if (!vn_state && vn->IsDeleted()) {
+        return;
+    }
+
     if (!vn_state) {
         vn_state = new VxlanRoutingVnState(this);
         vn->SetState(partition->parent(), vn_listener_id_, vn_state);

@@ -31,7 +31,6 @@
 #include "xmpp/xmpp_server.h"
 #include "xmpp/xmpp_session.h"
 
-
 using namespace std;
 
 namespace mpl = boost::mpl;
@@ -1608,7 +1607,7 @@ const char *XmppStateMachine::ChannelType() {
 }
 
 bool XmppStateMachine::DequeueEvent(
-        boost::intrusive_ptr<const sc::event_base> &event) {
+        boost::intrusive_ptr<const sc::event_base> event) {
     // Process message event and enqueue additional events as necessary.
     const xmsm::EvXmppMessage *ev_xmpp_message =
             dynamic_cast<const xmsm::EvXmppMessage *>(event.get());

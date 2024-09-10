@@ -16,7 +16,7 @@ class Icmpv6ErrorHandler : public ProtoHandler {
     static const int ICMPV6_PAYLOAD_LEN = 128;
     Icmpv6ErrorHandler(Agent *agent, Icmpv6ErrorProto *proto,
                        boost::shared_ptr<PktInfo> info,
-                       boost::asio::io_service *io);
+                       boost::asio::io_context *io);
     virtual ~Icmpv6ErrorHandler();
 
     bool Run();

@@ -44,12 +44,12 @@
 #include "linux_vxlan_agent_init.h"
 
 LinuxVxlanAgentInit::LinuxVxlanAgentInit()
-    : ksync_vxlan_(NULL) {
+    : ksync_vxlan_(nullptr) {
 }
 
 LinuxVxlanAgentInit::~LinuxVxlanAgentInit() {
-    ksync_vxlan_.reset(NULL);
-    uve_.reset(NULL);
+    ksync_vxlan_.reset(nullptr);
+    uve_.reset(nullptr);
 }
 
 void LinuxVxlanAgentInit::ProcessOptions

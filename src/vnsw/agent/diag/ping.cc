@@ -272,13 +272,13 @@ void PingReq::HandleRequest() const {
 
     {
     IpAddress sip(IpAddress::from_string(get_source_ip(), ec));
-    if (ec != 0) {
+    if (ec.failed()) {
         err_str = "Invalid source IP";
         goto error;
     }
 
     IpAddress dip(IpAddress::from_string(get_dest_ip(), ec));
-    if (ec != 0) {
+    if (ec.failed()) {
         err_str = "Invalid destination IP";
         goto error;
     }

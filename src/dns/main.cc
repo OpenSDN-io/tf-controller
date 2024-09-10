@@ -299,13 +299,17 @@ int main(int argc, char *argv[]) {
     IFMapServer ifmap_server(&config_db, &config_graph,
                              Dns::GetEventManager()->io_service());
 
-    ConfigFactory::Register<ConfigJsonParserBase>(
-                          boost::factory<ConfigJsonParser *>());
-    ConfigClientManager *config_client_manager =
-        new ConfigClientManager(Dns::GetEventManager(), options.hostname(),
-                  module_name, options.configdb_options());
-    ConfigJsonParser *json_parser =
-      static_cast<ConfigJsonParser *>(config_client_manager->config_json_parser());
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParser>();
+    boost::scoped_ptr<ConfigClientManager> config_client_manager_ptr(
+        new ConfigClientManager(Dns::GetEventManager(),
+            ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(),
+            options.hostname(),
+            module_name,
+            options.configdb_options()));
+    ConfigClientManager *config_client_manager = config_client_manager_ptr.get();
+    ConfigJsonParser *json_parser = static_cast<ConfigJsonParser *>(
+        config_client_manager->config_json_parser());
     json_parser->ifmap_server_set(&ifmap_server);
     IFMap_Initialize(&ifmap_server, json_parser);
 

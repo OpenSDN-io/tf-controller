@@ -23,10 +23,10 @@ public:
     };
 
     void Shutdown() {}
-    IcmpProto(Agent *agent, boost::asio::io_service &io);
+    IcmpProto(Agent *agent, boost::asio::io_context &io);
     virtual ~IcmpProto();
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
 
     void IncrStatsGwPing() { stats_.icmp_gw_ping++; }
     void IncrStatsGwPingErr() { stats_.icmp_gw_ping_err++; }

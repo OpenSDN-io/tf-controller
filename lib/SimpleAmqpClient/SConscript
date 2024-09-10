@@ -6,7 +6,7 @@ import subprocess
 
 env = DefaultEnvironment()
 
-vpath = '#third_party/SimpleAmqpClient'
+vpath = '#third_party/SimpleAmqpClient-2.4.0' 
 working_dir = Dir('.').abspath
 products = [File('#build/lib/' + env['LIBPREFIX'] + 'SimpleAmqpClient' + env['LIBSUFFIX'])]
 

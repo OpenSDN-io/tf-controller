@@ -9,6 +9,7 @@
 #include "control-node/control_node.h"
 #include "db/db_table.h"
 #include "db/db_table_walk_mgr.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using namespace boost;
 using namespace std;
@@ -1091,6 +1092,8 @@ class TestEnvironment : public ::testing::Environment {
 
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 }
 
 static void TearDown() {

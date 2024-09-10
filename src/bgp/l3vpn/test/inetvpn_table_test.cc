@@ -11,6 +11,7 @@
 #include "bgp/bgp_server.h"
 #include "bgp/routing-instance/routing_instance.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 
 class BgpPeerMock : public IPeer {
 public:
@@ -309,6 +310,8 @@ TEST_F(InetVpnTableTest, TableNotification) {
 
 static void SetUp() {
     bgp_log_test::init();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
     ControlNode::SetDefaultSchedulingPolicy();
 }
 

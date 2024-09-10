@@ -16,9 +16,12 @@ env.GenerateBuildInfoCode(
     source = ['main.cc'],
     path=str(Dir('.').abspath))
 
-env = AgentEnv.RemoveExceptionFlag(env)
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
 env.AppendUnique(CCFLAGS='-Wno-reorder')
 env.AppendUnique(CCFLAGS='-Wno-return-type')
+
+env.Append(LINKFLAGS = ['-lvnswksync'])
 
 linux_vxlan_agent = env.Program(target = 'linux_vxlan_agent',
                                 source = [

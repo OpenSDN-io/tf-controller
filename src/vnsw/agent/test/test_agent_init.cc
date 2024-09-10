@@ -7,11 +7,10 @@
 #define BOOST_FUNCTIONAL_FORWARD_ADAPTER_MAX_ARITY 8
 
 #include <boost/functional/forward_adapter.hpp>
-
 #include <base/test/task_test_util.h>
 
 #include <cmn/agent_cmn.h>
-#include <cmn/agent_factory.h>
+
 #include <init/agent_param.h>
 #include <cfg/cfg_init.h>
 
@@ -23,6 +22,12 @@
 #include <vrouter/flow_stats/session_stats_collector.h>
 
 #include "test_agent_init.h"
+#include <cmn/agent_factory.h>
+
+const uint32_t TestAgentInit::kDefaultInterval;
+const uint32_t TestAgentInit::kIncrementalInterval;
+
+
 TestAgentInit::TestAgentInit() : ContrailInitCommon() {
 }
 
@@ -62,19 +67,23 @@ void TestAgentInit::ProcessComputeAddress(AgentParam *param) {
 /****************************************************************************
  * Initialization routines
  ***************************************************************************/
+
 void TestAgentInit::FactoryInit() {
-    AgentObjectFactory::Register<AgentUveBase>(
-        boost::forward_adapter<boost::factory<AgentUveBaseTest *> >(
-            boost::factory<AgentUveBaseTest *>()));
-    AgentObjectFactory::Register<KSync>(
-        boost::forward_adapter<boost::factory<KSyncTest *> >(
-            boost::factory<KSyncTest *>()));
-    AgentObjectFactory::Register<FlowStatsCollector>(
-        boost::forward_adapter<boost::factory<FlowStatsCollector *> >(
-            boost::factory<FlowStatsCollector *>()));
-    AgentObjectFactory::Register<SessionStatsCollector>(
-        boost::forward_adapter<boost::factory<SessionStatsCollector *> >(
-            boost::factory<SessionStatsCollector *>()));
+    AgentStaticObjectFactory::LinkImpl<AgentUveBase,
+        AgentUveBaseTest, Agent *, uint64_t, uint32_t, uint32_t>();
+
+    AgentStaticObjectFactory::LinkImpl<KSync,
+        KSyncTest, Agent*>();
+
+    AgentStaticObjectFactory::LinkImpl<FlowStatsCollector,
+        FlowStatsCollector, boost::asio::io_service &,
+        int, uint32_t, AgentUveBase *, uint32_t,
+        FlowAgingTableKey *, FlowStatsManager *, FlowStatsCollectorObject *>();
+
+    AgentStaticObjectFactory::LinkImpl<SessionStatsCollector,
+        SessionStatsCollector, boost::asio::io_service&,
+        AgentUveBase*, uint32_t, FlowStatsManager *,
+        SessionStatsCollectorObject *>();
 }
 
 // Create the basic modules for agent operation.
@@ -88,7 +97,7 @@ void TestAgentInit::CreateModules() {
                 *agent()->event_manager()->io_service()));
     agent()->pkt()->set_control_interface(pkt0_.get());
 
-    uve_.reset(AgentObjectFactory::Create<AgentUveBase>
+    uve_.reset(AgentStaticObjectFactory::Create<AgentUveBase>
                (agent(), AgentUveBase::kBandwidthInterval,
                 TestAgentInit::kDefaultInterval,
                 TestAgentInit::kIncrementalInterval));
@@ -106,7 +115,7 @@ void TestAgentInit::CreateModules() {
             agent()->params()->flow_cache_timeout());
     agent()->set_flow_stats_manager(flow_stats_manager_.get());
 
-    ksync_.reset(AgentObjectFactory::Create<KSync>(agent()));
+    ksync_.reset(AgentStaticObjectFactory::Create<KSync>(agent()));
     agent()->set_ksync(ksync_.get());
 
     pih_.reset(new PortIpcHandler(agent(), "/tmp"));

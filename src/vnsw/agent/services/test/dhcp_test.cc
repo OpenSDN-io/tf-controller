@@ -641,7 +641,7 @@ public:
                            const std::string &name) {
         if (!lease_db_) {
             const std::vector<Ip4Address> reserve_addresses;
-            boost::asio::io_service *io =
+            boost::asio::io_context *io =
                 Agent::GetInstance()->event_manager()->io_service();
             lease_db_ = new DhcpLeaseDb(subnet, plen, reserve_addresses,
                                         name, *io);

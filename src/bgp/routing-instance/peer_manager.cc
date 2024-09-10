@@ -39,7 +39,7 @@ BgpPeer *PeerManager::PeerLocate(BgpServer *server,
     }
 
     BgpPeer *peer =
-        BgpObjectFactory::Create<BgpPeer>(server, instance(), config);
+        BgpStaticObjectFactory::Create<BgpPeer>(server, instance(), config);
     peer->Initialize();
     InsertPeerByKey(key, peer);
     InsertPeerByName(config->name(), peer);

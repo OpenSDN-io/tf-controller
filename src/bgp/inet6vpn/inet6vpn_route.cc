@@ -95,7 +95,7 @@ Inet6VpnPrefix Inet6VpnPrefix::FromString(const string &str,
     string rdstr = str.substr(0, pos);
     boost::system::error_code rderr;
     prefix.rd_ = RouteDistinguisher::FromString(rdstr, &rderr);
-    if (rderr != 0) {
+    if (rderr.failed()) {
         if (errorp != NULL) {
             *errorp = rderr;
         }

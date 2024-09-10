@@ -27,7 +27,7 @@
 #include <vrouter/stats_collector/agent_stats_interval_types.h>
 
 AgentStatsCollector::AgentStatsCollector
-    (boost::asio::io_service &io, Agent* agent)
+    (boost::asio::io_context &io, Agent* agent)
     : StatsCollector(TaskScheduler::GetInstance()->
                      GetTaskId("Agent::StatsCollector"),
                      StatsCollector::AgentStatsCollector,

@@ -16,6 +16,7 @@
 #include "bgp/test/bgp_server_test_util.h"
 #include "control-node/control_node.h"
 #include "io/test/event_manager_test.h"
+#include "bgp/test/bgp_config_mock.h"
 
 
 using std::ifstream;
@@ -771,9 +772,11 @@ TEST_P(L3VPNPeerTest, ExtendedCommunity) {
 static void SetUp() {
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineTest *>());
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
 
     //
     // This test uses multiple peering sessions between two BgpServers.

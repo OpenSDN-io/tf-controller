@@ -92,7 +92,7 @@ public:
     virtual ~KSyncObject();
 
     // Initialise stale entry cleanup state machine.
-    void InitStaleEntryCleanup(boost::asio::io_service &ios,
+    void InitStaleEntryCleanup(boost::asio::io_context &ios,
                                uint32_t cleanup_time, uint32_t cleanup_intvl,
                                uint16_t entries_per_intvl);
 

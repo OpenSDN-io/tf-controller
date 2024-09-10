@@ -6625,10 +6625,10 @@ class TestEnvironment : public ::testing::Environment {
 
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpIfmapConfigManager *>());
-    BgpObjectFactory::Register<BgpLifetimeManager>(
-        boost::factory<BgpLifetimeManagerTest *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
+    BgpStaticObjectFactory::LinkImpl<BgpLifetimeManager,
+        BgpLifetimeManagerTest, BgpServer *, int>();
 }
 
 static void TearDown() {

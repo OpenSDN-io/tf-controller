@@ -17,7 +17,7 @@
 #include <services/services_init.h>
 #include "base/logging.h"
 
-BfdProto::BfdProto(Agent *agent, boost::asio::io_service &io) :
+BfdProto::BfdProto(Agent *agent, boost::asio::io_context &io) :
     Proto(agent, "Agent::Services", PktHandler::BFD, io),
     msg_(new PktInfo(agent, BFD_TX_BUFF_LEN, PktHandler::BFD, 0)),
     communicator_(this),
@@ -37,7 +37,7 @@ BfdProto::~BfdProto() {
 }
 
 ProtoHandler *BfdProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                          boost::asio::io_service &io) {
+                                          boost::asio::io_context &io) {
     return new BfdHandler(agent(), info, io);
 }
 

@@ -62,7 +62,7 @@
  * to flag this case.
  */
 typedef struct bv_entry_ {
-    thread bv_ent_nonfull_thread;    /* Entry on non-full-entry thread */
+    task_thread bv_ent_nonfull_thread;    /* Entry on non-full-entry thread */
     bvx_patnode bv_ent_node;        /* Patricia node */
     uint8_t bv_key[sizeof(bv_bitnum_t)]; /* Patricia key */
     bv_bitnum_t bv_start;        /* Starting bit number */

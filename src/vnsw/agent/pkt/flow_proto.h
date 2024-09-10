@@ -48,7 +48,7 @@ public:
     static const int kMinTableCount = 1;
     static const int kMaxTableCount = 16;
 
-    FlowProto(Agent *agent, boost::asio::io_service &io);
+    FlowProto(Agent *agent, boost::asio::io_context &io);
     virtual ~FlowProto();
 
     void Init();
@@ -58,7 +58,7 @@ public:
 
     bool Validate(PktInfo *msg);
     FlowHandler *AllocProtoHandler(PktInfoPtr info,
-                                   boost::asio::io_service &io);
+                                   boost::asio::io_context &io);
     bool Enqueue(PktInfoPtr msg);
 
     FlowEntry *Find(const FlowKey &key, uint32_t table_index) const;

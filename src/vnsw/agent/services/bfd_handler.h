@@ -11,7 +11,7 @@
 class BfdHandler : public ProtoHandler {
 public:
     BfdHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-               boost::asio::io_service &io);
+               boost::asio::io_context &io);
     virtual ~BfdHandler();
 
     bool Run();

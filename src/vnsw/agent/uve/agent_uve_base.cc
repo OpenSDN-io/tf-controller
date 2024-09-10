@@ -29,6 +29,16 @@ using process::ConnectionState;
 using process::ConnectionStateManager;
 using process::g_process_info_constants;
 
+
+const uint32_t AgentUveBase::kUveCountPerTimer;
+
+const uint32_t AgentUveBase::kDefaultInterval;
+
+const uint32_t AgentUveBase::kIncrementalInterval;
+
+const uint64_t AgentUveBase::kBandwidthInterval;
+
+
 AgentUveBase *AgentUveBase::singleton_;
 
 AgentUveBase::AgentUveBase(Agent *agent, uint64_t intvl,
@@ -178,7 +188,7 @@ void AgentUveBase::Init() {
     std::string module_id(agent_->module_name());
     std::string instance_id(agent_->instance_id());
     EventManager *evm = agent_->event_manager();
-    boost::asio::io_service &io = *evm->io_service();
+    boost::asio::io_context &io = *evm->io_service();
 
     CpuLoadData::Init();
     connection_state_manager_ =

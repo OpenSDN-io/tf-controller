@@ -194,7 +194,7 @@ gmp_intf *gmp_attach_intf(mgm_global_data *gd, void *mif_state)
     gif->vm_interface = mif_state;
     gif->gmpif_proto = GMP_PROTO_IGMP;
     gif->gmpif_handle.gmpifh_host = FALSE;
-    std::memset(&gif->gmpif_handle.gmpifh_xmit_thread, 0, sizeof(thread));
+    std::memset(&gif->gmpif_handle.gmpifh_xmit_thread, 0, sizeof(task_thread));
     gmpr_attach_intf(gd->mgm_gmpr_instance, &gif->gmpif_handle);
     memcpy(&gif->params, &def_gmpr_intf_params[gd->mgm_gd_af],
                                     sizeof(gif->params));

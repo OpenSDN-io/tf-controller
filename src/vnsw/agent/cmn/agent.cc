@@ -828,7 +828,7 @@ Agent::Agent() :
     module_name_ = g_vns_constants.ModuleNames.find(module)->second;
 
     agent_signal_.reset(
-        AgentObjectFactory::Create<AgentSignal>(event_mgr_));
+        AgentStaticObjectFactory::Create<AgentSignal>(event_mgr_));
     agent_signal_.get()->RegisterSigHupHandler(
         boost::bind(&Agent::ReconfigSignalHandler, this, _1, _2));
     agent_signal_.get()->RegisterDebugSigHandler(

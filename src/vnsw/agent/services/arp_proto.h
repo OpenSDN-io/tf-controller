@@ -89,11 +89,11 @@ public:
     typedef std::pair<uint32_t, InterfaceArpInfo> InterfaceArpPair;
 
     void Shutdown();
-    ArpProto(Agent *agent, boost::asio::io_service &io, bool run_with_vrouter);
+    ArpProto(Agent *agent, boost::asio::io_context &io, bool run_with_vrouter);
     virtual ~ArpProto();
 
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
     bool TimerExpiry(ArpKey &key, uint32_t timer_type, const Interface *itf);
 
     bool AddArpEntry(ArpEntry *entry);

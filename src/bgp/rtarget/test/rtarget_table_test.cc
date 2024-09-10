@@ -11,6 +11,7 @@
 #include "bgp/bgp_server.h"
 #include "bgp/routing-instance/routing_instance.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using namespace std;
 
@@ -212,6 +213,8 @@ TEST_F(RTargetTableTest, AllocEntryStr) {
 static void SetUp() {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 }
 
 static void TearDown() {

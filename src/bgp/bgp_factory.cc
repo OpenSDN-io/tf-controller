@@ -1,87 +1,131 @@
-/*
- * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
- */
-
 #include "bgp/bgp_factory.h"
 
-template <>
-BgpObjectFactory *Factory<BgpObjectFactory>::singleton_ = NULL;
 
-#include "bgp/bgp_evpn.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, EvpnManager, EvpnManager);
-
-#include "bgp/bgp_export.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, BgpExport, BgpExport);
-
-#include "bgp/bgp_lifetime.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, BgpLifetimeManager,
-    BgpLifetimeManager);
+template<> BgpConfigManagerRec::FunctionType
+BgpConfigManagerRec::create_func_ = nullptr;
+//template<> BgpConfigManagerRec::DefaultLinkType //Is abstract
+//BgpConfigManagerRec::default_link_{};
 
 #include "bgp/bgp_membership.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, BgpMembershipManager,
-    BgpMembershipManager);
+template<> BgpMembershipManagerRec::FunctionType
+BgpMembershipManagerRec::create_func_ = nullptr;
+template<> BgpMembershipManagerRec::DefaultLinkType
+BgpMembershipManagerRec::default_link_{};
 
-#include "bgp/bgp_peer.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, BgpPeer, BgpPeer);
+#include "bgp/bgp_export.h"
+template<> BgpExportRec::FunctionType
+BgpExportRec::create_func_ = nullptr;
+template<> BgpExportRec::DefaultLinkType
+BgpExportRec::default_link_{};
 
-#include "bgp/bgp_peer_close.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, BgpPeerClose, BgpPeerClose);
-
-#include "bgp/bgp_session_manager.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, BgpSessionManager, BgpSessionManager);
-
-#include "bgp/bgp_ribout_updates.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, RibOutUpdates, RibOutUpdates);
-
-#include "bgp/routing-instance/peer_manager.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, PeerManager, PeerManager);
-
-#include "bgp/routing-instance/routing_instance.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, RoutingInstance, RoutingInstance);
-FACTORY_STATIC_REGISTER(BgpObjectFactory, RoutingInstanceMgr,
-    RoutingInstanceMgr);
-
-#include "bgp/routing-policy/routing_policy.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, RoutingPolicy, RoutingPolicy);
-FACTORY_STATIC_REGISTER(BgpObjectFactory, RoutingPolicyMgr, RoutingPolicyMgr);
-
-#include "bgp/routing-instance/rtarget_group_mgr.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, RTargetGroupMgr, RTargetGroupMgr);
-
-#include "bgp/peer_close_manager.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, PeerCloseManager, PeerCloseManager);
-
-FACTORY_STATIC_REGISTER(BgpObjectFactory, StateMachine, StateMachine);
+#include "bgp/bgp_evpn.h"
+template<> EvpnManagerRec::FunctionType
+EvpnManagerRec::create_func_ = nullptr;
+template<> EvpnManagerRec::DefaultLinkType
+EvpnManagerRec::default_link_{};
 
 #include "bgp/bgp_multicast.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, McastTreeManager, McastTreeManager);
+template<> McastTreeManagerRec::FunctionType
+McastTreeManagerRec::create_func_ = nullptr;
+template<> McastTreeManagerRec::DefaultLinkType
+McastTreeManagerRec::default_link_{};
 
 #include "bgp/bgp_mvpn.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, MvpnManager, MvpnManager);
-FACTORY_STATIC_REGISTER(BgpObjectFactory, MvpnProjectManager,
-                        MvpnProjectManager);
+template<> MvpnProjectManagerRec::FunctionType
+MvpnProjectManagerRec::create_func_ = nullptr;
+template<> MvpnProjectManagerRec::DefaultLinkType
+MvpnProjectManagerRec::default_link_{};
+template<> MvpnManagerRec::FunctionType
+MvpnManagerRec::create_func_ = nullptr;
+template<> MvpnManagerRec::DefaultLinkType
+MvpnManagerRec::default_link_{};
+
+#include "bgp/peer_close_manager.h"
+template<> PeerCloseManagerRec::FunctionType
+PeerCloseManagerRec::create_func_ = nullptr;
+template<> PeerCloseManagerRec::DefaultLinkType
+PeerCloseManagerRec::default_link_{};
+
+#include "bgp/routing-instance/peer_manager.h"
+template<> PeerManagerRec::FunctionType
+PeerManagerRec::create_func_ = nullptr;
+template<> PeerManagerRec::DefaultLinkType
+PeerManagerRec::default_link_{};
+
+#include "bgp/routing-policy/routing_policy.h"
+template<> RoutingPolicyMgrRec::FunctionType
+RoutingPolicyMgrRec::create_func_ = nullptr;
+template<> RoutingPolicyMgrRec::DefaultLinkType
+RoutingPolicyMgrRec::default_link_{};
+template<> RoutingPolicyRec::FunctionType
+RoutingPolicyRec::create_func_ = nullptr;
+template<> RoutingPolicyRec::DefaultLinkType
+RoutingPolicyRec::default_link_{};
+
+#include "bgp/routing-instance/rtarget_group_mgr.h"
+template<> RTargetGroupMgrRec::FunctionType
+RTargetGroupMgrRec::create_func_ = nullptr;
+template<> RTargetGroupMgrRec::DefaultLinkType
+RTargetGroupMgrRec::default_link_{};
+
+#include "bgp/bgp_peer_close.h"
+template<> BgpPeerCloseRec::FunctionType
+BgpPeerCloseRec::create_func_ = nullptr;
+template<> BgpPeerCloseRec::DefaultLinkType
+BgpPeerCloseRec::default_link_{};
+
+#include "bgp/state_machine.h"
+template<> StateMachineRec::FunctionType
+StateMachineRec::create_func_ = nullptr;
+template<> StateMachineRec::DefaultLinkType
+StateMachineRec::default_link_{};
+
+#include "bgp/bgp_lifetime.h"
+template<> BgpLifetimeManagerRec::FunctionType
+BgpLifetimeManagerRec::create_func_ = nullptr;
+template<> BgpLifetimeManagerRec::DefaultLinkType
+BgpLifetimeManagerRec::default_link_{};
+
+#include "bgp/bgp_session_manager.h"
+template<> BgpSessionManagerRec::FunctionType
+BgpSessionManagerRec::create_func_ = nullptr;
+template<> BgpSessionManagerRec::DefaultLinkType
+BgpSessionManagerRec::default_link_{};
+
+#include "bgp/bgp_ribout_updates.h"
+template<> RibOutUpdatesRec::FunctionType
+RibOutUpdatesRec::create_func_ = nullptr;
+template<> RibOutUpdatesRec::DefaultLinkType
+RibOutUpdatesRec::default_link_{};
+
+#include "bgp/bgp_peer.h"
+template<> BgpPeerRec::FunctionType
+BgpPeerRec::create_func_ = nullptr;
+template<> BgpPeerRec::DefaultLinkType
+BgpPeerRec::default_link_{};
+
+#include "bgp/routing-instance/routing_instance.h"
+template<> RoutingInstanceRec::FunctionType
+RoutingInstanceRec::create_func_ = nullptr;
+template<> RoutingInstanceRec::DefaultLinkType
+RoutingInstanceRec::default_link_{};
+template<> RoutingInstanceMgrRec::FunctionType
+RoutingInstanceMgrRec::create_func_ = nullptr;
+template<> RoutingInstanceMgrRec::DefaultLinkType
+RoutingInstanceMgrRec::default_link_{};
 
 #include "bgp/bgp_message_builder.h"
-FACTORY_STATIC_REGISTER(BgpObjectFactory, BgpMessageBuilder, BgpMessageBuilder);
+template<> BgpMessageBuilderRec::FunctionType
+BgpMessageBuilderRec::create_func_ = nullptr;
+template<> BgpMessageBuilderRec::DefaultLinkType
+BgpMessageBuilderRec::default_link_{};
 
-#include "bgp/routing-instance/route_aggregator.h"
-FACTORY_PARAM_STATIC_REGISTER(BgpObjectFactory, IRouteAggregator,
-    Address::INET, RouteAggregatorInet);
-FACTORY_PARAM_STATIC_REGISTER(BgpObjectFactory, IRouteAggregator,
-    Address::INET6, RouteAggregatorInet6);
+#include "bgp/xmpp_message_builder.h"
+template<> BgpXmppMessageBuilderRec::FunctionType
+BgpXmppMessageBuilderRec::create_func_ = nullptr;
+template<> BgpXmppMessageBuilderRec::DefaultLinkType
+BgpXmppMessageBuilderRec::default_link_{};
 
-#include "bgp/routing-instance/service_chaining.h"
-FACTORY_PARAM_STATIC_REGISTER(BgpObjectFactory, IServiceChainMgr,
-    SCAddress::INET, ServiceChainMgrInet);
-FACTORY_PARAM_STATIC_REGISTER(BgpObjectFactory, IServiceChainMgr,
-    SCAddress::INET6, ServiceChainMgrInet6);
-FACTORY_PARAM_STATIC_REGISTER(BgpObjectFactory, IServiceChainMgr,
-    SCAddress::EVPN, ServiceChainMgrEvpn);
-FACTORY_PARAM_STATIC_REGISTER(BgpObjectFactory, IServiceChainMgr,
-    SCAddress::EVPN6, ServiceChainMgrEvpn6);
-
-#include "bgp/routing-instance/static_route.h"
-FACTORY_PARAM_STATIC_REGISTER(BgpObjectFactory, IStaticRouteMgr,
-    Address::INET, StaticRouteMgrInet);
-FACTORY_PARAM_STATIC_REGISTER(BgpObjectFactory, IStaticRouteMgr,
-    Address::INET6, StaticRouteMgrInet6);
+//
+//
+//

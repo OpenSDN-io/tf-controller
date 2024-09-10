@@ -270,6 +270,8 @@ int main(int argc, char *argv[]) {
 
     ControlNode::SetTestMode(options.test_mode());
 
+    ConfigStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
     boost::scoped_ptr<BgpServer> bgp_server(new BgpServer(&evm));
     sandesh_context.set_test_mode(ControlNode::GetTestMode());
     sandesh_context.bgp_server = bgp_server.get();
@@ -282,11 +284,16 @@ int main(int argc, char *argv[]) {
     DBGraph config_graph;
     IFMapServer ifmap_server(&config_db, &config_graph, evm.io_service());
 
-    ConfigFactory::Register<ConfigJsonParserBase>(
-                          boost::factory<ConfigJsonParser *>());
-    ConfigClientManager *config_client_manager =
-        new ConfigClientManager(&evm, options.hostname(),
-                                module_name, options.configdb_options());
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParser>();
+
+    boost::scoped_ptr<ConfigClientManager> config_client_manager_ptr(
+        new ConfigClientManager(&evm,
+            ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(),
+            options.hostname(),
+            module_name,
+            options.configdb_options()));
+    ConfigClientManager *config_client_manager = config_client_manager_ptr.get();
     ConfigJsonParser *json_parser = static_cast<ConfigJsonParser *>(
         config_client_manager->config_json_parser());
     json_parser->ifmap_server_set(&ifmap_server);
@@ -306,7 +313,6 @@ int main(int argc, char *argv[]) {
         CONTROL_NODE_EXIT("BGP IP Address " <<  options.host_ip() <<
                           " conversion error: " << ec.message());
     }
-
     bgp_server->rtarget_group_mgr()->Initialize();
     bgp_server->session_manager()->Initialize(options.bgp_port(),
                                               bgp_ip_address);
@@ -346,9 +352,8 @@ int main(int argc, char *argv[]) {
                             ConnectionType::DATABASE)->second, "Cassandra"))
         (ConnectionTypeName(g_process_info_constants.ConnectionTypeNames.find(
                             ConnectionType::DATABASE)->second, "RabbitMQ"))
-                                .convert_to_container<vector<\
+                                .convert_to_container<vector<
                                  ConnectionTypeName> >();
-
     ConnectionStateManager::GetInstance()->Init(
         *evm.io_service(), options.hostname(),
         module_name, g_vns_constants.INSTANCE_ID_DEFAULT,

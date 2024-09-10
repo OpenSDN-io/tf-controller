@@ -7,7 +7,7 @@
 #include <services/icmpv6_error_proto.h>
 #include <services/icmpv6_error_handler.h>
 
-Icmpv6ErrorProto::Icmpv6ErrorProto(Agent *agent, boost::asio::io_service &io) :
+Icmpv6ErrorProto::Icmpv6ErrorProto(Agent *agent, boost::asio::io_context &io) :
     Proto(agent, "Agent::Services", PktHandler::ICMPV6_ERROR, io) {
     // limit the number of entries in the workqueue
     work_queue_.SetSize(agent->params()->services_queue_limit());
@@ -18,7 +18,7 @@ Icmpv6ErrorProto::~Icmpv6ErrorProto() {
 }
 
 ProtoHandler *Icmpv6ErrorProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                                boost::asio::io_service &io) {
+                                                boost::asio::io_context &io) {
     return new Icmpv6ErrorHandler(agent(), this, info, &io);
 }
 

@@ -16,7 +16,7 @@
 #include "igmp_protocol.h"
 #include "mld_proto.h"
 
-thread gmpr_global_instance_thread;	/* Thread of instances */
+task_thread gmpr_global_instance_thread;	/* Thread of instances */
 
 
 /*
@@ -216,7 +216,7 @@ void
 gmpr_instance_destroy (gmpr_instance *instance)
 {
     gmp_proto inst_proto;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     boolean found_proto;
 
     /* Blast all clients on the instance. */

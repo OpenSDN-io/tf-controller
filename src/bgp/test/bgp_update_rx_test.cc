@@ -16,6 +16,7 @@
 #include "bgp/routing-instance/peer_manager.h"
 #include "bgp/routing-instance/routing_instance.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using namespace std;
 namespace ip = boost::asio::ip;
@@ -582,7 +583,11 @@ INSTANTIATE_TEST_CASE_P(Instance, BgpUpdateRxParamTest2,
 
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpPeer>(boost::factory<BgpPeerMock *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
+    BgpStaticObjectFactory::LinkImpl<BgpPeer, BgpPeerMock,
+        BgpServer *, RoutingInstance *,
+        const BgpNeighborConfig *>();
 }
 
 static void TearDown() {

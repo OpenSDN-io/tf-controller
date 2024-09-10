@@ -188,7 +188,7 @@ void ErmVpnTable::CreateTreeManager() {
     if (IsMaster() && !server()->mvpn_ipv4_enable())
         return;
     assert(!tree_manager_);
-    tree_manager_ = BgpObjectFactory::Create<McastTreeManager>(this);
+    tree_manager_ = BgpStaticObjectFactory::Create<McastTreeManager>(this);
     tree_manager_->Initialize();
 }
 
@@ -218,7 +218,7 @@ void ErmVpnTable::CreateMvpnProjectManager() {
     if (!server()->mvpn_ipv4_enable() || IsMaster())
         return;
     assert(!mvpn_project_manager_);
-    mvpn_project_manager_ = BgpObjectFactory::Create<MvpnProjectManager>(this);
+    mvpn_project_manager_ = BgpStaticObjectFactory::Create<MvpnProjectManager>(this);
     mvpn_project_manager_->Initialize();
 }
 

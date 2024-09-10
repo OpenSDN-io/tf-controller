@@ -12,8 +12,8 @@ def MapBuildDir(dirs):
     return list(map(lambda x: '#/' + Dir('.').path + '/../' + x, dirs))
 
 env = BuildEnv.Clone()
-
-env.CppDisableExceptions()
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
 
 # Generate the source files
 SandeshGenFiles  = env.SandeshGenCpp('bgp_peer.sandesh')
@@ -148,7 +148,7 @@ test_suite += env.SConscript('extended-community/SConscript', exports='BuildEnv'
 test_suite += env.SConscript('test/SConscript',
                              exports='BuildEnv', duplicate = 0)
 
-env.SConscript('daemon/SConscript', exports='BuildEnv', duplicate = 0)
+#env.SConscript('daemon/SConscript', exports='BuildEnv', duplicate = 0)
 
 def code_coverage(target, source, env):
     # rm -rf bgp/test_coverage

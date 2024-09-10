@@ -179,7 +179,7 @@ bool task_timer_cleanup(void *data)
 {
     task *tp = (task *)data;
     task_timer *timer = NULL;
-    thread *thread_ptr = NULL;
+    task_thread *thread_ptr = NULL;
 
     while (TRUE) {
         thread_ptr = thread_circular_top(&tp->deleted_timers);

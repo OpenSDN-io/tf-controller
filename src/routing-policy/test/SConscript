@@ -29,4 +29,5 @@ env.Prepend(LIBS = [
 
 policy_parse_test = env.Program('policy_parse_test',
                                  ['policy_parse_test.cc'])
+env.Alias('policy_parse_test', policy_parse_test)
 env.Alias('src/routing-policy:policy_parse_test', policy_parse_test)

@@ -55,7 +55,7 @@ XmppServer::XmppServer(EventManager *evm, const string &server_addr,
     : XmppConnectionManager(
           evm, ssl::context::sslv23_server, config->auth_enabled, true),
       max_connections_(0),
-      lifetime_manager_(XmppObjectFactory::Create<XmppLifetimeManager>(
+      lifetime_manager_(XmppStaticObjectFactory::Create<XmppLifetimeManager>(
           TaskScheduler::GetInstance()->GetTaskId("bgp::Config"))),
       deleter_(new DeleteActor(this)),
       server_addr_(server_addr),
@@ -201,7 +201,7 @@ private:
 XmppServer::XmppServer(EventManager *evm, const string &server_addr)
     : XmppConnectionManager(evm, ssl::context::sslv23_server, false, false),
       max_connections_(0),
-      lifetime_manager_(XmppObjectFactory::Create<XmppLifetimeManager>(
+      lifetime_manager_(XmppStaticObjectFactory::Create<XmppLifetimeManager>(
           TaskScheduler::GetInstance()->GetTaskId("bgp::Config"))),
       deleter_(new DeleteActor(this)),
       server_addr_(server_addr),
@@ -584,7 +584,8 @@ XmppServerConnection *XmppServer::CreateConnection(XmppSession *session) {
 
     XMPP_DEBUG(XmppCreateConnection, session->ToUVEKey(), XMPP_PEER_DIR_OUT,
                session->ToString());
-    connection = XmppObjectFactory::Create<XmppServerConnection>(this, &cfg);
+    connection = XmppStaticObjectFactory::Create<XmppServerConnection>
+        (this, static_cast<const XmppChannelConfig*>(&cfg));
 
     return connection;
 }

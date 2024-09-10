@@ -25,7 +25,7 @@ public:
         uint16_t port_;
     };
 
-    BindResolver(boost::asio::io_service &io,
+    BindResolver(boost::asio::io_context &io,
                  const std::vector<DnsServer> &dns_servers,
                  uint16_t client_port, Callback cb, uint8_t dscp);
     virtual ~BindResolver();
@@ -36,7 +36,7 @@ public:
     void SetDscpValue(uint8_t val);
     uint8_t GetDscpValue();
 
-    static void Init(boost::asio::io_service &io,
+    static void Init(boost::asio::io_context &io,
                      const std::vector<DnsServer> &dns_servers,
                      uint16_t client_port, Callback cb, uint8_t dscp);
     static void Shutdown();

@@ -16,6 +16,7 @@
 #include "bgp/routing-instance/peer_manager.h"
 #include "bgp/routing-instance/routing_instance.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using namespace std;
 using namespace boost::asio;
@@ -70,7 +71,9 @@ protected:
           instance_config_(BgpConfigManager::kMasterInstance),
           config_(new BgpNeighborConfig) {
         ConcurrencyScope scope("bgp::Config");
-        BgpObjectFactory::Register<BgpPeer>(boost::factory<BgpPeerMock *>());
+        BgpStaticObjectFactory::LinkImpl<BgpPeer, BgpPeerMock,
+        BgpServer *, RoutingInstance *,
+        const BgpNeighborConfig *>();
         RoutingInstance *rti =
                 server_.routing_instance_mgr()->CreateRoutingInstance(
                     &instance_config_);
@@ -254,6 +257,8 @@ TEST_F(BgpSessionUnitTest, StreamRead) {
 
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 }
 
 static void TearDown() {

@@ -766,8 +766,8 @@ static void SetUp() {
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineTest *>());
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
 }
 
 static void TearDown() {

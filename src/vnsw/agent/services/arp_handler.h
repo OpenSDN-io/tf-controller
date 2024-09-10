@@ -17,7 +17,7 @@ class ArpHandler : public ProtoHandler {
 public:
     static const uint16_t kMaxArpProbes = 256;
     ArpHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-               boost::asio::io_service &io);
+               boost::asio::io_context &io);
     virtual ~ArpHandler();
 
     bool Run();

@@ -19,7 +19,6 @@
 class MyTest {
   public:
     void TableListener(DBTablePartBase *root, DBEntryBase *entry) {
-        std::cout << "Coming here" << std::endl;
         return;
     }
 };

@@ -33,7 +33,7 @@ class NexthopDBServer
     typedef std::map <std::string, NexthopDBEntry::NexthopPtr>::iterator
         NexthopIterator;
 
-    NexthopDBServer(boost::asio::io_service &io, const std::string &path);
+    NexthopDBServer(boost::asio::io_context &io, const std::string &path);
 
     NexthopDBEntry::NexthopPtr FindOrCreateNexthop(const std::string &str);
     void FindAndRemoveNexthop(const std::string &str);
@@ -48,7 +48,7 @@ class NexthopDBServer
     void AddNexthop(NexthopDBEntry::NexthopPtr nh);
     void RemoveNexthop(NexthopDBEntry::NexthopPtr nh);
 
-    boost::asio::io_service &io_service_;
+    boost::asio::io_context &io_service_;
     std::string endpoint_path_;
     boost::scoped_ptr<UnixDomainSocketServer> io_server_;
     NexthopDB nexthop_table_;

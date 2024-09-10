@@ -322,7 +322,7 @@ protected:
         DBRequest req;
         error_code ec;
         RTargetPrefix rt_prefix = RTargetPrefix::FromString(rt_prefix_str, &ec);
-        assert(ec == 0);
+        assert(!ec);
         req.key.reset(new RTargetTable::RequestKey(rt_prefix, NULL));
         if (add_change) {
             req.data.reset(new RTargetTable::RequestData(attr, 0, 0));
@@ -4417,12 +4417,12 @@ static void SetUp() {
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    XmppObjectFactory::Register<XmppStateMachine>(
-        boost::factory<XmppStateMachineTest *>());
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineTest *>());
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
+    XmppStaticObjectFactory::LinkImpl<XmppStateMachine,
+        XmppStateMachineTest,XmppConnection*,bool,bool,int>();
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
 }
 
 static void TearDown() {

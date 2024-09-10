@@ -450,6 +450,7 @@ void BgpStressTest::IFMapInitialize(const string &hostname) {
                                             evm_.io_service()));
 
     config_client_manager_.reset(new ConfigClientManager(&evm_,
+        ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(),
         hostname, "BgpServerTest", ConfigClientOptions()));
     ConfigJsonParser *config_json_parser_ =
      static_cast<ConfigJsonParser *>(config_client_manager_->config_json_parser());
@@ -3419,18 +3420,25 @@ class TestEnvironment : public ::testing::Environment {
 
 static void SetUp() {
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<PeerCloseManager>(
-        boost::factory<PeerCloseManagerTest *>());
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
-    IFMapFactory::Register<IFMapXmppChannel>(
-        boost::factory<IFMapXmppChannelTest *>());
-    ConfigFactory::Register<ConfigCassandraClient>(
-        boost::factory<ConfigCassandraClientTest *>());
-    ConfigFactory::Register<ConfigCassandraPartition>(
-        boost::factory<ConfigCassandraPartitionTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParser *>());
+    BgpStaticObjectFactory::LinkImpl<PeerCloseManager,
+        PeerCloseManagerTest, IPeerClose*>();
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
+    IfmapStaticObjectFactory::LinkImpl<IFMapXmppChannel,
+        IFMapXmppChannelTest, XmppChannel*,
+        IFMapServer*, IFMapChannelManager*>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraPartition,
+        ConfigCassandraPartitionTest,
+        ConfigCassandraClient *,
+        size_t>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraClient,
+        ConfigCassandraClientTest,
+        ConfigClientManager *,
+        EventManager *,
+        const ConfigClientOptions &,
+        int>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParser>();
 }
 
 static void TearDown() {

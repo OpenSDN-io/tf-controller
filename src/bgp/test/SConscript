@@ -8,7 +8,7 @@ import os
 
 env = BuildEnv.Clone()
 
-env.CppDisableExceptions()
+env.CppEnableExceptions()
 
 env.Append(CPPPATH = [env['TOP'],
                       env['TOP'] + '/bgp',
@@ -50,10 +50,6 @@ libbgptest = env.Library('bgptest',
                           'bgp_test_util.cc'])
 
 env.Alias('src/bgp:libbgptest', libbgptest)
-
-libbgp_test_factory = env.Library(
-    'bgp_test_factory',
-    ['bgp_config_mock.cc'])
 
 env.Append(LIBPATH = env['TOP'] + '/schema')
 env.Append(LIBPATH = env['TOP'] + '/base/test')
@@ -112,10 +108,10 @@ else:
                  '-lrtarget',
                  '-lbgp_inet6',
                  '-lbgp_inet6vpn',
-                 '-lbgp_test_factory',
                  '-Wl,--no-whole-archive'])
 
 env.Append(LIBS = [
+    'bgp_xmpp',
     'bgp_ermvpn',
     'bgp_mvpn',
     'bgp_evpn',
@@ -123,7 +119,6 @@ env.Append(LIBS = [
     'bgp_inet6',
     'bgp_inet6vpn',
     'bgp_l3vpn',
-    'bgp_test_factory',
     'rtarget',
     'control_node_uve',
     'io',

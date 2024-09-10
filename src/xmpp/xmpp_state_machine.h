@@ -194,7 +194,7 @@ private:
     bool ConnectTimerExpired();
     bool OpenTimerExpired();
     bool Enqueue(const sc::event_base &ev);
-    bool DequeueEvent(boost::intrusive_ptr<const sc::event_base> &event);
+    bool DequeueEvent(boost::intrusive_ptr<const sc::event_base> event);
     void ProcessEvent(const sc::event_base &event);
     void ProcessStreamHeaderMessage(XmppSession *session,
                                     const XmppStanza::XmppMessage *msg);

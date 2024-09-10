@@ -31,7 +31,7 @@ public:
         DropStatsType
     };
 
-    AgentStatsCollector(boost::asio::io_service &io, Agent *agent);
+    AgentStatsCollector(boost::asio::io_context &io, Agent *agent);
     virtual ~AgentStatsCollector();
     Agent* agent() const { return agent_; }
 

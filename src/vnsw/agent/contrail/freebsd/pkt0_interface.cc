@@ -148,7 +148,7 @@ void Pkt0Interface::InitControlInterface() {
 
     boost::system::error_code ec;
     input_.assign(tap_fd_, ec);
-    assert(ec == 0);
+    assert(!ec);
 
     VrouterControlInterface::InitControlInterface();
     AsyncRead();

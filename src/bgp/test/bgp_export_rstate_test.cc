@@ -3,6 +3,7 @@
  */
 
 #include "bgp/test/bgp_export_test.h"
+#include "bgp/test/bgp_config_mock.h"
 
 
 using namespace std;
@@ -12,7 +13,7 @@ using namespace std;
 // the test methodlogy.
 
 //
-// Used for RouteState tests.
+// Used for RouteState test
 //
 class BgpExportRouteStateTest : public BgpExportTest {
 protected:
@@ -1167,6 +1168,8 @@ TEST_F(BgpExportRouteStateTest, LeaveDeleted4) {
 
 static void SetUp() {
     bgp_log_test::init();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
 }

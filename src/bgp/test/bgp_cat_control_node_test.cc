@@ -69,6 +69,7 @@ class BgpCatControlNodeTest : public ::testing::Test {
                                       evm_.io_service())),
         ifmap_sandesh_context_(new IFMapSandeshContext(ifmap_server_.get())),
         config_client_manager_(new ConfigClientManager(&evm_,
+            ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(),
             "localhost", "config-test", config_options_)),
         bgp_sandesh_context_(new BgpSandeshContext()),
         xmpp_sandesh_context_(new XmppSandeshContext()),
@@ -314,20 +315,20 @@ int main(int argc, char **argv) {
     ;
     Signal signal(&evm_, smap);
 
-    ConfigFactory::Register<ConfigCassandraClient>(
-        boost::factory<ConfigCassandraClientTest *>());
-    ConfigFactory::Register<ConfigCassandraPartition>(
-        boost::factory<ConfigCassandraClientPartitionTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParser *>());
-    ConfigFactory::Register<ConfigCassandraClient>(
-        boost::factory<ConfigCassandraClientTest *>());
-    ConfigFactory::Register<ConfigCassandraPartition>(
-        boost::factory<ConfigCassandraClientPartitionTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParser *>());
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraPartition,
+        ConfigCassandraPartitionTest,
+        ConfigCassandraClient *,
+        size_t>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraClient,
+        ConfigCassandraClientTest,
+        ConfigClientManager *,
+        EventManager *,
+        const ConfigClientOptions &,
+        int>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParser>();
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
     int status = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();
     return status;

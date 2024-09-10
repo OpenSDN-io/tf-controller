@@ -45,12 +45,16 @@ private:
 
 class MessageBuilder {
 public:
+    MessageBuilder(){};
     virtual Message *Create() const = 0;
     static MessageBuilder *GetInstance(RibExportPolicy::Encoding encoding);
+    virtual ~MessageBuilder(){};
 
 private:
     static BgpMessageBuilder *bgp_message_builder_;
     static BgpXmppMessageBuilder *xmpp_message_builder_;
+
+    DISALLOW_COPY_AND_ASSIGN(MessageBuilder);
 };
 
 #endif  // SRC_BGP_MESSAGE_BUILDER_H_

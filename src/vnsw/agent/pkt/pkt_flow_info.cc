@@ -182,7 +182,6 @@ static bool PickEcmpMember(const Agent *agent, const NextHop **nh,
         info->out_component_nh_idx = CompositeNH::kInvalidComponentNHIdx;
         return true;
     }
-
     info->ecmp = true;
     // If this is flow revluation,
     // 1. If flow transitions from non-ECMP to ECMP, the old-nh will be first
@@ -232,7 +231,6 @@ static bool PickEcmpMember(const Agent *agent, const NextHop **nh,
     if (!(*nh) || (*nh)->IsActive() == false) {
         return false;
     }
-
     return true;
 }
 

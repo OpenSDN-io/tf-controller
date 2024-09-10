@@ -26,13 +26,13 @@ public:
     typedef boost::shared_ptr<MacAgingTable> MacAgingTablePtr;
 
     MacLearningProto(Agent *agent,
-                     boost::asio::io_service &io);
+                     boost::asio::io_context &io);
     virtual ~MacLearningProto() {}
 
     virtual bool Validate(PktInfo *msg) { return true; }
     virtual ProtoHandler*
         AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                          boost::asio::io_service &io);
+                          boost::asio::io_context &io);
     MacLearningPartition* Find(uint32_t index);
 
     void Delete(uint32_t index) {

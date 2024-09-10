@@ -264,7 +264,7 @@ public:
     }
 
     LifetimeActor *deleter();
-    boost::asio::io_service *ioservice();
+    boost::asio::io_context *ioservice();
 
     void increment_message_build_error() const { ++message_build_error_; }
     uint64_t message_build_error() const { return message_build_error_; }

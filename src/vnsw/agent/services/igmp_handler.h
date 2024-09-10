@@ -12,7 +12,7 @@
 class IgmpHandler : public ProtoHandler {
 public:
     IgmpHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                boost::asio::io_service &io);
+                boost::asio::io_context &io);
     virtual ~IgmpHandler();
 
     bool Run();

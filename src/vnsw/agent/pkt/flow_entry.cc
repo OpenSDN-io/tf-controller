@@ -733,6 +733,7 @@ void FlowEntry::InitFwdFlow(const PktFlowInfo *info, const PktInfo *pkt,
     } else {
         reset_flags(FlowEntry::EcmpFlow);
     }
+
     data_.component_nh_idx = info->out_component_nh_idx;
     reset_flags(FlowEntry::Trap);
     if (ctrl->rt_ && ctrl->rt_->is_multicast()) {
@@ -3659,6 +3660,18 @@ uint8_t FlowEntry::GetUnderlayGwIndex(uint32_t intf_in, const IpAddress &sip,
         }
         return underlay_gw_index;
     }
+
+    InetUnicastRouteEntry *rt = static_cast<InetUnicastRouteEntry *>
+        (FlowEntry::GetUcRoute(GetDestinationVrf(), dip));
+    const TunnelNH *tunnel_nh = rt != nullptr ?
+        dynamic_cast<const TunnelNH *>(rt->GetActiveNextHop()) : nullptr;
+
+    if (!tunnel_nh && is_flags_set(FlowEntry::EcmpFlow) &&
+        data_.component_nh_idx != CompositeNH::kInvalidComponentNHIdx) {
+        // For composite nh set underlay gw index to component_nh_idx (same hash is used)
+        return (data_.component_nh_idx % (flow_table()->agent()->fabric_interface_name_list().size()));
+    }
+
     Interface *intf = flow_table()->agent()->interface_table()->
             FindInterface(intf_in);
     if (intf && intf->type() == Interface::PHYSICAL) {
@@ -3674,18 +3687,9 @@ uint8_t FlowEntry::GetUnderlayGwIndex(uint32_t intf_in, const IpAddress &sip,
         hash = HashCombine(hash, proto);
         underlay_gw_index = hash % (flow_table()->agent()->fabric_interface_name_list().size());
     }
-    InetUnicastRouteEntry *rt = static_cast<InetUnicastRouteEntry *>
-        (FlowEntry::GetUcRoute(GetDestinationVrf(), dip));
-    if (rt == NULL) {
-        return -1;
-    }
-    const TunnelNH *tunnel_nh =
-        dynamic_cast<const TunnelNH *>(rt->GetActiveNextHop());
 
-    if (!tunnel_nh && is_flags_set(FlowEntry::EcmpFlow) &&
-        data_.component_nh_idx != CompositeNH::kInvalidComponentNHIdx) {
-        // For composite nh set underlay gw index to component_nh_idx (same hash is used)
-        return (data_.component_nh_idx % (flow_table()->agent()->fabric_interface_name_list().size()));
+    if (rt == nullptr) {
+        return -1;
     }
     if ( !(tunnel_nh && (tunnel_nh->IsValid()))) {
          return -1;
@@ -3721,7 +3725,7 @@ uint16_t TcpPort::Bind() {
     boost::system::error_code ec;
     socket_.open(tcp::v4());
     socket_.bind(tcp::endpoint(tcp::v4(), port_), ec);
-    if (ec != 0) {
+    if (ec.failed()) {
         return 0;
     }
     port_ = socket_.local_endpoint(ec).port();
@@ -3736,7 +3740,7 @@ uint16_t UdpPort::Bind() {
     boost::system::error_code ec;
     socket_.open(udp::v4());
     socket_.bind(udp::endpoint(udp::v4(), port_), ec);
-    if (ec != 0) {
+    if (ec.failed()) {
         return 0;
     }
     port_ = socket_.local_endpoint(ec).port();

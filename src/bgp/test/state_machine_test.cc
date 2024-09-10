@@ -522,7 +522,7 @@ struct EvGenComp {
 };
 
 TEST_F(StateMachineUnitTest, Matrix) {
-    boost::asio::io_service::work work(*evm_.io_service());
+    boost::asio::io_context::work work(*evm_.io_service());
     typedef map<EvGen, StateMachine::State, EvGenComp> Transitions;
 
 #define TRANSITION(F, E) \
@@ -668,7 +668,7 @@ TEST_F(StateMachineUnitTest, Basic) {
 // Simulate EvTcpConnectFail and EvTcpClose.
 //
 TEST_F(StateMachineUnitTest, ConnectionErrors) {
-    boost::asio::io_service::work work(*evm_.io_service());
+    boost::asio::io_context::work work(*evm_.io_service());
     GetToState(StateMachine::CONNECT);
     EvTcpConnectFail();
     VerifyState(StateMachine::ACTIVE);
@@ -2692,12 +2692,12 @@ TEST_F(StateMachineEstablishedTest, TcpCloseThenAdminDown) {
 int main(int argc, char **argv) {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpIfmapConfigManager *>());
-    BgpObjectFactory::Register<BgpSessionManager>(
-        boost::factory<BgpSessionManagerMock *>());
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineTest *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
+    BgpStaticObjectFactory::LinkImpl<BgpSessionManager,
+        BgpSessionManagerMock, EventManager *, BgpServer *>();
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
     ::testing::InitGoogleTest(&argc, argv);
     int result = RUN_ALL_TESTS();
     TaskScheduler::GetInstance()->Terminate();

@@ -152,10 +152,10 @@ public:
     void ConfigInit();
     void Shutdown();
     void IoShutdown();
-    DnsProto(Agent *agent, boost::asio::io_service &io);
+    DnsProto(Agent *agent, boost::asio::io_context &io);
     virtual ~DnsProto();
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
     bool SendUpdateDnsEntry(const VmInterface *vmitf, const std::string &name,
                             const Ip4Address &ip, uint32_t plen,
                             const Ip6Address &ip6, uint32_t plen6,

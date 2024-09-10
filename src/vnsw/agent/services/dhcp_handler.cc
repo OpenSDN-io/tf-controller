@@ -325,7 +325,7 @@ Dhcpv4CategoryMap g_dhcpv4_category_map =
         (DHCP_OPTION_END, DhcpHandler::None);
 
 DhcpHandler::DhcpHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                         boost::asio::io_service &io)
+                         boost::asio::io_context &io)
         : DhcpHandlerBase(agent, info, io), msg_type_(DHCP_UNKNOWN),
           out_msg_type_(DHCP_UNKNOWN),
           nak_msg_("cannot assign requested address") {

@@ -10,7 +10,7 @@
 #include <services/icmpv6_proto.h>
 #include "mac_learning/mac_learning_proto.h"
 
-Icmpv6Proto::Icmpv6Proto(Agent *agent, boost::asio::io_service &io) :
+Icmpv6Proto::Icmpv6Proto(Agent *agent, boost::asio::io_context &io) :
     Proto(agent, "Agent::Services", PktHandler::ICMPV6, io) {
     // limit the number of entries in the workqueue
     work_queue_.SetSize(agent->params()->services_queue_limit());
@@ -49,7 +49,7 @@ void Icmpv6Proto::Shutdown() {
 }
 
 ProtoHandler *Icmpv6Proto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                             boost::asio::io_service &io) {
+                                             boost::asio::io_context &io) {
     return new Icmpv6Handler(agent(), info, io);
 }
 

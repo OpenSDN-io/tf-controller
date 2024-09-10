@@ -213,7 +213,7 @@ gmpr_destroy_client (gmpr_client *client)
 void
 gmpr_destroy_instance_clients (gmpr_instance *instance)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmpr_client *client;
 
     /* Walk all clients on the instance. */
@@ -451,7 +451,7 @@ gmpr_flush_notifications_client (gmpr_client *client)
 {
     gmpr_notify_block *notification;
 
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     /* Walk the client notification list. */
 
@@ -531,7 +531,7 @@ static void
 gmpr_client_enqueue_group (gmpr_client *client, gmpr_ogroup *group)
 {
     ordinal_t client_ord;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     /*
      * Bail if the client startup timer is running.  We'll be doing a full
@@ -545,7 +545,7 @@ gmpr_client_enqueue_group (gmpr_client *client, gmpr_ogroup *group)
     gmpr_update_client_notify(client);
 
     /*
-     * Delink the group from the client thread, in case it was already
+     * Delink the group from the client task_thread, in case it was already
      * on there, and then requeue it at the end.
      */
     client_ord = client->rclient_ordinal;
@@ -577,7 +577,7 @@ gmpr_client_enqueue_source (gmpr_client *client,
 {
     gmpr_ogroup *group;
     ordinal_t client_ord;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     /*
      * If we're only doing full notifications, enqueue the group instead
@@ -633,7 +633,7 @@ gmpr_group_notify_clients (gmpr_ogroup *group)
 {
     gmpr_instance *instance;
     gmpr_client *client;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     instance = group->rogroup_intf->rintf_instance;
 
@@ -668,7 +668,7 @@ gmpr_source_notify_clients (gmpr_ogroup_addr_entry *group_addr,
 {
     gmpr_instance *instance;
     gmpr_client *client;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     boolean client_found;
 
     instance = group_addr->rogroup_addr_group->rogroup_intf->rintf_instance;
@@ -1138,7 +1138,7 @@ gmpr_alert_clients (gmpr_instance *instance)
 {
     gmpr_client *client;
     gmpr_client_context *cli_ctx;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     gmpr_trace_agent("Alert Client : file : %s, line : %.",
                             __FILE__, __LINE__);
@@ -1181,7 +1181,7 @@ gmpr_client_notification *
 gmpr_client_get_notification (gmpr_client *client,
 			      gmpr_client_notification *last_notification)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmpr_ogroup *group;
     gmpr_instance *instance;
     gmpr_client_notification *client_notif;

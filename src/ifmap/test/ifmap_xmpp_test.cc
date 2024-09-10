@@ -3885,10 +3885,15 @@ static void SetUp() {
     LoggingInit();
     ControlNode::SetDefaultSchedulingPolicy();
     ConfigAmqpClient::set_disable(true);
-    ConfigFactory::Register<ConfigCassandraClient>(
-        boost::factory<ConfigCassandraClientTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParser *>());
+
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraClient,
+        ConfigCassandraClientTest,
+        ConfigClientManager *,
+        EventManager *,
+        const ConfigClientOptions &,
+        int>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParser>();
 }
 
 static void TearDown() {

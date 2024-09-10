@@ -10,6 +10,7 @@
 #include "bgp/tunnel_encap/tunnel_encap.h"
 #include "control-node/control_node.h"
 #include "sandesh/sandesh_trace.h"
+#include "bgp/test/bgp_config_mock.h"
 
 #define    TEST_DORMANT_TRACE_BUFFER_SIZE        4
 #define    TEST_DORMANT_TRACE_BUFFER_THRESHOLD   2
@@ -938,6 +939,9 @@ static void SetUp() {
     char   value[100];
 
     ControlNode::SetDefaultSchedulingPolicy();
+
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 
     // Intialize the environmental variables for this test prior to
     // the creation of the Routing Instance Manager

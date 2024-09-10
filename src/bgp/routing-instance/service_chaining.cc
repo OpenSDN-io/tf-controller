@@ -304,7 +304,7 @@ ServiceChain<T>::ServiceChain(ServiceChainMgrT *manager,
             }
         }
         PrefixT ipam_subnet = PrefixT::FromString(prefix, &ec);
-        if (ec != 0)
+        if (ec.failed())
             continue;
         prefix_to_routelist_map_[ipam_subnet] = RouteList();
     }
@@ -1776,7 +1776,7 @@ bool ServiceChainMgr<T>::LocateServiceChain(RoutingInstance *rtinstance,
     error_code ec;
     AddressT chain_addr =
         AddressT::from_string(config.service_chain_address, ec);
-    if (ec != 0) {
+    if (ec.failed()) {
         string reason = "Service chain address is invalid";
         AddPendingServiceChain(rtinstance, group, reason);
         return false;

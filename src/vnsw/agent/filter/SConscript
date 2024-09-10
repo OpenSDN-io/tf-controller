@@ -9,6 +9,9 @@ import os
 Import('AgentEnv')
 env = AgentEnv.Clone()
 
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
+
 libfilter = env.Library('filter',
                      [
                       'traffic_action.cc',

@@ -1349,7 +1349,7 @@ gmpr_process_report_packet(gmpr_intf *intf, gmp_packet *packet)
     gmpr_group *group;
     gmp_report_packet *rpt_pkt;
     gmp_report_group_record *group_rcrd;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmp_addr_vect source_vect;
     gmp_addr_thread_entry *thread_entry;
     gmp_addr_string *addr;

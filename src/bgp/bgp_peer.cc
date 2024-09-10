@@ -513,8 +513,8 @@ BgpPeer::BgpPeer(BgpServer *server, RoutingInstance *instance,
           family_primary_path_count_(Address::NUM_FAMILIES),
           peer_type_((config->peer_as() == config->local_as()) ?
                          BgpProto::IBGP : BgpProto::EBGP),
-          state_machine_(BgpObjectFactory::Create<StateMachine>(this)),
-          peer_close_(BgpObjectFactory::Create<BgpPeerClose>(this)),
+          state_machine_(BgpStaticObjectFactory::Create<StateMachine>(this)),
+          peer_close_(BgpStaticObjectFactory::Create<BgpPeerClose>(this)),
           peer_stats_(new PeerStats(this)),
           deleter_(new DeleteActor(this)),
           instance_delete_ref_(this, instance ? instance->deleter() : NULL),
@@ -527,7 +527,7 @@ BgpPeer::BgpPeer(BgpServer *server, RoutingInstance *instance,
           instance_op_(-1) {
     buffer_.reserve(buffer_capacity_);
     close_manager_.reset(
-        BgpObjectFactory::Create<PeerCloseManager>(peer_close_.get()));
+        BgpStaticObjectFactory::Create<PeerCloseManager>(static_cast<IPeerClose*>(peer_close_.get())));
     ostringstream oss1;
     oss1 << peer_key_.endpoint.address();
     if (peer_key_.endpoint.port() != BgpConfigManager::kDefaultPort)
@@ -2423,7 +2423,7 @@ static void FillSocketStats(const IPeerDebugStats::SocketStats &socket_stats,
     }
     peer_socket_stats->set_blocked_count(socket_stats.blocked_count);
     ostringstream os;
-    os << boost::posix_time::microseconds(socket_stats.blocked_duration_usecs);
+    os << boost::posix_time::microseconds(long(socket_stats.blocked_duration_usecs));
     peer_socket_stats->set_blocked_duration(os.str());
     if (socket_stats.blocked_count) {
         os.str("");

@@ -374,7 +374,7 @@ static BgpNeighborConfig *MakeBgpNeighborConfig(
         }
         Ip4Address localid =
             Ip4Address::from_string(master_params.identifier, err);
-        if (err == 0) {
+        if (!err) {
             neighbor->set_local_identifier(IpAddressToBgpIdentifier(localid));
         }
         if (!neighbor->local_as()) {
@@ -662,7 +662,7 @@ void BgpIfmapProtocolConfig::Update(BgpIfmapConfigManager *manager,
     data_.set_port(params.port ?: BgpConfigManager::kDefaultPort);
     boost::system::error_code err;
     IpAddress identifier = IpAddress::from_string(params.identifier, err);
-    if (err == 0) {
+    if (!err) {
         data_.set_identifier(IpAddressToBgpIdentifier(identifier));
     }
     data_.set_hold_time(params.hold_time);
@@ -866,7 +866,7 @@ static bool GetRouteAggregateConfig(DBGraph *graph, IFMapNode *node,
     boost::system::error_code ec;
     IpAddress nexthop =
         IpAddress::from_string(ra->aggregate_route_nexthop(), ec);
-    if (ec != 0) return false;
+    if (ec.failed()) return false;
 
     BOOST_FOREACH(const string &route, ra->aggregate_route_entries()) {
         AggregateRouteConfig aggregate;
@@ -874,7 +874,7 @@ static bool GetRouteAggregateConfig(DBGraph *graph, IFMapNode *node,
 
         Ip4Address address;
         ec = Ip4SubnetParse(route, &address, &aggregate.prefix_length);
-        if (ec == 0) {
+        if (!ec) {
             if (!nexthop.is_v4()) continue;
             aggregate.aggregate = address;
             inet_list->push_back(aggregate);
@@ -882,7 +882,7 @@ static bool GetRouteAggregateConfig(DBGraph *graph, IFMapNode *node,
             if (!nexthop.is_v6()) continue;
             Ip6Address address;
             ec = Inet6SubnetParse(route, &address, &aggregate.prefix_length);
-            if (ec != 0) continue;
+            if (ec.failed()) continue;
             aggregate.aggregate = address;
             inet6_list->push_back(aggregate);
         }
@@ -960,7 +960,7 @@ static void SetStaticRouteConfig(BgpInstanceConfig *rti,
         boost::system::error_code ec;
         StaticRouteConfig item;
         item.nexthop = IpAddress::from_string(route.next_hop, ec);
-        if (ec != 0)
+        if (ec.failed())
             continue;
 
         item.route_targets = route.route_target;
@@ -968,7 +968,7 @@ static void SetStaticRouteConfig(BgpInstanceConfig *rti,
         if (item.nexthop.is_v4()) {
             Ip4Address address;
             ec = Ip4SubnetParse(route.prefix, &address, &item.prefix_length);
-            if (ec != 0)
+            if (ec.failed())
                 continue;
             item.address = address;
             std::pair<BgpInstanceConfig::StaticRouteList::iterator, bool> ret =
@@ -982,7 +982,7 @@ static void SetStaticRouteConfig(BgpInstanceConfig *rti,
         } else {
             Ip6Address address;
             ec = Inet6SubnetParse(route.prefix, &address, &item.prefix_length);
-            if (ec != 0)
+            if (ec.failed())
                 continue;
             item.address = address;
             std::pair<BgpInstanceConfig::StaticRouteList::iterator, bool> ret =

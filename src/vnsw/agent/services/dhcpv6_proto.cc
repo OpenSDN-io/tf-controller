@@ -12,7 +12,7 @@
 using namespace boost::asio;
 using boost::asio::ip::udp;
 
-Dhcpv6Proto::Dhcpv6Proto(Agent *agent, boost::asio::io_service &io,
+Dhcpv6Proto::Dhcpv6Proto(Agent *agent, boost::asio::io_context &io,
                          bool run_with_vrouter) :
     Proto(agent, "Agent::Services", PktHandler::DHCPV6, io),
     run_with_vrouter_(run_with_vrouter) {
@@ -30,7 +30,7 @@ Dhcpv6Proto::~Dhcpv6Proto() {
 }
 
 ProtoHandler *Dhcpv6Proto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                             boost::asio::io_service &io) {
+                                             boost::asio::io_context &io) {
     return new Dhcpv6Handler(agent(), info, io);
 }
 

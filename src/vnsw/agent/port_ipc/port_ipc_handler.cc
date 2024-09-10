@@ -650,7 +650,7 @@ bool PortIpcHandler::BuildGatewayArrayElement
     }
     boost::system::error_code ec;
     entry->ip_ = Ip4Address::from_string(d["ip-address"].GetString(), ec);
-    if (ec != 0) {
+    if (ec.failed()) {
         return false;
     }
     entry->plen_ = d["prefix-len"].GetInt();

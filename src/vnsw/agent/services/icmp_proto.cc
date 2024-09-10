@@ -6,7 +6,7 @@
 #include <init/agent_init.h>
 #include <services/icmp_proto.h>
 
-IcmpProto::IcmpProto(Agent *agent, boost::asio::io_service &io) :
+IcmpProto::IcmpProto(Agent *agent, boost::asio::io_context &io) :
     Proto(agent, "Agent::Services", PktHandler::ICMP, io) {
     // limit the number of entries in the workqueue
     work_queue_.SetSize(agent->params()->services_queue_limit());
@@ -17,6 +17,6 @@ IcmpProto::~IcmpProto() {
 }
 
 ProtoHandler *IcmpProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                           boost::asio::io_service &io) {
+                                           boost::asio::io_context &io) {
     return new IcmpHandler(agent(), info, io);
 }

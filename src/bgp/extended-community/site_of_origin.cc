@@ -84,7 +84,7 @@ SiteOfOrigin SiteOfOrigin::FromString(const string &str,
     Ip4Address addr = Ip4Address::from_string(second, ec);
     int offset;
     char *endptr;
-    if (ec.value() != 0) {
+    if (ec.failed()) {
         // Not an IP address. Try ASN
         int64_t asn = strtol(second.c_str(), &endptr, 10);
         if (asn == 0 || asn > 0xFFFFFFFF || *endptr != '\0') {

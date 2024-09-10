@@ -15,6 +15,7 @@
 
 class BgpConfigListener;
 class BgpConfigManager;
+class BgpIfmapConfigManager;
 class BgpExport;
 class BgpInstanceConfig;
 class BgpLifetimeManager;
@@ -50,52 +51,99 @@ class RoutingPolicyMgr;
 class RTargetGroupMgr;
 class StateMachine;
 
-class BgpObjectFactory : public Factory<BgpObjectFactory> {
-    FACTORY_TYPE_N1(BgpObjectFactory, BgpConfigManager, BgpServer *);
-    FACTORY_TYPE_N1(BgpObjectFactory, BgpMembershipManager, BgpServer *);
-    FACTORY_TYPE_N1(BgpObjectFactory, BgpExport, RibOut *);
-    FACTORY_TYPE_N1(BgpObjectFactory, EvpnManager, EvpnTable *);
-    FACTORY_TYPE_N1(BgpObjectFactory, McastTreeManager, ErmVpnTable *);
-    FACTORY_TYPE_N1(BgpObjectFactory, MvpnProjectManager, ErmVpnTable *);
-    FACTORY_TYPE_N1(BgpObjectFactory, PeerCloseManager, IPeerClose *);
-    FACTORY_TYPE_N1(BgpObjectFactory, PeerManager, RoutingInstance *);
-    FACTORY_TYPE_N1(BgpObjectFactory, RoutingInstanceMgr, BgpServer *);
-    FACTORY_TYPE_N1(BgpObjectFactory, RoutingPolicyMgr, BgpServer *);
-    FACTORY_TYPE_N1(BgpObjectFactory, RTargetGroupMgr, BgpServer *);
-    FACTORY_TYPE_N1(BgpObjectFactory, StateMachine, BgpPeer *);
-    FACTORY_TYPE_N1(BgpObjectFactory, BgpPeerClose, BgpPeer *);
-    FACTORY_TYPE_N2(BgpObjectFactory, MvpnManager, MvpnTable *, ErmVpnTable *);
-    FACTORY_TYPE_N2(BgpObjectFactory, BgpLifetimeManager, BgpServer *, int);
-    FACTORY_TYPE_N2(BgpObjectFactory, BgpSessionManager,
-                    EventManager *, BgpServer *);
-    FACTORY_TYPE_N2(BgpObjectFactory, RibOutUpdates, RibOut *, int);
-    FACTORY_TYPE_N3(BgpObjectFactory, BgpPeer,
-                    BgpServer *, RoutingInstance *, const BgpNeighborConfig *);
-    FACTORY_TYPE_N4(BgpObjectFactory, RoutingInstance,
-                    std::string, BgpServer *, RoutingInstanceMgr *,
-                    const BgpInstanceConfig *);
-    FACTORY_TYPE_N4(BgpObjectFactory, RoutingPolicy,
-                    std::string, BgpServer *, RoutingPolicyMgr *,
-                    const BgpRoutingPolicyConfig *);
-    FACTORY_TYPE_N0(BgpObjectFactory, BgpMessageBuilder);
-    FACTORY_TYPE_N0(BgpObjectFactory, BgpXmppMessageBuilder);
 
-    FACTORY_PARAM_TYPE_N1(BgpObjectFactory, IServiceChainMgr,
-        1 /* SCAddress::INET */, BgpServer *);
-    FACTORY_PARAM_TYPE_N1(BgpObjectFactory, IServiceChainMgr,
-        2 /* SCAddress::INET6 */, BgpServer *);
-    FACTORY_PARAM_TYPE_N1(BgpObjectFactory, IServiceChainMgr,
-        3 /* SCAddress::EVPN */, BgpServer *);
-    FACTORY_PARAM_TYPE_N1(BgpObjectFactory, IServiceChainMgr,
-        4 /* SCAddress::EVPN6 */, BgpServer *);
-    FACTORY_PARAM_TYPE_N1(BgpObjectFactory, IStaticRouteMgr,
-        1 /* Address::INET */, RoutingInstance *);
-    FACTORY_PARAM_TYPE_N1(BgpObjectFactory, IStaticRouteMgr,
-        2 /* Address::INET6 */, RoutingInstance *);
-    FACTORY_PARAM_TYPE_N1(BgpObjectFactory, IRouteAggregator,
-        1 /* Address::INET */, RoutingInstance *);
-    FACTORY_PARAM_TYPE_N1(BgpObjectFactory, IRouteAggregator,
-        2 /* Address::INET6 */, RoutingInstance *);
+struct BgpStaticObjectFactory : public StaticObjectFactory {
 };
 
+#include "bgp/bgp_config_ifmap.h"
+
+using BgpConfigManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<BgpConfigManager,
+        BgpServer*>;
+using BgpMembershipManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<BgpMembershipManager,
+        BgpServer*>;
+using BgpExportRec =
+    BgpStaticObjectFactory::FactoryRecord<BgpExport,
+        RibOut*>;
+using EvpnManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<EvpnManager,
+        EvpnTable*>;
+using McastTreeManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<McastTreeManager,
+        ErmVpnTable*>;
+using MvpnProjectManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<MvpnProjectManager,
+        ErmVpnTable*>;
+using PeerCloseManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<PeerCloseManager,
+        IPeerClose*>;
+using PeerManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<PeerManager,
+        RoutingInstance*>;
+using RoutingInstanceMgrRec =
+    BgpStaticObjectFactory::FactoryRecord<RoutingInstanceMgr,
+       BgpServer *>;
+using RoutingPolicyMgrRec =
+    BgpStaticObjectFactory::FactoryRecord<RoutingPolicyMgr,
+        BgpServer*>;
+using RTargetGroupMgrRec =
+    BgpStaticObjectFactory::FactoryRecord<RTargetGroupMgr,
+        BgpServer *>;
+using StateMachineRec =
+    BgpStaticObjectFactory::FactoryRecord<StateMachine,
+        BgpPeer *>;
+using BgpPeerCloseRec =
+    BgpStaticObjectFactory::FactoryRecord<BgpPeerClose,
+        BgpPeer *>;
+using MvpnManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<MvpnManager,
+        MvpnTable *, ErmVpnTable *>;
+using BgpLifetimeManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<BgpLifetimeManager,
+        BgpServer *, int>;
+using BgpSessionManagerRec =
+    BgpStaticObjectFactory::FactoryRecord<BgpSessionManager,
+        EventManager *, BgpServer *>;
+using RibOutUpdatesRec =
+    BgpStaticObjectFactory::FactoryRecord<RibOutUpdates,
+        RibOut *, int>;
+using BgpPeerRec =
+    BgpStaticObjectFactory::FactoryRecord<BgpPeer,
+        BgpServer *, RoutingInstance *, const BgpNeighborConfig *>;
+using RoutingInstanceRec =
+    BgpStaticObjectFactory::FactoryRecord<RoutingInstance,
+        std::string, BgpServer *,
+        RoutingInstanceMgr *, const BgpInstanceConfig *>;
+using RoutingPolicyRec =
+    BgpStaticObjectFactory::FactoryRecord<RoutingPolicy,
+        std::string, BgpServer *,
+        RoutingPolicyMgr *, const BgpRoutingPolicyConfig *>;
+using BgpMessageBuilderRec =
+    BgpStaticObjectFactory::FactoryRecord<BgpMessageBuilder>;
+using BgpXmppMessageBuilderRec =
+    BgpStaticObjectFactory::FactoryRecord<BgpXmppMessageBuilder>;
+
+
+#include "bgp/routing-instance/service_chaining.h"
+template<> struct BgpStaticObjectFactory::ParameterCastTo<IServiceChainMgr,SCAddress::INET>
+    {using ImplType = ServiceChainMgrInet;};
+template<> struct BgpStaticObjectFactory::ParameterCastTo<IServiceChainMgr,SCAddress::INET6>
+    {using ImplType = ServiceChainMgrInet6;};
+template<> struct BgpStaticObjectFactory::ParameterCastTo<IServiceChainMgr,SCAddress::EVPN>
+    {using ImplType = ServiceChainMgrEvpn;};
+template<> struct BgpStaticObjectFactory::ParameterCastTo<IServiceChainMgr,SCAddress::EVPN6>
+    {using ImplType = ServiceChainMgrEvpn6;};
+
+#include "bgp/routing-instance/static_route.h"
+template<> struct BgpStaticObjectFactory::ParameterCastTo<IStaticRouteMgr,Address::INET>
+    {using ImplType = StaticRouteMgrInet;};
+template<> struct BgpStaticObjectFactory::ParameterCastTo<IStaticRouteMgr,Address::INET6>
+    {using ImplType = StaticRouteMgrInet6;};
+
+#include "bgp/routing-instance/route_aggregator.h"
+template<> struct BgpStaticObjectFactory::ParameterCastTo<IRouteAggregator,Address::INET>
+    {using ImplType = RouteAggregatorInet;};
+template<> struct BgpStaticObjectFactory::ParameterCastTo<IRouteAggregator,Address::INET6>
+    {using ImplType = RouteAggregatorInet6;};
 #endif  // SRC_BGP_BGP_FACTORY_H_

@@ -78,7 +78,7 @@ size_t KSyncSockTcp::SendTo(KSyncBufferList *iovec, uint32_t seq_no) {
     }
 
     msg.msg_iovlen = i;
-    fd = tcp_socket_->native();
+    fd = tcp_socket_->native_handle();
     ret = sendmsg(fd, &msg, 0);
     if (ret != len) {
         LOG(ERROR, "sendmsg failure " << ret << "len " << len);
@@ -130,7 +130,7 @@ void KSyncSockTcp::Receive(mutable_buffers_1 buf) {
         mutable_buffers_1 buffer =
             static_cast<mutable_buffers_1>(netlink_header + bytes_read);
         bytes_read += session_->socket()->receive(buffer, 0, ec);
-        if (ec != 0) {
+        if (ec.failed()) {
             assert(0);
         }
         //Data read is lesser than netlink header
@@ -156,7 +156,7 @@ void KSyncSockTcp::Receive(mutable_buffers_1 buf) {
         mutable_buffers_1 buffer =
             static_cast<mutable_buffers_1>(data + bytes_read);
         bytes_read += session_->socket()->receive(buffer, 0, ec);
-        if (ec != 0) {
+        if (ec.failed()) {
             assert(0);
         }
     }
@@ -172,7 +172,7 @@ bool KSyncSockTcp::ReceiveMsg(const u_int8_t *msg, size_t size) {
 
 bool KSyncSockTcp::Run() {
     AgentSandeshContext *ctxt = KSyncSock::GetAgentSandeshContext(0);
-    int fd = tcp_socket_->native();
+    int fd = tcp_socket_->native_handle();
 
     while (1) {
         char *bufp = rx_buff_;

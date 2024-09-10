@@ -158,7 +158,7 @@ ErmVpnPrefix ErmVpnPrefix::FromString(const string &str,
     temp_str = str.substr(pos1 + 1, pos2 - pos1 - 1);
     boost::system::error_code rd_err;
     prefix.rd_ = RouteDistinguisher::FromString(temp_str, &rd_err);
-    if (rd_err != 0) {
+    if (rd_err.failed()) {
         if (errorp != NULL) {
             *errorp = rd_err;
         }
@@ -176,7 +176,7 @@ ErmVpnPrefix ErmVpnPrefix::FromString(const string &str,
     temp_str = str.substr(pos2 + 1, pos3 - pos2 - 1);
     boost::system::error_code rtid_err;
     prefix.router_id_ = Ip4Address::from_string(temp_str, rtid_err);
-    if (rtid_err != 0) {
+    if (rtid_err.failed()) {
         if (errorp != NULL) {
             *errorp = rtid_err;
         }
@@ -194,7 +194,7 @@ ErmVpnPrefix ErmVpnPrefix::FromString(const string &str,
     temp_str = str.substr(pos3 + 1, pos4 - pos3 - 1);
     boost::system::error_code group_err;
     prefix.group_ = Ip4Address::from_string(temp_str, group_err);
-    if (group_err != 0) {
+    if (group_err.failed()) {
         if (errorp != NULL) {
             *errorp = group_err;
         }
@@ -205,7 +205,7 @@ ErmVpnPrefix ErmVpnPrefix::FromString(const string &str,
     temp_str = str.substr(pos4 + 1, string::npos);
     boost::system::error_code source_err;
     prefix.source_ = Ip4Address::from_string(temp_str, source_err);
-    if (source_err != 0) {
+    if (source_err.failed()) {
         if (errorp != NULL) {
             *errorp = source_err;
         }

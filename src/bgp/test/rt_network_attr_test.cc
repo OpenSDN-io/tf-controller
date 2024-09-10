@@ -34,6 +34,7 @@ protected:
           map_server_(bgp_server_.config_db(), bgp_server_.config_graph(),
                       evm_.io_service()),
           config_client_manager_(new ConfigClientManager(&evm_,
+              ConfigStaticObjectFactory::Create<ConfigJsonParserBase>(),
               "localhost", "config-test", config_options_)) {
         config_cassandra_client_=dynamic_cast<ConfigCassandraClientTest *>(
             config_client_manager_->config_db_client());
@@ -172,12 +173,16 @@ static void SetUp() {
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
-    ConfigFactory::Register<ConfigCassandraClient>(
-        boost::factory<ConfigCassandraClientTest *>());
-    ConfigFactory::Register<ConfigJsonParserBase>(
-        boost::factory<ConfigJsonParser *>());
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigCassandraClient,
+        ConfigCassandraClientTest,
+        ConfigClientManager *,
+        EventManager *,
+        const ConfigClientOptions &,
+        int>();
+    ConfigStaticObjectFactory::LinkImpl<ConfigJsonParserBase,
+        ConfigJsonParser>();
 }
 
 static void TearDown() {

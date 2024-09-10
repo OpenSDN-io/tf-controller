@@ -2434,8 +2434,8 @@ class TestEnvironment : public ::testing::Environment {
 
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<BgpConfigManager>(
-        boost::factory<BgpIfmapConfigManager *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpIfmapConfigManager, BgpServer*>();
 }
 
 static void TearDown() {

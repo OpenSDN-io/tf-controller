@@ -15,6 +15,9 @@ SandeshGenFiles = env.SandeshGenCpp('diag.sandesh')
 SandeshGenSrcs = env.ExtractCpp(SandeshGenFiles)
 sandesh_objs = AgentEnv.BuildExceptionCppObj(env, SandeshGenSrcs)
 
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
+
 libdiag = env.Library('diag',
                    sandesh_objs +
                    [

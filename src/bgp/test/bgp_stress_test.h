@@ -68,7 +68,7 @@ public:
 
 class IFMapServerTest : public IFMapServer {
 public:
-    IFMapServerTest(DB *db, DBGraph *graph, boost::asio::io_service *io_service)
+    IFMapServerTest(DB *db, DBGraph *graph, boost::asio::io_context *io_service)
         : IFMapServer(db, graph, io_service), config_client_manager_(NULL) {
     }
 

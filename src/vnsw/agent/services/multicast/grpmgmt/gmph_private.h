@@ -29,8 +29,8 @@
  */
 typedef struct gmph_instance_ {
     u_int32_t hinst_magic;             /* Magic number for robustness */
-    thread hinst_thread;        /* Link on global instance thread */
-    thread hinst_client_thread;        /* Head of client thread */
+    task_thread hinst_thread;        /* Link on global instance thread */
+    task_thread hinst_client_thread;        /* Head of client thread */
     gmp_addr_catalog hinst_addr_cat;    /* Address catalog */
 
     void *hinst_context;        /* External context */
@@ -85,7 +85,7 @@ typedef struct gmph_intf_ {
     gmpx_intf_id hintf_id;        /* Interface ID */
     gmp_addr_string hintf_local_addr;    /* Local interface address */
 
-    thread hintf_xmit_head;        /* Head of xmit groups */
+    task_thread hintf_xmit_head;        /* Head of xmit groups */
     gmph_report_type hintf_last_report_type; /* Last report type sent */
 
     gmp_version hintf_ver;        /* GMP version running */
@@ -233,7 +233,7 @@ typedef struct gmph_group_ {
 
     /* Linkages */
 
-    thread hgroup_client_thread;    /* Head of thread of client groups */
+    task_thread hgroup_client_thread;    /* Head of thread of client groups */
     gmph_intf *hgroup_intf;        /* Pointer back to interface */
     gmpx_patnode hgroup_intf_patnode;    /* Node on interface tree of groups */
 
@@ -259,7 +259,7 @@ typedef struct gmph_group_ {
 
     /* Transmission stuff */
 
-    thread hgroup_xmit_thread;        /* Entry on intf transmit list */
+    task_thread hgroup_xmit_thread;        /* Entry on intf transmit list */
     boolean hgroup_change_msg_due;    /* TRUE if we need to send chg msg  */
     boolean hgroup_reply_due;        /* TRUE if we need to send a reply */
     boolean hgroup_gss_reply_due;    /* TRUE if sending a GSS reply */
@@ -303,7 +303,7 @@ typedef struct gmph_group_set_context_ {
 typedef struct gmph_client_ {
     u_int32_t hclient_magic;        /* Magic number for robustness */
     gmph_instance *hclient_instance;    /* Owning instance */
-    thread hclient_thread;        /* Link on instance client thread */
+    task_thread hclient_thread;        /* Link on instance client thread */
     gmpx_patroot *hclient_group_root;    /* Root of client group requests */
 } gmph_client;
 
@@ -334,7 +334,7 @@ typedef struct gmph_client_group_ {
     gmph_client *client_group_client;    /* Pointer back to owning client */
     gmph_group *client_group_group;    /* Pointer to group entry */
     gmpx_patnode client_group_node;    /* Node on client tree of groups */
-    thread client_group_thread;          /* Node on group thread of cli grps */
+    task_thread client_group_thread;          /* Node on group thread of cli grps */
     gmph_client_group_key client_group_key; /* Patricia key */
     gmp_filter_mode client_filter_mode; /* Include/Exclude */
     gmp_addr_vect client_addr_vect;    /* Source address vector */
@@ -415,7 +415,7 @@ extern gmpx_block_tag gmph_group_tag;
 extern gmpx_block_tag gmph_group_rpt_entry_tag;
 extern gmpx_block_tag gmph_client_group_tag;
 extern gmpx_block_tag gmph_client_group_thread_tag;
-extern thread gmph_global_instance_thread;
+extern task_thread gmph_global_instance_thread;
 extern gmpx_patroot *gmph_global_intf_tree[];
 
 

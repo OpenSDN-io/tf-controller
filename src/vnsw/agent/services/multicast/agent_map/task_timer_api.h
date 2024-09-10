@@ -26,7 +26,7 @@ typedef struct task_timer_ {
     boolean oneshot;
     void *tdata;
     boolean rescheduled;
-    thread deleted_entry;
+    task_thread deleted_entry;
 } task_timer;
 
 THREAD_TO_STRUCT(task_timer_list_entry, task_timer, deleted_entry);

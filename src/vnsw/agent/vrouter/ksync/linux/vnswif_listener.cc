@@ -118,7 +118,7 @@ void VnswInterfaceListenerLinux::ReadHandler(
     const boost::system::error_code &error, std::size_t len) {
     struct nlmsghdr *nlh;
 
-    if (error == 0) {
+    if (!error) {
         nlh = (struct nlmsghdr *)read_buf_;
         NlMsgDecode(nlh, len, -1);
     } else {

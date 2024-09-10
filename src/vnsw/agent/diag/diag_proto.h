@@ -40,11 +40,11 @@ public:
     typedef std::map<uint32_t, DiagStats> DiagStatsMap;
     typedef std::pair<uint32_t, DiagStats> DiagStatsPair;
 
-    DiagProto(Agent *agent, boost::asio::io_service &io);
+    DiagProto(Agent *agent, boost::asio::io_context &io);
     virtual ~DiagProto() {}
 
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
     bool SegmentHealthCheckProcess(
         HealthCheckTable::HealthCheckServiceAction action,
         HealthCheckInstanceService *service);

@@ -75,8 +75,8 @@ KSyncVxlanFdbEntry::KSyncVxlanFdbEntry(KSyncVxlanRouteObject *obj,
 
 KSyncVxlanFdbEntry::KSyncVxlanFdbEntry(KSyncVxlanRouteObject *obj,
                                        const BridgeRouteEntry *route) :
-    KSyncVxlanRouteEntry(obj, route), bridge_(NULL), mac_(route->prefix_address()),
-    port_(NULL), tunnel_dest_() {
+    KSyncVxlanRouteEntry(obj, route), bridge_(nullptr), mac_(route->prefix_address()),
+    port_(nullptr), tunnel_dest_() {
 }
 
 KSyncVxlanFdbEntry::~KSyncVxlanFdbEntry() {
@@ -136,10 +136,10 @@ bool KSyncVxlanFdbEntry::Sync(DBEntry *e) {
     }
 
     // Look for change in nexthop
-    KSyncVxlanPortEntry *port = NULL;
+    KSyncVxlanPortEntry *port = nullptr;
     Ip4Address tunnel_dest = Ip4Address(0);
     const NextHop *nh = fdb->GetActiveNextHop();
-    if (nh != NULL) {
+    if (nh != nullptr) {
         if (nh->GetType() == NextHop::INTERFACE) {
             const InterfaceNH *intf_nh = static_cast<const InterfaceNH *>(nh);
             KSyncVxlanPortObject *port_obj =
@@ -172,7 +172,7 @@ bool KSyncVxlanFdbEntry::Sync(DBEntry *e) {
 }
 
 KSyncEntry *KSyncVxlanFdbEntry::UnresolvedReference() {
-    if (bridge_ == NULL) {
+    if (bridge_ == nullptr) {
         return KSyncVxlan::defer_entry();
     }
 
@@ -181,7 +181,7 @@ KSyncEntry *KSyncVxlanFdbEntry::UnresolvedReference() {
     }
 
 
-    if (port_ == NULL && tunnel_dest_.to_ulong() == 0) {
+    if (port_ == nullptr && tunnel_dest_.to_ulong() == 0) {
         return KSyncVxlan::defer_entry();
     }
 
@@ -189,7 +189,7 @@ KSyncEntry *KSyncVxlanFdbEntry::UnresolvedReference() {
         return port_;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /**************************************************************************
@@ -206,7 +206,7 @@ KSyncVxlanRouteObject::KSyncVxlanRouteObject(KSyncVxlanVrfObject *vrf,
 
 KSyncVxlanRouteObject::~KSyncVxlanRouteObject() {
     UnregisterDb(GetDBTable());
-    table_delete_ref_.Reset(NULL);
+    table_delete_ref_.Reset(nullptr);
 }
 
 void KSyncVxlanRouteObject::Unregister() {
@@ -281,7 +281,7 @@ void KSyncVxlanVrfObject::VrfNotify(DBTablePartBase *partition, DBEntryBase *e){
         return;
     }
 
-    if (state == NULL) {
+    if (state == nullptr) {
         state = new VrfState();
         state->seen_ = true;
         vrf->SetState(partition->parent(), vrf_listener_id_, state);

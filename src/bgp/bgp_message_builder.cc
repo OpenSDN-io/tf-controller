@@ -302,5 +302,6 @@ Message *BgpMessageBuilder::Create() const {
     return new BgpMessage;
 }
 
-BgpMessageBuilder::BgpMessageBuilder() {
+BgpMessageBuilder::BgpMessageBuilder()
+: MessageBuilder() {
 }

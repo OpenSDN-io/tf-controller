@@ -394,7 +394,7 @@ bool MvpnPrefix::GetRDFromString(MvpnPrefix *prefix, const string &str,
     string temp_str = str.substr(pos1 + 1, *pos2 - pos1 - 1);
     error_code rd_err;
     prefix->rd_ = RouteDistinguisher::FromString(temp_str, &rd_err);
-    if (rd_err != 0) {
+    if (rd_err.failed()) {
         if (errorp != NULL) {
             *errorp = rd_err;
         }
@@ -408,7 +408,7 @@ bool MvpnPrefix::GetOriginatorFromString(MvpnPrefix *prefix,
     string temp_str = str.substr(pos1 + 1, string::npos);
     error_code originator_err;
     prefix->originator_ = Ip4Address::from_string(temp_str, originator_err);
-    if (originator_err != 0) {
+    if (originator_err.failed()) {
         if (errorp != NULL) {
             *errorp = originator_err;
         }
@@ -429,7 +429,7 @@ bool MvpnPrefix::GetSourceFromString(MvpnPrefix *prefix, const string &str,
     string temp_str = str.substr(pos1 + 1, *pos2 - pos1 - 1);
     error_code source_err;
     prefix->source_ = Ip4Address::from_string(temp_str, source_err);
-    if (source_err != 0) {
+    if (source_err.failed()) {
         if (errorp != NULL) {
             *errorp = source_err;
         }
@@ -455,7 +455,7 @@ bool MvpnPrefix::GetGroupFromString(MvpnPrefix *prefix, const string &str,
         temp_str = str.substr(pos1 + 1, *pos2 - pos1 - 1);
     error_code group_err;
     prefix->group_ = Ip4Address::from_string(temp_str, group_err);
-    if (group_err != 0) {
+    if (group_err.failed()) {
         if (errorp != NULL) {
             *errorp = group_err;
         }
@@ -610,7 +610,7 @@ MvpnPrefix MvpnPrefix::FromString(const string &str, error_code *errorp) {
         temp_str = str.substr(pos5 + 1, pos6 - pos5 - 1);
         error_code originator_err;
         Ip4Address ip = Ip4Address::from_string(temp_str, originator_err);
-        if (originator_err != 0) {
+        if (originator_err.failed()) {
             if (errorp != NULL) {
                 *errorp = originator_err;
             }

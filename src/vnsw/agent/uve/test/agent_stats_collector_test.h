@@ -22,7 +22,7 @@
 
 class AgentStatsCollectorTest : public AgentStatsCollector {
 public:
-    AgentStatsCollectorTest(boost::asio::io_service &io, Agent *agent) :
+    AgentStatsCollectorTest(boost::asio::io_context &io, Agent *agent) :
         AgentStatsCollector(io, agent), interface_stats_responses_(0),
         vrf_stats_responses_(0), drop_stats_responses_(0),
         interface_stats_errors_(0), vrf_stats_errors_(0), drop_stats_errors_(0) {

@@ -600,11 +600,11 @@ TEST_F(ServiceInstanceIntegrationTest, AddDeleteAdd) {
     parser->ConfigParse(config_, 0);
     task_util::WaitForIdle();
 }
+
 /*
  * Ensure that the code can deal with multiple instances.
  * In this case, the same template is used for all instances.
  */
-
 TEST_F(ServiceInstanceIntegrationTest, MultipleInstances) {
     static const int kNumTestInstances = 16;
     typedef std::vector<uuid> UuidList;
@@ -632,7 +632,7 @@ TEST_F(ServiceInstanceIntegrationTest, MultipleInstances) {
         EncodeServiceInstance(svc_id, name_gen.str(), true);
         ConnectServiceTemplate(name_gen.str(), "nat-netns-template",
                                "source-nat");
-
+//
         vm_ids.push_back(
             ConnectVirtualMachine(name_gen.str()));
 
@@ -659,14 +659,12 @@ TEST_F(ServiceInstanceIntegrationTest, MultipleInstances) {
         vmi_outside_ids.push_back(
             ConnectVirtualMachineInterface(name_gen.str(), right_id, right_mac,
                                            right_ip, false));
-
         parser->ConfigParse(config_, 0);
     }
-
     task_util::WaitForIdle();
 
     for (int i = 0; i < kNumTestInstances; ++i) {
-        ServiceInstanceTable *si_table = agent_->service_instance_table();
+       ServiceInstanceTable *si_table = agent_->service_instance_table();
 
         ServiceInstanceKey key(svc_ids.at(i));
         ServiceInstance *svc_instance =
@@ -686,7 +684,6 @@ TEST_F(ServiceInstanceIntegrationTest, MultipleInstances) {
         EXPECT_EQ(vmi_outside_ips.at(i),
                   svc_instance->properties().ip_addr_outside);
     }
-
     pugi::xml_node msg = config_.append_child("delete");
 
     for (int i = 0; i < kNumTestInstances; ++i) {
@@ -715,7 +712,6 @@ TEST_F(ServiceInstanceIntegrationTest, MultipleInstances) {
         EncodeNodeDelete(&msg, "virtual-machine-interface", names.at(i));
         EncodeNodeDelete(&msg, "virtual-machine-interface", names.at(i));
     }
-
     parser->ConfigParse(config_, 0);
     task_util::WaitForIdle();
 }
@@ -724,6 +720,7 @@ TEST_F(ServiceInstanceIntegrationTest, MultipleInstances) {
  * Remove some of the links and ensure that the depedency tracking is
  * doing the right thing.
  */
+
 TEST_F(ServiceInstanceIntegrationTest, RemoveLinks) {
     boost::uuids::random_generator gen;
     uuid svc_id = gen();

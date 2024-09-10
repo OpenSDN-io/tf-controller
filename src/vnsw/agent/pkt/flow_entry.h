@@ -919,9 +919,9 @@ protected:
 
 class TcpPort : public Port {
 public:
-    TcpPort(boost::asio::io_service &io, uint16_t port):
+    TcpPort(boost::asio::io_context &io, uint16_t port):
         Port(port), socket_(io) {}
-    ~TcpPort();
+    virtual ~TcpPort();
 
     virtual uint16_t Bind();
 private:
@@ -930,9 +930,9 @@ private:
 
 class UdpPort : public Port {
 public:
-    UdpPort(boost::asio::io_service &io, uint16_t port):
+    UdpPort(boost::asio::io_context &io, uint16_t port):
         Port(port), socket_(io) {}
-    ~UdpPort();
+    virtual ~UdpPort();
 
     virtual uint16_t Bind();
 private:

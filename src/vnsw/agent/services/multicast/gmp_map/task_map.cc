@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 TaskMap::TaskMap(Agent *agent, const std::string &name, int instance,
-                        boost::asio::io_service &io) :
+                        boost::asio::io_context &io) :
                         agent_(agent), name_(name), instance_(instance),
                         io_(io) {
 
@@ -36,7 +36,7 @@ task *task_create(void *task_map)
 }
 
 TaskMap *TaskMapManager::CreateTaskMap(Agent *agent, const std::string &name,
-            int instance, boost::asio::io_service &io) {
+            int instance, boost::asio::io_context &io) {
 
     TaskMap *task_map = new TaskMap(agent, name, instance, io);
     if (!task_map) {

@@ -63,7 +63,7 @@ void DnsProto::ConfigInit() {
                        boost::bind(&DnsProto::SendDnsIpc, this, _1, _2), dscp);
 }
 
-DnsProto::DnsProto(Agent *agent, boost::asio::io_service &io) :
+DnsProto::DnsProto(Agent *agent, boost::asio::io_context &io) :
     Proto(agent, "Agent::Services", PktHandler::DNS, io),
     xid_(0), timeout_(agent->params()->dns_timeout()),
     max_retries_(agent->params()->dns_max_retries()) {
@@ -120,7 +120,7 @@ std::vector<IpAddress> DnsProto::GetDefaultServerList() {
 }
 
 ProtoHandler *DnsProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                          boost::asio::io_service &io) {
+                                          boost::asio::io_context &io) {
     return new DnsHandler(agent(), info, io);
 }
 

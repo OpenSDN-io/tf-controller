@@ -379,7 +379,7 @@ void StaticRoute<T>::UpdateAttributes(const StaticRouteConfig &config) {
         it != config.route_targets.end(); ++it) {
         error_code ec;
         RouteTarget rtarget = RouteTarget::FromString(*it, &ec);
-        if (ec != 0)
+        if (ec.failed())
             continue;
         rtarget_list_.insert(rtarget);
     }

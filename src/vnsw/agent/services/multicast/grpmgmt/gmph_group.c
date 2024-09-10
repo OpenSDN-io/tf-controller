@@ -379,7 +379,7 @@ gmph_enqueue_group_xmit (gmph_group *group)
 gmph_group *
 gmph_first_group_xmit (gmph_intf *intf)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmph_group *group;
 
     thread_ptr = thread_circular_top(&intf->hintf_xmit_head);
@@ -399,7 +399,7 @@ gmph_first_group_xmit (gmph_intf *intf)
 gmph_group *
 gmph_next_group_xmit (gmph_group *group)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmph_group *next_group;
 
     thread_ptr = 
@@ -555,7 +555,7 @@ gmph_group_aggregate_client_state (gmph_group *group,
 				   gmp_addr_vect **group_addr_vect,
 				   gmp_filter_mode *filter_mode)
 {
-    thread *cur_thread;
+    task_thread *cur_thread;
     gmph_client_group *client_group;
     boolean exclude_seen;
 

@@ -300,7 +300,7 @@ RibOut::RibOut(BgpTable *table, BgpUpdateSender *sender,
       sender_(sender),
       policy_(policy),
       listener_id_(DBTableBase::kInvalidId),
-      bgp_export_(BgpObjectFactory::Create<BgpExport>(this)) {
+      bgp_export_(BgpStaticObjectFactory::Create<BgpExport>(this)) {
     name_ = "RibOut";
     if (policy_.type == BgpProto::XMPP) {
         name_ += " Type: XMPP";
@@ -316,7 +316,7 @@ RibOut::RibOut(BgpTable *table, BgpUpdateSender *sender,
         name_ += ")";
     }
     for (int idx = 0; idx < DB::PartitionCount(); ++idx) {
-        updates_.push_back(BgpObjectFactory::Create<RibOutUpdates>(this, idx));
+        updates_.push_back(BgpStaticObjectFactory::Create<RibOutUpdates>(this, idx));
     }
 }
 

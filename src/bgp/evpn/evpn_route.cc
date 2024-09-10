@@ -686,7 +686,7 @@ bool EvpnPrefix::GetSourceFromString(EvpnPrefix *prefix, const string &str,
     string temp_str = str.substr(pos1 + 1, *pos2 - pos1 - 1);
     boost::system::error_code source_err;
     prefix->source_ = Ip4Address::from_string(temp_str, source_err);
-    if (source_err != 0) {
+    if (source_err.failed()) {
         if (errorp != NULL) {
             *errorp = source_err;
         }
@@ -707,7 +707,7 @@ bool EvpnPrefix::GetGroupFromString(EvpnPrefix *prefix, const string &str,
     string temp_str = str.substr(pos1 + 1, *pos2 - pos1 - 1);
     boost::system::error_code group_err;
     prefix->group_ = Ip4Address::from_string(temp_str, group_err);
-    if (group_err != 0) {
+    if (group_err.failed()) {
         if (errorp != NULL) {
             *errorp = group_err;
         }
@@ -757,7 +757,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
     string rd_str = str.substr(pos1 + 1, pos2 - pos1 - 1);
     boost::system::error_code rd_err;
     prefix.rd_ = RouteDistinguisher::FromString(rd_str, &rd_err);
-    if (rd_err != 0) {
+    if (rd_err.failed()) {
         if (errorp != NULL) {
             *errorp = rd_err;
         }
@@ -778,7 +778,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
         string esi_str = str.substr(pos2 + 1, pos3 - pos2 - 1);
         boost::system::error_code esi_err;
         prefix.esi_ = EthernetSegmentId::FromString(esi_str, &esi_err);
-        if (esi_err != 0) {
+        if (esi_err.failed()) {
             if (errorp != NULL) {
                 *errorp = esi_err;
             }
@@ -824,7 +824,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
         string mac_str = str.substr(pos3 + 1, pos4 - pos3 -1);
         boost::system::error_code mac_err;
         prefix.mac_addr_ = MacAddress::FromString(mac_str, &mac_err);
-        if (mac_err != 0) {
+        if (mac_err.failed()) {
             if (errorp != NULL) {
                 *errorp = mac_err;
             }
@@ -835,7 +835,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
         string ip_str = str.substr(pos4 + 1, string::npos);
         boost::system::error_code ip_err;
         prefix.ip_address_ = IpAddress::from_string(ip_str, ip_err);
-        if (ip_err != 0) {
+        if (ip_err.failed()) {
             if (errorp != NULL) {
                 *errorp = ip_err;
             }
@@ -873,7 +873,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
         string ip_str = str.substr(pos3 + 1, string::npos);
         boost::system::error_code ip_err;
         prefix.ip_address_ = IpAddress::from_string(ip_str, ip_err);
-        if (ip_err != 0) {
+        if (ip_err.failed()) {
             if (errorp != NULL) {
                 *errorp = ip_err;
             }
@@ -898,7 +898,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
         string esi_str = str.substr(pos2 + 1, pos3 - pos2 - 1);
         boost::system::error_code esi_err;
         prefix.esi_ = EthernetSegmentId::FromString(esi_str, &esi_err);
-        if (esi_err != 0) {
+        if (esi_err.failed()) {
             if (errorp != NULL) {
                 *errorp = esi_err;
             }
@@ -909,7 +909,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
         string ip_str = str.substr(pos3 + 1, string::npos);
         boost::system::error_code ip_err;
         prefix.ip_address_ = IpAddress::from_string(ip_str, ip_err);
-        if (ip_err != 0) {
+        if (ip_err.failed()) {
             if (errorp != NULL) {
                 *errorp = ip_err;
             }
@@ -946,7 +946,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
         boost::system::error_code ip_err;
 
         Ip4Prefix inet_prefix = Ip4Prefix::FromString(ip_str, &ip_err);
-        if (ip_err == 0) {
+        if (!ip_err) {
             prefix.family_ = Address::INET;
             prefix.ip_address_ = inet_prefix.addr();
             prefix.ip_prefixlen_ = inet_prefix.prefixlen();
@@ -954,7 +954,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
         }
 
         Inet6Prefix inet6_prefix = Inet6Prefix::FromString(ip_str, &ip_err);
-        if (ip_err == 0) {
+        if (!ip_err) {
             prefix.family_ = Address::INET6;
             prefix.ip_address_ = inet6_prefix.addr();
             prefix.ip_prefixlen_ = inet6_prefix.prefixlen();
@@ -1002,7 +1002,7 @@ EvpnPrefix EvpnPrefix::FromString(const string &str,
         string ip_str = str.substr(pos5 + 1, string::npos);
         boost::system::error_code ip_err;
         prefix.ip_address_ = IpAddress::from_string(ip_str, ip_err);
-        if (ip_err != 0) {
+        if (ip_err.failed()) {
             if (errorp != NULL) {
                 *errorp = ip_err;
             }

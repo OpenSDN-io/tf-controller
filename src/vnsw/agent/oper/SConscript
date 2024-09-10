@@ -8,11 +8,8 @@ import platform
 Import('AgentEnv')
 env = AgentEnv.Clone()
 
-except_env = env.Clone()
-cflags = except_env['CCFLAGS']
-if '-fno-exceptions' in cflags:
-   cflags.remove('-fno-exceptions')
-except_env.Replace(CCFLAGS=cflags)
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
 
 SandeshGenFiles = env.SandeshGenCpp('agent.sandesh')
 SandeshGenFiles += env.SandeshGenCpp('agent_profile.sandesh')
@@ -22,7 +19,7 @@ sandesh_objs = AgentEnv.BuildExceptionCppObj(env, SandeshGenSrcs)
 optional_objs = []
 
 if GetOption('with_libvirt'):
-    optional_objs.append(except_env.Object('libvirt_instance_adapter.cc'))
+    optional_objs.append(['libvirt_instance_adapter.cc'])
 
 os_specific_src = ['nix/interface_params.cc', 'instance_task.cc']
 
@@ -58,9 +55,9 @@ vnswoperdb = env.Library('vnswoperdb',
                           'mirror_table.cc',
                           'mpls.cc',
                           'multicast.cc',
-                          except_env.Object('instance_manager.cc'),
-                          except_env.Object('docker_instance_adapter.cc'),
-                          except_env.Object('netns_instance_adapter.cc'),
+                          'instance_manager.cc',
+                          'docker_instance_adapter.cc',
+                          'netns_instance_adapter.cc',
                           'nexthop.cc',
                           'operdb_init.cc',
                           'path_preference.cc',

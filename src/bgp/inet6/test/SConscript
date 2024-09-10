@@ -87,6 +87,8 @@ env.Prepend(LIBS = [
                     'sandeshvns',
                     'net',
                     'route',
+                    'bgp_xmpp',
+                    'xmpp_mvpn',
                     'xmpp',
                     'bgp_inet',
                     'bgp_inet6',

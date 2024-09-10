@@ -9,6 +9,9 @@ import platform
 Import('AgentEnv')
 env = AgentEnv.Clone()
 
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
+
 SandeshGenFiles = env.SandeshGenCpp('stats.sandesh')
 SandeshGenSrcs = env.ExtractCpp(SandeshGenFiles)
 sandesh_objs = AgentEnv.BuildExceptionCppObj(env, SandeshGenSrcs)

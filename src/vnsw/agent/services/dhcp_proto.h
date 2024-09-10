@@ -67,10 +67,10 @@ public:
     };
 
     void Shutdown();
-    DhcpProto(Agent *agent, boost::asio::io_service &io, bool run_with_vrouter);
+    DhcpProto(Agent *agent, boost::asio::io_context &io, bool run_with_vrouter);
     virtual ~DhcpProto();
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
     void SendDhcpIpc(uint8_t *dhcp, std::size_t len);
 
     bool dhcp_relay_mode() const { return dhcp_relay_mode_; }

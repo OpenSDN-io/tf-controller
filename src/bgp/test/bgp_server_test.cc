@@ -4188,10 +4188,10 @@ static void SetUp() {
     BgpServer::Initialize();
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<BgpSessionManager>(
-        boost::factory<BgpSessionManagerCustom *>());
-    BgpObjectFactory::Register<StateMachine>(
-        boost::factory<StateMachineTest *>());
+    BgpStaticObjectFactory::LinkImpl<BgpSessionManager,
+    BgpSessionManagerCustom, EventManager *, BgpServer *>();
+    BgpStaticObjectFactory::LinkImpl<StateMachine,
+        StateMachineTest, BgpPeer *>();
 }
 
 static void TearDown() {

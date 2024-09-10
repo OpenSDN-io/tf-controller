@@ -59,7 +59,6 @@ env.Prepend(LIBS = [
                     'task_test',
                     'bgptest',
                     'bgp',
-                    'bgp_test_factory',
                     'bgp_ifmap_config',
                     'extended_community',
                     'peer_sandesh',
@@ -90,6 +89,8 @@ env.Prepend(LIBS = [
                     'sandeshvns',
                     'net',
                     'route',
+                    'bgp_xmpp',
+                    'xmpp_mvpn',
                     'xmpp',
                     'bgp_ermvpn',
                     'bgp_mvpn',
@@ -114,7 +115,6 @@ env.Prepend(LIBS = [
 if platform.system() != 'Darwin':
     env.Append(LIBS=['rt'])
     env.Prepend(LINKFLAGS = ['-Wl,--whole-archive',
-                             '-lbgp_test_factory',
                              '-lbgp_evpn',
                              '-lbgp_ermvpn',
                              '-lbgp_mvpn',

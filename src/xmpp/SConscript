@@ -18,20 +18,14 @@ env = BuildEnv.Clone()
 
 sandesh_files = env.SConscript('sandesh/SConscript', exports='BuildEnv', duplicate = 0)
 
-env.Append(CPPPATH = [env['TOP']])
-except_env = env.Clone()
-except_env.Prepend(CPPPATH = Dir('.').abspath)
-
-env.CppDisableExceptions()
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
 
 sandesh_files_ = []
 for src in sandesh_files:
     objname = src.replace('.cpp', '.o')
     obj = env.Object(objname, 'sandesh/' + src)
     sandesh_files_.append(obj)
-
-xmpp_session = except_env.Object('xmpp_session.cc')
-xmpp_init = except_env.Object('xmpp_init.cc')
 
 libxmpp = env.Library('xmpp',
                      [
@@ -41,13 +35,13 @@ libxmpp = env.Library('xmpp',
                       'xmpp_connection_manager.cc',
                       'xmpp_factory.cc',
                       'xmpp_lifetime.cc',
-                      'xmpp_session',
+                      'xmpp_session.cc',
                       'xmpp_state_machine.cc',
                       'xmpp_server.cc',
                       'xmpp_client.cc',
                       'xmpp_proto.cc',
-                      'xmpp_init',
-                      'xmpp_channel_mux.cc',
+                      'xmpp_init.cc',
+                      'xmpp_channel_mux.cc'
                       ] + sandesh_files_ )
 
 env.Prepend(LIBS=['sandesh', 'http_parser', 'curl', 'http',
@@ -65,6 +59,7 @@ env.Append(LIBPATH=libs)
 
 xmpp_include = '#/' + Dir('.').path
 env.Append(CPPPATH=xmpp_include)
+env.Append(CPPPATH=[env['TOP']])
 env.Append(CPPPATH = [env['TOP'] + '/bgp'])
 env.Append(CPPPATH = [env['TOP'] + '/io'])
 env.Append(CPPPATH = [env['TOP'] + '/tools/sandesh/library/common'])

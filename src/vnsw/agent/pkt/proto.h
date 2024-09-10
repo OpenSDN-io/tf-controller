@@ -17,21 +17,21 @@ public:
     typedef WorkQueue<boost::shared_ptr<PktInfo> > ProtoWorkQueue;
 
     Proto(Agent *agent, const char *task_name, PktHandler::PktModuleName mod,
-          boost::asio::io_service &io);
+          boost::asio::io_context &io);
     virtual ~Proto();
 
     virtual bool Validate(PktInfo *msg) { return true; }
     virtual bool Enqueue(boost::shared_ptr<PktInfo> msg);
     virtual void ProcessStats(PktStatsType::Type type) { return; }
     virtual ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                            boost::asio::io_service &io) = 0;
+                                            boost::asio::io_context &io) = 0;
 
     void FreeBuffer(PktInfo *msg);
     bool ProcessProto(boost::shared_ptr<PktInfo> msg_info);
     bool RunProtoHandler(ProtoHandler *handler);
     void set_trace(bool val) { trace_ = val; }
     void set_free_buffer(bool val) { free_buffer_ = val; }
-    boost::asio::io_service &get_io_service() const { return io_; }
+    boost::asio::io_context &get_io_service() const { return io_; }
     Agent *agent() const { return agent_; }
     const ProtoWorkQueue *work_queue() const { return &work_queue_; }
     virtual void TokenAvailable(TokenPool *pool) {assert(0);}
@@ -40,7 +40,7 @@ protected:
     PktHandler::PktModuleName module_;
     bool trace_;
     bool free_buffer_;
-    boost::asio::io_service &io_;
+    boost::asio::io_context &io_;
     ProtoWorkQueue work_queue_;
 
 private:

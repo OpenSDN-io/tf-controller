@@ -18,7 +18,7 @@
 #include "oper/vn.h"
 
 DnsHandler::DnsHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                       boost::asio::io_service &io)
+                       boost::asio::io_context &io)
     : ProtoHandler(agent, info, io), resp_ptr_(NULL), dns_resp_size_(0),
       xid_(-1), action_(NONE), rkey_(NULL),
       query_name_update_(false), pend_req_(0), default_method_(false),

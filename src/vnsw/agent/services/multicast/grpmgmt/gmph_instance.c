@@ -14,7 +14,7 @@
 #include "gmp_private.h"
 #include "gmph_private.h"
 
-thread gmph_global_instance_thread;	/* Thread of instances */
+task_thread gmph_global_instance_thread;	/* Thread of instances */
 
 
 /*
@@ -158,7 +158,7 @@ void
 gmph_instance_destroy (gmph_instance *instance)
 {
     gmp_proto inst_proto;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     boolean found_proto;
 
     /* Blast all clients on the instance. */

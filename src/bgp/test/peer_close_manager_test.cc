@@ -95,7 +95,7 @@ private:
 class PeerCloseManagerTest : public PeerCloseManager {
 public:
     PeerCloseManagerTest(IPeerClose *peer_close,
-                         boost::asio::io_service &io_service) :
+                         boost::asio::io_context &io_service) :
             PeerCloseManager(peer_close, &io_service), restart_time_(0),
             restart_timer_started_(false), can_use_membership_manager_(false),
             is_registerd_(false), unregister_called_(false),

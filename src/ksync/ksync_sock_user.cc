@@ -760,7 +760,7 @@ void KSyncSockTypeMap::UpdateBridgeEntryInactiveFlag(int idx, bool set) {
 }
 
 //init ksync map
-void KSyncSockTypeMap::Init(boost::asio::io_service &ios) {
+void KSyncSockTypeMap::Init(boost::asio::io_context &ios) {
     assert(singleton_ == NULL);
 
     singleton_ = new KSyncSockTypeMap(ios);

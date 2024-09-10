@@ -94,7 +94,7 @@ void KSyncTest::NetlinkInitTest() {
     EventManager *event_mgr;
 
     event_mgr = agent_->event_manager();
-    boost::asio::io_service &io = *event_mgr->io_service();
+    boost::asio::io_context &io = *event_mgr->io_service();
 
     KSyncSockTypeMap::Init(io);
     for (int i = 0; i < KSyncSock::kRxWorkQueueCount; i++) {

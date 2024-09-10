@@ -26,7 +26,7 @@ public:
                         const std::string &program_name);
 
     // Initialization virtual methods
-    void FactoryInit();
+    void FactoryInit() override;
     void CreateModules();
     void InitDone();
 

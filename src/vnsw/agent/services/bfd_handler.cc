@@ -10,7 +10,7 @@
 #include "mac_learning/mac_learning_proto.h"
 
 BfdHandler::BfdHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                       boost::asio::io_service &io)
+                       boost::asio::io_context &io)
     : ProtoHandler(agent, info, io) {
 }
 

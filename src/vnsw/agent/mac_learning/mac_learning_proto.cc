@@ -10,7 +10,7 @@
 #include "mac_ip_learning_proto_handler.h"
 #include "mac_aging.h"
 
-MacLearningProto::MacLearningProto(Agent *agent, boost::asio::io_service &io):
+MacLearningProto::MacLearningProto(Agent *agent, boost::asio::io_context &io):
     Proto(agent, kTaskMacLearning, PktHandler::MAC_LEARNING, io),
     add_tokens_("Add Tokens", this, agent->params()->mac_learning_add_tokens()),
     change_tokens_("Change tokens", this,
@@ -22,7 +22,7 @@ MacLearningProto::MacLearningProto(Agent *agent, boost::asio::io_service &io):
 
 ProtoHandler*
 MacLearningProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io) {
+                                    boost::asio::io_context &io) {
     if (info->agent_hdr.cmd == AgentHdr::TRAP_MAC_IP_LEARNING) {
         return new MacIpLearningProtoHandler(agent(), info, io);
     } else {

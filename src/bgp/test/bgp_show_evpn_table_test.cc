@@ -82,10 +82,10 @@ class TestEnvironment : public ::testing::Environment {
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    XmppObjectFactory::Register<XmppStateMachine>(
-        boost::factory<XmppStateMachineTest *>());
-    BgpObjectFactory::Register<BgpXmppMessageBuilder>(
-        boost::factory<BgpXmppMessageBuilder *>());
+    XmppStaticObjectFactory::LinkImpl<XmppStateMachine,
+        XmppStateMachineTest,XmppConnection*,bool,bool,int>();
+    BgpStaticObjectFactory::LinkImpl<BgpXmppMessageBuilder,
+        BgpXmppMessageBuilder>();
 }
 
 static void TearDown() {

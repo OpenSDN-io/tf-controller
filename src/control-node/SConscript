@@ -230,7 +230,6 @@ env.GenerateBuildInfoCode(
 
 ctrlnode = env.Program(target = 'contrail-control',
                        source = ['buildinfo.cc',
-                                 'factory.cc',
                                  'main.cc',
                                  'options.cc'])
 

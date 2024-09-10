@@ -17,6 +17,7 @@
 #include "bgp/origin-vn/origin_vn.h"
 #include "control-node/control_node.h"
 #include "net/community_type.h"
+#include "bgp/test/bgp_config_mock.h"
 
 
 using std::string;
@@ -1632,6 +1633,8 @@ TEST_F(BgpRouteTest, GetSourceString) {
 static void SetUp() {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 }
 
 static void TearDown() {

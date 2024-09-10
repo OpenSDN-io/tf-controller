@@ -2979,7 +2979,9 @@ class TestEnvironment : public ::testing::Environment {
 static void SetUp() {
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<BgpPeer>(boost::factory<BgpPeerShowTest *>());
+    BgpStaticObjectFactory::LinkImpl<BgpPeer, BgpPeerShowTest,
+        BgpServer *, RoutingInstance *,
+        const BgpNeighborConfig *>();
 }
 
 static void TearDown() {

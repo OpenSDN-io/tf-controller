@@ -359,10 +359,10 @@ void OperDB::RegisterDBClients() {
 OperDB::OperDB(Agent *agent)
         : agent_(agent),
           dependency_manager_(
-              AgentObjectFactory::Create<IFMapDependencyManager>(
+              AgentStaticObjectFactory::Create<IFMapDependencyManager>(
                   agent->db(), agent->cfg()->cfg_graph())),
           instance_manager_(
-                  AgentObjectFactory::Create<InstanceManager>(agent)) {
+                  AgentStaticObjectFactory::Create<InstanceManager>(agent)) {
     if (agent_->params() &&
         agent_->params()->nexthop_server_endpoint().length() > 0) {
         nexthop_manager_.reset(new NexthopManager(agent_->event_manager(),

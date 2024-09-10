@@ -94,10 +94,10 @@ public:
     typedef std::pair<uint32_t, InterfaceNdpInfo> InterfaceNdpPair;
 
     void Shutdown();
-    Icmpv6Proto(Agent *agent, boost::asio::io_service &io);
+    Icmpv6Proto(Agent *agent, boost::asio::io_context &io);
     virtual ~Icmpv6Proto();
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
     void VrfNotify(DBTablePartBase *part, DBEntryBase *entry);
     void VnNotify(DBEntryBase *entry);
     void InterfaceNotify(DBEntryBase *entry);

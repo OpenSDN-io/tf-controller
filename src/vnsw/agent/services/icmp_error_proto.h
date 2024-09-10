@@ -28,14 +28,14 @@ class IcmpErrorProto : public Proto {
     };
     typedef boost::function<bool(uint32_t, FlowKey *, bool *)> FlowIndexToKeyFn;
 
-    IcmpErrorProto(Agent *agent, boost::asio::io_service &io);
+    IcmpErrorProto(Agent *agent, boost::asio::io_context &io);
     virtual ~IcmpErrorProto();
 
     void Shutdown() { }
     void Register(FlowIndexToKeyFn fn) { flow_index_to_key_fn_ = fn; }
     bool FlowIndexToKey(uint32_t index, FlowKey *key, bool *is_nat_flow);
     ProtoHandler *AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
 
     void incrememt_df_msgs() { stats_.df_msgs++; }
     void increment_drops() { stats_.drops++; }

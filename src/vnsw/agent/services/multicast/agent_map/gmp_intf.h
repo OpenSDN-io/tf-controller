@@ -24,7 +24,7 @@
  */
 typedef struct gmp_intf_handle_ {
     boolean gmpifh_host;        /* TRUE if this is a host interface */
-    thread gmpifh_xmit_thread;      /* Entry on transmit thread */
+    task_thread gmpifh_xmit_thread;      /* Entry on transmit thread */
 } gmp_intf_handle;
 
 THREAD_TO_STRUCT(gmp_xmit_thread_to_handle, gmp_intf_handle,

@@ -15,6 +15,7 @@
 #include "bgp/bgp_update_sender.h"
 #include "bgp/inet/inet_table.h"
 #include "control-node/control_node.h"
+#include "bgp/test/bgp_config_mock.h"
 
 using namespace std;
 using namespace ::testing;
@@ -1995,8 +1996,10 @@ TEST_F(BgpUpdateSenderMultiRibOutTest, PeerDequeueBlocks1b) {
 int main(int argc, char **argv) {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
-    BgpObjectFactory::Register<RibOutUpdates>(
-        boost::factory<RibOutUpdatesMock *>());
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
+    BgpStaticObjectFactory::LinkImpl<RibOutUpdates,
+        RibOutUpdatesMock, RibOut *, int>();
     ::testing::InitGoogleMock(&argc, argv);
     bool success = RUN_ALL_TESTS();
     SchedulerTerminate();

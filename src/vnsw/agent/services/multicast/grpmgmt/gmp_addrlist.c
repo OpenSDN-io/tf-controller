@@ -153,7 +153,7 @@ gmp_addr_string *
 gmp_next_addr_thread_addr (gmp_addr_thread *addr_thread,
 			   gmp_addr_thread_entry **entry_ptr)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
     gmp_addr_thread_entry *thread_entry;
 
     /* Bail if there's no thread. */
@@ -196,7 +196,7 @@ void
 gmp_destroy_addr_thread (gmp_addr_thread *addr_thread)
 {
     gmp_addr_thread_entry *thread_entry;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     /* Tolerate NULL pointers. */
 
@@ -558,8 +558,8 @@ gmp_addr_list_empty (gmp_addr_list *list)
 gmp_addr_list_entry *
 gmp_addr_list_next_entry (gmp_addr_list *list, gmp_addr_list_entry *prev)
 {
-    thread *new_thread;
-    thread *cur_thread;
+    task_thread *new_thread;
+    task_thread *cur_thread;
 
     /* Get the current position. */
 
@@ -624,7 +624,7 @@ gmp_addr_list_init (gmp_addr_list *list, gmp_addr_catalog *catalog,
 void
 gmp_flush_xmit_list (gmp_addr_list *addr_list)
 {
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     if (!addr_list)
 	return;				/* Tolerate NULL pointers */
@@ -703,7 +703,7 @@ gmp_xmit_addr_list_empty (gmp_addr_list *list)
 gmp_addr_list_entry *
 gmp_first_xmit_addr_entry (gmp_addr_list *addr_list)
 {
-    thread *entry_thread;
+    task_thread *entry_thread;
 
     entry_thread = thread_circular_top(&addr_list->addr_list_xmit_head);
     return gmp_xmit_thread_to_addr_list_entry(entry_thread);

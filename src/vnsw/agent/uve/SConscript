@@ -8,6 +8,9 @@ import platform
 Import('AgentEnv')
 env = AgentEnv.Clone()
 
+env.CppEnableExceptions()
+env.Append(CCFLAGS = ['-fexceptions'])
+
 # Generate the sandesh UVE source files
 vrouter_pkg = env.SandeshGenPy('vrouter.sandesh', 'vrouter/', False)
 loadbalancer_pkg = env.SandeshGenPy('loadbalancer.sandesh', 'vrouter/', False)

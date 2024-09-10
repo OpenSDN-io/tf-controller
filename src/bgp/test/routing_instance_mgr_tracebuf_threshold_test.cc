@@ -8,6 +8,7 @@
 #include "bgp/test/bgp_server_test_util.h"
 #include "control-node/control_node.h"
 #include "sandesh/sandesh_trace.h"
+#include "bgp/test/bgp_config_mock.h"
 
 #define    TEST_DORMANT_TRACE_BUFFER_SIZE             4
 #define    TEST_DORMANT_TRACE_BUFFER_THRESHOLD_ZERO   0
@@ -169,6 +170,9 @@ class TestEnvironment : public ::testing::Environment {
 static void SetUp() {
 
     ControlNode::SetDefaultSchedulingPolicy();
+
+    BgpStaticObjectFactory::LinkImpl<BgpConfigManager,
+        BgpMockConfigManager,BgpServer*>();
 
     // Intialize the environmental variables for this test prior to
     // the creation of the Routing Instance Manager

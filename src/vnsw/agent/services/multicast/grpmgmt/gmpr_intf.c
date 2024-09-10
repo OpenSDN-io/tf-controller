@@ -377,7 +377,7 @@ gmpr_restart_query_timer (gmpr_intf *intf)
     gmpr_instance *instance;
     uint32_t ivl;
     int intf_count;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     instance = intf->rintf_instance;
 
@@ -956,7 +956,7 @@ gmpr_update_querier (gmpr_intf *intf, gmp_addr_string *addr, boolean querier)
 {
     gmpr_instance *instance;
     gmpr_client *client;
-    thread *thread_ptr;
+    task_thread *thread_ptr;
 
     instance = intf->rintf_instance;
 

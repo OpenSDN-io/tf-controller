@@ -31,7 +31,7 @@ class DiagPktHandler : public ProtoHandler {
 public:
     static const uint8_t icmp_payload_len = 128;
     DiagPktHandler(Agent *agent, boost::shared_ptr<PktInfo> info,
-                   boost::asio::io_service &io) :
+                   boost::asio::io_context &io) :
         ProtoHandler(agent, info, io), done_(false),
         diag_table_(agent->diag_table()) {}
     virtual bool Run();

@@ -500,10 +500,11 @@ static void SetUp() {
     bgp_log_test::init();
     ControlNode::SetDefaultSchedulingPolicy();
     BgpServerTest::GlobalSetUp();
-    BgpObjectFactory::Register<McastTreeManager>(
-        boost::factory<McastTreeManagerMock *>());
-    BgpObjectFactory::Register<RoutingInstance>(
-        boost::factory<RoutingInstanceTest *>());
+    BgpStaticObjectFactory::LinkImpl<McastTreeManager,
+        McastTreeManagerMock,ErmVpnTable*>();
+    BgpStaticObjectFactory::LinkImpl<RoutingInstance,
+        RoutingInstanceTest,std::string, BgpServer *,
+        RoutingInstanceMgr *, const BgpInstanceConfig *>();
 }
 
 static void TearDown() {

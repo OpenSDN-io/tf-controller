@@ -15,13 +15,13 @@ MessageBuilder *MessageBuilder::GetInstance(
     if (encoding == RibExportPolicy::BGP) {
         if (bgp_message_builder_ == NULL) {
             bgp_message_builder_ =
-                    BgpObjectFactory::Create<BgpMessageBuilder>();
+                    BgpStaticObjectFactory::Create<BgpMessageBuilder>();
         }
         return bgp_message_builder_;
     } else if (encoding == RibExportPolicy::XMPP) {
         if (xmpp_message_builder_ == NULL) {
             xmpp_message_builder_=
-                    BgpObjectFactory::Create<BgpXmppMessageBuilder>();
+                    BgpStaticObjectFactory::Create<BgpXmppMessageBuilder>();
         }
         return xmpp_message_builder_;
     }

@@ -28,7 +28,7 @@ public:
         RERESOLVING  = 0x08,
     };
 
-    ArpEntry(boost::asio::io_service &io, ArpHandler *handler,
+    ArpEntry(boost::asio::io_context &io, ArpHandler *handler,
              ArpKey &key, const VrfEntry *vrf, State state,
               const Interface *itf);
     virtual ~ArpEntry();
@@ -57,7 +57,7 @@ private:
     void HandleDerivedArpRequest();
     bool IsDerived();
 
-    boost::asio::io_service &io_;
+    boost::asio::io_context &io_;
     ArpKey key_;
     const VrfEntry *nh_vrf_;
     MacAddress mac_address_;

@@ -616,7 +616,7 @@ struct Probe : sc::state<Probe, NdpEntry> {
 
 }  // namespace fsm
 
-NdpEntry::NdpEntry(boost::asio::io_service &io, Icmpv6Handler *handler,
+NdpEntry::NdpEntry(boost::asio::io_context &io, Icmpv6Handler *handler,
                    NdpKey &key, const VrfEntry *vrf, const Interface *itf)
     : work_queue_(TaskScheduler::GetInstance()->GetTaskId("Agent::Services"),
       NULL,

@@ -12,20 +12,20 @@ typedef struct task_ task;
 class TaskMap {
 public:
     TaskMap(Agent *agent, const std::string &name, int instance,
-                                    boost::asio::io_service &io);
+                                    boost::asio::io_context &io);
     ~TaskMap();
 
     Agent *agent_;
     const std::string &name_;
     int instance_;
-    boost::asio::io_service &io_;
+    boost::asio::io_context &io_;
     task *task_;
 };
 
 class TaskMapManager {
 public:
     static TaskMap *CreateTaskMap(Agent *agent, const std::string &name,
-                    int instance, boost::asio::io_service &io);
+                    int instance, boost::asio::io_context &io);
     static bool DeleteTaskMap(TaskMap *task_map);
 
     friend class TaskMap;

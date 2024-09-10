@@ -13,7 +13,7 @@
 #include <diag/diag_pkt_handler.h>
 #include <diag/segment_health_check.h>
 
-DiagProto::DiagProto(Agent *agent, boost::asio::io_service &io)
+DiagProto::DiagProto(Agent *agent, boost::asio::io_context &io)
     : Proto(agent, "Agent::Diag", PktHandler::DIAG, io),
       session_map_(), stats_mutex_(), stats_() {
     agent->health_check_table()->RegisterHealthCheckCallback(
@@ -22,7 +22,7 @@ DiagProto::DiagProto(Agent *agent, boost::asio::io_service &io)
 }
 
 ProtoHandler *DiagProto::AllocProtoHandler(boost::shared_ptr<PktInfo> info,
-                                           boost::asio::io_service &io) {
+                                           boost::asio::io_context &io) {
     return new DiagPktHandler(agent(), info, io);
 }
 
