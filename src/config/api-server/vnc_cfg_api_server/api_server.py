@@ -32,6 +32,7 @@ import os
 import re
 import random
 import socket
+import traceback
 from cfgm_common import jsonutils as json
 from .provision_defaults import *
 import uuid
@@ -962,8 +963,8 @@ class VncApiServer(object):
             self._extension_mgrs['resourceApi'].map_method(
                  'pre_%s_create' %(obj_type), obj_dict)
         except RuntimeError:
-            # lack of registered extension leads to RuntimeError
-            pass
+            self.config_log("lack of registered extension leads to RuntimeError",
+                        level=SandeshLevel.SYS_WARN)
         except Exception as e:
             err_msg = 'In pre_%s_create an extension had error for %s' \
                       %(obj_type, obj_dict)
@@ -1140,8 +1141,8 @@ class VncApiServer(object):
                     try:
                         quota_counter.append(self.quota_counter[path])
                     except KeyError:
-                        # project quota could be remove since
-                        pass
+                        self.config_log("project quota could be remove since",
+                        level=SandeshLevel.SYS_WARN)
             else:
                 #normal execution
                 (ok, result) = db_conn.dbe_create(obj_type, obj_id, obj_dict)
@@ -1212,8 +1213,8 @@ class VncApiServer(object):
             self._extension_mgrs['resourceApi'].map_method(
                 'post_%s_create' %(obj_type), obj_dict)
         except RuntimeError:
-            # lack of registered extension leads to RuntimeError
-            pass
+            self.config_log("lack of registered extension leads to RuntimeError",
+                        level=SandeshLevel.SYS_WARN)
         except Exception as e:
             err_msg = 'In post_%s_create an extension had error for %s' \
                       %(obj_type, obj_dict)
@@ -1230,7 +1231,11 @@ class VncApiServer(object):
             self._extension_mgrs['resourceApi'].map_method(
                 'pre_%s_read' %(obj_type), id)
         except Exception as e:
-            pass
+            self.config_log(f"Error in pre_{obj_type}_read extension: {type(e).__name__}: {str(e)}",
+                level=SandeshLevel.SYS_WARN)
+            self.config_log(f"Traceback:\n{traceback.format_exc()}",
+                level=SandeshLevel.SYS_WARN)
+
 
         etag = get_request().headers.get('If-None-Match')
         db_conn = self._db_conn
@@ -1326,7 +1331,11 @@ class VncApiServer(object):
             self._extension_mgrs['resourceApi'].map_method(
                 'post_%s_read' %(obj_type), id, rsp_body)
         except Exception as e:
-            pass
+            self.config_log(f"Error in pre_{obj_type}_read extension: {type(e).__name__}: {str(e)}",
+                level=SandeshLevel.SYS_WARN)
+            self.config_log(f"Traceback:\n{traceback.format_exc()}",
+                level=SandeshLevel.SYS_WARN)
+
 
         return {resource_type: rsp_body}
     # end http_resource_read
@@ -1436,8 +1445,8 @@ class VncApiServer(object):
             self._extension_mgrs['resourceApi'].map_method(
                 'pre_%s_delete' %(obj_type), id)
         except RuntimeError:
-            # lack of registered extension leads to RuntimeError
-            pass
+            self.config_log("lack of registered extension leads to RuntimeError",
+                            level=SandeshLevel.SYS_WARN)
         except Exception as e:
             err_msg = 'In pre_%s_delete an extension had error for %s' \
                       %(obj_type, id)
@@ -1625,8 +1634,8 @@ class VncApiServer(object):
             self._extension_mgrs['resourceApi'].map_method(
                 'post_%s_delete' %(obj_type), id, read_result)
         except RuntimeError:
-            # lack of registered extension leads to RuntimeError
-            pass
+            self.config_log("lack of registered extension leads to RuntimeError",
+                            level=SandeshLevel.SYS_WARN)
         except Exception as e:
             err_msg = 'In pre_%s_delete an extension had error for %s' \
                       %(obj_type, id)
@@ -1657,8 +1666,12 @@ class VncApiServer(object):
                         self._db_conn.fq_name_to_uuid(p_class.object_type,
                                                       parent_fq_name),
                     )
-                except cfgm_common.exceptions.NoIdError:
-                    pass
+                except cfgm_common.exceptions.NoIdError as e:
+                    self.config_log(f"Error in http_resource_list: {type(e).__name__}: {str(e)}", 
+                                    level=SandeshLevel.SYS_WARN)
+                    self.config_log(f"Traceback:\n{traceback.format_exc()}",
+                                    level=SandeshLevel.SYS_WARN)
+
         elif 'parent_id' in get_request().query:
             parent_uuids = get_request().query.parent_id.split(',')
         if 'back_ref_id' in get_request().query:
@@ -1677,7 +1690,11 @@ class VncApiServer(object):
                         obj_uuids = []
                     obj_uuids.append(obj_uuid)
                 except cfgm_common.exceptions.NoIdError as e:
-                    pass
+                    self.config_log(f"Error in http_resource_list: {type(e).__name__}: {str(e)}", 
+                                    level=SandeshLevel.SYS_WARN)
+                    self.config_log(f"Traceback:\n{traceback.format_exc()}",
+                                    level=SandeshLevel.SYS_WARN)
+
             if obj_uuids is None:
                 return {'%ss' %(resource_type): []}
 
@@ -2263,8 +2280,8 @@ class VncApiServer(object):
                 self._extension_mgrs['resync'].map(
                     self._resync_domains_projects)
             except RuntimeError:
-                # lack of registered extension leads to RuntimeError
-                pass
+                self.config_log("lack of registered extension leads to RuntimeError",
+                            level=SandeshLevel.SYS_WARN)
             except Exception as e:
                 err_msg = cfgm_common.utils.detailed_traceback()
                 self.config_log(err_msg, level=SandeshLevel.SYS_ERR)
@@ -3477,7 +3494,11 @@ class VncApiServer(object):
                         # Reconnect to achieve load-balance irrespective of list
                         self._sandesh.reconfig_collectors(self._random_collectors)
                 except NoOptionError as e:
-                    pass
+                    self.config_log(f"Error in sighup_handler: {type(e).__name__}: {str(e)}",
+                                    level=SandeshLevel.SYS_WARN)
+                    self.config_log(f"Traceback:\n{traceback.format_exc()}",
+                                    level=SandeshLevel.SYS_WARN)
+
     # end sighup_handler
 
     def _load_extensions(self):
@@ -3593,8 +3614,12 @@ class VncApiServer(object):
                 for field, value in list(old_id_perms.items()):
                     if value is not None:
                         id_perms[field] = value
-            except NoIdError:
-                pass
+            except NoIdError as e:
+                self.config_log(f"Error in _ensure_id_perms_present: {type(e).__name__}: {str(e)}",
+                                level=SandeshLevel.SYS_WARN)
+                self.config_log(f"Traceback:\n{traceback.format_exc()}",
+                                level=SandeshLevel.SYS_WARN)
+
 
         # not all fields can be updated
         if obj_uuid:
@@ -3704,8 +3729,12 @@ class VncApiServer(object):
                 for field, value in list(old_perms2.items()):
                     if value is not None:
                         perms2[field] = value
-            except NoIdError:
-                pass
+            except NoIdError as e:
+                self.config_log(f"Error in _ensure_id_perms_present: {type(e).__name__}: {str(e)}",
+                                level=SandeshLevel.SYS_WARN)
+                self.config_log(f"Traceback:\n{traceback.format_exc()}",
+                                level=SandeshLevel.SYS_WARN)
+
 
         # Start from default and update from obj_dict
         req_perms2 = obj_dict['perms2']
@@ -3939,8 +3968,12 @@ class VncApiServer(object):
             if update_obj:
                 self._db_conn.dbe_update(obj_type, id, obj_dict)
             return
-        except NoIdError:
-            pass
+        except NoIdError as e:
+            self.config_log(f"Error in _create_default_rbac_rule: {type(e).__name__}: {str(e)}",
+                            level=SandeshLevel.SYS_WARN)
+            self.config_log(f"Traceback:\n{traceback.format_exc()}",
+                            level=SandeshLevel.SYS_WARN)
+
 
         rge = RbacRuleEntriesType([])
         for rule in rbac_rules:
@@ -3982,9 +4015,12 @@ class VncApiServer(object):
                 # doesn't exist in zookeeper but does so in cassandra,
                 # migrate this info to zookeeper
                 self._db_conn._zk_db.create_fq_name_to_uuid_mapping(obj_type, fq_name, str(cass_uuid))
-        except NoIdError:
+        except NoIdError as e:
             # doesn't exist in cassandra as well as zookeeper, proceed normal
-            pass
+            self.config_log(f"Entry not found in Cassandra or ZooKeeper for {fq_name}: {str(e)}", 
+                            level=SandeshLevel.SYS_WARN)
+            self.config_log(f"Traceback:\n{traceback.format_exc()}", 
+                            level=SandeshLevel.SYS_WARN)
         # TODO backward compat END
 
         # create if it doesn't exist yet
@@ -4247,9 +4283,12 @@ class VncApiServer(object):
         try:
             obj_dict['parent_href'] = self.generate_url(
                 obj_dict['parent_type'], obj_dict['parent_uuid'])
-        except KeyError:
-            # No parent
-            pass
+        except KeyError as e:
+            self.config_log(f"Parent key not found for resource {resource_type}: {str(e)}", 
+                            level=SandeshLevel.SYS_WARN)
+            self.config_log(f"Traceback:\n{traceback.format_exc()}", 
+                            level=SandeshLevel.SYS_WARN)
+
 
         for field, field_info in itertools.chain(
                     list(r_class.children_field_types.items()),
@@ -4260,8 +4299,12 @@ class VncApiServer(object):
                 type = field_info[0]
                 for link in obj_dict[field]:
                     link['href'] = self.generate_url(type, link['uuid'])
-            except KeyError:
-                pass
+            except KeyError as e:
+                self.config_log(f"Key not found for field {field} in resource {resource_type}: {str(e)}", 
+                                level=SandeshLevel.SYS_WARN)
+                self.config_log(f"Traceback:\n{traceback.format_exc()}", 
+                                level=SandeshLevel.SYS_WARN)
+
 
     def config_object_error(self, id, fq_name_str, obj_type,
                             operation, err_str):
@@ -4281,7 +4324,7 @@ class VncApiServer(object):
 
     def config_log(self, msg_str, level=SandeshLevel.SYS_INFO):
         errcls = {
-            SandeshLevel.SYS_DEBUG: VncApiDebug,
+            SandeshLevel.SYS_WARN: VncApiDebug,
             SandeshLevel.SYS_INFO: VncApiInfo,
             SandeshLevel.SYS_NOTICE: VncApiNotice,
             SandeshLevel.SYS_ERR: VncApiError,
@@ -4355,8 +4398,8 @@ class VncApiServer(object):
             self._extension_mgrs['resourceApi'].map_method(
                 'pre_%s_update' %(obj_type), obj_uuid, req_obj_dict)
         except RuntimeError:
-            # lack of registered extension leads to RuntimeError
-            pass
+            self.config_log("lack of registered extension leads to RuntimeError",
+                            level=SandeshLevel.SYS_WARN)
         except Exception as e:
             err_msg = 'In pre_%s_update an extension had error for %s' \
                       %(obj_type, req_obj_dict)
@@ -4599,8 +4642,8 @@ class VncApiServer(object):
                 'post_%s_update' %(obj_type), obj_uuid,
                  req_obj_dict, db_obj_dict)
         except RuntimeError:
-            # lack of registered extension leads to RuntimeError
-            pass
+            self.config_log("lack of registered extension leads to RuntimeError",
+                            level=SandeshLevel.SYS_WARN)
         except Exception as e:
             err_msg = 'In post_%s_update an extension had error for %s' \
                       %(obj_type, req_obj_dict)
@@ -4715,8 +4758,12 @@ class VncApiServer(object):
             raise cfgm_common.exceptions.HttpError(
                 409, '' + pformat(obj_dict['fq_name']) +
                 ' already exists with uuid: ' + obj_uuid)
-        except NoIdError:
-            pass
+        except NoIdError as e:
+            self.config_log(f"Object with fq_name {obj_dict['fq_name']} not found in DB: {str(e)}", 
+                            level=SandeshLevel.SYS_WARN)
+            self.config_log(f"Traceback:\n{traceback.format_exc()}", 
+                            level=SandeshLevel.SYS_WARN)
+
 
         self.validate_parent_type(obj_type, obj_dict)
         # Ensure object has at least default permissions set
@@ -4752,8 +4799,11 @@ class VncApiServer(object):
                 raise cfgm_common.exceptions.HttpError(
                     409, uuid_in_req + ' already exists with fq_name: ' +
                     pformat(fq_name))
-            except NoIdError:
-                pass
+            except NoIdError as e:
+                self.config_log(f"UUID {uuid_in_req} not found in DB: {str(e)}", 
+                                level=SandeshLevel.SYS_WARN)
+                self.config_log(f"Traceback:\n{traceback.format_exc()}", 
+                                level=SandeshLevel.SYS_WARN)
             apiConfig.identifier_uuid = uuid_in_req
 
         self._set_api_audit_info(apiConfig)

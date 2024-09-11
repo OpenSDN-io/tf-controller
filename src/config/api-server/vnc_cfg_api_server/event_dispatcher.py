@@ -40,6 +40,8 @@ class ResourceWatcher(object):
             for field in requested_fields:
                 self.obj_fields.remove(field)
         except ValueError:
+            #NOTE Exception before logger initialized
+            #TODO log this Error in future
             pass
 
 

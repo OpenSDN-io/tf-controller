@@ -14,6 +14,7 @@ from future.utils import raise_
 import copy
 import uuid
 import netaddr
+import traceback
 from netaddr import IPNetwork, IPAddress, IPRange, all_matching_cidrs
 from .vnc_quota import QuotaHelper
 from pprint import pformat
@@ -1034,8 +1035,16 @@ class AddrMgmt(object):
                 Subnet.delete_cls('%s:%s' % (vn_fq_name_str, subnet_name))
                 try:
                     del self._subnet_objs[obj_id][subnet_name]
-                except KeyError:
-                    pass
+                except KeyError as e:
+                    self.config_log(
+                        f"Error in subnet delete instance-ip check: {str(e)}",
+                        level=SandeshLevel.SYS_WARN
+                    )
+                    self.config_log(
+                        f"Traceback:\n{traceback.format_exc()}",
+                        level=SandeshLevel.SYS_WARN
+                    )
+
 
         vn_category = vn_dict.get('virtual_network_category') or None
         self._create_net_subnet_objs(vn_fq_name_str, obj_id, vn_dict,
@@ -1087,8 +1096,15 @@ class AddrMgmt(object):
                 Subnet.delete_cls('%s:%s' % (vn_fq_name_str, subnet_name))
             try:
                 del self._subnet_objs[obj_id]
-            except KeyError:
-                pass
+            except KeyError as e:
+                self.config_log(
+                    f"Error in subnet delete during net_delete_notify for obj_id {obj_id}: {str(e)}",
+                    level=SandeshLevel.SYS_WARN
+                )
+                self.config_log(
+                    f"Traceback:\n{traceback.format_exc()}",
+                    level=SandeshLevel.SYS_WARN
+                )
     # end net_delete_notify
 
     def _ipam_to_subnets(self, ipam_dict):
@@ -2412,8 +2428,16 @@ class AddrMgmt(object):
                 Subnet.delete_cls('%s:%s' % (ipam_fq_name_str, subnet_name))
             try:
                 del self._subnet_objs[obj_id]
-            except KeyError:
-                pass
+            except KeyError as e:
+                self.config_log(
+                    f"Error in subnet delete during ipam_delete_notify for obj_id {obj_id}: {str(e)}",
+                    level=SandeshLevel.SYS_WARN
+                )
+                self.config_log(
+                    f"Traceback:\n{traceback.format_exc()}",
+                    level=SandeshLevel.SYS_WARN
+                )
+
     # end ipam_delete_notify
 
     def ipam_update_req(self, ipam_fq_name, db_ipam_dict, req_ipam_dict,
@@ -2496,8 +2520,15 @@ class AddrMgmt(object):
                 Subnet.delete_cls('%s:%s' % (ipam_fq_name_str, subnet_name))
                 try:
                     del self._subnet_objs[obj_id][subnet_name]
-                except KeyError:
-                    pass
+                except KeyError as e:
+                    self.config_log(
+                        f"Error in subnet delete during ipam_update_notify for obj_id {obj_id}: {str(e)}",
+                        level=SandeshLevel.SYS_WARN
+                    )
+                    self.config_log(
+                        f"Traceback:\n{traceback.format_exc()}",
+                        level=SandeshLevel.SYS_WARN
+                    )
 
         subnetting = ipam_dict.get('ipam_subnetting', False)
         self._create_ipam_subnet_objs(obj_id, ipam_dict,

@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 import socket
+import traceback
 import gevent
 from six import StringIO
 from pprint import pformat
@@ -64,8 +65,9 @@ class VncAmqpHandle(object):
         try:
             with open(self._trace_file, 'a') as err_file:
                 err_file.write(string_buf.getvalue())
-        except IOError:
-            pass
+        except IOError as e:
+            self.logger.warn(f"Failed to write to trace file: {str(e)}")
+
 
     def log_ignored_errors(self, obj_class):
         if not self._trace_file:
@@ -104,7 +106,7 @@ class VncAmqpHandle(object):
             try:
                 self.msgbus_trace_msg()
             except Exception:
-                pass
+                self.logger.warn('Error in _vnc_subscribe_callback')
             del self.oper_info
             del self.obj_type
             del self.obj_class
