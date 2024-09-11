@@ -1,6 +1,6 @@
 gevent<1.5.0
 greenlet<2.0.0
-bottle
+bottle<0.13
 six
 pyYAML
 psutil>=0.6.0,!=5.5.0,!=5.5.1

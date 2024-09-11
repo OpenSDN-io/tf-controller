@@ -8,7 +8,7 @@ gevent
 netaddr
 python-keystoneclient
 netifaces
-bottle
+bottle<0.13
 stevedore
 kazoo
 pycrypto

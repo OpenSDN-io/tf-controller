@@ -8,7 +8,7 @@ python-novaclient
 keystoneauth1
 kombu
 netifaces
-bottle
+bottle<0.13
 stevedore
 timeout-decorator
 docker
