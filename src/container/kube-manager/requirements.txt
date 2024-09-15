@@ -1,6 +1,6 @@
 requests
 bitstring
-netaddr
+netaddr<1
 gevent
 greenlet
 keystoneauth1

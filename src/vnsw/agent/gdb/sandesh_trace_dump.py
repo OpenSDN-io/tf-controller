@@ -1,4 +1,3 @@
-from __future__ import print_function
 #
 #  Copyright (c) 2014 Juniper Networks. All rights reserved.
 #
@@ -6,13 +5,9 @@ from __future__ import print_function
 #
 #  gdb macros to dump the sandesh trace buffer
 
-from builtins import next
-from builtins import str
-from builtins import range
 import gdb
 import datetime
 import os
-import sys
 import re
 import fileinput
 from time import strptime

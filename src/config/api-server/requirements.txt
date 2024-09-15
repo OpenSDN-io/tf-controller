@@ -5,7 +5,7 @@ sandesh-common
 keystonemiddleware
 keystoneauth1
 gevent
-netaddr
+netaddr<1
 python-keystoneclient
 netifaces
 bottle<0.13

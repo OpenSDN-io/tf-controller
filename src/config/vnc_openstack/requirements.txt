@@ -8,6 +8,6 @@ contrail-config-common
 contrail-api-client
 gevent
 kazoo
-netaddr
+netaddr<1
 sandesh==0.1.dev0
 sandesh-common

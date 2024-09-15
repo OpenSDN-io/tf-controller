@@ -1,6 +1,6 @@
 lxml
 gevent
-netaddr
+netaddr<1
 attrdict
 bitarray
 psutil
