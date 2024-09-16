@@ -40,7 +40,7 @@ sources = [
 ]
 
 cd_cmd = 'cd ' + Dir('.').path + ' && '
-sdist_gen = env.Command('dist', sources, cd_cmd + 'python setup.py sdist')
+sdist_gen = env.Command('dist', sources, cd_cmd + 'python3 setup.py sdist')
 env.Alias('controller/src/vnsw/opencontrail_vrouter_netns:sdist', sdist_gen)
 
 env.Alias('install', env.InstallAs(env['INSTALL_CONF'] + '/contrail-lbaas-auth.conf',

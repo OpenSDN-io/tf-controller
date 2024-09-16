@@ -54,7 +54,7 @@ cd_cmd = 'cd ' + Dir('.').path + ' && '
 sdist_gen = env.Command(
     'dist/sandesh-common-%s.tar.gz' % env.GetPyVersion(),
     'setup.py',
-    cd_cmd + 'python setup.py sdist')
+    cd_cmd + 'python3 setup.py sdist')
 
 # install everything before building distribution
 env.Depends(sdist_gen, sdist_depends)
@@ -66,16 +66,8 @@ def SymLink(target, source, env):
     os.symlink(os.path.abspath(str(source[0])), os.path.abspath(str(target[0])))
 
 if 'install' in BUILD_TARGETS:
-    install_cmd_py2 = env.Command(None, 'setup.py',
-                                  cd_cmd + 'python setup.py install %s' %
-                                  env['PYTHON_INSTALL_OPT'])
-    env.Depends(install_cmd_py2, sdist_depends)
-    env.Alias('install', install_cmd_py2)
-
-    setup_link_cmd = env.Command("setup-py3.py", "setup.py", SymLink)
-    env.Depends(setup_link_cmd, sdist_depends)
-    install_cmd_py3 = env.Command(None, 'setup-py3.py',
-                                  cd_cmd + 'python3 setup-py3.py install %s' %
-                                  env['PYTHON_INSTALL_OPT'])
-    env.Depends(install_cmd_py3, sdist_depends)
-    env.Alias('install', install_cmd_py3)
+    install_cmd = env.Command(
+        None, 'setup.py',
+        cd_cmd + 'python3 setup.py install %s' % env['PYTHON_INSTALL_OPT'])
+    env.Depends(install_cmd, sdist_depends)
+    env.Alias('install', install_cmd)

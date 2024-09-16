@@ -33,7 +33,6 @@ subdirs += [
     'config',
     'container',
     'control-node',
-    'utils',
 ]
 
 include = ['#/controller/src', '#/build/include', '#src/contrail-common', '#controller/lib']

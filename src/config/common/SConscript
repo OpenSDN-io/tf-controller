@@ -82,7 +82,7 @@ cd_cmd = 'cd ' + Dir('.').path + ' && '
 sdist_gen = env.Command(
     'dist/contrail-config-common-%s.tar.gz' % env.GetPyVersion(),
     'setup.py',
-    cd_cmd + 'python setup.py sdist')
+    cd_cmd + 'python3 setup.py sdist')
 
 # Add the dependency between contrail-config-common tarball and its dependencies.
 # That lets others depend only on contrail-config-common without having to also
@@ -99,15 +99,7 @@ env.SetupPyTestSuite(sdist_gen, use_tox=True)
 
 if 'install' in BUILD_TARGETS:
     install_cmd = env.Command(None, 'setup.py',
-                              cd_cmd + 'python setup.py install %s' %
+                              cd_cmd + 'python3 setup.py install %s' %
                               env['PYTHON_INSTALL_OPT'])
     env.Depends(install_cmd, sdist_gen)
     env.Alias('install', install_cmd)
-    # Install in python3 path
-    setup_link_cmd = env.Command("setup3.py", "setup.py", SymLink)
-    env.Depends(setup_link_cmd, sdist_depends)
-    py3_install_cmd = env.Command(None, 'setup3.py',
-                                  cd_cmd + 'python3 setup3.py install %s' %
-                                  env['PYTHON_INSTALL_OPT'])
-    env.Depends(py3_install_cmd, setup_link_cmd)
-    env.Alias('install', py3_install_cmd)

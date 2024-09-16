@@ -76,7 +76,7 @@ sdist_depends.extend(interface_pkg)
 sdist_depends.extend(interface_port_bmap_pkg)
 
 cd_cmd = 'cd ' + Dir('.').path + ' && '
-sdist_gen = env.Command('dist', 'setup.py', cd_cmd + 'python setup.py sdist')
+sdist_gen = env.Command('dist', 'setup.py', cd_cmd + 'python3 setup.py sdist')
 
 env.Depends(sdist_gen, sdist_depends)
 env.Default(sdist_gen)

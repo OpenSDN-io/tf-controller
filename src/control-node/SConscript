@@ -56,7 +56,7 @@ sdist_depends.extend(ifmap_pkg)
 sdist_depends.extend(cpuinfo_pkg)
 sdist_depends.extend(process_info_pkg)
 sdist_depends.extend(build_info_rules)
-sdist_gen = env.Command('dist', File('setup.py'), cd_cmd + 'python setup.py sdist')
+sdist_gen = env.Command('dist', File('setup.py'), cd_cmd + 'python3 setup.py sdist')
 
 env.Depends(sdist_gen, sdist_depends)
 env.Default(sdist_gen)

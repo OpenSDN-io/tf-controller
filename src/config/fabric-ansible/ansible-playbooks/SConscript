@@ -88,7 +88,7 @@ sdist_depends.extend(local_sources_rules)
 pyver = env.GetPyVersion()
 sdist_gen = env.Command(
     'dist/fabric_ansible_playbooks-%s.tar.gz' % pyver,
-    'setup.py', cd_cmd + 'python setup.py sdist')
+    'setup.py', cd_cmd + 'python3 setup.py sdist')
 
 env.Depends(sdist_gen, sdist_depends)
 env.Default(sdist_gen)
