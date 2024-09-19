@@ -21,12 +21,7 @@ from pprint import pformat
 import cfgm_common.exceptions
 from cfgm_common.utils import _DEFAULT_ZK_COUNTER_PATH_PREFIX
 from .context import get_context
-try:
-    # python2.7
-    from collections import OrderedDict
-except:
-    # python2.6
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 
