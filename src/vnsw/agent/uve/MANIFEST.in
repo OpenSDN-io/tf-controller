@@ -3,3 +3,4 @@
 #
 
 recursive-include vrouter *.html *.xml *.css
+include *.txt

@@ -30,18 +30,19 @@ env.Depends(virtual_machine_port_bmap_pkg, virtual_machine_pkg)
 env.Depends(interface_port_bmap_pkg, interface_pkg)
 
 setup_sources = [
-           'setup.py',
-           'MANIFEST.in',
-          ]
+    'setup.py',
+    'requirements.txt'
+    'MANIFEST.in',
+]
 
 setup_sources_rules = []
 for file in setup_sources:
     setup_sources_rules.append(env.Install("", "#controller/src/vnsw/agent/uve/" + file))
 
 vrouter_sources = [
-        'cpuinfo.py',
-        'mock_generator.py',
-       ]
+    'cpuinfo.py',
+    'mock_generator.py',
+]
 
 vrouter_sources_rules = []
 for file in vrouter_sources:
@@ -100,21 +101,21 @@ StatsSandeshGenFiles += env.SandeshGenCpp('uve.sandesh')
 StatsSandeshGenSrcs = env.ExtractCpp(StatsSandeshGenFiles)
 StatsSandeshGenObjs = env.Object(StatsSandeshGenSrcs)
 
-libuve = env.Library('uve',
-                     SandeshGenObjs +
-                     [
-                     'agent_uve_base.cc',
-                     'agent_uve.cc',
-                     'interface_uve_table.cc',
-                     'l4_port_bitmap.cc',
-                     'prouter_uve_table.cc',
-                     'vm_uve_entry_base.cc',
-                     'vm_uve_table_base.cc',
-                     'vn_uve_entry_base.cc',
-                     'vn_uve_table_base.cc',
-                     'vrouter_stats_collector.cc',
-                     'vrouter_uve_entry_base.cc'
-                     ])
+libuve = env.Library(
+    'uve',
+    SandeshGenObjs + [
+        'agent_uve_base.cc',
+        'agent_uve.cc',
+        'interface_uve_table.cc',
+        'l4_port_bitmap.cc',
+        'prouter_uve_table.cc',
+        'vm_uve_entry_base.cc',
+        'vm_uve_table_base.cc',
+        'vn_uve_entry_base.cc',
+        'vn_uve_table_base.cc',
+        'vrouter_stats_collector.cc',
+        'vrouter_uve_entry_base.cc'
+    ])
 
 libstatsuve_os_dependent_src = ['vm_stat.cc', 'vm_stat_kvm.cc', 'vm_stat_docker.cc']
 
@@ -153,7 +154,7 @@ mockEnv.Prepend(LIBS=[
     'boost_program_options',
     'curl',
     'pugixml',
-     'rt',
+    'rt',
     'ssl',
     'crypto'
     ])
@@ -161,12 +162,11 @@ mockEnv.Prepend(LIBS=[
 if platform.system() != 'Darwin':
     mockEnv.Append(LIBS = ['rt'])
 
-libpath = MapBuildDir(
-    [
-     'base',
-     'io',
-     'ksync',
-    ])
+libpath = MapBuildDir([
+    'base',
+    'io',
+    'ksync',
+])
 mockEnv.Append(LIBPATH=libpath)
 mockEnv.Prepend(CPPPATH = mockEnv['TOP'])
 mockgen = mockEnv.Program('mock_generator',

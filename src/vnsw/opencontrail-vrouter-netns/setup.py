@@ -2,13 +2,14 @@
 # Copyright (c) 2014 Juniper Networks, Inc.
 #
 
-import setuptools
+import re, setuptools
 
 
 def requirements(filename):
     with open(filename) as f:
         lines = f.read().splitlines()
-    return lines
+    c = re.compile(r'\s*#.*')
+    return list(filter(bool, map(lambda y: c.sub('', y).strip(), lines)))
 
 setuptools.setup(
     name='opencontrail-vrouter-netns',

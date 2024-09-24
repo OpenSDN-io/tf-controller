@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2016 Juniper Networks, Inc.
 #
@@ -7,16 +7,11 @@
 # This sceipt is called by the vrouter agent for CRUD
 # of IPSEC tunnels
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
 import argparse
 import json
 import logging
 import requests
 import sys
-import time
 import socket
 from passlib.hash import sha256_crypt
 

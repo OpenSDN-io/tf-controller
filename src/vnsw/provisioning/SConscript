@@ -9,6 +9,7 @@ env = BuildEnv.Clone()
 
 sources = [
     'setup.py',
+    'requirements.txt',
     'contrail_vrouter_provisioning/__init__.py',
     'contrail_vrouter_provisioning/setup.py',
     'contrail_vrouter_provisioning/cmdparser.py',
@@ -22,7 +23,7 @@ sources = [
     'contrail_vrouter_provisioning/toragent/templates/tor_agent_conf.py',
     'contrail_vrouter_provisioning/toragent/templates/tor_agent_ini.py',
     'contrail_vrouter_provisioning/toragent/templates/tor_agent_service.py',
-    ]
+]
 
 cd_cmd = 'cd ' + Dir('.').path + ' && '
 sdist_gen = env.Command('dist/contrail-vrouter-provisioning-1.0.tar.gz',
@@ -36,6 +37,15 @@ if 'install' in BUILD_TARGETS:
                               cd_cmd + 'python3 setup.py install %s' %
                               env['PYTHON_INSTALL_OPT'])
     env.Alias('install', install_cmd)
+
+    install_root = GetOption('install_root')
+    if install_root is None:
+        install_root = ''
+    env.Alias(
+        'install',
+        env.Install(
+            install_root + '/opt/opensdn/pip/vrouter-provisioning/',
+            Entry('#controller/src/vnsw/provisioning/requirements.txt')))
 
 # Local Variables:
 # mode: python

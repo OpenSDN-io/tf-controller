@@ -1,6 +1,5 @@
 # Copyright (c) 2016 Juniper Networks, Inc
 
-from builtins import object
 import subprocess
 
 class ContrailVRouterApi(object):

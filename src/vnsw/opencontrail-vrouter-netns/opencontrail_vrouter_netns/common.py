@@ -1,4 +1,3 @@
-from builtins import str
 import uuid
 
 def validate_uuid(val):

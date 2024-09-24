@@ -10,8 +10,8 @@ setup(
     packages = [
         'sandesh_common',
         'sandesh_common.vns'
-        ],
+    ],
     package_data = {
         'sandesh_common.vns':['*.html', '*.css', '*.xml']
-        }
+    }
 )

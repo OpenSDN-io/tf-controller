@@ -4,18 +4,13 @@
 #
 """Base Contrail Provisioning module."""
 
-from builtins import str
-from builtins import object
 import os
 import re
-import stat
 import shutil
 import socket
 import tempfile
 import platform
 import logging
-import argparse
-from distutils.version import LooseVersion
 
 
 from contrail_vrouter_provisioning import local, ExtList

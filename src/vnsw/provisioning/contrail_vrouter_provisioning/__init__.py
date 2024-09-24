@@ -1,6 +1,5 @@
 """Contrail vrouter provisioning package"""
 
-from builtins import str
 import os
 import logging
 import logging.handlers

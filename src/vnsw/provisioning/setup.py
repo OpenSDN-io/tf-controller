@@ -2,14 +2,19 @@
 # Copyright (c) 2017 Juniper Networks, Inc.
 #
 
-import setuptools
+import re, setuptools
+
+
+def requirements(filename):
+    with open(filename) as f:
+        lines = f.read().splitlines()
+    c = re.compile(r'\s*#.*')
+    return list(filter(bool, map(lambda y: c.sub('', y).strip(), lines)))
 
 setuptools.setup(
     name='contrail-vrouter-provisioning',
     version='0.1.dev0',
-    install_requires=[
-        'future',
-    ],
+    install_requires=requirements('requirements.txt'),
     packages=setuptools.find_packages(),
 
     # metadata

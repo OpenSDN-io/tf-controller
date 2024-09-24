@@ -3,9 +3,6 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import map
-from builtins import str
-from builtins import object
 import os
 import re
 import glob
