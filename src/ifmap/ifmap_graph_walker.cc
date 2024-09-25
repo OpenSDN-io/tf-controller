@@ -440,6 +440,7 @@ void IFMapGraphWalker::AddNodesToWhitelist() {
         ("virtual-network-multicast-policy")
         ("vn-health-check")
         ("host-based-service-virtual-network")
+        ("project-virtual-network")
             .convert_to_container<set<string> >())
         ("floating-ip", list_of("floating-ip-pool-floating-ip")
         ("instance-ip-floating-ip").convert_to_container<set<string> >())

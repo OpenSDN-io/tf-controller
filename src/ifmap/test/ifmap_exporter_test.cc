@@ -580,7 +580,7 @@ TEST_F(IFMapExporterTest, NodeAddDependency) {
                 << link->ToString() << " before " << link->right()->ToString();
         }
     }
-    EXPECT_EQ(4, seen.size());
+    EXPECT_EQ(5, seen.size());
 }
 
 // Link is deleted.
@@ -641,7 +641,7 @@ TEST_F(IFMapExporterTest, LinkDeleteDependency) {
                 << link->ToString() << " after " << link->right()->ToString();
         }
     }
-    EXPECT_EQ(4, seen.size());
+    EXPECT_EQ(5, seen.size());
 }
 
 TEST_F(IFMapExporterTest, DISABLED_CrcChecks) {
@@ -1235,10 +1235,10 @@ TEST_F(IFMapExporterTest, ConfigTracker) {
     EXPECT_TRUE(ConfigTrackerHasInterestState(c3.index(), state));
     EXPECT_TRUE(ConfigTrackerHasInterestState(c4.index(), state));
     // VR, VM, VMI, VN, VR-VM, VM-VMI, VMI-VN i.e. 7
-    EXPECT_EQ(InterestConfigTrackerSize(c1.index()), 7);
-    EXPECT_EQ(InterestConfigTrackerSize(c2.index()), 7);
-    EXPECT_EQ(InterestConfigTrackerSize(c3.index()), 7);
-    EXPECT_EQ(InterestConfigTrackerSize(c4.index()), 7);
+    EXPECT_EQ(InterestConfigTrackerSize(c1.index()), 9);
+    EXPECT_EQ(InterestConfigTrackerSize(c2.index()), 9);
+    EXPECT_EQ(InterestConfigTrackerSize(c3.index()), 9);
+    EXPECT_EQ(InterestConfigTrackerSize(c4.index()), 9);
 
     ProcessQueue();
     task_util::WaitForIdle();
