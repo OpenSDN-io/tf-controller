@@ -5,6 +5,12 @@ from setuptools import setup, find_packages, Command
 import os
 import re
 
+def requirements(filename):
+    with open(filename) as f:
+        lines = f.read().splitlines()
+    c = re.compile(r'\s*#.*')
+    return list(filter(bool, map(lambda y: c.sub('', y).strip(), lines)))
+
 class RunTestsCommand(Command):
     description = "Test command to run testr in virtualenv"
     user_options = [
@@ -33,11 +39,11 @@ class RunTestsCommand(Command):
 setup(
     name='device_manager',
     version='0.1.dev0',
-    install_requires=['future', 'configparser'],
     packages=find_packages(exclude=["*.test", "*.test.*", "test.*", "test"]),
     package_data={'': ['*.html', '*.css', '*.xml']},
     zip_safe=False,
     long_description="VNC Configuration Physical Router Configuration Manager",
+    install_requires=requirements('requirements.txt'),
     entry_points = {
          # Please update sandesh/common/vns.sandesh on process name change
          'console_scripts' : [

@@ -52,6 +52,14 @@ if 'install_ironic_notification_manager' in BUILD_TARGETS:
               env.Command(None, setup_sources + local_sources,
                           cd_cmd + 'python3 setup.py install %s' %
                           env['PYTHON_INSTALL_OPT']))
+    install_root = GetOption('install_root')
+    if install_root is None:
+        install_root = ''
+    env.Alias(
+        'install',
+        env.Install(
+            install_root + '/opt/opensdn/pip/ironic/',
+            Entry('#controller/src/config/ironic-notification-manager/requirements.txt')))
 
 env.Alias('install', env.Install(env['INSTALL_CONF'],
           'ironic-notification-manager.conf'))

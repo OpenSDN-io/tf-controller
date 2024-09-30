@@ -9,15 +9,15 @@ Import('CfgmEnv')
 env = CfgmEnv.Clone()
 
 setup_sources = [
+           'requirements.txt',
            'setup.py',
            'MANIFEST.in',
-           'requirements.txt',
            'test-requirements.txt',
            '.stestr.conf',
            'tox.ini',
            '.coveragerc',
            'schema_transformer',
-          ]
+]
 
 setup_sources_rules = []
 for file in setup_sources:
@@ -49,6 +49,15 @@ if 'install' in BUILD_TARGETS:
                               env['PYTHON_INSTALL_OPT'])
     env.Depends(install_cmd, sdist_depends)
     env.Alias('install', install_cmd)
+
+    install_root = GetOption('install_root')
+    if install_root is None:
+        install_root = ''
+    env.Alias(
+        'install',
+        env.Install(
+            install_root + '/opt/opensdn/pip/schema_transformer/',
+            Entry('#controller/src/config/schema-transformer/requirements.txt')))
 
 env.Alias('install', env.Install(env['INSTALL_CONF'],
     'contrail-schema.conf'))

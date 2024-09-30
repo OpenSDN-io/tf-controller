@@ -4,5 +4,7 @@ gevent
 greenlet
 python-keystoneclient
 python-ironicclient
+python-ironic-inspector-client
+python-novaclient
 keystoneauth1
 netaddr<1

@@ -1,5 +1,6 @@
 contrail-config-common
 contrail-api-client
+configparser
 sandesh==0.1.dev0
 sandesh-common
 keystonemiddleware
@@ -11,6 +12,6 @@ netifaces
 bottle<0.13
 stevedore
 kazoo
-pycrypto
 future
+pycrypto
 six

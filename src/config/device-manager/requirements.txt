@@ -2,10 +2,9 @@ lxml
 gevent
 netaddr<1
 attrdict
+future
 bitarray
 psutil
-python-novaclient
-keystoneauth1
 kombu
 netifaces
 bottle<0.13
@@ -16,4 +15,5 @@ inflection
 jsonschema
 cityhash
 contrail-config-common
+configparser
 sandesh==0.1.dev0
