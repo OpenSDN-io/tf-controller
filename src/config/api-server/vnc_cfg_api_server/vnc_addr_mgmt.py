@@ -1,16 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import map
-from builtins import zip
-from builtins import str
-from builtins import range
-from builtins import object
-from past.utils import old_div
-from future.utils import raise_
 import copy
 import uuid
 import netaddr
@@ -354,7 +345,7 @@ class Subnet(object):
 
             # each alloc-pool should have minimum block_alloc_unit+1,
             # possible allocation
-            if (old_div(alloc_pool_range,ip_alloc_unit)) <= block_alloc_unit:
+            if (alloc_pool_range // ip_alloc_unit) <= block_alloc_unit:
                 raise AddrMgmtAllocUnitInvalid(name, prefix+'/'+prefix_len,
                     ip_alloc_unit, 'Pool range<=block_alloc_unit')
 
@@ -380,7 +371,7 @@ class Subnet(object):
 
         # reserve excluded addresses only in bitmap but not in zk
         for addr in exclude:
-            self._db_conn.subnet_set_in_use(name, old_div(int(addr),ip_alloc_unit))
+            self._db_conn.subnet_set_in_use(name, (int(addr) // ip_alloc_unit))
         self._name = name
         self._network = network
         self._version = network.version
@@ -421,26 +412,26 @@ class Subnet(object):
         if ip in self._exclude:
             return True
         addr = int(ip)
-        return self._db_conn.subnet_is_addr_allocated(self._name, old_div(addr,self.alloc_unit))
+        return self._db_conn.subnet_is_addr_allocated(self._name, (addr // self.alloc_unit))
     # end is_ip_allocated
 
     def ip_set_in_use(self, ipaddr):
         ip = IPAddress(ipaddr)
         addr = int(ip)
-        return self._db_conn.subnet_set_in_use(self._name, old_div(addr,self.alloc_unit))
+        return self._db_conn.subnet_set_in_use(self._name, (addr // self.alloc_unit))
     # end ip_set_in_use
 
     def ip_reset_in_use(self, ipaddr):
         ip = IPAddress(ipaddr)
         addr = int(ip)
-        return self._db_conn.subnet_reset_in_use(self._name, old_div(addr,self.alloc_unit))
+        return self._db_conn.subnet_reset_in_use(self._name, (addr // self.alloc_unit))
     # end ip_reset_in_use
 
     def ip_reserve(self, ipaddr, value):
         ip = IPAddress(ipaddr)
         req = int(ip)
 
-        addr = self._db_conn.subnet_reserve_req(self._name, old_div(req,self.alloc_unit), value)
+        addr = self._db_conn.subnet_reserve_req(self._name, (req // self.alloc_unit), value)
         if addr:
             return str(IPAddress(addr*self.alloc_unit))
         return None
@@ -458,7 +449,7 @@ class Subnet(object):
                 raise AddrMgmtAllocUnitInvalid(self._name,
                           self._prefix+'/'+self._prefix_len, self.alloc_unit,
                           'IP address %s not aligned' %(ipaddr))
-            return self.ip_reserve(old_div(ipaddr,self.alloc_unit), value)
+            return self.ip_reserve((ipaddr // self.alloc_unit), value)
 
         addr = self._db_conn.subnet_alloc_req(self._name, value,
                                               alloc_pools=sn_alloc_pools,
@@ -476,7 +467,7 @@ class Subnet(object):
         ip = IPAddress(ip_addr)
         if ((ip in ip_network) and (ip not in exclude_addrs)):
             if cls._db_conn:
-                cls._db_conn.subnet_free_req(subnet_fq_name, old_div(int(ip),alloc_unit))
+                cls._db_conn.subnet_free_req(subnet_fq_name, (int(ip) // alloc_unit))
                 return True
 
         return False
@@ -2305,7 +2296,8 @@ class AddrMgmt(object):
             ok, result = self._uuid_to_obj_dict('virtual_network', vn_uuid,
                                                  obj_fields)
             if not ok:
-                raise_(False, result)
+                #NOTE check before commit
+                raise Exception(result)
             ipam_refs = result['network_ipam_refs']
 
         for ipam_ref in ipam_refs:

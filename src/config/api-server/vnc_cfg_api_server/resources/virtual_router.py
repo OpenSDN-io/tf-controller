@@ -2,7 +2,6 @@
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import zip
 
 from netaddr import IPRange
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel

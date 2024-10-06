@@ -5,10 +5,7 @@
 This is the main module in vnc_cfg_api_server package. It manages interaction
 between http/rest, address management, authentication and database interfaces.
 """
-from __future__ import absolute_import
 
-from future import standard_library
-standard_library.install_aliases()
 
 from gevent import monkey
 monkey.patch_all()
@@ -20,8 +17,6 @@ import gevent.pywsgi
 gevent.pywsgi.MAX_REQUEST_LINE = 65535
 
 import sys
-from six import string_types
-from six.moves import reload_module
 from configparser import ConfigParser, NoOptionError
 import functools
 import hashlib
@@ -3485,7 +3480,7 @@ class VncApiServer(object):
             if 'DEFAULTS' in config.sections():
                 try:
                     collectors = config.get('DEFAULTS', 'collectors')
-                    if isinstance(collectors, string_types):
+                    if isinstance(collectors, str):
                         collectors = collectors.split()
                         new_chksum = hashlib.md5("".join(collectors).encode()).hexdigest()
                         if new_chksum != self._chksum:

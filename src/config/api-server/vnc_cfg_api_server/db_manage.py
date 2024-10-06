@@ -1,19 +1,6 @@
-from __future__ import absolute_import
-from __future__ import print_function
 
 import argparse
 import sys
-if sys.version_info[0] < 3:
-    from __builtin__ import filter
-    from __builtin__ import object
-    from __builtin__ import str
-else:
-    from builtins import filter
-    from builtins import object
-    from builtins import str
-    from past.builtins import basestring
-    from future import standard_library
-    standard_library.install_aliases()  # noqa
 from collections import defaultdict
 import copy
 from functools import wraps
@@ -48,13 +35,10 @@ except ImportError:
 from cfgm_common.utils import cgitb_hook
 from cfgm_common.zkclient import IndexAllocator
 from cfgm_common.zkclient import ZookeeperClient
-#from future import standard_library
-#standard_library.install_aliases()  # noqa
 import kazoo.client
 import kazoo.exceptions
 from netaddr import IPAddress, IPNetwork
 from netaddr.core import AddrFormatError
-#from past.builtins import basestring
 import pycassa
 from pycassa.cassandra.ttypes import ConsistencyLevel
 import pycassa.connection
@@ -219,7 +203,7 @@ SG_ID_MIN_ALLOC = cfgm_common.SGID_MIN_ALLOC
 
 
 def _parse_rt(rt):
-    if isinstance(rt, basestring):
+    if isinstance(rt, str):
         prefix, asn, target = rt.split(':')
     else:
         prefix, asn, target = rt

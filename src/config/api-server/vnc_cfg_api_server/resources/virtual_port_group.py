@@ -2,7 +2,6 @@
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
 import os
 
 from cfgm_common.exceptions import HttpError

@@ -3,7 +3,6 @@
 #
 
 
-from builtins import str
 import re
 import socket
 

@@ -1,6 +1,4 @@
 
-from builtins import str
-from builtins import object
 from vnc_api.gen.resource_xsd import *
 from vnc_api.gen.resource_common import *
 from pprint import pformat

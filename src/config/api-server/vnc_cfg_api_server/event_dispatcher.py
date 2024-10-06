@@ -5,7 +5,6 @@ This is the module that dispatches events to client queues subscribed by
 The dispatcher receives events from rabbitmq event consumer and push events
 to specific client queues
 """
-from __future__ import absolute_import
 
 import json
 

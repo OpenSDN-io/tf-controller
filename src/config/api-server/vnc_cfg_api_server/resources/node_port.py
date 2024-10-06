@@ -1,5 +1,4 @@
 
-from builtins import str
 from pprint import pformat
 
 from cfgm_common.exceptions import NoIdError

@@ -4,8 +4,6 @@
 
 # flake8: noqa
 
-from builtins import str as builtin_str
-from future.utils import native_str
 
 from cfgm_common.utils import str_to_class
 from vnc_api.gen import resource_common
@@ -107,7 +105,7 @@ def initialize_all_server_resource_classes(server_instance):
             # resource server class methods can be invoked in CRUD methods
             # without checking for None
             server_class = type(
-                native_str(server_name),
+                str(server_name),
                 (ResourceMixin, common_class, object),
                 {})
         server_class.server = server_instance

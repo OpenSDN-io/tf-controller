@@ -3,8 +3,6 @@
 #
 
 
-from builtins import range
-from builtins import str
 import os
 
 from cfgm_common import _obj_serializer_all

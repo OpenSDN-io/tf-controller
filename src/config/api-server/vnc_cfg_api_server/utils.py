@@ -4,18 +4,12 @@
 """
 Provides utility routines for modules in api-server
 """
-from __future__ import absolute_import
-from future import standard_library
-standard_library.install_aliases()
 
-from builtins import str
-from builtins import object
 import argparse
 from ast import literal_eval
 import base64
 from cfgm_common import jsonutils as json
 from configparser import ConfigParser
-from six import string_types, PY3
 import vnc_api.gen.resource_xsd
 from . import vnc_quota
 import cfgm_common
@@ -143,7 +137,7 @@ def parse_args(args_str):
     cassandraopts = {
         'cassandra_user'     : None,
         'cassandra_password' : None,
-        'cassandra_driver'   : (PY3 and 'cql' or 'thrift'),
+        'cassandra_driver'   : 'cql',
         'num_workers': None,
         'num_groups': None,
     }
@@ -413,10 +407,10 @@ def parse_args(args_str):
     args_obj, remaining_argv = parser.parse_known_args(remaining_argv)
     args_obj.conf_file = args.conf_file
     args_obj.config_sections = config
-    if isinstance(args_obj.cassandra_server_list, string_types):
+    if isinstance(args_obj.cassandra_server_list, str):
         args_obj.cassandra_server_list =\
             args_obj.cassandra_server_list.split()
-    if isinstance(args_obj.collectors, string_types):
+    if isinstance(args_obj.collectors, str):
         args_obj.collectors = args_obj.collectors.split()
     args_obj.sandesh_config = SandeshConfig.from_parser_arguments(args_obj)
     args_obj.cassandra_use_ssl = (str(args_obj.cassandra_use_ssl).lower() == 'true')

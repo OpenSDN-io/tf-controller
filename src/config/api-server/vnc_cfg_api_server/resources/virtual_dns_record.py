@@ -2,9 +2,6 @@
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-
-from builtins import str
-
 from vnc_api.gen.resource_common import VirtualDnsRecord
 
 from vnc_cfg_api_server.resources._resource_base import ResourceMixin

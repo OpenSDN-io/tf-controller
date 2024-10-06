@@ -1,8 +1,6 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from builtins import object
 import sys
 import cfgm_common
 from cfgm_common import has_role
