@@ -38,7 +38,7 @@ class IronicKombuClient(object):
         # Without it, it can take several minutes before new master is elected
         # If any app using this wants to register their own sigterm handler,
         # then we will have to modify this function to perhaps take an argument
-        # gevent.signal(signal.SIGTERM, self.sigterm_handler)
+        # gevent.hub.signal(signal.SIGTERM, self.sigterm_handler)
 
         # self._conn_state = ConnectionStatus.INIT
 

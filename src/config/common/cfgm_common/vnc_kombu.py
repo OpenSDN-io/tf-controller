@@ -1,5 +1,3 @@
-from __future__ import division
-from __future__ import unicode_literals
 #
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
@@ -9,7 +7,6 @@ import re
 from distutils.util import strtobool
 import kombu
 import gevent
-from gevent.signal import signal as gevent_signal
 import gevent.monkey
 gevent.monkey.patch_all()
 import signal
@@ -64,7 +61,7 @@ class VncKombuClientBase(object):
         # If any app using this wants to register their own sigterm handler,
         # then we will have to modify this function to perhaps take an argument
         if register_handler:
-            gevent_signal(signal.SIGTERM, self.sigterm_handler)
+            gevent.hub.signal(signal.SIGTERM, self.sigterm_handler)
 
     def num_pending_messages(self):
         return self._publish_queue.qsize()

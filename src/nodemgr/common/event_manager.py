@@ -118,7 +118,7 @@ class EventManager(object):
         event_handlers['PROCESS_STATE'] = self._event_process_state
         event_handlers['PROCESS_COMMUNICATION'] = self._event_process_communication
         event_handlers['PROCESS_LIST_UPDATE'] = self._update_current_processes
-        gevent.signal(signal.SIGHUP, self.nodemgr_sighup_handler)
+        gevent.hub.signal(signal.SIGHUP, self.nodemgr_sighup_handler)
         self.system_data = LinuxSysData(self.msg_log, self.config.corefile_path)
         if ContainerProcessInfoManager:
             strategy = self.container_strategy()

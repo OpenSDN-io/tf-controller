@@ -2,6 +2,7 @@ bitarray
 contrail-api-client
 contrail-config-common
 future
+gevent
 kazoo
 kombu
 requests

@@ -1,8 +1,9 @@
-gevent<1.5.0
-greenlet<2.0.0
 bottle<0.13
+PyYAML>=5.1,<6
+netaddr<1
+gevent
+greenlet
 six
-pyYAML
 psutil>=0.6.0,!=5.5.0,!=5.5.1
 sandesh==0.1.dev0
 sandesh-common
@@ -10,3 +11,5 @@ grpcio==1.29.0
 protobuf==3.17.3
 docker<=3.0.0
 containerd==1.5.2
+lxml==4.0.0
+future
