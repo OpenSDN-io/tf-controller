@@ -12,10 +12,10 @@
 
 class Agent;
 
-class RESTServer {
+class RestServer {
  public:
-    explicit RESTServer(Agent *agent);
-    virtual ~RESTServer();
+    explicit RestServer(Agent *agent);
+    virtual ~RestServer();
 
     void InitDone();
     void HandleRequest(HttpSession* session, const HttpRequest* request);
@@ -32,7 +32,7 @@ class RESTServer {
 
     class HandlerSpecifier {
      public:
-        typedef void (RESTServer::*HandlerFunc)(const struct RESTData&);
+        typedef void (RestServer::*HandlerFunc)(const struct RESTData&);
 
         HandlerSpecifier(const contrail::regex &request_regex,
                          enum http_method method,
@@ -68,7 +68,7 @@ class RESTServer {
 
     Agent *agent_;
     HttpServer *http_server_;
-    DISALLOW_COPY_AND_ASSIGN(RESTServer);
+    DISALLOW_COPY_AND_ASSIGN(RestServer);
 };
 
 #endif  // _ROOT_REST_SERVER_H_

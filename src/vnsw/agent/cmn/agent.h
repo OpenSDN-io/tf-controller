@@ -277,7 +277,7 @@ class VNController;
 class AgentSignal;
 class ServiceInstanceTable;
 class Agent;
-class RESTServer;
+class RestServer;
 class PortIpcHandler;
 class MacLearningProto;
 class MacLearningModule;
@@ -1081,8 +1081,8 @@ public:
     VirtualGateway *vgw() const;
     void set_vgw(VirtualGateway *vgw);
 
-    RESTServer *rest_server() const;
-    void set_rest_server(RESTServer *r);
+    RestServer *rest_server() const;
+    void set_rest_server(RestServer *r);
 
     PortIpcHandler *port_ipc_handler() const;
     void set_port_ipc_handler(PortIpcHandler *r);
@@ -1417,7 +1417,7 @@ private:
     PktModule *pkt_;
     ServicesModule *services_;
     VirtualGateway *vgw_;
-    RESTServer *rest_server_;
+    RestServer *rest_server_;
     PortIpcHandler *port_ipc_handler_;
     OperDB *oper_db_;
     DiagTable *diag_table_;

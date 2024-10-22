@@ -27,7 +27,7 @@ using contrail::regex_search;
 class RestServerGetVmCfgTask : public Task {
 public:
     RestServerGetVmCfgTask(PortIpcHandler *pih,
-                            const struct RESTServer::RESTData& data):
+                            const struct RestServer::RESTData& data):
         Task((TaskScheduler::GetInstance()->GetTaskId("Agent::RestApi")), 0),
         pih_(pih),
         vm_name_((*data.match)[1]),
@@ -53,12 +53,12 @@ public:
 private:
     const PortIpcHandler *pih_;
     std::string vm_name_;
-    const struct RESTServer::RESTData& data_;
+    const struct RestServer::RESTData& data_;
     const std::string context_;
     DISALLOW_COPY_AND_ASSIGN(RestServerGetVmCfgTask);
 };
 
-void RESTServer::VmPortPostHandler(const struct RESTData& data) {
+void RestServer::VmPortPostHandler(const struct RESTData& data) {
     PortIpcHandler *pih = agent_->port_ipc_handler();
     if (pih) {
         std::string err_msg;
@@ -72,7 +72,7 @@ void RESTServer::VmPortPostHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::VmPortSyncHandler(const struct RESTData& data) {
+void RestServer::VmPortSyncHandler(const struct RESTData& data) {
     PortIpcHandler *pih = agent_->port_ipc_handler();
     if (pih) {
         pih->SyncHandler();
@@ -82,7 +82,7 @@ void RESTServer::VmPortSyncHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::VmPortDeleteHandler(const struct RESTData& data) {
+void RestServer::VmPortDeleteHandler(const struct RESTData& data) {
     std::string error;
     const std::string& port_id = (*data.match)[1];
     PortIpcHandler *pih = agent_->port_ipc_handler();
@@ -97,7 +97,7 @@ void RESTServer::VmPortDeleteHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::VmPortGetHandler(const struct RESTData& data) {
+void RestServer::VmPortGetHandler(const struct RESTData& data) {
     const std::string& port_id = (*data.match)[1];
     PortIpcHandler *pih = agent_->port_ipc_handler();
     if (pih) {
@@ -112,7 +112,7 @@ void RESTServer::VmPortGetHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::GatewayPostHandler(const struct RESTData& data) {
+void RestServer::GatewayPostHandler(const struct RESTData& data) {
     PortIpcHandler *pih = agent_->port_ipc_handler();
     if (pih) {
         std::string err_msg;
@@ -126,7 +126,7 @@ void RESTServer::GatewayPostHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::GatewayDeleteHandler(const struct RESTData& data) {
+void RestServer::GatewayDeleteHandler(const struct RESTData& data) {
     std::string error;
     PortIpcHandler *pih = agent_->port_ipc_handler();
     if (pih) {
@@ -141,7 +141,7 @@ void RESTServer::GatewayDeleteHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::VmVnPortPostHandler(const struct RESTData& data) {
+void RestServer::VmVnPortPostHandler(const struct RESTData& data) {
     PortIpcHandler *pih = agent_->port_ipc_handler();
     if (pih) {
         std::string err_msg;
@@ -155,7 +155,7 @@ void RESTServer::VmVnPortPostHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::VmVnPortDeleteHandler(const struct RESTData& data) {
+void RestServer::VmVnPortDeleteHandler(const struct RESTData& data) {
     std::string error;
     const std::string &vm_uuid = (*data.match)[1];
     PortIpcHandler *pih = agent_->port_ipc_handler();
@@ -170,7 +170,7 @@ void RESTServer::VmVnPortDeleteHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::VmVnPortGetHandler(const struct RESTData& data) {
+void RestServer::VmVnPortGetHandler(const struct RESTData& data) {
     std::string url = (*data.match)[0];
     bool vmi_uuid_presence = false;
     std::size_t pos = 4; // skip "/vm/"
@@ -197,7 +197,7 @@ void RESTServer::VmVnPortGetHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::VmVnPortCfgGetHandler(const struct RESTData& data) {
+void RestServer::VmVnPortCfgGetHandler(const struct RESTData& data) {
     PortIpcHandler *pih = agent_->port_ipc_handler();
     if (pih) {
         RestServerGetVmCfgTask *t =
@@ -209,7 +209,7 @@ void RESTServer::VmVnPortCfgGetHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::VmPortEnableHandler(const struct RESTData& data) {
+void RestServer::VmPortEnableHandler(const struct RESTData& data) {
     std::string error;
     const std::string& port_id = (*data.match)[1];
     PortIpcHandler *pih = agent_->port_ipc_handler();
@@ -224,7 +224,7 @@ void RESTServer::VmPortEnableHandler(const struct RESTData& data) {
     }
 }
 
-void RESTServer::VmPortDisableHandler(const struct RESTData& data) {
+void RestServer::VmPortDisableHandler(const struct RESTData& data) {
     std::string error;
     const std::string& port_id = (*data.match)[1];
     PortIpcHandler *pih = agent_->port_ipc_handler();
@@ -239,76 +239,76 @@ void RESTServer::VmPortDisableHandler(const struct RESTData& data) {
     }
 }
 
-const std::vector<RESTServer::HandlerSpecifier> RESTServer::RESTHandlers_ =
+const std::vector<RestServer::HandlerSpecifier> RestServer::RESTHandlers_ =
     boost::assign::list_of
     (HandlerSpecifier(
         regex("/port"),
         HTTP_POST,
-        &RESTServer::VmPortPostHandler))
+        &RestServer::VmPortPostHandler))
     (HandlerSpecifier(
         regex("/syncports"),
         HTTP_POST,
-        &RESTServer::VmPortSyncHandler))
+        &RestServer::VmPortSyncHandler))
     (HandlerSpecifier(
         regex("/port/"
             "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"),
         HTTP_DELETE,
-        &RESTServer::VmPortDeleteHandler))
+        &RestServer::VmPortDeleteHandler))
     (HandlerSpecifier(
         regex("/port/"
             "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"),
         HTTP_GET,
-        &RESTServer::VmPortGetHandler))
+        &RestServer::VmPortGetHandler))
     (HandlerSpecifier(
         regex("/gateway"),
         HTTP_POST,
-        &RESTServer::GatewayPostHandler))
+        &RestServer::GatewayPostHandler))
     (HandlerSpecifier(
         regex("/gateway"),
         HTTP_DELETE,
-        &RESTServer::GatewayDeleteHandler))
+        &RestServer::GatewayDeleteHandler))
     (HandlerSpecifier(
         regex("/vm"),
         HTTP_POST,
-        &RESTServer::VmVnPortPostHandler))
+        &RestServer::VmVnPortPostHandler))
     (HandlerSpecifier(
         regex("/vm/"
             "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"),
         HTTP_DELETE,
-        &RESTServer::VmVnPortDeleteHandler))
+        &RestServer::VmVnPortDeleteHandler))
     (HandlerSpecifier(
         regex("/vm/"
             "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"),
         HTTP_GET,
-        &RESTServer::VmVnPortGetHandler))
+        &RestServer::VmVnPortGetHandler))
     (HandlerSpecifier(
         regex("/vm/"
             "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/"
             "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"),
         HTTP_GET,
-        &RESTServer::VmVnPortGetHandler))
+        &RestServer::VmVnPortGetHandler))
     (HandlerSpecifier(
         regex("/vm-cfg/(.*)"),
         HTTP_GET,
-        &RESTServer::VmVnPortCfgGetHandler))
+        &RestServer::VmVnPortCfgGetHandler))
     (HandlerSpecifier(
         regex("/enable-port/"
             "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"),
         HTTP_PUT,
-        &RESTServer::VmPortEnableHandler))
+        &RestServer::VmPortEnableHandler))
     (HandlerSpecifier(
         regex("/disable-port/"
             "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"),
         HTTP_PUT,
-        &RESTServer::VmPortDisableHandler));
+        &RestServer::VmPortDisableHandler));
 
-RESTServer::RESTServer(Agent *agent)
+RestServer::RestServer(Agent *agent)
     : agent_(agent), http_server_(new HttpServer(agent->event_manager())) {
     http_server_->RegisterHandler(HTTP_WILDCARD_ENTRY,
-        boost::bind(&RESTServer::HandleRequest, this, _1, _2));
+        boost::bind(&RestServer::HandleRequest, this, _1, _2));
 }
 
-void RESTServer::InitDone() {
+void RestServer::InitDone() {
      if (agent_ && agent_->params() && agent_->params()->cat_is_agent_mocked())
          //only if RestServer is used via mocked agent
          http_server_->Initialize(agent_->params()->rest_port());
@@ -316,10 +316,10 @@ void RESTServer::InitDone() {
          http_server_->Initialize(ContrailPorts::PortIpcVrouterAgentPort());
 }
 
-void RESTServer::HandleRequest(HttpSession* session,
+void RestServer::HandleRequest(HttpSession* session,
                                const HttpRequest* request) {
     std::string path = request->UrlPath();
-    BOOST_FOREACH(const RESTServer::HandlerSpecifier& hs, RESTHandlers_) {
+    BOOST_FOREACH(const RestServer::HandlerSpecifier& hs, RESTHandlers_) {
         boost::smatch match;
         if (regex_match(path, match, hs.request_regex) &&
             request->GetMethod() == hs.method) {
@@ -340,7 +340,7 @@ void RESTServer::HandleRequest(HttpSession* session,
     REST::SendErrorResponse(session, "Unknown Request", 404);
 }
 
-void RESTServer::Shutdown() {
+void RestServer::Shutdown() {
     if (http_server_) {
         http_server_->Shutdown();
         TcpServerManager::DeleteServer(http_server_);
@@ -348,5 +348,5 @@ void RESTServer::Shutdown() {
     }
 }
 
-RESTServer::~RESTServer() {
+RestServer::~RestServer() {
 }

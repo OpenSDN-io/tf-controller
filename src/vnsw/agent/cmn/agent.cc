@@ -994,11 +994,11 @@ void Agent::set_vgw(VirtualGateway *vgw) {
     vgw_ = vgw;
 }
 
-RESTServer *Agent::rest_server() const {
+RestServer *Agent::rest_server() const {
     return rest_server_;
 }
 
-void Agent::set_rest_server(RESTServer *r) {
+void Agent::set_rest_server(RestServer *r) {
     rest_server_ = r;
 }
 
