@@ -91,8 +91,12 @@ static bool IsBGPaaSCompositeNextHop(const Agent* agent, const NextHop* nh) {
 // VxlanRoutingManager members
 //
 
-uint32_t VxlanRoutingManager::GetNewLocalSequence() {
+uint32_t VxlanRoutingManager::GetNewLocalSequence(const AgentPath* path) {
     tbb::mutex::scoped_lock lock(mutex_);
+    const NextHop *path_nh = path->nexthop();
+    if (path_nh->GetType() != NextHop::COMPOSITE) {
+        return 0;
+    }
     loc_sequence_++;
     return loc_sequence_;
 }
@@ -489,7 +493,7 @@ void VxlanRoutingManager::AdvertiseBGPaaSRoute(const IpAddress& prefix_ip,
     }
 
     PathPreference path_preference = path->path_preference();
-    path_preference.set_loc_sequence(GetNewLocalSequence());
+    path_preference.set_loc_sequence(GetNewLocalSequence(path));
     const RouteParameters params (Ip4Address(),  // nh address is not needed here
         MacAddress(),  // nh MAC is not needed here
         path->dest_vn_list(),

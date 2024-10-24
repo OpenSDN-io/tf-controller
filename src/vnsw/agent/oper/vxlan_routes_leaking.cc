@@ -114,7 +114,7 @@ bool VxlanRoutingManager::InetRouteNotify(DBTablePartBase *partition,
     }
 
     PathPreference preference = local_vm_port_path->path_preference();
-    preference.set_loc_sequence(GetNewLocalSequence());
+    preference.set_loc_sequence(GetNewLocalSequence(local_vm_port_path));
     // preference.set_preference(100);
     VnListType dest_vns;
     dest_vns.insert(routing_vrf->vn()->GetName());

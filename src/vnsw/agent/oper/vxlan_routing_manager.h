@@ -633,7 +633,7 @@ private:
     /// Auxilliary functions
 
     /// @brief Returns new value of a local sequence. Thread safe version
-    static uint32_t GetNewLocalSequence();
+    static uint32_t GetNewLocalSequence(const AgentPath*);
 
     /// @brief Determines whether the address string contains an IPv4 address
     ///  as substring or not.

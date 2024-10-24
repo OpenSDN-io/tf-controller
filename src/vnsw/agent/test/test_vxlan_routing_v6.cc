@@ -185,24 +185,37 @@ protected:
         InetUnicastRouteEntry *rt =
             RouteGetV6(routing_vrf, addr, plen);
         if (present) {
-            EXPECT_TRUE(rt != NULL);
+            ASSERT_TRUE(rt != nullptr);
+            const auto *rt_path = rt->GetActivePath();
+            ASSERT_TRUE (rt_path != nullptr);
+            const auto &path_preference = rt_path->path_preference();
             const InterfaceNH *intf_nh =
                 dynamic_cast<const InterfaceNH *>(rt->GetActiveNextHop());
             if (intf_nh) {
                 EXPECT_TRUE(intf_nh->GetInterface()->name() == dest_name);
                 EXPECT_TRUE(intf_nh->IsVxlanRouting());
+                if (agent_->local_vm_export_peer()->GetType() ==
+                    rt_path->peer()->GetType()) {
+                    EXPECT_TRUE(path_preference.loc_sequence() == 0);
+                }
+            }
+            const CompositeNH *comp_nh =
+                dynamic_cast<const CompositeNH *>(rt->GetActiveNextHop());
+            if (comp_nh) {
+                EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
+                if (agent_->local_vm_export_peer()->GetType() ==
+                    rt_path->peer()->GetType()) {
+                    EXPECT_TRUE(path_preference.loc_sequence() > 0);
+                }
             }
             const TunnelNH *tunnel_nh =
                 dynamic_cast<const TunnelNH *>(rt->GetActiveNextHop());
             if (tunnel_nh) {
                 EXPECT_TRUE(tunnel_nh->GetDip()->to_string() == dest_name);
             }
-            const AgentPath *path = rt->GetActivePath();
-            if (path) {
-                EXPECT_TRUE(path->origin_vn() == origin_vn);
-            }
+            EXPECT_TRUE(rt_path->origin_vn() == origin_vn);
         } else {
-            EXPECT_TRUE(rt == NULL);
+            EXPECT_TRUE(rt == nullptr);
         }
     }
 
