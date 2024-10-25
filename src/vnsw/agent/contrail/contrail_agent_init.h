@@ -45,7 +45,7 @@ private:
     std::unique_ptr<AgentStatsCollector> stats_collector_;
     std::unique_ptr<FlowStatsManager> flow_stats_manager_;
     std::unique_ptr<PortIpcHandler> port_ipc_handler_;
-    std::unique_ptr<RESTServer> rest_server_;
+    std::unique_ptr<RestServer> rest_server_;
 
     DISALLOW_COPY_AND_ASSIGN(ContrailAgentInit);
 };

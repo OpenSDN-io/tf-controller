@@ -143,7 +143,7 @@ void ContrailAgentInit::CreateModules() {
                                                newkPortsDir));
     agent()->set_port_ipc_handler(port_ipc_handler_.get());
 
-    rest_server_.reset(new RESTServer(agent()));
+    rest_server_.reset(new RestServer(agent()));
     agent()->set_rest_server(rest_server_.get());
 }
 
