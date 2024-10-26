@@ -3,7 +3,10 @@ future
 six
 requests
 python-keystoneclient
+python-ironic-inspector-client
+timeout-decorator
 keystoneauth1
+python-novaclient
 contrail-config-common
 contrail-api-client
 gevent

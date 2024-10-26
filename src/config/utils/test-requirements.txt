@@ -1,9 +1,9 @@
 contrail-config-common
 kombu==4.0.2
-python-novaclient==16.0.0
 keystoneauth1
 contrail-api-server
 gevent
+python-novaclient==16.0.0
 greenlet
 flexmock==0.10.4
 mock<=4.0.2

@@ -12,15 +12,7 @@ def requirements(filename):
     with open(filename) as f:
         lines = f.read().splitlines()
     c = re.compile(r'\s*#.*')
-    result = list(filter(bool, map(lambda y: c.sub('', y).strip(), lines)))
-    if sys.version_info.major < 3 and 'gevent<1.5.0' in result:
-        # current UT doesn't work with gevent==1.4.0 for python2
-        # and gevent==1.1.2 can't be used with python3
-        # Apply this workaround as markers are not supported in requirements.txt
-        result.remove('gevent<1.5.0')
-        result.append('gevent==1.1.2')
-    return result
-
+    return list(filter(bool, map(lambda y: c.sub('', y).strip(), lines)))
 
 setuptools.setup(
     name='schema_transformer',

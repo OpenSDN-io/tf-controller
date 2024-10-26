@@ -1,5 +1,4 @@
 include README.md
 include LICENSE
 include tox.ini
-include requirements.txt
-include test-requirements.txt
+include *.txt

@@ -114,6 +114,14 @@ if 'install' in BUILD_TARGETS:
                               env['PYTHON_INSTALL_OPT'])
     env.Depends(install_cmd, sdist_depends)
     env.Alias('install', install_cmd)
+    install_root = GetOption('install_root')
+    if install_root is None:
+        install_root = ''
+    env.Alias(
+        'install',
+        env.Install(
+            install_root + '/opt/opensdn/pip/kube_manager/',
+            Entry('#controller/src/container/kube-manager/requirements.txt')))
 
 env.SetupPyTestSuite(
     sdist_gen,

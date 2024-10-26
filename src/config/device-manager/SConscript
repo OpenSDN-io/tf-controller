@@ -58,7 +58,7 @@ setup_sources = [
            '.testr.conf',
            '.coveragerc',
            'test',
-          ]
+]
 
 setup_sources_rules = []
 for file in setup_sources:
@@ -144,6 +144,14 @@ if 'install' in BUILD_TARGETS:
                               env['PYTHON_INSTALL_OPT'])
     env.Depends(install_cmd, sdist_depends)
     env.Alias('install', install_cmd)
+    install_root = GetOption('install_root')
+    if install_root is None:
+        install_root = ''
+    env.Alias(
+        'install',
+        env.Install(
+            install_root + '/opt/opensdn/pip/device_manager/',
+            Entry('#controller/src/config/device-manager/requirements.txt')))
 
 env.Alias('install', env.Install(env['INSTALL_CONF'],
           'contrail-device-manager.conf'))
