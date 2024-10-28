@@ -2,6 +2,11 @@ import os
 import platform
 from distutils.version import LooseVersion
 
+try:
+    import distro
+except ImportError:
+    pass
+
 subdirs = [
     'gunit',
     'http_parser',
@@ -11,20 +16,28 @@ subdirs = [
     'hiredis',
     'rabbitmq-c',
     'SimpleAmqpClient',
-    'openvswitch',
-    'ipfix',
-    'tbb'
+    'ipfix'
 ]
 
 etcd_incl = os.environ.get('CONTRAIL_ETCD_INCL')
 if etcd_incl:
    subdirs += ['grpc',]
 
-(distname, version, _) = platform.dist()
-if distname in ['centos', 'redhat'] and LooseVersion(version) >= LooseVersion('7.0'):
+if hasattr(platform, 'dist'):
+   (distname, version, _) = platform.dist()
+else:
+   distname = distro.id()
+   version = distro.version(best=True)
+if distname in ['centos', 'redhat', 'rocky'] and LooseVersion(version) >= LooseVersion('7.0'):
    subdirs += [
       'gperftools',
       'log4cplus',
+   ]
+
+if distname != 'rocky':
+   subdirs += [
+      'openvswitch',
+      'tbb'
    ]
 
 for dir in subdirs:

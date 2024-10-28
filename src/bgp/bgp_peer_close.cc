@@ -355,14 +355,14 @@ void BgpPeerClose::CloseComplete() {
 
 void BgpPeerClose::GetGracefulRestartFamilies(Families *families) const {
     families->clear();
-    for (const auto family : gr_families_) {
+    for (const auto& family : gr_families_) {
         families->insert(Address::FamilyFromString(family));
     }
 }
 
 void BgpPeerClose::GetLongLivedGracefulRestartFamilies(Families *families) const {
     families->clear();
-    for (const auto family : llgr_families_) {
+    for (const auto& family : llgr_families_) {
         families->insert(Address::FamilyFromString(family));
     }
 }

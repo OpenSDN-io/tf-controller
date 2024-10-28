@@ -282,7 +282,7 @@ void BgpNeighborConfig::set_gateway_address(Address::Family family,
 BgpNeighborConfig::AddressFamilyList
 BgpNeighborConfig::GetAddressFamilies() const {
     BgpNeighborConfig::AddressFamilyList family_list;
-    for (const auto family_config : family_attributes_list_) {
+    for (const auto& family_config : family_attributes_list_) {
         family_list.push_back(family_config.family);
     }
     sort(family_list.begin(), family_list.end());

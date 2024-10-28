@@ -13,7 +13,15 @@ from contrail_vrouter_provisioning.toragent.templates import tor_agent_ini
 from contrail_vrouter_provisioning.toragent.templates import tor_agent_service
 from distutils.version import LooseVersion
 
-(PLATFORM, VERSION, EXTRA) = platform.linux_distribution()
+try:
+    import distro
+except ImportError:
+    pass
+
+if hasattr(platform, 'linux_distribution'):
+    (PLATFORM, VERSION, EXTRA) = platform.linux_distribution()
+else:
+    (PLATFORM, VERSION, EXTRA) = distro.linux_distribution()
 
 class TorAgentBaseSetup(ContrailSetup):
     def __init__(self, tor_agent_args, args_str=None):

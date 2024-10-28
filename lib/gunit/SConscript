@@ -1,11 +1,19 @@
 # -*- mode: python; -*-
 
 import platform
+try:
+    import distro
+except ImportError:
+    pass
 
 default = DefaultEnvironment()
 env = default.Clone()
 
-(distname, version, _) = platform.dist()
+if hasattr(platform, 'dist'):
+   (distname, version, _) = platform.dist()
+else:
+   distname = distro.id()
+   version = distro.version(best=True)
 if distname != 'Ubuntu' or float(version) < 14.04:
     if env['CPP_STANDARD'] != 'c++11':
         gtest_path = '#/third_party/gtest-1.6.0'

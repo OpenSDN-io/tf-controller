@@ -65,10 +65,11 @@ if gpp_version == "4.8.5" or gpp_version_major >= 8:
         common.Append(CCFLAGS = ['-Wno-error=deprecated-declarations', '-Wno-deprecated-declarations'])
         # nonull this is compared with NULL
         common.Append(CCFLAGS = ['-Wno-error=nonnull-compare', '-Wno-nonnull-compare'])
+if gpp_version_major >= 11:
+    common.Append(CCFLAGS =['-Wno-nonnull'])
 
 if platform.system() == 'Linux':
-    if not platform.linux_distribution()[0].startswith('XenServer'):
-        common.Append(CCFLAGS = ['-Wno-unused-local-typedefs'])
+    common.Append(CCFLAGS = ['-Wno-unused-local-typedefs'])
 elif platform.system() == 'FreeBSD':
     common.Append(CCFLAGS = ['-Wno-unused-local-typedefs'])
 common.Append(CPPPATH = include)
