@@ -425,7 +425,7 @@ XmppServerConnection *XmppServer::FindConnection(Endpoint remote_endpoint) {
 
 XmppServerConnection *XmppServer::FindConnection(const string &address) {
     tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
-    BOOST_FOREACH(ConnectionMap::value_type &value, connection_map_) {
+    for (auto& value : connection_map_) {
         if (value.second->ToString() == address)
             return value.second;
     }
@@ -434,7 +434,7 @@ XmppServerConnection *XmppServer::FindConnection(const string &address) {
 
 bool XmppServer::ClearConnection(const string &hostname) {
     tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
-    BOOST_FOREACH(ConnectionMap::value_type &value, connection_map_) {
+    for (auto& value : connection_map_) {
         if (value.second->GetComputeHostName() == hostname) {
             value.second->Clear();
             return true;
@@ -445,14 +445,14 @@ bool XmppServer::ClearConnection(const string &hostname) {
 
 void XmppServer::UpdateAllConnections(uint8_t time_out) {
     tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
-    BOOST_FOREACH(ConnectionMap::value_type &value, connection_map_) {
+    for (auto& value : connection_map_) {
         value.second->UpdateKeepAliveTimer(time_out);
     }
 }
 
 void XmppServer::ClearAllConnections() {
     tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
-    BOOST_FOREACH(ConnectionMap::value_type &value, connection_map_) {
+    for (auto& value : connection_map_) {
         value.second->Clear();
     }
 }
@@ -593,7 +593,7 @@ XmppServerConnection *XmppServer::CreateConnection(XmppSession *session) {
 void XmppServer::SetDscpValue(uint8_t value) {
     tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
     dscp_value_ = value;
-    BOOST_FOREACH(ConnectionMap::value_type &value, connection_map_) {
+    for (auto& value : connection_map_) {
         XmppServerConnection *connection = value.second;
         connection->SetDscpValue(dscp_value_);
     }
@@ -739,14 +739,13 @@ void XmppServer::ReleaseConnectionEndpoint(XmppServerConnection *connection) {
 void XmppServer::FillShowConnections(
     vector<ShowXmppConnection> *show_connection_list) const {
     tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
-    BOOST_FOREACH(const ConnectionMap::value_type &value, connection_map_) {
+    for (const auto& value : connection_map_) {
         const XmppServerConnection *connection = value.second;
         ShowXmppConnection show_connection;
         connection->FillShowInfo(&show_connection);
         show_connection_list->push_back(show_connection);
     }
-    BOOST_FOREACH(const XmppServerConnection *connection,
-        deleted_connection_set_) {
+    for (const auto& connection : deleted_connection_set_) {
         ShowXmppConnection show_connection;
         connection->FillShowInfo(&show_connection);
         show_connection_list->push_back(show_connection);

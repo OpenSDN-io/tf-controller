@@ -237,7 +237,7 @@ SslSession *XmppClient::AllocSession(SslSocket *socket) {
 }
 
 XmppClientConnection *XmppClient::FindConnection(const string &address) {
-    BOOST_FOREACH(ConnectionMap::value_type &value, connection_map_) {
+    for (auto& value : connection_map_) {
         if (value.second->ToString() == address)
             return value.second;
     }
