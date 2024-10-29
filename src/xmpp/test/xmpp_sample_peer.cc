@@ -52,7 +52,7 @@ XmppPeerManager::XmppPeerManager(XmppServer *xmpp_server, void *server) {
 }
 
 XmppPeerManager::~XmppPeerManager() {
-    BOOST_FOREACH(XmppPeerMap::value_type &i, peer_mux_map_) {
+    for (auto& i : peer_mux_map_) {
         delete i.second;
     }
     peer_mux_map_.clear();
@@ -66,7 +66,7 @@ XmppSamplePeer *XmppPeerManager::FindPeer(const XmppChannel *mux) {
 }
 
 void XmppPeerManager::VisitPeers(XmppPeerManager::VisitorFn fn) {
-    BOOST_FOREACH(XmppPeerMap::value_type &i, peer_mux_map_) {
+    for (auto& i : peer_mux_map_) {
         fn(i.second);
     }
 }

@@ -118,7 +118,7 @@ size_t XmppChannelMux::ReceiverCount() const {
 
 vector<string> XmppChannelMux::GetReceiverList() const {
     vector<string> receivers;
-    BOOST_FOREACH(const ReceiveCbMap::value_type &value, rxmap_) {
+    for (const auto& value : rxmap_) {
         receivers.push_back(xmps::PeerIdToName(value.first));
     }
     return receivers;
