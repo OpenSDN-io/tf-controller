@@ -60,12 +60,12 @@ static void FillRoutingInstanceInfo(ShowRoutingInstance *sri,
     sri->set_deleted_at(
         UTCUsecToString(rtinstance->deleter()->delete_time_stamp_usecs()));
     vector<string> import_rt;
-    BOOST_FOREACH(RouteTarget rt, rtinstance->GetImportList()) {
+    for (auto rt : rtinstance->GetImportList()) {
         import_rt.push_back(rt.ToString());
     }
     sri->set_import_target(import_rt);
     vector<string> export_rt;
-    BOOST_FOREACH(RouteTarget rt, rtinstance->GetExportList()) {
+    for (auto rt : rtinstance->GetExportList()) {
         export_rt.push_back(rt.ToString());
     }
     sri->set_export_target(export_rt);
@@ -89,7 +89,7 @@ static void FillRoutingInstanceInfo(ShowRoutingInstance *sri,
     sri->set_tables(srit_list);
 
     vector<ShowInstanceRoutingPolicyInfo> policy_list;
-    BOOST_FOREACH(RoutingPolicyInfo info, rtinstance->routing_policies()) {
+    for (auto info : rtinstance->routing_policies()) {
         ShowInstanceRoutingPolicyInfo show_policy_info;
         RoutingPolicyPtr policy = info.first;
         show_policy_info.set_policy_name(policy->name());

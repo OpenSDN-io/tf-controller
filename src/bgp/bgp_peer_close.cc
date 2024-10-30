@@ -214,8 +214,7 @@ bool BgpPeerClose::IsGRReady() const {
 
     // Make sure that forwarding state is preserved for all families in
     // the restarting speaker. (Except for ERMVPN)
-    BOOST_FOREACH(BgpProto::OpenMessage::Capability::GR::Family family,
-                  gr_params_.families) {
+    for (auto family : gr_params_.families) {
         // Check if forwarding state was preserved during restart.
         if (family.forwarding_state_preserved())
             continue;
@@ -324,8 +323,7 @@ bool BgpPeerClose::IsCloseLongLivedGracefulInternal() const {
 
     // Make sure that forwarding state is preserved for all families in
     // the restarting speaker.
-    BOOST_FOREACH(BgpProto::OpenMessage::Capability::LLGR::Family family,
-                  llgr_params_.families) {
+    for (auto family : llgr_params_.families) {
         // Ignore forwarding-state preservation check for certain families.
         Address::Family addr_family =
             BgpAf::AfiSafiToFamily(family.afi, family.safi);
@@ -357,14 +355,14 @@ void BgpPeerClose::CloseComplete() {
 
 void BgpPeerClose::GetGracefulRestartFamilies(Families *families) const {
     families->clear();
-    BOOST_FOREACH(const string family, gr_families_) {
+    for (const auto family : gr_families_) {
         families->insert(Address::FamilyFromString(family));
     }
 }
 
 void BgpPeerClose::GetLongLivedGracefulRestartFamilies(Families *families) const {
     families->clear();
-    BOOST_FOREACH(const string family, llgr_families_) {
+    for (const auto family : llgr_families_) {
         families->insert(Address::FamilyFromString(family));
     }
 }
@@ -387,7 +385,7 @@ void BgpPeerClose::AddGRCapabilities(
         return;
     }
 
-    BOOST_FOREACH(Address::Family family, peer_->supported_families()) {
+    for (auto family : peer_->supported_families()) {
         if (!peer_->LookupFamily(family))
             continue;
         gr_families.push_back(family);
@@ -446,7 +444,7 @@ void BgpPeerClose::AddLLGRCapabilities(
     }
 
     vector<Address::Family> llgr_families;
-    BOOST_FOREACH(Address::Family family, peer_->supported_families()) {
+    for (auto family : peer_->supported_families()) {
         if (peer_->LookupFamily(family))
             llgr_families.push_back(family);
     }

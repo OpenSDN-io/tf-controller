@@ -220,7 +220,7 @@ struct TestVisitorFilter : public DBGraph::VisitorFilter {
     virtual bool VertexFilter(const DBGraphVertex *vertex) const {
         const TestVertex *node = static_cast<const TestVertex *>(vertex);
         std::cout << "TestVisitorFilter: node is " << node->name() << std::endl;
-        BOOST_FOREACH(const string &incl, include_vertex) {
+        for (const auto &incl : include_vertex) {
             if (node->name() == incl) {
                 std::cout << "TestVisitorFilter: node " << node->name()
                           << " in filter" << std::endl;

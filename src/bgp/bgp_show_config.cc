@@ -31,12 +31,12 @@ static void FillBgpInstanceConfigInfo(ShowBgpInstanceConfig *sbic,
     sbic->set_vxlan_id(instance->vxlan_id());
 
     vector<string> import_list;
-    BOOST_FOREACH(std::string rt, instance->import_list()) {
+    for (auto rt : instance->import_list()) {
         import_list.push_back(rt);
     }
     sbic->set_import_target(import_list);
     vector<string> export_list;
-    BOOST_FOREACH(std::string rt, instance->export_list()) {
+    for (auto rt : instance->export_list()) {
         export_list.push_back(rt);
     }
     sbic->set_export_target(export_list);
@@ -50,7 +50,7 @@ static void FillBgpInstanceConfigInfo(ShowBgpInstanceConfig *sbic,
     sbic->set_neighbors(neighbors);
 
     vector<ShowBgpServiceChainConfig> sbscc_list;
-    BOOST_FOREACH(const ServiceChainConfig &sc_config,
+    for (const auto &sc_config :
         instance->service_chain_list()) {
         ShowBgpServiceChainConfig sbscc;
         Address::Family family =
@@ -66,8 +66,8 @@ static void FillBgpInstanceConfigInfo(ShowBgpInstanceConfig *sbic,
 
     vector<ShowBgpStaticRouteConfig> static_route_list;
     vector<Address::Family> families = list_of(Address::INET)(Address::INET6);
-    BOOST_FOREACH(Address::Family family, families) {
-        BOOST_FOREACH(const StaticRouteConfig &static_rt_config,
+    for (auto family : families) {
+        for (const auto &static_rt_config :
             instance->static_routes(family)) {
             ShowBgpStaticRouteConfig sbsrc;
             string prefix = static_rt_config.address.to_string() + "/";
@@ -83,8 +83,8 @@ static void FillBgpInstanceConfigInfo(ShowBgpInstanceConfig *sbic,
         sbic->set_static_routes(static_route_list);
 
     vector<ShowBgpRouteAggregateConfig> aggregate_route_list;
-    BOOST_FOREACH(Address::Family family, families) {
-        BOOST_FOREACH(const AggregateRouteConfig &aggregate_rt_config,
+    for (auto family : families) {
+        for (const auto &aggregate_rt_config :
             instance->aggregate_routes(family)) {
             ShowBgpRouteAggregateConfig sbarc;
             string prefix = aggregate_rt_config.aggregate.to_string() + "/";
@@ -98,7 +98,7 @@ static void FillBgpInstanceConfigInfo(ShowBgpInstanceConfig *sbic,
         sbic->set_aggregate_routes(aggregate_route_list);
 
     vector<ShowBgpInstanceRoutingPolicyConfig> routing_policy_list;
-    BOOST_FOREACH(const RoutingPolicyAttachInfo &policy_config,
+    for (const auto &policy_config :
                   instance->routing_policy_list()) {
         ShowBgpInstanceRoutingPolicyConfig sbirpc;
         sbirpc.set_policy_name(policy_config.routing_policy_);
@@ -215,7 +215,7 @@ static void FillBgpRoutingPolicyInfo(ShowBgpRoutingPolicyConfig *sbrpc,
     const BgpSandeshContext *bsc, const BgpRoutingPolicyConfig *policy) {
     sbrpc->set_name(policy->name());
     std::vector<ShowBgpRoutingPolicyTermConfig> terms_list;
-    BOOST_FOREACH(const RoutingPolicyTermConfig &term, policy->terms()) {
+    for (const auto &term : policy->terms()) {
         ShowBgpRoutingPolicyTermConfig sbrptc;
         sbrptc.set_match(term.match.ToString());
         sbrptc.set_action(term.action.ToString());
@@ -363,7 +363,7 @@ static void FillBgpNeighborConfigInfo(ShowBgpNeighborConfig *sbnc,
     }
 
     vector<ShowBgpNeighborFamilyConfig> sbnfc_list;
-    BOOST_FOREACH(const BgpFamilyAttributesConfig family_config,
+    for (const auto family_config :
         neighbor->family_attributes_list()) {
         ShowBgpNeighborFamilyConfig sbnfc;
         sbnfc.set_family(family_config.family);

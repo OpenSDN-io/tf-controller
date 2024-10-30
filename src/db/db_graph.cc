@@ -213,7 +213,7 @@ void DBGraph::Visit(DBGraphVertex *start, VertexVisitor vertex_visit_fn,
             filter.AllowedEdges(vertex);
 
         if (!allowed_edge_ret.first) {
-            BOOST_FOREACH (std::string allowed_edge, allowed_edge_ret.second) {
+            for (auto allowed_edge : allowed_edge_ret.second) {
                 EdgeContainer fake_container;
                 fake_container.push_back(
                          EdgeType(0, 0, EdgeProperties(allowed_edge, NULL)));

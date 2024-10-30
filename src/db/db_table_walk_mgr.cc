@@ -38,7 +38,7 @@ bool DBTableWalkMgr::ProcessWalkRequestList() {
         current_table_walk_.swap(info->pending_requests);
         DBTable *table = info->table;
         bool walk_table = false;
-        BOOST_FOREACH(DBTable::DBTableWalkRef walker, current_table_walk_) {
+        for (auto walker : current_table_walk_) {
             if (walker->stopped()) continue;
             walker->set_in_progress();
             walker->reset_walk_again();
@@ -58,7 +58,7 @@ bool DBTableWalkMgr::ProcessWalkRequestList() {
 bool DBTableWalkMgr::ProcessWalkDone() {
     CHECK_CONCURRENCY("db::Walker");
     assert(!current_table_walk_.empty());
-    BOOST_FOREACH(DBTable::DBTableWalkRef walker, current_table_walk_) {
+    for (auto walker : current_table_walk_) {
         if (walker->walk_again())
             walker->set_walk_requested();
         else if (!walker->stopped())
@@ -119,7 +119,7 @@ void DBTableWalkMgr::WalkDone() {
 
 bool DBTableWalkMgr::InvokeWalkCb(DBTablePartBase *part, DBEntryBase *entry) {
     uint32_t skip_walk_count = 0;
-    BOOST_FOREACH(DBTable::DBTableWalkRef walker, current_table_walk_) {
+    for (auto walker : current_table_walk_) {
         if (walker->done() || walker->stopped() || walker->walk_again()) {
             skip_walk_count++;
             continue;

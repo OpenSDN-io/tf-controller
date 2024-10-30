@@ -282,8 +282,7 @@ void BgpNeighborConfig::set_gateway_address(Address::Family family,
 BgpNeighborConfig::AddressFamilyList
 BgpNeighborConfig::GetAddressFamilies() const {
     BgpNeighborConfig::AddressFamilyList family_list;
-    BOOST_FOREACH(const BgpFamilyAttributesConfig family_config,
-        family_attributes_list_) {
+    for (const auto family_config : family_attributes_list_) {
         family_list.push_back(family_config.family);
     }
     sort(family_list.begin(), family_list.end());
@@ -424,7 +423,7 @@ string RoutingPolicyMatchConfig::ToString() const {
     oss << "from {" << endl;
     if (!protocols_match.empty()) {
         oss << "    protocol [ ";
-        BOOST_FOREACH(const string &protocol, protocols_match) {
+        for (const auto &protocol : protocols_match) {
             oss << protocol << ",";
         }
         oss.seekp(-1, oss.cur);
@@ -436,14 +435,14 @@ string RoutingPolicyMatchConfig::ToString() const {
         } else {
             oss << "    community (any) [ ";
         }
-        BOOST_FOREACH(const string &community, community_match) {
+        for (const auto &community : community_match) {
             oss << community << ",";
         }
         oss.seekp(-1, oss.cur);
         oss << " ]";
     }
     if (!prefixes_to_match.empty()) {
-        BOOST_FOREACH(const PrefixMatchConfig &match, prefixes_to_match) {
+        for (const auto &match : prefixes_to_match) {
             oss << "    prefix " << match.prefix_to_match << " "
                 << match.prefix_match_type << endl;
         }
@@ -514,7 +513,7 @@ template<>
 void BgpConfigManager::Notify<BgpInstanceConfig>(
         const BgpInstanceConfig *config, EventType event) {
     config->set_last_change_at(UTCTimestampUsec());
-    BOOST_FOREACH(Observers obs, obs_) {
+    for (auto obs : obs_) {
         if (obs.instance) {
             (obs.instance)(config, event);
         }
@@ -525,7 +524,7 @@ template<>
 void BgpConfigManager::Notify<BgpRoutingPolicyConfig>(
         const BgpRoutingPolicyConfig *config, EventType event) {
     config->set_last_change_at(UTCTimestampUsec());
-    BOOST_FOREACH(Observers obs, obs_) {
+    for (auto obs : obs_) {
         if (obs.policy) {
             (obs.policy)(config, event);
         }
@@ -536,7 +535,7 @@ template<>
 void BgpConfigManager::Notify<BgpProtocolConfig>(
         const BgpProtocolConfig *config, EventType event) {
     config->set_last_change_at(UTCTimestampUsec());
-    BOOST_FOREACH(Observers obs, obs_) {
+    for (auto obs : obs_) {
         if (obs.protocol) {
             (obs.protocol)(config, event);
         }
@@ -547,7 +546,7 @@ template<>
 void BgpConfigManager::Notify<BgpNeighborConfig>(
         const BgpNeighborConfig *config, EventType event) {
     config->set_last_change_at(UTCTimestampUsec());
-    BOOST_FOREACH(Observers obs, obs_) {
+    for (auto obs : obs_) {
         if (obs.neighbor) {
             (obs.neighbor)(config, event);
         }
@@ -558,7 +557,7 @@ template<>
 void BgpConfigManager::Notify<BgpGlobalSystemConfig>(
         const BgpGlobalSystemConfig *config, EventType event) {
     config->set_last_change_at(UTCTimestampUsec());
-    BOOST_FOREACH(Observers obs, obs_) {
+    for (auto obs : obs_) {
         if (obs.system) {
             (obs.system)(config, event);
         }
@@ -569,7 +568,7 @@ template<>
 void BgpConfigManager::Notify<BgpGlobalQosConfig>(
         const BgpGlobalQosConfig *config, EventType event) {
     config->set_last_change_at(UTCTimestampUsec());
-    BOOST_FOREACH(Observers obs, obs_) {
+    for (auto obs : obs_) {
         if (obs.qos) {
             (obs.qos)(config, event);
         }

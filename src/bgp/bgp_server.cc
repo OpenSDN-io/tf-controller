@@ -654,7 +654,7 @@ void BgpServer::RemovePeer(TcpSession::Endpoint remote, BgpPeer *peer) {
 }
 
 void BgpServer::ClearBgpaaSPeers() {
-    BOOST_FOREACH(EndpointPeerList::value_type &i, endpoint_peer_list_) {
+    for (auto &i : endpoint_peer_list_) {
         i.second->Clear(BgpProto::Notification::OtherConfigChange);
     }
 }

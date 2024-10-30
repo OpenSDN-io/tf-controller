@@ -83,7 +83,7 @@ void Community::Append(uint32_t value) {
 }
 
 void Community::Append(const std::vector<uint32_t> &communities) {
-    BOOST_FOREACH(uint32_t community, communities) {
+    for (auto community : communities) {
         communities_.push_back(community);
     }
     sort(communities_.begin(), communities_.end());
@@ -94,13 +94,13 @@ void Community::Append(const std::vector<uint32_t> &communities) {
 
 void Community::Set(const std::vector<uint32_t> &communities) {
     communities_.clear();
-    BOOST_FOREACH(uint32_t community, communities) {
+    for (auto community : communities) {
         communities_.push_back(community);
     }
 }
 
 void Community::Remove(const std::vector<uint32_t> &communities) {
-    BOOST_FOREACH(uint32_t community, communities) {
+    for (auto community : communities) {
         communities_.erase(
                std::remove(communities_.begin(), communities_.end(), community),
                communities_.end());
@@ -111,7 +111,7 @@ void Community::Remove() {
 }
 
 bool Community::ContainsValue(uint32_t value) const {
-    BOOST_FOREACH(uint32_t community, communities_) {
+    for (auto community : communities_) {
         if (community == value)
             return true;
     }
@@ -119,7 +119,7 @@ bool Community::ContainsValue(uint32_t value) const {
 }
 
 void Community::BuildStringList(vector<string> *list) const {
-    BOOST_FOREACH(uint32_t community, communities_) {
+    for (auto community : communities_) {
         string name = CommunityType::CommunityToString(community);
         list->push_back(name);
     }

@@ -352,7 +352,7 @@ void DBTable::TableWalker::StartWalk() {
         table_->WalkDone();
     } else {
         TaskScheduler *scheduler = TaskScheduler::GetInstance();
-        BOOST_FOREACH(Task *task, worker_tasks_) scheduler->Enqueue(task);
+        for (auto *task : worker_tasks_) scheduler->Enqueue(task);
     }
 }
 
