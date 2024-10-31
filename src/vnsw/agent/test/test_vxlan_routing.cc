@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2018-2024 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2024 Elena Zizganova
  */
 
 #include "base/os.h"
@@ -1848,10 +1849,9 @@ TEST_F(VxlanRoutingTest, Composite_tunnels_and_interfaces) {
     //EXPECT_TRUE(lr_vrf_rt->GetActivePath()->vxlan_id() == routing_vrf->vxlan_id());
     if (lr_vrf_rt) {
         const Route::PathList & path_list = lr_vrf_rt->GetPathList();
-        for (Route::PathList::const_iterator it = path_list.begin();
-            it != path_list.end(); ++it) {
+        for (const auto& path_it : path_list) {
             const AgentPath* path =
-                dynamic_cast<const AgentPath*>(it.operator->());
+                dynamic_cast<const AgentPath*>(&path_it);
             if (!path)
                 continue;
             if ((path->nexthop())&&(path->nexthop()->GetType() == NextHop::COMPOSITE)) {
@@ -1859,26 +1859,27 @@ TEST_F(VxlanRoutingTest, Composite_tunnels_and_interfaces) {
                      (path->nexthop());
                 EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
                 EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
+                EXPECT_TRUE(comp_nh->PolicyEnabled()==true);
     
-                const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[0]->nh());
-                if (nh_nh != NULL)
+                
+                if (comp_nh->component_nh_list()[0] != nullptr)
                 {
-                    const TunnelNH *nh_nh2 = dynamic_cast<const TunnelNH *>(comp_nh->component_nh_list()[1]->nh());
-                    EXPECT_TRUE(nh_nh2 != NULL);
+                    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>
+                        (comp_nh->component_nh_list()[0]->nh());
+                    EXPECT_TRUE(comp_nh->component_nh_list()[1] == nullptr);
                 }
                 else
                 {
-                    const TunnelNH *nh_nh1 = dynamic_cast<const TunnelNH *>(comp_nh->component_nh_list()[0]->nh());
-                    EXPECT_TRUE(nh_nh1 != NULL);
-                    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[1]->nh());
-                    EXPECT_TRUE(nh_nh2 != NULL);
+                    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>
+                        (comp_nh->component_nh_list()[1]->nh());
+                    EXPECT_TRUE(nh_nh2 != nullptr);
                 }
             }
         }
     }
     // Verify route for local vm port is still present
     ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.1"), 32,
-            "vnet1", true, "vn1");
+            "vnet1", true);
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("1.1.1.1"), 32, false);
 

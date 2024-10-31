@@ -52,6 +52,7 @@ public:
         EVPN_ROUTING_PEER,
         LINKLOCAL_PEER,
         ECMP_PEER,
+        VXLAN_BGP_PEER,
         LOCAL_VM_PORT_PEER,
         LOCAL_VM_PEER,
         LOCAL_PEER,
@@ -62,8 +63,7 @@ public:
         MULTICAST_TOR_PEER,
         MAC_VM_BINDING_PEER,
         INET_EVPN_PEER,
-        MAC_LEARNING_PEER,
-        VXLAN_BGP_PEER, /* The peer has the lowest priority
+        MAC_LEARNING_PEER, /* The peer has the lowest priority
                           to prevent interference with other paths */
     };
 

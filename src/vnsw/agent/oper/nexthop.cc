@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2013-2024 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2024 Elena Zizganova
  */
 
 #include <boost/uuid/uuid_io.hpp>
@@ -2434,16 +2435,17 @@ void CompositeNHKey::insert(ComponentNHKeyPtr new_component_nh_key) {
     component_nh_key_list_.push_back(new_component_nh_key);
 }
 
-void CompositeNHKey::erase(ComponentNHKeyPtr nh_key) {
-    ComponentNHKeyList::iterator it;
-    for (it = component_nh_key_list_.begin();
-         it != component_nh_key_list_.end(); it++) {
-        if ((*it) == NULL) {
+void CompositeNHKey::erase(ComponentNHKeyPtr nh_key_ptr) {
+    if (nh_key_ptr==nullptr){
+        return;
+    }
+    for (auto &com_key_ptr : component_nh_key_list_)
+    {
+        if (com_key_ptr==nullptr){
             continue;
         }
-        //Find the nexthop and compare
-        if (**it == *nh_key) {
-            (*it).reset();
+        if (*com_key_ptr==*nh_key_ptr ){
+            com_key_ptr.reset();
             return;
         }
     }

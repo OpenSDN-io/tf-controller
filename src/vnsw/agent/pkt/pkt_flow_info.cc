@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2013-2024 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2024 Elena Zizganova
  */
 
 
@@ -1366,15 +1367,33 @@ void PktFlowInfo::NatVxlanVrfTranslate(const PktInfo *pkt, PktControlInfo *in,
     InetUnicastRouteEntry *inet_rt = vrf->GetUcRoute(pkt->ip_daddr);
     const NextHop *rt_nh = inet_rt ?
         inet_rt->GetActiveNextHop() : NULL;
-    if (rt_nh == NULL || rt_nh->GetType() != NextHop::INTERFACE) {
+    if (rt_nh == NULL || (rt_nh->GetType() != NextHop::INTERFACE && rt_nh->GetType() != NextHop::COMPOSITE)) {
         return;
     }
 
-    const Interface *intf = static_cast<const InterfaceNH*>
-        (rt_nh)->GetInterface();
-    if (intf == NULL || intf->type() != Interface::VM_INTERFACE ||
-        static_cast<const VmInterface*>(intf)->FloatingIpCount() == 0) {
-        return;
+    if (rt_nh->GetType() == NextHop::INTERFACE){
+        const Interface *intf = static_cast<const InterfaceNH*>
+            (rt_nh)->GetInterface();
+        if (intf == NULL || intf->type() != Interface::VM_INTERFACE ||
+            static_cast<const VmInterface*>(intf)->FloatingIpCount() == 0) {
+            return;
+        }
+    }
+    if (rt_nh->GetType() == NextHop::COMPOSITE){
+        const CompositeNH *composite_nh = static_cast<const CompositeNH*>(rt_nh);
+        uint32_t comp_nh_count = composite_nh->ComponentNHCount();
+        for (uint32_t i=0; i < comp_nh_count; i++) {
+            const NextHop * c_nh = composite_nh->GetNH(i);
+            if (c_nh == NULL){
+                continue;
+            } else {
+                const Interface *intf = static_cast<const InterfaceNH*>(c_nh)->GetInterface();
+                if (intf == NULL || intf->type() != Interface::VM_INTERFACE ||
+                    static_cast<const VmInterface*>(intf)->FloatingIpCount() == 0) {
+                    return;
+                }
+            }
+        }
     }
 
     ChangeVrf(pkt, out, vrf);

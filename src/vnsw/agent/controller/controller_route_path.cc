@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2014-2024 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2024 Elena Zizganova
  */
 
 #include <boost/uuid/uuid_io.hpp>
@@ -206,6 +207,8 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
     sg_list_ = item->entry.security_group_list.security_group;
 
     ComponentNHKeyList comp_nh_list;
+    bool intf_exist = false;
+    bool tun_exist = false;
     bool comp_nh_policy = false;
     for (uint32_t i = 0; i < item->entry.next_hops.next_hop.size(); i++) {
         std::string nexthop_addr =
@@ -278,6 +281,7 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
                         vrf_name,
                         item->entry.next_hops.next_hop[i],
                         comp_nh_list);
+                    intf_exist = true;
                 }
             }
         } else {
@@ -320,6 +324,7 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
                 if (is_routing_vrf) {
                     nh_key = agent_->oper_db()->vxlan_routing_manager()->
                         AllocateTunnelNextHopKey(addr, mac);
+                    tun_exist = true;
                 } else {
                     nh_key = new TunnelNHKey(agent_->fabric_vrf_name(),
                         agent_->router_id(),
@@ -329,12 +334,27 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
                         mac);
                 }
 
-               std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
+                std::unique_ptr<const NextHopKey> nh_key_ptr(nh_key);
                 ComponentNHKeyPtr component_nh_key(new ComponentNHKey(label,
                                                                     std::move(nh_key_ptr)));
                 comp_nh_list.push_back(component_nh_key);
             }
         }
+    }
+
+    if (intf_exist && tun_exist) {
+        for (auto &comp_nh_ptr : comp_nh_list) {
+            if (comp_nh_ptr == nullptr) {
+                continue;
+            }
+            if (comp_nh_ptr->nh_key()->GetType() != NextHop::INTERFACE)
+            {
+                comp_nh_ptr.reset();
+            }
+        }
+    }
+    if (intf_exist) {
+        comp_nh_policy = true;
     }
 
     tunnel_bmap_ = encap;
