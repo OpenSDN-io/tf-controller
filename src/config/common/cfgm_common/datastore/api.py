@@ -258,6 +258,15 @@ class API(Trace):
             keyspace_name=keyspace_name)
 
     @abc.abstractmethod
+    def _Get_Keys(self, cf_name, rows):
+        pass
+
+    @Trace.trace
+    def get_keys(self, cf_name, rows):
+        """Get keys by rows value"""
+        return self._Get_Keys(cf_name=cf_name, rows=rows)
+
+    @abc.abstractmethod
     def _Get_One_Col(self, cf_name, key, column):
         pass
 

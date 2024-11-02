@@ -41,6 +41,9 @@ class FakeDriver(datastore_api.CassandraDriver):
     def _Get_One_Col(self, cf_name, key, column):
         pass
 
+    def _Get_Keys(self, cf_name, rows):
+        pass
+
     def _Insert(self, key, columns, keyspace_name=None, cf_name=None,
                 batch=None, column_family=None):
         pass
