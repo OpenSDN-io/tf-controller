@@ -971,6 +971,7 @@ class PhysicalRouterDM(DBBaseDM):
                     self.nc_q.get(True, timeout)
                 except queue.Empty:
                     pass
+
     # end wait_for_config_push
 
     def delete_handler(self):
@@ -1048,16 +1049,17 @@ class PhysicalRouterDM(DBBaseDM):
                 self.config_repush_count = 0
             self.nc_q.put_nowait(1)
         except queue.Full:
-            pass
+            self._logger.warn(f"queue is full")
+
     # end
 
     def nc_handler(self):
         while self.nc_q.get() is not None:
             try:
                 self.push_config()
-            except Exception as e:
+            except Exception:
                 tb = traceback.format_exc()
-                self._logger.error("Exception: " + str(e) + tb)
+                self._logger.error("Exception in nc_handler: " + tb)
     # end
 
     def is_valid_ip(self, ip_str):
@@ -1096,9 +1098,9 @@ class PhysicalRouterDM(DBBaseDM):
                 subnet=subnet_uuid)
             if ip_addr:
                 return ip_addr[0]  # ip_alloc default ip count is 1
-        except Exception as e:
+        except Exception:
             tb = traceback.format_exc()
-            self._logger.error("Exception: " + str(e) + tb)
+            self._logger.error("Exception: " + tb)
             return None
     # end
 
@@ -1113,9 +1115,9 @@ class PhysicalRouterDM(DBBaseDM):
             self._manager._vnc_lib.virtual_network_ip_free(
                 vn, [ip_addr])
             return True
-        except Exception as e:
+        except Exception:
             tb = traceback.format_exc()
-            self._logger.error("Exception: " + str(e) + tb)
+            self._logger.error("Exception: " + tb)
             return False
     # end
 
@@ -5578,23 +5580,32 @@ class DMCassandraDB(VncObjectDBClient):
         vlan_alloc = self.get_pnf_vlan_allocator(pr_id)
         try:
             vlan_alloc.reserve(0)
-        except ResourceExistsError:
+        except ResourceExistsError as e:
+            self._logger.debug(
+                f"VLAN already reserved for physical router {pr_id}: {str(e)}"
+            )
             # must have been reserved already, restart case
-            pass
         vlan_id = vlan_alloc.alloc(si_id)
         pr_set = self.get_si_pr_set(si_id)
         for other_pr_uuid in pr_set:
             if other_pr_uuid != pr_id:
                 try:
                     self.get_pnf_vlan_allocator(other_pr_uuid).reserve(vlan_id)
-                except ResourceExistsError:
-                    pass
+                except ResourceExistsError as e:
+                    self._logger.debug(
+                        f"VLAN {vlan_id} already reserved for physical" +
+                        f"router {other_pr_uuid}: {str(e)}"
+                    )
+
         unit_alloc = self.get_pnf_unit_allocator(pi_id)
         try:
             unit_alloc.reserve(0)
-        except ResourceExistsError:
-            # must have been reserved already, restart case
-            pass
+        except ResourceExistsError as e:
+            self._logger.debug(
+                f"Unit already reserved for physical interface" +
+                f" {pi_id}: {str(e)}"
+            )
+
         unit_id = unit_alloc.alloc(si_id)
         pnf_resources = {
             "network_id": str(network_id),

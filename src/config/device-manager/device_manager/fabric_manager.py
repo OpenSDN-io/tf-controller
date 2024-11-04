@@ -228,7 +228,10 @@ class FabricManager(object):
                                                      physical_role_uuid,
                                                      None, 'ADD')
                     except NoIdError:
-                        pass
+                        self.logger.warn(
+                            f"Physical role '{physical_role}' not found for" +
+                            f" physical router {pr.get('uuid')}"
+                        )
                 if overlay_roles:
                     for overlay_role in overlay_roles or []:
                         try:
@@ -243,9 +246,14 @@ class FabricManager(object):
                                                          overlay_role_uuid,
                                                          None, 'ADD')
                         except NoIdError:
-                            pass
+                            self.logger.warn(
+                                f"Overlay role '{overlay_role}' not found" +
+                                f" for physical router {pr.get('uuid')}"
+                            )
             except NoIdError:
-                pass
+                self.logger.warn(
+                    f"NoIdError: {pr.get('uuid')}"
+                )
 
         # handle replacing master-LR as <fab_name>-master-LR here
         # as part of in-place cluster update. Copy the master-LR
@@ -266,7 +274,9 @@ class FabricManager(object):
                     ]
                 )
             except NoIdError:
-                pass
+                self.logger.warn(
+                    f"NoIdError: default-domain:admin:master-LR"
+                )
 
         if master_lr_obj:
             vmi_refs = master_lr_obj.get_virtual_machine_interface_refs(
@@ -284,8 +294,9 @@ class FabricManager(object):
                 # Now delete master-LR object
                 # this will delete lr annotations from fabric in
                 # corresponding VNs if they exist
+                id_lr = master_lr_obj.get_uuid()
                 self._vnc_api.logical_router_delete(
-                    id=master_lr_obj.get_uuid())
+                    id=id_lr)
 
                 # try to obtain the fabric refs either by fabric ref if one
                 # is available or from pr_refs if available
@@ -323,7 +334,9 @@ class FabricManager(object):
                                                   vmi_refs=vmi_refs,
                                                   pr_refs=pr_refs)
             except NoIdError:
-                pass
+                self.logger.warn(
+                    f"NoIdError: {id_lr}"
+                )
             except Exception as exc:
                 err_msg = "An exception occurred while attempting to " \
                           "create fabric master-LR: %s " % exc.message
@@ -354,7 +367,9 @@ class FabricManager(object):
                                               perms2,
                                               fabric_obj=fab_obj)
             except RefsExistError:
-                pass
+                self.logger.warn(
+                    f"RefsExistError: {fabric.get('uuid')}"
+                )
             except Exception as exc:
                 err_msg = "An exception occurred while attempting to " \
                           "create fabric master-LR: %s " % exc.message
@@ -369,7 +384,9 @@ class FabricManager(object):
                 self._vnc_api.job_template_delete(
                     fq_name=['default-global-system-config', jt_name])
             except NoIdError:
-                pass
+                self.logger.warn(
+                    f"NoIdError: {jt_name}"
+                )
 
     # end _load_init_data
 
