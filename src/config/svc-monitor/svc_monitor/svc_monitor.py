@@ -5,14 +5,12 @@
 """
 Service monitor to instantiate/scale/monitor services like firewall, LB, ...
 """
-from __future__ import absolute_import
 
 import sys
 import gevent
 from gevent import monkey
 monkey.patch_all(thread=not 'unittest' in sys.modules)
 
-from gevent.signal import signal as gevent_signal
 from cfgm_common.zkclient import ZookeeperClient
 from six import StringIO
 import configparser
@@ -931,7 +929,7 @@ def run_svc_monitor(sm_logger, args=None):
     """ @sighup
     SIGHUP handler to indicate configuration changes
     """
-    gevent_signal(signal.SIGHUP, monitor.sighup_handler)
+    gevent.hub.signal(signal.SIGHUP, monitor.sighup_handler)
 
     # Retry till API server is up
     connected = False

@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
@@ -16,7 +15,6 @@ from cfgm_common.vnc_object_db import VncObjectDBClient
 from cfgm_common.zkclient import ZookeeperClient
 import gevent
 from gevent import monkey
-from gevent.signal import signal as gevent_signal
 import psutil
 
 from .device_job_manager import DeviceJobManager
@@ -247,9 +245,9 @@ def main(args_str=None):
     if 'host_ip' not in args:
         args.host_ip = socket.gethostbyname(socket.getfqdn())
 
-    gevent_signal(signal.SIGHUP, sighup_handler)
-    gevent_signal(signal.SIGTERM, sigterm_handler)
-    gevent_signal(signal.SIGINT, sigterm_handler)
+    gevent.hub.signal(signal.SIGHUP, sighup_handler)
+    gevent.hub.signal(signal.SIGTERM, sigterm_handler)
+    gevent.hub.signal(signal.SIGINT, sigterm_handler)
 
     if args.dm_run_mode == 'Full':
         dm_logger = DeviceManagerLogger(args, http_server_port=-1)

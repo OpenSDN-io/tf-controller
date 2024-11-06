@@ -10,10 +10,6 @@ configuration model/schema to a representation needed by VNC Control Plane
 (BGP-based)
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import argparse
 
 # Import kazoo.client before monkey patching
@@ -34,7 +30,6 @@ import time
 from cfgm_common import vnc_cgitb
 from cfgm_common.exceptions import NoIdError, ResourceExhaustionError
 from cfgm_common.vnc_db import DBBase
-from gevent.signal import signal as gevent_signal
 from past.utils import old_div
 from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
@@ -43,7 +38,6 @@ from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from pysandesh.sandesh_base import Sandesh, SandeshConfig
 import requests
 from six import string_types
-from six.moves import reload_module
 
 from configparser import ConfigParser, NoOptionError
 
@@ -79,9 +73,6 @@ from .resources.virtual_network import VirtualNetworkST
 from .resources.virtual_port_group import VirtualPortGroupST
 from .st_amqp import STAmqpHandle
 
-if sys.version_info[0] < 3:
-    reload_module(sys)
-    sys.setdefaultencoding('UTF8')
 # connection to api-server
 _vnc_lib = None
 # zookeeper client connection
@@ -854,7 +845,7 @@ def run_schema_transformer(st_logger, args):
     """ @sighup
     SIGHUP handler to indicate configuration changes
     """
-    gevent_signal(signal.SIGHUP, transformer.sighup_handler)
+    gevent.hub.signal(signal.SIGHUP, transformer.sighup_handler)
 
     try:
         gevent.joinall(transformer._vnc_amqp._vnc_kombu.greenlets())
