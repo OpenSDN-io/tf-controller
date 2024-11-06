@@ -1,24 +1,13 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from builtins import object
-import os
-import sys
-import uuid
 import logging
 
-import testtools
-from testtools.matchers import Equals, MismatchError, Not, Contains
-from testtools import content, content_type, ExpectedException
 import json
 
 from vnc_api.vnc_api import *
 import keystoneclient.exceptions as kc_exceptions
 import keystoneclient.v2_0.client as keystone
-from keystonemiddleware import auth_token
-from cfgm_common import rest, utils
-import cfgm_common
 from cfgm_common import vnc_cgitb
 vnc_cgitb.enable(format='text')
 

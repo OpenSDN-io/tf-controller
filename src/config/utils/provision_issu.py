@@ -108,22 +108,22 @@ class ISSUContrailPostProvisioner:
         if args.conf_file:
             args_obj.config_section = config
 
-        if isinstance(args_obj.db_host_info, basestring):
+        if isinstance(args_obj.db_host_info, str):
             json_string=args_obj.db_host_info.replace("'", "\"")
             args_obj.db_host_info=\
                 json.loads(json_string)
 
-        if isinstance(args_obj.config_host_info, basestring):
+        if isinstance(args_obj.config_host_info, str):
             json_string=args_obj.config_host_info.replace("'", "\"")
             args_obj.config_host_info=\
                 json.loads(json_string)
 
-        if isinstance(args_obj.analytics_host_info, basestring):
+        if isinstance(args_obj.analytics_host_info, str):
             json_string=args_obj.analytics_host_info.replace("'", "\"")
             args_obj.analytics_host_info=\
                 json.loads(json_string)
 
-        if isinstance(args_obj.control_host_info, basestring):
+        if isinstance(args_obj.control_host_info, str):
             json_string=args_obj.control_host_info.replace("'", "\"")
             args_obj.control_host_info=\
                 json.loads(json_string)

@@ -1,8 +1,3 @@
-from __future__ import absolute_import
-
-from builtins import object
-from builtins import range
-from builtins import str
 import copy
 from datetime import datetime
 import json
@@ -17,7 +12,6 @@ from cfgm_common.exceptions import NoIdError
 from cfgm_common.tests import test_common
 from keystonemiddleware import auth_token
 import mock
-from past.builtins import basestring
 import requests
 from testtools import ExpectedException
 from vnc_api import vnc_api
@@ -245,7 +239,7 @@ class TestBasic(test_case.NeutronBackendTestCase):
         resp = self._api_svr_app.post_json('/neutron/port', body)
         port_dict = json.loads(resp.text)
         self.assertTrue(isinstance(port_dict['binding:profile'], dict))
-        self.assertTrue(isinstance(port_dict['binding:host_id'], basestring))
+        self.assertTrue(isinstance(port_dict['binding:host_id'], str))
 
         # Clean the resources
         self.delete_resource('port', proj_uuid, port_dict['id'])

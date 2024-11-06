@@ -5,9 +5,6 @@
 """This file contains job manager api which involves playbook interactions."""
 
 import ast
-from builtins import map
-from builtins import object
-from builtins import str
 import json
 import os
 import signal

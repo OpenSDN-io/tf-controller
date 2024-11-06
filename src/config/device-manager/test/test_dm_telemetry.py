@@ -1,8 +1,6 @@
 #
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import absolute_import
-from builtins import str
 import gevent
 from attrdict import AttrDict
 from .test_dm_ansible_common import TestAnsibleCommonDM

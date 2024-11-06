@@ -13,8 +13,6 @@
 
 
 import argparse
-from builtins import object
-from builtins import str
 import errno
 import json
 import sys

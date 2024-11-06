@@ -2,7 +2,6 @@
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import absolute_import
 import mock
 from attrdict import AttrDict
 from cfgm_common.tests.test_common import retries

@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 #
 # Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
 #

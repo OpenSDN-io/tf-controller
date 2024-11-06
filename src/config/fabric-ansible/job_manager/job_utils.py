@@ -4,11 +4,7 @@
 
 """Contains utility functions used by the job manager."""
 
-from __future__ import absolute_import
-
 import base64
-from builtins import object
-from builtins import str
 import collections
 from enum import Enum
 import json

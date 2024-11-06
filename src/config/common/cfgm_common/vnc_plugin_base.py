@@ -1,11 +1,9 @@
-from __future__ import unicode_literals
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
 import abc
 from vnc_api.gen.vnc_api_extension_gen import ResourceApiGen
-from future.utils import with_metaclass
 
 class Resync(object):
     @abc.abstractmethod
@@ -54,7 +52,7 @@ class NeutronApi(object):
     #end __init__
 
 
-class AuthBase(with_metaclass(abc.ABCMeta, object)):
+class AuthBase(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __init__(self, auth_method, auth_opts):
         pass

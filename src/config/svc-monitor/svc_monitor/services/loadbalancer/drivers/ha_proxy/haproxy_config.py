@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from svc_monitor.config_db import *
 from os.path import dirname, exists, join
 import yaml

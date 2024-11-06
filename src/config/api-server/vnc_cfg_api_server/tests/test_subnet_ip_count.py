@@ -1,30 +1,13 @@
-from __future__ import print_function
-from __future__ import absolute_import
 #
 # Copyright (c) 2013,2014 Juniper Networks, Inc. All rights reserved.
 #
-from builtins import str
-import os
-import sys
-import socket
-import errno
 import uuid
 import logging
 
-import testtools
-from testtools.matchers import Equals, MismatchError, Not, Contains
-from testtools import content, content_type, ExpectedException
 import unittest
-import re
-import json
-import copy
-import inspect
-import requests
 
 from vnc_api.vnc_api import *
-import vnc_api.gen.vnc_api_test_gen
 from vnc_api.gen.resource_test import *
-import cfgm_common
 from cfgm_common import vnc_cgitb
 vnc_cgitb.enable(format='text')
 

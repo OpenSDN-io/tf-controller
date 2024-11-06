@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import absolute_import
 import gevent
 import gevent.monkey
 gevent.monkey.patch_all(thread=False)

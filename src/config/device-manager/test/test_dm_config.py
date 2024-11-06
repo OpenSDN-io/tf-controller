@@ -1,9 +1,6 @@
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import range
 import sys
 import gevent
 from . import test_case
@@ -14,11 +11,6 @@ import copy
 from unittest import skip
 from vnc_api.vnc_api import *
 from .test_dm_utils import fake_netconf_connect
-
-try:
-    import device_manager
-except ImportError:
-    from device_manager import device_manager
 
 from time import sleep
 

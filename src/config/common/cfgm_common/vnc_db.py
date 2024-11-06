@@ -5,16 +5,14 @@
 """
 This file contains implementation of database model for contrail config daemons
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from future.utils import with_metaclass
 from collections import OrderedDict
 from six import StringIO
 from vnc_api.gen.resource_client import *
 
 from cfgm_common.utils import cgitb_hook
 from .exceptions import NoIdError
-from .utils import obj_type_to_vnc_class, compare_refs
+from vnc_api.utils import obj_type_to_vnc_class
+from .utils import compare_refs
 
 
 class DBBaseMeta(type):
@@ -39,7 +37,7 @@ class DBBaseMeta(type):
         return item in cls._dict
 
 
-class DBBase(object, with_metaclass(DBBaseMeta)):
+class DBBase(metaclass=DBBaseMeta):
     # This is the base class for all DB objects. All derived objects must
     # have a class member called _dict of dictionary type.
     # The init method of this class must be callled before using any functions

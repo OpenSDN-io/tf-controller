@@ -1,35 +1,14 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
-import os
-import sys
-import socket
-import errno
-import uuid
 import logging
-import tempfile
 
-import fixtures
-import testtools
-from testtools.matchers import Equals, MismatchError, Not, Contains, LessThan
-from testtools import content, content_type, ExpectedException
 import unittest
-import re
-import json
-import copy
-from lxml import etree
 
 from vnc_api.vnc_api import *
-from cfgm_common import exceptions as vnc_exceptions
-import vnc_api.gen.vnc_api_test_gen
 from vnc_api.gen.resource_test import *
-import cfgm_common
-from cfgm_common import vnc_plugin_base
 from cfgm_common import vnc_cgitb
-from cfgm_common import db_json_exim
 vnc_cgitb.enable(format='text')
 
 from . import test_case

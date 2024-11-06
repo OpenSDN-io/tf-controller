@@ -1,11 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-
-from builtins import object
-
-from future import standard_library
-standard_library.install_aliases()  # noqa
 import json                         # noqa
 import pprint
 from urllib.parse import urlparse

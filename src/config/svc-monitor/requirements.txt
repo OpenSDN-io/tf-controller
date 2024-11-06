@@ -9,3 +9,4 @@ requests
 sandesh==0.1.dev0
 sandesh-common
 six
+python-novaclient

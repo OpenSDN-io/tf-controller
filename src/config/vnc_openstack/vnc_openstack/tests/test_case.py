@@ -1,18 +1,12 @@
-from __future__ import absolute_import
-
-from builtins import range
 import json
 
 import bottle
 from cfgm_common.tests.test_common import setup_extra_flexmock, TestCase
 from cfgm_common.tests.test_utils import FakeExtensionManager
 from cfgm_common.tests.test_utils import get_keystone_client
-from future import standard_library
 import stevedore.extension
 from testtools.matchers import Equals
 import vnc_openstack
-
-standard_library.install_aliases()
 
 
 @bottle.hook('after_request')

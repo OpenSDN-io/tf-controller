@@ -2,9 +2,6 @@
 # Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import int
-from builtins import range
-from builtins import str
 from collections import defaultdict
 import json
 import logging

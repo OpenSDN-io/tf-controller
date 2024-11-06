@@ -1,8 +1,6 @@
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import absolute_import
-import sys
 import gevent
 import itertools
 from cfgm_common.tests.test_common import retries

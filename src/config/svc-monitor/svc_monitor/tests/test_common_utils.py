@@ -1,5 +1,3 @@
-from builtins import str
-from builtins import object
 from svc_monitor.config_db import *
 from vnc_api.vnc_api import *
 

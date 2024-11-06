@@ -1,14 +1,12 @@
-from __future__ import print_function
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 # Create, read, update and delete an object
 #
-from builtins import str
-from builtins import object
 import argparse
 import uuid as __uuid
 import os
+import sys
 
 from vnc_api.vnc_api import *
 from vnc_api.gen.resource_xsd import *

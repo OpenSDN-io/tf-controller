@@ -1,7 +1,6 @@
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import absolute_import
 from unittest import skip
 from .test_dm_bgp import TestBgpDM
 

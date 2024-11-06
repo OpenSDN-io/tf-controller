@@ -1,9 +1,6 @@
 """
 This file contains sanity test for activate maintenance mode workflow
 """
-from __future__ import absolute_import
-from builtins import str
-from builtins import object
 import sys
 from . import config
 

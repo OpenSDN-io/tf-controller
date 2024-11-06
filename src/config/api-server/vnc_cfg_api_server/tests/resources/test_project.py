@@ -2,7 +2,6 @@
 # Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
 import logging
 import uuid
 

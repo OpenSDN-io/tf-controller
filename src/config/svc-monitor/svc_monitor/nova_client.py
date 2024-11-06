@@ -1,6 +1,3 @@
-
-from builtins import str
-from builtins import object
 from novaclient import client as nc
 from novaclient import exceptions as nc_exc
 

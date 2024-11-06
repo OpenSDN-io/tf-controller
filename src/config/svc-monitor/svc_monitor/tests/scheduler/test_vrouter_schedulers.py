@@ -17,15 +17,11 @@
 #
 # @author: Edouard Thuleau, Cloudwatt.
 
-from builtins import object
 import mock
 import unittest
 import six
-import cfgm_common.analytics_client as analytics
-import cfgm_common.svc_info as svc_info
 from sandesh_common.vns import constants
 import svc_monitor.scheduler.vrouter_scheduler as scheduler
-from vnc_api.vnc_api import VirtualRouter, VirtualMachine
 
 from svc_monitor.config_db import ServiceInstanceSM, VirtualRouterSM
 import svc_monitor.tests.test_common_utils as test_utils

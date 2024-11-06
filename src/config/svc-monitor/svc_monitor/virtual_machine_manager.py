@@ -17,20 +17,11 @@
 #
 # @author: Rudra Rugge
 
-from __future__ import absolute_import
-
-from builtins import str
-from builtins import range
-
-from cfgm_common import svc_info
 from vnc_api.vnc_api import *
 from .instance_manager import InstanceManager
 from .config_db import VirtualMachineSM
 
-try:
-    from novaclient import exceptions as nc_exc
-except ImportError:
-    pass
+from novaclient import exceptions as nc_exc
 
 class VirtualMachineManager(InstanceManager):
 

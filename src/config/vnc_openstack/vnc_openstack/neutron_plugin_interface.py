@@ -1,8 +1,6 @@
 #
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import absolute_import
-
 import collections
 import configparser
 from pprint import pformat
@@ -10,12 +8,9 @@ from pprint import pformat
 import bottle
 from cfgm_common import jsonutils as json
 from cfgm_common.utils import CacheContainer
-from future import standard_library
 import six
 
 from .neutron_plugin_db import DBInterface
-
-standard_library.install_aliases()
 
 
 @bottle.error(400)

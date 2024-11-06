@@ -7,7 +7,6 @@ This file contains implementation of netconf interface for QFX physical router
 configuration manager
 """
 
-from builtins import str
 import copy
 
 import abc

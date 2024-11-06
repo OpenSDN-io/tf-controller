@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright (c) 2014 Cloudwatt
@@ -18,8 +17,6 @@ from __future__ import unicode_literals
 #
 # @author: Sylvain Afchain, eNovance.
 
-from future import standard_library
-standard_library.install_aliases()  # noqa
 import requests
 from six.moves.urllib import parse as urlparse
 

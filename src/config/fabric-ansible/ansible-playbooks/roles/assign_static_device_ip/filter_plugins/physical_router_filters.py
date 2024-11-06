@@ -4,12 +4,9 @@
 # Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import object
-from builtins import str
 import ipaddress
 
 from cfgm_common.exceptions import NoIdError
-from filter_utils import _task_error_log  # noqa
 from netaddr import IPAddress, IPNetwork
 from netifaces import AF_INET, ifaddresses, interfaces
 from pyroute2 import IPRoute

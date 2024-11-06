@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import mock
 import unittest
 from vnc_api.vnc_api import *

@@ -1,10 +1,6 @@
 #
 # Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import str
-from builtins import range
 import sys
 import gevent
 from . import test_case

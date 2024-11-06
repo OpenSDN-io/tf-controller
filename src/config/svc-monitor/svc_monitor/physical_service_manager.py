@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import str
 import uuid
 from vnc_api.vnc_api import *
 from .instance_manager import InstanceManager
@@ -9,10 +7,8 @@ from .config_db import (
     ServiceApplianceSetSM,
     ServiceApplianceSM,
     PhysicalInterfaceSM,
-    ServiceInstanceSM,
     ServiceTemplateSM,
     PortTupleSM)
-from cfgm_common import svc_info
 
 
 class PhysicalServiceManager(InstanceManager):

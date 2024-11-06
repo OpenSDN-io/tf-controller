@@ -6,13 +6,11 @@
 This file contains error code for E2 services
 """
 
-from builtins import object
-from future.utils import with_metaclass
 class ROClass(type):
-    def __setattr__(self, name, value):
+    def __setattr__(self, name, _):
         raise ValueError("Cannot modify %s" % name)
 
-class L2vpnErrors(with_metaclass(ROClass, object)):
+class L2vpnErrors(metaclass=ROClass):
 
     """
     It is not meant to be instantiated and will raise an exception if
@@ -65,7 +63,7 @@ class L2vpnErrors(with_metaclass(ROClass, object)):
             return "No such errcode"
 # end L2vpnErrors
 
-class L2cktErrors(with_metaclass(ROClass, object)):
+class L2cktErrors(metaclass=ROClass):
 
     """
     It is not meant to be instantiated and will raise an exception if

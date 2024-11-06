@@ -3,7 +3,6 @@
 #
 
 """DC Gateway Feature Implementation."""
-from builtins import str
 from collections import OrderedDict
 import copy
 

@@ -20,10 +20,6 @@
 #
 # @author: Numan Siddique, eNovance.
 
-
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 import urllib.request, urllib.parse, urllib.error
 from collections import OrderedDict
 import sys
@@ -31,8 +27,6 @@ from six import StringIO
 from configparser import NoOptionError
 
 from cfgm_common import vnc_cgitb
-from vnc_api.utils import (
-    CamelCase, str_to_class, obj_type_to_vnc_class, getCertKeyCaBundle)
 
 
 _DEFAULT_USER_DOMAIN_NAME = 'Default'

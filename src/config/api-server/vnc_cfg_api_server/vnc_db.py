@@ -5,7 +5,6 @@
 """
 Layer that transforms VNC config objects to database representation
 """
-from cfgm_common.zkclient import ZookeeperClient, IndexAllocator, ZookeeperLock
 from gevent import monkey
 monkey.patch_all()
 import gevent
@@ -15,11 +14,12 @@ from io import StringIO
 import time
 from pprint import pformat
 
-
 import socket
 from netaddr import IPNetwork, IPAddress
 from .context import get_request
 from .event_dispatcher import EventDispatcher
+
+from vnc_api import utils as vnc_utils
 
 from cfgm_common.uve.vnc_api.ttypes import *
 from cfgm_common import ignore_exceptions
@@ -41,6 +41,7 @@ from cfgm_common import vnc_greenlets
 from cfgm_common import PERMS_RWX
 from cfgm_common import SGID_MIN_ALLOC
 from cfgm_common import VNID_MIN_ALLOC
+from cfgm_common.zkclient import ZookeeperClient, IndexAllocator, ZookeeperLock
 from . import utils
 
 import copy
@@ -1611,7 +1612,7 @@ class VncDbClient(object):
     def _dbe_resync(self, obj_type, obj_uuids):
         msg = "Start DB Resync for %s" % obj_type
         self.config_log(msg, level=SandeshLevel.SYS_DEBUG)
-        obj_class = cfgm_common.utils.obj_type_to_vnc_class(obj_type, __name__)
+        obj_class = vnc_utils.obj_type_to_vnc_class(obj_type, __name__)
         obj_fields = list(obj_class.prop_fields) + list(obj_class.ref_fields)
         kwargs = {}
         if obj_type == 'project':
@@ -2430,7 +2431,7 @@ class VncDbClient(object):
                 ret_marker = 'shared:%s' %(marker)
 
         if is_detail:
-            cls = cfgm_common.utils.obj_type_to_vnc_class(obj_type, __name__)
+            cls = vnc_utils.obj_type_to_vnc_class(obj_type, __name__)
             obj_fields = list(cls.prop_fields) + list(cls.ref_fields)
         else:
             obj_fields = []

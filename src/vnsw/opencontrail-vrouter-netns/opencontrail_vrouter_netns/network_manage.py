@@ -1,7 +1,5 @@
 #!/bin/env python
 
-from __future__ import print_function
-from builtins import object
 import argparse
 from vnc_api.vnc_api import *
 

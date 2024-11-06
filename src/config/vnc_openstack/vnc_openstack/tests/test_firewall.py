@@ -13,8 +13,6 @@
 #    under the License.
 #
 
-from builtins import range
-from builtins import str
 import uuid
 
 from cfgm_common import protocols as constants

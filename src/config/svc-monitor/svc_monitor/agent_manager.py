@@ -16,7 +16,6 @@
 # @author: Sylvain Afchain
 
 
-from builtins import object
 class AgentManager(object):
 
     def __init__(self):

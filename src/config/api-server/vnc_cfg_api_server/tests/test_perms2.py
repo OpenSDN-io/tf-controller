@@ -1,20 +1,13 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
-from builtins import object
-import os
 import sys
 import uuid
 import logging
 
-import fixtures
-import testtools
-from testtools.matchers import Equals, MismatchError, Not, Contains
-from testtools import content, content_type, ExpectedException
-import unittest
+from testtools.matchers import Equals
+from testtools import ExpectedException
 import json
 import bottle
 
@@ -36,7 +29,8 @@ import requests
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-from vnc_api.gen.resource_xsd import PermType, PermType2, IdPermsType
+from vnc_api.gen.resource_xsd import PermType2
+
 PERMS_NONE = 0
 PERMS_X = 1
 PERMS_W = 2

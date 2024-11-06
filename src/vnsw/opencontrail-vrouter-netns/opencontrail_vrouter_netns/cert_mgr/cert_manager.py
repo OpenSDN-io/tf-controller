@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
-
 try:
     from .barbican_cert_manager import BarbicanCertManager
 except ImportError:

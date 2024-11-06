@@ -41,10 +41,7 @@
 #    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """Display a subunit stream through a colorized unittest test runner."""
-from __future__ import unicode_literals
 
-from builtins import str
-from builtins import object
 import heapq
 import subunit
 import sys

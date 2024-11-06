@@ -1,4 +1,3 @@
-from __future__ import (absolute_import, division)
 __metaclass__ = type
 
 from ansible.errors import AnsibleError
@@ -37,7 +36,7 @@ class LookupModule(LookupBase):
             values = [self.tostr(node) for node in nodes]
             return values
 
-        except Exception, e:  # noqa: E999
+        except Exception as e:  # noqa: E999
             raise AnsibleError("xmlfile: %s" % str(e))
 
         return dflt
@@ -50,14 +49,12 @@ class LookupModule(LookupBase):
                                             templar=self._templar,
                                             loader=self._loader)
 
-        if isinstance(terms, basestring):
+        if isinstance(terms, str):
             terms = [terms]
 
         ret = []
         for term in terms:
             params = term.split()
-            key = params[0]
-
             paramvals = {
                 'file': 'ansible.xml',
                 'default': None,
@@ -70,7 +67,7 @@ class LookupModule(LookupBase):
                     name, value = param.split('=', 1)
                     assert(name in paramvals)
                     paramvals[name] = value
-            except (ValueError, AssertionError), e:
+            except (ValueError, AssertionError) as e:
                 raise AnsibleError(e)
 
             path = self._loader.path_dwim_relative(basedir, 'files', paramvals['file'])  # noqa: E501

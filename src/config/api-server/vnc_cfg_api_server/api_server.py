@@ -34,6 +34,7 @@ import uuid
 import copy
 from pprint import pformat
 from io import StringIO
+from vnc_api import utils as vnc_utils
 from vnc_api.utils import AAA_MODE_VALID_VALUES
 # import GreenletProfiler
 from cfgm_common import vnc_cgitb
@@ -274,7 +275,7 @@ class VncApiServer(object):
             else:
                 values = [value]
             if attr_type_vals['is_complex']:
-                attr_cls = cfgm_common.utils.str_to_class(attr_type, __name__)
+                attr_cls = vnc_utils.str_to_class(attr_type, __name__)
                 for item in values:
                     if attr_type == 'AllowedAddressPair':
                         cls._validate_allowed_address_pair_prefix_len(item,config)
@@ -805,7 +806,7 @@ class VncApiServer(object):
                 else:
                     continue
 
-            prop_cls = cfgm_common.utils.str_to_class(prop_type, __name__)
+            prop_cls = vnc_utils.str_to_class(prop_type, __name__)
             if isinstance(prop_value, dict):
                 try:
                     self._validate_complex_type(prop_cls, prop_value,self._args)
@@ -830,7 +831,7 @@ class VncApiServer(object):
             if ref_link_type == 'None':
                 continue
 
-            attr_cls = cfgm_common.utils.str_to_class(ref_link_type, __name__)
+            attr_cls = vnc_utils.str_to_class(ref_link_type, __name__)
             for ref_dict in obj_dict.get(ref_name) or []:
                 try:
                     self._validate_complex_type(attr_cls, ref_dict['attr'],self._args)
@@ -3007,9 +3008,9 @@ class VncApiServer(object):
             field_val = req_param.get('value')
             field_pos = str(req_param.get('position'))
             prop_type = r_class.prop_field_types[obj_field]['xsd_type']
-            prop_cls = cfgm_common.utils.str_to_class(prop_type, __name__)
+            prop_cls = vnc_utils.str_to_class(prop_type, __name__)
             prop_val_type = prop_cls.attr_field_type_vals[prop_cls.attr_fields[0]]['attr_type']
-            prop_val_cls = cfgm_common.utils.str_to_class(prop_val_type, __name__)
+            prop_val_cls = vnc_utils.str_to_class(prop_val_type, __name__)
             try:
                 self._validate_complex_type(prop_val_cls, field_val,self._args)
             except Exception as e:

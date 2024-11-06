@@ -15,16 +15,8 @@
 #
 # @author: Varun Lodaya, Symantec.
 
-from future import standard_library
-standard_library.install_aliases()
 import unittest
-import mock
 import svc_monitor.services.loadbalancer.drivers.ha_proxy.custom_attributes.haproxy_validator as validator
-from sys import version_info
-if version_info.major == 2:
-    import builtins as builtins
-else:
-    import builtins
 
 custom_attributes_dict = {
     'global': {

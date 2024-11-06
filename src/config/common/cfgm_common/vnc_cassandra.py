@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
 #
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
@@ -11,6 +9,7 @@ from pprint import pformat
 import six
 
 from vnc_api import vnc_api
+from vnc_api import utils as vncutils
 from .exceptions import NoIdError, VncError
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from cfgm_common import jsonutils as json
@@ -83,8 +82,7 @@ class VncCassandraClient(object):
         if hasattr(self, '_db_client_mgr'):
             return self._db_client_mgr.get_resource_class(obj_type)
 
-        cls_name = '%s' % (utils.CamelCase(obj_type))
-        return getattr(vnc_api, cls_name)
+        return getattr(vnc_api, vncutils.CamelCase(obj_type))
     # end _get_resource_class
 
     @classmethod
@@ -382,8 +380,8 @@ class VncCassandraClient(object):
         if send:
             bch.send()
         return symmetric_ref_updates
-
     # end _delete_ref
+
     def _get_xsd_class(self, xsd_type):
         return getattr(vnc_api, xsd_type)
     # end _get_xsd_class

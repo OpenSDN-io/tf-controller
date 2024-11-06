@@ -1,13 +1,9 @@
 """
 This file contains sanity test for image upgrade workflow
 """
-from __future__ import absolute_import
-from builtins import str
-from builtins import object
 import sys
 import hashlib
 from . import config
-import re
 from .sanity_base import SanityBase
 from . import config
 import re

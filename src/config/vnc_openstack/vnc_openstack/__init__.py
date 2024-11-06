@@ -1,10 +1,6 @@
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import absolute_import
-
-from builtins import range
-from builtins import str
 
 import gevent.monkey
 gevent.monkey.patch_all()
@@ -17,11 +13,11 @@ import queue
 import uuid
 
 import bottle
+from vnc_api import utils as vncutils
 from cfgm_common import exceptions as vnc_exc
 from cfgm_common import utils as cfgmutils
 from cfgm_common import vnc_plugin_base
 from cfgm_common.utils import cgitb_hook
-from future import standard_library
 import gevent
 import gevent.event
 from keystoneclient import client as kclient
@@ -49,8 +45,6 @@ from .neutron_plugin_db import _NEUTRON_FIREWALL_DEFAULT_IPV4_RULE_NAME
 from .neutron_plugin_db import _NEUTRON_FIREWALL_DEFAULT_IPV6_RULE_NAME
 from .neutron_plugin_db import _NEUTRON_FWAAS_TAG_TYPE
 from .neutron_plugin_db import DBInterface as npd
-
-standard_library.install_aliases()
 
 Q_CREATE = 'create'
 Q_DELETE = 'delete'
@@ -108,7 +102,7 @@ def fill_keystone_opts(obj, conf_sections):
         certs = [obj._cafile]
         if obj._keyfile and obj._certfile:
             certs = [obj._certfile, obj._keyfile, obj._cafile]
-        obj._kscertbundle = cfgmutils.getCertKeyCaBundle(
+        obj._kscertbundle = vncutils.getCertKeyCaBundle(
             _DEFAULT_KS_CERT_BUNDLE, certs)
         obj._use_certs = True
 

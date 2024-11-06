@@ -1,8 +1,6 @@
 """
 Unconfigure the namespace created by daemon_start.
 """
-from __future__ import absolute_import
-
 import argparse
 import socket
 import sys

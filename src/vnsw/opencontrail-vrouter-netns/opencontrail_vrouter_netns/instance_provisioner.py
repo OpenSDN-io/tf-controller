@@ -1,7 +1,6 @@
 """
 """
 
-from builtins import object
 from vnc_api.vnc_api import *
 
 

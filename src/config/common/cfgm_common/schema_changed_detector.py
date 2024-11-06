@@ -12,23 +12,11 @@
 # Find changes between a current commit and the specific release:
 #   python schema_change_detector.py --release 1910
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import argparse
 import cgitb
 import re
 import subprocess
 import sys
-
-# TODO (pawel.zadrozny): remove six import and if-statement
-#  after full migration to Py3
-import six
-
-if six.PY2:
-    # FileNotFoundError is only available since Python 3.3
-    FileNotFoundError = IOError
-    from io import open
 
 DEBUG = False
 

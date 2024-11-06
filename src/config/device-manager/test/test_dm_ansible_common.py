@@ -1,9 +1,6 @@
 #
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import absolute_import
-from builtins import str
-from builtins import range
 import json
 import sys
 import uuid

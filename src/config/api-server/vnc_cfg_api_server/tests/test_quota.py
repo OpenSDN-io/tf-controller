@@ -1,13 +1,9 @@
-from __future__ import absolute_import
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
 
-from builtins import str
-from builtins import range
 import gevent
-import sys
 import uuid
 import logging
 import mock

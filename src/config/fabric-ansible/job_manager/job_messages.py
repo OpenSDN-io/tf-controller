@@ -1,5 +1,3 @@
-from builtins import object
-
 
 class MsgBundle(object):
 

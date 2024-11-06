@@ -1,9 +1,4 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
 import mock
-from mock import patch
 import configparser
 import unittest
 from cfgm_common.vnc_db import DBBase
@@ -11,6 +6,7 @@ from svc_monitor import config_db
 from svc_monitor import loadbalancer_agent
 from vnc_api.vnc_api import *
 import argparse
+
 
 class HAProxyTest(unittest.TestCase):
     def setUp(self):

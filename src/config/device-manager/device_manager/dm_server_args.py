@@ -2,9 +2,6 @@
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-from future import standard_library  # noqa
-standard_library.install_aliases()  # noqa
-
 import argparse # noqa
 from configparser import ConfigParser
 

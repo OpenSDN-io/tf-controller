@@ -17,16 +17,9 @@
 #
 # @author: Rudra Rugge
 
-from __future__ import absolute_import
-
-from builtins import str
-from builtins import range
-from builtins import object
 import abc
 import six
-import uuid
 
-from cfgm_common import analytics_client
 from cfgm_common import svc_info
 from vnc_api.vnc_api import *
 from .config_db import *

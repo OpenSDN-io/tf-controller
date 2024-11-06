@@ -2,15 +2,12 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
-from builtins import object
 from keystoneclient.v2_0 import client
 from vnc_api.vnc_api import *
 import uuid
 import argparse
 import keystoneclient.exceptions as kc_exceptions
 import cfgm_common
-import pprint
 import logging
 
 logger = logging.getLogger(__name__)

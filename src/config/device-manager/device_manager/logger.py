@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 #
 # Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.

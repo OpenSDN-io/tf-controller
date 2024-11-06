@@ -1,7 +1,3 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
 import mock
 from mock import patch
 from six.moves import configparser
@@ -12,6 +8,7 @@ from svc_monitor import loadbalancer_agent
 from vnc_api.vnc_api import *
 import argparse
 import six
+
 
 class F5LBTest(unittest.TestCase):
     def setUp(self):

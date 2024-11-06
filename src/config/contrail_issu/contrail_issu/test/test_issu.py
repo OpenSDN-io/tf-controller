@@ -2,7 +2,6 @@
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
 import sys
 import gevent
 import logging

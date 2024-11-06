@@ -1,11 +1,8 @@
-from __future__ import print_function
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 
 # Show and change all object ownership and permissions2 fields
 #
-from builtins import str
-from builtins import object
 import argparse
 import uuid as __uuid
 import os

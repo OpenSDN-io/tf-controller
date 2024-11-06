@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-
-from builtins import range
 import mock
-from mock import patch
 import unittest
 import svc_monitor
 from vnc_api.vnc_api import *
@@ -10,7 +6,7 @@ from svc_monitor.port_tuple import PortTupleAgent
 from svc_monitor.config_db import *
 from . import test_common_utils as test_utils
 from svc_monitor.module_logger import ServiceMonitorModuleLogger
-from svc_monitor.sandesh.port_tuple import ttypes
+
 
 class PortTupleTest(unittest.TestCase):
     def setUp(self):

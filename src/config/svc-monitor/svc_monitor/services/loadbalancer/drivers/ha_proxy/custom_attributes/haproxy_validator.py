@@ -1,9 +1,6 @@
-from builtins import str
-from builtins import range
-from builtins import object
 import logging
 import inspect
-import os
+
 
 class CustomAttr(object):
     """This type handles non-flat data-types like

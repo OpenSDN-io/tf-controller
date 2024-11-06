@@ -2,23 +2,12 @@
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
 import configparser
-import os
 import sys
-import errno
 import pprint
-import subprocess
-import time
 import argparse
 
-sys.path.insert(0, os.path.realpath('/usr/lib/python2.7/site-packages'))
-
 from vnc_api.vnc_api import *
-from svc_monitor import svc_monitor
 from novaclient import client as nc
 from novaclient import exceptions as nc_exc
 

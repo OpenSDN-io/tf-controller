@@ -1,18 +1,9 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from builtins import str
-from builtins import range
-from builtins import object
-from past.utils import old_div
 import gevent
 import os
 import sys
-import socket
-import errno
 import uuid
 import logging
 import random
@@ -20,17 +11,14 @@ import netaddr
 import mock
 import tempfile
 
-import fixtures
-import testtools
-from testtools.matchers import Equals, MismatchError, Not, Contains, LessThan
-from testtools import content, content_type, ExpectedException
+from testtools.matchers import Equals, Not, Contains, LessThan
+from testtools import content, ExpectedException
 import unittest
 from flexmock import flexmock
 import re
 import json
 import copy
 from lxml import etree
-import inspect
 import requests
 import bottle
 import stevedore
@@ -38,14 +26,13 @@ import netaddr
 import contextlib
 
 from vnc_api.vnc_api import *
-from cfgm_common import exceptions as vnc_exceptions
+from vnc_api import utils as vncutils
 from netaddr import IPNetwork
 import vnc_api.gen.vnc_api_test_gen
 from vnc_api.gen.resource_test import *
 import cfgm_common
 from cfgm_common import vnc_plugin_base
 from cfgm_common import vnc_cgitb
-from cfgm_common import SGID_MIN_ALLOC
 from cfgm_common import rest
 from functools import reduce
 vnc_cgitb.enable(format='text')
@@ -54,7 +41,6 @@ from cfgm_common.tests import cassandra_fake_impl
 from cfgm_common.tests import test_common
 from cfgm_common.tests.test_utils import FakeKombu
 from cfgm_common.tests.test_utils import FakeExtensionManager
-from cfgm_common.vnc_api_stats import log_api_stats
 from . import test_case
 from vnc_cfg_api_server.api_server import VncApiServer
 from vnc_cfg_api_server.resources import GlobalSystemConfigServer
@@ -1060,7 +1046,7 @@ class TestVncCfgApiServer(test_case.ApiServerTestCase):
 
             logger.info("Creating objects to hit max rabbit pending.")
             # every VN create, creates RI too
-            test_objs = self._create_test_objects(count=old_div(max_pend_upd,2)+1)
+            test_objs = self._create_test_objects(count=(max_pend_upd // 2)+1)
 
             def asserts_on_max_pending():
                 self.assertEqual(e.status_code, 500)
@@ -2511,7 +2497,7 @@ class TestVncCfgApiServer(test_case.ApiServerTestCase):
                 f.write("CA")
             with open(bundle_dir+'key', 'w') as f:
                 f.write("KEY")
-            cfgm_common.utils.getCertKeyCaBundle(bundle_dir+'pem',
+            vncutils.getCertKeyCaBundle(bundle_dir+'pem',
                 [bundle_dir+x for x in ['cert', 'ca', 'key']])
             with open(bundle_dir+'pem', 'r') as f:
                 self.assertEqual(f.readlines()[0], 'CERTCAKEY')
@@ -2525,7 +2511,7 @@ class TestVncCfgApiServer(test_case.ApiServerTestCase):
                 f.write("CANEW")
             with open(bundle_dir+'key', 'w') as f:
                 f.write("KEYNEW")
-            cfgm_common.utils.getCertKeyCaBundle(bundle_dir+'pem',
+            vncutils.getCertKeyCaBundle(bundle_dir+'pem',
                 [bundle_dir+x for x in ['cert', 'ca', 'key']])
             with open(bundle_dir+'pem', 'r') as f:
                 self.assertEqual(f.readlines()[0], 'CERTNEWCANEWKEYNEW')
@@ -5039,7 +5025,7 @@ class TestPagination(test_case.ApiServerTestCase):
             all_vn_ids = []
             all_vn_count = self._vnc_lib.virtual_networks_list(
                 count=True)['virtual-networks']['count']
-            max_fetches = (old_div(all_vn_count,
+            max_fetches = ((all_vn_count //
                            (page_limit or self.default_paginate_count))) + 1
             fetches = 0
             while True:
@@ -5133,7 +5119,7 @@ class TestPagination(test_case.ApiServerTestCase):
             [FetchExpect(0, None)])
         verify_collection_walk(page_limit=2, fetch_expects=[
             FetchExpect(2, sorted_vn_uuid[(i*2)+1])
-                for i in range(old_div(len(vn_objs),2))] +
+                for i in range((len(vn_objs) // 2))] +
             [FetchExpect(0, None)])
 
         logger.info("Verified anchored pagination fetch with one parent.")

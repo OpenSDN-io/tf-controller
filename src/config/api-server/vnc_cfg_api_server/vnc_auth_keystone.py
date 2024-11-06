@@ -7,14 +7,10 @@
 # future by moved to vnc_auth_keystone.py
 #
 
-import gevent
 from gevent import monkey
 monkey.patch_all()
 import bottle
-import time
 import base64
-import re
-import uuid
 import six
 
 try:
@@ -26,9 +22,8 @@ except ImportError:
         pass
 from keystoneauth1 import exceptions as k_exc
 
-from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
+from vnc_api import utils as vncutils
 from .vnc_bottle import get_bottle_server
-from cfgm_common.exceptions import NoIdError
 from cfgm_common import utils as cfgmutils
 from cfgm_common import vnc_greenlets
 from .context import get_request, get_context, set_context, use_context
@@ -184,7 +179,7 @@ class AuthServiceKeystone(object):
             certs=[args.cafile]
             if args.keyfile and args.certfile:
                 certs=[args.certfile, args.keyfile, args.cafile]
-            _kscertbundle=cfgmutils.getCertKeyCaBundle(_DEFAULT_KS_CERT_BUNDLE,certs)
+            _kscertbundle=vncutils.getCertKeyCaBundle(_DEFAULT_KS_CERT_BUNDLE,certs)
         self._conf_info = {
             'admin_port': args.admin_port,
             'max_requests': args.max_requests,

@@ -4,7 +4,6 @@
 
 """L2 Gateway Feature Implementation."""
 
-from builtins import str
 from collections import OrderedDict
 
 from abstract_device_api.abstract_device_xsd import (

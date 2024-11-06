@@ -5,8 +5,6 @@
 """
 VNC network management for kubernetes.
 """
-from __future__ import print_function
-
 from netaddr import IPNetwork, IPAddress
 from six import string_types
 import uuid

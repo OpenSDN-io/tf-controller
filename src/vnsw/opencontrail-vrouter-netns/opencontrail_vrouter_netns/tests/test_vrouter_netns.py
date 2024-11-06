@@ -17,7 +17,6 @@
 #
 # @author: Edouard Thuleau, Cloudwatt.
 
-from builtins import str
 import mock
 import netaddr
 import requests

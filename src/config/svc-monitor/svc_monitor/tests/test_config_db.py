@@ -1,11 +1,9 @@
-from builtins import str
-from builtins import range
 import mock
-from mock import patch
 import unittest
 from cfgm_common.vnc_db import DBBase
 from svc_monitor import config_db
 from vnc_api.vnc_api import *
+
 
 class ConfigDBTest(unittest.TestCase):
     def setUp(self):

@@ -7,7 +7,6 @@
 # virtual network
 #
 
-from builtins import object
 import logging
 import time
 
@@ -16,8 +15,6 @@ from netaddr import IPNetwork
 from netifaces import AF_INET, ifaddresses, interfaces
 from pyroute2 import IPRoute
 from vnc_api.vnc_api import VncApi
-
-from job_manager.job_utils import JobVncApi  # noqa
 
 
 class FilterModule(object):

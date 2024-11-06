@@ -2,8 +2,6 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-
 from cfgm_common.tests import test_common
 import gevent
 from vnc_api.vnc_api import GlobalSystemConfig, NoIdError, RouteTargetList

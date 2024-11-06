@@ -1,9 +1,6 @@
 """
 This script associates a network namespace with a docker instance.
 """
-from __future__ import print_function
-from __future__ import absolute_import
-
 import argparse
 import socket
 import subprocess

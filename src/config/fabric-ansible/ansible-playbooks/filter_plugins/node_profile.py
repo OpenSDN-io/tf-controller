@@ -1,22 +1,17 @@
 #!/usr/bin/python
 
-from builtins import str
-from builtins import map
-from past.builtins import basestring
-from builtins import object
 import logging
 import traceback
 import json
 import yaml
 import sys
 import base64
-import uuid
 import collections
 from pprint import pformat
 
 sys.path.append('/opt/contrail/fabric_ansible_playbooks/filter_plugins')
 sys.path.append('/opt/contrail/fabric_ansible_playbooks/common')
-from contrail_command import CreateCCNode, CreateCCNodeProfile
+from contrail_command import CreateCCNodeProfile
 import jsonschema
 from job_manager.job_utils import JobVncApi
 
@@ -164,7 +159,7 @@ class FilterModule(object):
         return cc_node_profile_payload, node_profile_dict['name']
 
     def convert(self, data):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             return str(data)
         elif isinstance(data, collections.Mapping):
             return dict(list(map(self.convert, iter(list(data.items())))))

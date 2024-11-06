@@ -1,4 +1,3 @@
-from __future__ import print_function
 #
 #  Copyright (c) 2016 Juniper Networks. All rights reserved.
 #
@@ -6,9 +5,6 @@ from __future__ import print_function
 #
 #  gdb macros to dump the vrouter agent DB object/entries
 
-from builtins import next
-from builtins import str
-from builtins import range
 import gdb
 
 from libstdcxx.v6.printers import *

@@ -7,17 +7,9 @@ adapted from from contrail_lib.py in https://github.com/Juniper/vrouter-xen-util
 Noel Burton-Krahn <noel@pistoncloud.com>
 """
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-import sys
-
-import thrift
 import uuid
 import shlex
 
-import instance_service
 from thrift.protocol import TBinaryProtocol
 from thrift.transport import TTransport
 from nova.utils import execute

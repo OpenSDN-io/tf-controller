@@ -6,9 +6,7 @@
 """
 Service monitor logger
 """
-from __future__ import absolute_import
 
-from builtins import str
 from cfgm_common import svc_info
 from cfgm_common.uve.service_instance.ttypes import UveSvcInstanceConfig,\
         UveSvcInstanceVMConfig, UveSvcInstanceConfigTrace

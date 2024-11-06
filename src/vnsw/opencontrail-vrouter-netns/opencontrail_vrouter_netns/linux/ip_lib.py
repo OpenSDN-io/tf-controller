@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2012 OpenStack Foundation
@@ -16,10 +15,6 @@ from __future__ import absolute_import
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from builtins import zip
-from builtins import str
-from builtins import next
-from builtins import object
 import netaddr
 
 from . import utils

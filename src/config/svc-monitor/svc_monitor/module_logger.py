@@ -47,7 +47,6 @@ Log Function Identifier/ID --> String that is mapped to a Message Log Function.
 
 """
 
-from builtins import object
 class MessageID(object):
     """
     Default log function identifiers.

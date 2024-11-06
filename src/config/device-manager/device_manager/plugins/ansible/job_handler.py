@@ -4,8 +4,6 @@
 # This file contains implementation of job api handler code
 #
 
-from builtins import object
-from builtins import str
 from enum import Enum
 import time
 import uuid
