@@ -224,7 +224,7 @@ vector<string> BgpPath::GetFlagsStringList() const {
     if (flags_ & CheckGlobalErmVpnRoute)
         flags.push_back(CheckGlobalErmVpnRoute);
 
-    BOOST_FOREACH(PathFlag flag, flags) {
+    for (auto flag : flags) {
         switch (flag) {
         case AsPathLooped:
             flag_names.push_back("AsPathLooped");

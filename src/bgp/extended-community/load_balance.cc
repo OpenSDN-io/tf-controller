@@ -99,8 +99,7 @@ LoadBalance::LoadBalance(const BgpPath *path) {
     const ExtCommunity *ext_community = attr->ext_community();
     if (!ext_community)
         return;
-    BOOST_FOREACH(const ExtCommunity::ExtCommunityValue &comm,
-                  ext_community->communities()) {
+    for (const auto &comm : ext_community->communities()) {
         if (ExtCommunity::is_load_balance(comm)) {
             copy(comm.begin(), comm.end(), data_.begin());
             break;

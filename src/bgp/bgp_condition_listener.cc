@@ -112,7 +112,7 @@ BgpConditionListener::BgpConditionListener(BgpServer *server) :
 
 bool BgpConditionListener::PurgeTableState() {
     CHECK_CONCURRENCY("bgp::Config");
-    BOOST_FOREACH(ConditionMatchTableState *ts, purge_list_) {
+    for (auto *ts : purge_list_) {
         if (ts->match_objects()->empty()) {
             BgpTable *bgptable = ts->table();
             if (ts->walk_ref() != NULL)
