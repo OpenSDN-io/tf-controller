@@ -1,18 +1,7 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
 #
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
-from builtins import next
-from builtins import chr
-from builtins import str
-from builtins import range
-from builtins import object
-import copy
 import importlib
-
-import six
-import abc
 
 try:
     pycassa = importlib.import_module('pycassa')
@@ -27,7 +16,6 @@ except ImportError:
 
 import gevent
 
-from vnc_api import vnc_api
 from cfgm_common.exceptions import NoIdError, DatabaseUnavailableError, VncError
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
@@ -40,7 +28,6 @@ import itertools
 import sys
 from collections import Mapping
 import ssl
-from cfgm_common.datastore.api import CassandraDriver
 from cfgm_common.datastore import api as datastore_api
 
 

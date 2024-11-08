@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import gevent
 import sys
 from cfgm_common.tests import test_common

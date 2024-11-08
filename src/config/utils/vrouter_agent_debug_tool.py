@@ -112,13 +112,7 @@ provider_config:
       cache_count: 10000
 
 """
-from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from builtins import object
 import subprocess
 import time
 import sys

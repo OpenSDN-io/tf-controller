@@ -1,12 +1,8 @@
-from __future__ import print_function
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 # Util to manage RBAC group and rules (add, delete etc)",
 #
-from builtins import input
-from builtins import str
-from builtins import object
 import argparse
 import uuid as __uuid
 import os
@@ -17,7 +13,6 @@ from vnc_api.vnc_api import *
 from vnc_api.gen.resource_xsd import *
 from cfgm_common.exceptions import *
 from cfgm_common.rbaclib import *
-import cfgm_common
 from vnc_api.utils import AAA_MODE_VALID_VALUES
 
 example_usage = \

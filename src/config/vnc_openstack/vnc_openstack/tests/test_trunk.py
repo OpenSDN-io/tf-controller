@@ -1,6 +1,4 @@
 # Copyright 2019 Juniper Networks. All rights reserved.
-from builtins import range
-from builtins import str
 import json
 import re
 

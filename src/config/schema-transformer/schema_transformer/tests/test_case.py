@@ -1,12 +1,9 @@
-from __future__ import print_function
-
 import sys
 import uuid
 
 from cfgm_common.tests import test_common
 from gevent import sleep
 from gevent import spawn
-from past.builtins import basestring
 from vnc_api.vnc_api import ActionListType, AddressType
 from vnc_api.vnc_api import InstanceIp, MirrorActionType, NetworkPolicy
 from vnc_api.vnc_api import NoIdError
@@ -134,7 +131,7 @@ class STTestCase(test_common.TestCase):
         for addr in addrs:
             if addr["type"] == "vn":
                 vn = addr["value"]
-                if isinstance(vn, basestring):
+                if isinstance(vn, str):
                     rule_kwargs.update({'virtual_network': vn})
                 else:
                     rule_kwargs.update(

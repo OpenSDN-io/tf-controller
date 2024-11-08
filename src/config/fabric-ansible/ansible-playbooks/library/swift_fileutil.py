@@ -11,16 +11,10 @@ This file contains implementation of gett
 swift download URL for the uploaded image file
 """
 
-from builtins import object
-from builtins import str
-
-from future import standard_library  # noqa
-standard_library.install_aliases()   # noqa
 import logging                       # noqa
 import re
 from threading import RLock
 import time
-from urllib.parse import urlparse  # noqa
 
 from ansible.module_utils.fabric_utils import FabricAnsibleModule
 import requests

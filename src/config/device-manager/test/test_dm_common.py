@@ -1,7 +1,6 @@
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import absolute_import
 from . import test_case
 from vnc_api.vnc_api import *
 from device_api.juniper_common_xsd import *

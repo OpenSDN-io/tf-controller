@@ -1,16 +1,6 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from past.builtins import basestring
-from builtins import object
-from future.utils import native_str
 import sys
 from configparser import RawConfigParser
 from configparser import DuplicateSectionError
@@ -237,7 +227,7 @@ def create_api_server_instance(test_id, config_knobs, db='cassandra'):
     block_till_port_listened(ret_server_info['ip'],
         ret_server_info['service_port'])
     extra_env = {'HTTP_HOST': ret_server_info['ip'],
-                 'SERVER_PORT': native_str(ret_server_info['service_port'])}
+                 'SERVER_PORT': str(ret_server_info['service_port'])}
     api_server_obj = ret_server_info['greenlet'].api_server
     ret_server_info['app'] = VncTestApp(api_server_obj.api_bottle,
                                         extra_environ=extra_env)
@@ -786,7 +776,7 @@ class TestCase(testtools.TestCase, fixtures.TestWithFixtures):
         ipam_fq_name = [
             'default-domain', 'default-project', 'default-network-ipam']
         ipam_obj = self._vnc_lib.network_ipam_read(fq_name=ipam_fq_name)
-        subnets = [vn_subnet] if isinstance(vn_subnet, basestring) else vn_subnet
+        subnets = [vn_subnet] if isinstance(vn_subnet, str) else vn_subnet
         subnet_infos = []
         for subnet in subnets:
             cidr = IPNetwork(subnet)
@@ -885,8 +875,8 @@ class TestCase(testtools.TestCase, fixtures.TestWithFixtures):
     def create_network_policy(self, vn1, vn2, service_list=None, mirror_service=None,
                               auto_policy=False, create_right_port=True,
                               retain_as_path=False, **kwargs):
-        vn1_name = vn1 if isinstance(vn1, basestring) else vn1.get_fq_name_str()
-        vn2_name = vn2 if isinstance(vn2, basestring) else vn2.get_fq_name_str()
+        vn1_name = vn1 if isinstance(vn1, str) else vn1.get_fq_name_str()
+        vn2_name = vn2 if isinstance(vn2, str) else vn2.get_fq_name_str()
 
         addr1 = AddressType(virtual_network=vn1_name, subnet=kwargs.get('subnet_1'))
         addr2 = AddressType(virtual_network=vn2_name, subnet=kwargs.get('subnet_2'))

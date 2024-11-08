@@ -7,9 +7,6 @@ This file contains implementation of data model for physical router.
 
 for device specific configuration manager
 """
-from __future__ import absolute_import
-from __future__ import division
-
 import copy
 import json
 import re
@@ -42,12 +39,9 @@ from cfgm_common.vnc_db import FeatureFlagBase
 from cfgm_common.vnc_object_db import VncObjectDBClient
 from cfgm_common.zkclient import IndexAllocator
 import cityhash
-from future.utils import native_str
 import gevent
 from gevent import queue
 from netaddr import IPAddress
-from past.builtins import basestring
-from past.utils import old_div
 from sandesh_common.vns.constants import DEVICE_MANAGER_KEYSPACE_NAME
 from vnc_api.vnc_api import VirtualNetwork
 
@@ -813,7 +807,7 @@ class PhysicalRouterDM(DBBaseDM):
             kvps = annotations.get('key_value_pair') or []
             kvp_dict = dict((kvp['key'], kvp['value']) for kvp in kvps)
             transaction = kvp_dict.get('job_transaction')
-            if transaction and isinstance(transaction, basestring):
+            if transaction and isinstance(transaction, str):
                 trans_dict = json.loads(transaction)
                 return trans_dict.get('transaction_id'), \
                     trans_dict.get('transaction_descr')
@@ -1495,7 +1489,7 @@ class PhysicalRouterDM(DBBaseDM):
 
     def get_push_config_interval(self, last_config_size):
         config_delay = int(
-            (old_div(last_config_size, 1000)) *
+            (last_config_size // 1000) *
             PushConfigState.get_push_delay_per_kb())
         delay = min([PushConfigState.get_push_delay_max(), config_delay])
         return delay
@@ -5018,7 +5012,7 @@ class VirtualPortGroupDM(DBBaseDM):
                     {pi.get('uuid'): pi.get('attr').get('ae_num')})
 
     def get_esi(self):
-        hash_value = cityhash.CityHash64(native_str(self.uuid))
+        hash_value = cityhash.CityHash64(str(self.uuid))
         unpacked = struct.unpack('>8B', struct.pack('>Q', hash_value))
         self.esi = '00:%s:00' % (':'.join('%02x' % i for i in unpacked))
 
@@ -5117,7 +5111,7 @@ class RoleConfigDM(DBBaseDM):
         self.node_profile = self.get_parent_uuid(obj)
         self.add_to_parent(obj)
         self.config = obj.get('role_config_config')
-        if self.config and isinstance(self.config, basestring):
+        if self.config and isinstance(self.config, str):
             self.config = json.loads(self.config)
     # end update
 

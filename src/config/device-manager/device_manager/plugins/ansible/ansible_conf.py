@@ -5,8 +5,6 @@
 # using ansible
 #
 
-from builtins import str
-from builtins import object
 import datetime
 from hashlib import md5
 import json
@@ -15,9 +13,8 @@ import time
 from abstract_device_api.abstract_device_xsd import *
 
 from .ansible_base import AnsibleBase
-from .db import BgpRouterDM, GlobalVRouterConfigDM, GlobalSystemConfigDM, \
-    InstanceIpDM, LogicalInterfaceDM, NodeProfileDM, PhysicalInterfaceDM, \
-    PhysicalRouterDM, RoleConfigDM
+from .db import BgpRouterDM, GlobalVRouterConfigDM, NodeProfileDM, \
+    RoleConfigDM
 from .device_manager import DeviceManager
 from .dm_utils import DMUtils
 from .dm_utils import PushConfigState

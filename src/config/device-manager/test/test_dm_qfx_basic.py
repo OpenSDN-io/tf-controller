@@ -1,8 +1,6 @@
 #
 # Copyright (c) 2017 Juniper Infra, Inc. All rights reserved.
 #
-from __future__ import absolute_import
-from builtins import str
 import sys
 import uuid
 from unittest import skip

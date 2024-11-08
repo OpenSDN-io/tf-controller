@@ -6,11 +6,6 @@
 """
 Logger for config services
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from future import standard_library
-standard_library.install_aliases()
 import datetime
 import logging
 import socket
@@ -18,7 +13,7 @@ from six import StringIO
 
 from cfgm_common.utils import cgitb_hook
 
-from pysandesh.sandesh_base import Sandesh, SandeshSystem
+from pysandesh.sandesh_base import Sandesh
 from pysandesh.sandesh_logger import SandeshLogger
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 

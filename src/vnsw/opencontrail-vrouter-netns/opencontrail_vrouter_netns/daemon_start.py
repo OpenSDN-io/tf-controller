@@ -2,8 +2,6 @@
 This script creates and configures a linux network namespace such that an
 application can be executed under the context of a virtualized network.
 """
-from __future__ import absolute_import
-
 import argparse
 import socket
 import sys

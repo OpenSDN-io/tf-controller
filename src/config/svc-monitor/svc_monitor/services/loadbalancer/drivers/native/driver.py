@@ -2,16 +2,14 @@
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import str
 import uuid
 import svc_monitor.services.loadbalancer.drivers.abstract_driver as abstract_driver
 
-from vnc_api.vnc_api import InstanceIp
 from vnc_api.vnc_api import FloatingIp
 from vnc_api.vnc_api import PortMap, PortMappings
 from vnc_api.vnc_api import ServiceHealthCheck, ServiceHealthCheckType
 
-from vnc_api.vnc_api import NoIdError, RefsExistError
+from vnc_api.vnc_api import NoIdError
 
 from svc_monitor.config_db import *
 

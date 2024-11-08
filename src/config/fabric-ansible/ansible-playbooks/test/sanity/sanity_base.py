@@ -8,12 +8,6 @@
 This file contains base class to support tests for all major workflows
 supported by fabric ansible
 """
-from __future__ import print_function
-from __future__ import division
-from builtins import map
-from builtins import str
-from builtins import object
-from past.utils import old_div
 import logging
 import pprint
 import time
@@ -27,7 +21,6 @@ from cfgm_common.exceptions import (
     NoIdError
 )
 from vnc_api.vnc_api import VncApi
-from vnc_api.gen.resource_client import Fabric
 from vnc_api.gen.resource_client import FabricNamespace
 from vnc_api.gen.resource_client import DeviceImage
 
@@ -378,8 +371,8 @@ class SanityBase(object):
                     if log_details:
                         log_details = log_details.get('#text')
                     log_ts_us = int(log_entry['MessageTS'])
-                    log_ts_ms = old_div(log_ts_us, 1000)
-                    log_ts_sec = old_div(log_ts_ms, 1000)
+                    log_ts_ms = (log_ts_us // 1000)
+                    log_ts_sec = (log_ts_ms // 1000)
                     log_ts_sec_gm = time.gmtime(log_ts_sec)
                     log_ts_fmt = time.strftime("%m/%d/%Y %H:%M:%S",
                                                log_ts_sec_gm) + ".%s" % \

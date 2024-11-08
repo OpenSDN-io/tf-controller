@@ -9,8 +9,6 @@
 This file contains implementation of checking for successful SSH connections
 """
 
-from builtins import range
-from builtins import str
 from datetime import datetime
 import logging
 import socket

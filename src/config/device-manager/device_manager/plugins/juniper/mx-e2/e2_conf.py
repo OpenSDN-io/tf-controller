@@ -6,10 +6,6 @@
 This file contains implementation of netconf interface for E2 services
 on physical router
 """
-from __future__ import division
-
-from builtins import str
-from past.utils import old_div
 from ncclient import manager
 from ncclient.operations.errors import TimeoutExpiredError
 import datetime
@@ -1435,7 +1431,7 @@ class MxE2Conf(JuniperConf):
         block_provider_comm = etree.Element("community")
         etree.SubElement(block_provider_comm, "name").text = block_rib_name
         if provider_as > 65535:
-            provider_comm_str = "large:0:" + str(old_div(provider_as,65536)) + ":" + \
+            provider_comm_str = "large:0:" + str(provider_as //65536) + ":" + \
                                  str(provider_as%65536)
         else:
             provider_comm_str = "0:" + str(provider_as)
@@ -1446,7 +1442,7 @@ class MxE2Conf(JuniperConf):
         to_provider_comm = etree.Element("community")
         etree.SubElement(to_provider_comm, "name").text = to_rib_name
         if provider_as > 65535:
-            provider_comm_str = "large:" + str(vrr_as) + ":" + str(old_div(provider_as,65536)) + \
+            provider_comm_str = "large:" + str(vrr_as) + ":" + str(provider_as // 65536) + \
                                 ":" + str(provider_as%65536)
         else:
             provider_comm_str = str(vrr_as) + ":" + str(provider_as)

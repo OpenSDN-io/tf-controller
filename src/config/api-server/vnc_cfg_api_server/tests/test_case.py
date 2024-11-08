@@ -1,4 +1,3 @@
-from builtins import range
 from vnc_api import vnc_api
 from cfgm_common.tests import test_common
 
@@ -6,9 +5,7 @@ import mock
 import logging
 logger = logging.getLogger(__name__)
 
-from cfgm_common.utils import _DEFAULT_ZK_DB_RESYNC_PATH_PREFIX
 from cfgm_common.utils import _DEFAULT_ZK_DB_SYNC_COMPLETE_ZNODE_PATH_PREFIX
-from cfgm_common.utils import _DEFAULT_ZK_LOCK_TIMEOUT
 
 from cfgm_common.utils import (
     _DEFAULT_ZK_DB_SYNC_COMPLETE_ZNODE_PATH_PREFIX

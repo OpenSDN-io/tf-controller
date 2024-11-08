@@ -5,8 +5,6 @@
 # This file contains code to support the RMA devices feature
 #
 
-from builtins import object
-from builtins import str
 import sys
 import traceback
 

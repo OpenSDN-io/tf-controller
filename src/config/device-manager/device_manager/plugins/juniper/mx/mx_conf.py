@@ -7,9 +7,7 @@ This file contains implementation of netconf interface for physical router
 configuration manager
 """
 
-from builtins import str
 import copy
-from future.utils import native_str
 
 from device_api.juniper_common_xsd import *
 
@@ -151,7 +149,7 @@ class MxConf(JuniperConf):
                         pnf_inters.add(pnf_li)
 
             if pnf_inters:
-                vrf_name = native_str(self.physical_router.get_pnf_vrf_name(
+                vrf_name = str(self.physical_router.get_pnf_vrf_name(
                     si_obj, if_type, is_left_first_vrf))
                 vrf_interfaces = pnf_inters
                 ri_conf = { 'ri_name': vrf_name }
@@ -226,7 +224,7 @@ class MxConf(JuniperConf):
 
         from_ = From()
         for prefix in prefixes:
-            from_.add_destination_address(native_str(prefix))
+            from_.add_destination_address(str(prefix))
         then_ = Then()
         then_.add_routing_instance(ri_name)
         return Term(name=DMUtils.make_vrf_term_name(ri_name),
@@ -316,9 +314,9 @@ class MxConf(JuniperConf):
                         rib_config_v6.set_static(static_config_v6)
                         ri_opt.set_rib(rib_config_v6)
                     if ':' in prefix:
-                        static_config_v6.add_route(Route(name=native_str(prefix), discard=''))
+                        static_config_v6.add_route(Route(name=str(prefix), discard=''))
                     else:
-                        static_config.add_route(Route(name=native_str(prefix), discard=''))
+                        static_config.add_route(Route(name=str(prefix), discard=''))
                     if router_external:
                         self.add_to_global_ri_opts(prefix)
 
@@ -473,7 +471,7 @@ class MxConf(JuniperConf):
             irb_intf = Interface(name="irb")
             interfaces_config.add_interface(irb_intf)
 
-            intf_unit = Unit(name=native_str(network_id),
+            intf_unit = Unit(name=str(network_id),
                              comment=DMUtils.vn_irb_fip_inet_comment(vn))
             if restrict_proxy_arp:
                 intf_unit.set_proxy_arp(ProxyArp(restricted=''))
@@ -492,7 +490,7 @@ class MxConf(JuniperConf):
             if highest_enapsulation_priority == "VXLAN":
                 bd_config = BridgeDomains()
                 ri.set_bridge_domains(bd_config)
-                bd = Domain(name=native_str(DMUtils.make_bridge_name(vni)),
+                bd = Domain(name=str(DMUtils.make_bridge_name(vni)),
                             vlan_id='none',
                             vxlan=VXLan(vni=vni))
                 bd.set_comment(DMUtils.vn_bd_comment(vn, "VXLAN"))
@@ -501,14 +499,14 @@ class MxConf(JuniperConf):
                      bd.add_interface(Interface(name=interface.name))
                 if is_l2_l3:
                     # network_id is unique, hence irb
-                    bd.set_routing_interface("irb." + native_str(network_id))
+                    bd.set_routing_interface("irb." + str(network_id))
                 ri.set_protocols(RoutingInstanceProtocols(
                                evpn=Evpn(encapsulation='vxlan', extended_vni_list='all')))
             elif highest_enapsulation_priority in ["MPLSoGRE", "MPLSoUDP"]:
                 ri.set_vlan_id('none')
                 if is_l2_l3:
                     # network_id is unique, hence irb
-                    ri.set_routing_interface("irb." + native_str(network_id))
+                    ri.set_routing_interface("irb." + str(network_id))
                 evpn = Evpn()
                 evpn.set_comment(DMUtils.vn_evpn_comment(vn, highest_enapsulation_priority))
                 for interface in interfaces:
@@ -520,7 +518,7 @@ class MxConf(JuniperConf):
                 irb_intf = Interface(name='irb', gratuitous_arp_reply='')
                 interfaces_config.add_interface(irb_intf)
                 if gateways is not None:
-                    intf_unit = Unit(name=native_str(network_id),
+                    intf_unit = Unit(name=str(network_id),
                                      comment=DMUtils.vn_irb_comment(vn, False, is_l2_l3))
                     irb_intf.add_unit(intf_unit)
                     family = Family()
@@ -540,16 +538,16 @@ class MxConf(JuniperConf):
                                 family.set_inet(inet)
                             addr = Address()
                             inet.add_address(addr)
-                        addr.set_name(native_str(irb_ip))
+                        addr.set_name(str(irb_ip))
                         addr.set_comment(DMUtils.irb_ip_comment(irb_ip))
                         if len(gateway) and gateway != '0.0.0.0':
-                            addr.set_virtual_gateway_address(native_str(gateway))
+                            addr.set_virtual_gateway_address(str(gateway))
 
             self.build_l2_evpn_interface_config(interfaces_config, interfaces, vn)
 
         if (not is_l2 and not is_l2_l3 and gateways):
             interfaces_config = self.interfaces_config or Interfaces(comment=DMUtils.interfaces_comment())
-            ifl_num = native_str(1000 + int(network_id))
+            ifl_num = str(1000 + int(network_id))
             lo_intf = Interface(name="lo0")
             interfaces_config.add_interface(lo_intf)
             intf_unit = Unit(name=ifl_num, comment=DMUtils.l3_lo_intf_comment(vn))
@@ -575,7 +573,7 @@ class MxConf(JuniperConf):
                     addr = Address()
                     inet.add_address(addr)
                     lo_ip = ip + '/' + '32'
-                addr.set_name(native_str(lo_ip))
+                addr.set_name(str(lo_ip))
                 addr.set_comment(DMUtils.lo0_ip_comment(subnet))
             ri.add_interface(Interface(name="lo0." + ifl_num,
                                        comment=DMUtils.lo0_ri_intf_comment(vn)))
@@ -692,7 +690,7 @@ class MxConf(JuniperConf):
                                comment=DMUtils.l2_evpn_intf_unit_comment(vn,
                                                      True, interface.vlan_tag),
                                encapsulation='vlan-bridge',
-                               vlan_id=native_str(interface.vlan_tag)))
+                               vlan_id=str(interface.vlan_tag)))
     # end build_l2_evpn_interface_config
 
     def add_to_global_ri_opts(self, prefix):
@@ -707,7 +705,7 @@ class MxConf(JuniperConf):
             self.global_routing_options_config.add_rib(rib_config_v6)
         else:
             self.global_routing_options_config.add_static(static_config)
-        static_config.add_route(Route(name=native_str(prefix), discard=''))
+        static_config.add_route(Route(name=str(prefix), discard=''))
     # end add_to_global_ri_opts
 
     def set_route_targets_config(self):
@@ -751,9 +749,9 @@ class MxConf(JuniperConf):
                 if ri_obj is None:
                     continue
                 if ri_obj.fq_name[-1] == vn_obj.fq_name[-1]:
-                    vrf_name_l2 = native_str(DMUtils.make_vrf_name(
+                    vrf_name_l2 = str(DMUtils.make_vrf_name(
                         vn_obj.fq_name[-1], vn_obj.vn_network_id, 'l2'))
-                    vrf_name_l3 = native_str(DMUtils.make_vrf_name(
+                    vrf_name_l3 = str(DMUtils.make_vrf_name(
                         vn_obj.fq_name[-1], vn_obj.vn_network_id, 'l3'))
                     export_set = copy.copy(ri_obj.export_targets)
                     import_set = copy.copy(ri_obj.import_targets)
@@ -791,7 +789,7 @@ class MxConf(JuniperConf):
                         if vn_obj.get_forwarding_mode() == 'l2_l3':
                             interfaces = [
                                  JunosInterface(
-                                'irb.' + native_str(vn_obj.vn_network_id),
+                                'irb.' + str(vn_obj.vn_network_id),
                                 'l3', 0)]
                         else:
                             lo0_ips = vn_irb_ip_map['lo0'].get(vn_id, [])
@@ -817,7 +815,7 @@ class MxConf(JuniperConf):
                         vn_obj.fq_name,
                         vn_obj.vn_network_id))
                 else:
-                    vrf_name = native_str(DMUtils.make_vrf_name(
+                    vrf_name = str(DMUtils.make_vrf_name(
                         vn_obj.fq_name[-1], vn_obj.vn_network_id, 'l3', True))
                     interfaces = []
                     service_ports = self.physical_router.junos_service_ports.get(

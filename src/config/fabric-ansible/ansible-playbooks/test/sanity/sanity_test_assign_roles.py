@@ -8,9 +8,6 @@
 This file contains sanity test for all major workflows supported by
 fabric ansible
 """
-from __future__ import absolute_import
-
-from builtins import str
 from .sanity_base import SanityBase
 from . import config
 

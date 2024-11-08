@@ -7,7 +7,7 @@ import os
 import uuid
 
 from cfgm_common import PERMS_RWX
-from cfgm_common.utils import CamelCase, detailed_traceback, str_to_class
+from cfgm_common.utils import detailed_traceback
 from vnc_api.exceptions import NoIdError, RefsExistError
 from vnc_api.gen import resource_client
 from vnc_api.gen.resource_client import (
@@ -21,6 +21,7 @@ from vnc_api.gen.resource_xsd import (
     SubnetType,
     VnSubnetsType
 )
+from vnc_api.utils import CamelCase, str_to_class
 
 
 class FabricManager(object):

@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import mock
 import os
 import sys
@@ -8,9 +7,7 @@ import cfgm_common.tests
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(cfgm_common.tests.__file__),
                 "./mocked_libs")))
 from svc_monitor import svc_monitor
-from pysandesh.sandesh_base import Sandesh
 from svc_monitor.logger import ServiceMonitorLogger
-from cfgm_common.vnc_db import DBBase
 from svc_monitor import config_db
 from vnc_api.vnc_api import *
 from . import test_common_utils as test_utils

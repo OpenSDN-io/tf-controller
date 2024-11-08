@@ -1,10 +1,6 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-
 import argparse
-from builtins import object
-from builtins import str
 import sys
 import traceback
 

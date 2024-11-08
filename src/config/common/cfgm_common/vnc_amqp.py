@@ -1,8 +1,4 @@
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 import socket
-import traceback
 import gevent
 from six import StringIO
 from pprint import pformat

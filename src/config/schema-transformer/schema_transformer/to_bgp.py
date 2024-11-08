@@ -30,7 +30,6 @@ import time
 from cfgm_common import vnc_cgitb
 from cfgm_common.exceptions import NoIdError, ResourceExhaustionError
 from cfgm_common.vnc_db import DBBase
-from past.utils import old_div
 from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
 from pysandesh.gen_py.process_info.ttypes import ConnectionType as ConnType
@@ -206,7 +205,7 @@ class SchemaTransformer(object):
                      yield_in_evaluate=False,
                      print_stats=False):
             self.timeout = time.time()
-            self.max_time = old_div(zk_timeout, 6)
+            self.max_time = zk_timeout // 6
             if self.max_time < 60:
                 self.max_time = 60
             self.total_yield_stats = 0

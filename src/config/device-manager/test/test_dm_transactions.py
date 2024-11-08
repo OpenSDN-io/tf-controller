@@ -1,8 +1,6 @@
 #
 # Copyright (c) 2020 Juniper Networks, Inc. All rights reserved.
 #
-from __future__ import absolute_import
-
 import time
 
 from attrdict import AttrDict

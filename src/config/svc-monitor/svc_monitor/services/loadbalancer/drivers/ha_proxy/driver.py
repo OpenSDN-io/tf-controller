@@ -2,17 +2,12 @@
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import absolute_import
-
-from builtins import str
-import uuid
-
 import svc_monitor.services.loadbalancer.drivers.abstract_driver as abstract_driver
 
 from vnc_api.vnc_api import ServiceTemplate, ServiceInstance, ServiceInstanceType
 from vnc_api.vnc_api import ServiceScaleOutType, ServiceInstanceInterfaceType
 from vnc_api.vnc_api import NoIdError, RefsExistError
-from vnc_api.vnc_api import KeyValuePair, KeyValuePairs
+from vnc_api.vnc_api import KeyValuePair
 from vnc_api.vnc_api import FatFlowProtocols, ProtocolType
 
 from svc_monitor.config_db import *

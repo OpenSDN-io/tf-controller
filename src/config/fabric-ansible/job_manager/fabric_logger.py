@@ -8,7 +8,6 @@ Contains common logger initialization.
 This is to be used in ansible internals as well as ansible modules
 """
 
-from builtins import str
 import logging
 from logging.handlers import RotatingFileHandler
 import os

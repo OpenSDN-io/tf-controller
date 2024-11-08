@@ -1,9 +1,7 @@
-from builtins import object
 import abc
-from future.utils import with_metaclass
 
 
-class ContrailLoadBalancerAbstractDriver(with_metaclass(abc.ABCMeta, object)):
+class ContrailLoadBalancerAbstractDriver(metaclass=abc.ABCMeta):
     """Abstract lbaas driver that expose ~same API as lbaas plugin.
 
     The configuration elements (Vip,Member,etc) are the dicts that

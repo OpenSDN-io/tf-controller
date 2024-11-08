@@ -4,7 +4,6 @@
 # Copyright (c) 2020 Juniper Networks, Inc. All rights reserved.
 #
 
-from builtins import object
 import logging
 import re
 import sys

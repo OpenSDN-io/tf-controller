@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-
-from builtins import object
-
 import testscenarios
 import testtools
 from vnc_openstack.neutron_plugin_db import DBInterface

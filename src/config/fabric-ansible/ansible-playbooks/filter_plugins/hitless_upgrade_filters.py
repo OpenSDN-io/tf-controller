@@ -7,11 +7,8 @@
 """This file contains code to support the hitless image upgrade feature."""
 
 import argparse
-from builtins import object
-from builtins import str
 import copy
 from datetime import timedelta
-import re  # noqa
 import sys
 import traceback
 

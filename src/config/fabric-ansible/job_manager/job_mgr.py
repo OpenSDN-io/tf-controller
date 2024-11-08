@@ -3,13 +3,8 @@
 #
 
 """This file contains job manager process code and api."""
-from __future__ import print_function
 
 import argparse
-from builtins import map
-from builtins import object
-# from builtins import range
-from builtins import str
 import json
 import os
 import signal
@@ -24,7 +19,6 @@ monkey.patch_socket()  # noqa
 from gevent.greenlet import Greenlet
 from gevent.pool import Pool
 import jsonschema
-from past.builtins import basestring
 import subprocess32
 from vnc_api.vnc_api import VncApi
 
@@ -94,7 +88,7 @@ class ExecutableManager(object):
                                self.job_execution_id)
         try:
             ip_schema_json = input_schema
-            if isinstance(input_schema, basestring):
+            if isinstance(input_schema, str):
                 ip_schema_json = json.loads(input_schema)
             jsonschema.validate(ip_json, ip_schema_json)
             self._logger.error("Input Schema Validation Successful"
@@ -474,7 +468,7 @@ class WFManager(object):
                                self.job_execution_id)
         try:
             ip_schema_json = input_schema
-            if isinstance(input_schema, basestring):
+            if isinstance(input_schema, str):
                 ip_schema_json = json.loads(input_schema)
             jsonschema.validate(ip_json, ip_schema_json)
             self._logger.debug("Input Schema Validation Successful"

@@ -10,9 +10,6 @@ This file contains untility functions for device discovery
 """
 
 import ast
-from builtins import next
-from builtins import object
-from builtins import str
 import subprocess
 import xml.etree.ElementTree as etree
 
@@ -24,7 +21,7 @@ import paramiko
 from vnc_api.gen.resource_client import PhysicalRouter
 from vnc_api.vnc_api import VncApi
 
-from job_manager.job_utils import JobFileWrite, JobVncApi  # noqa
+from job_manager.job_utils import JobFileWrite  # noqa
 
 REF_EXISTS_ERROR = 3
 JOB_IN_PROGRESS = "JOB_IN_PROGRESS"

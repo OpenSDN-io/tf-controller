@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from vnc_api.vnc_api import *
 
 from cfgm_common import importutils

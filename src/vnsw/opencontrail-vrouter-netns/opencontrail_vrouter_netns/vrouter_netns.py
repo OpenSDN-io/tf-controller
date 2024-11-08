@@ -22,10 +22,6 @@ Script to start or destroy a Linux network namespace plug
 between two virtual networks. Such that an application can
 be executed under the context of a virtualized network.
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import str
-from builtins import object
 __docformat__ = "restructuredtext en"
 
 import argparse

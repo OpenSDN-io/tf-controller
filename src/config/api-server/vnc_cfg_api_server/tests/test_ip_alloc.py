@@ -1,13 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
 #
 # Copyright (c) 2013,2014 Juniper Networks, Inc. All rights reserved.
 #
-from builtins import map
-from builtins import str
-from builtins import range
-from builtins import object
-from past.utils import old_div
+
 import os
 import sys
 import socket
@@ -2871,7 +2865,7 @@ class TestIpAlloc(test_case.ApiServerTestCase):
             # Repeat this for 2 VMs from middle of the alloc_pool
             total_ip_addr = len(ip_addr_list)
             to_modifies = [[0, total_ip_addr-1],
-                           [old_div(total_ip_addr,2) -1, old_div(total_ip_addr,2)]]
+                           [(total_ip_addr // 2) - 1, (total_ip_addr // 2)]]
             for to_modify in to_modifies:
                 logger.debug('Delete Instances %s %s', to_modify[0], to_modify[1])
                 for idx, val in enumerate(to_modify):

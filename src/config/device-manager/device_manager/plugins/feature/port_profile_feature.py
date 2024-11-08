@@ -9,7 +9,6 @@ This file contains implementation of abstract config generation for
 port profile feature
 """
 
-from builtins import str
 from collections import OrderedDict
 
 from abstract_device_api.abstract_device_xsd import (

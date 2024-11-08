@@ -2,8 +2,6 @@
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import absolute_import
-
 from attrdict import AttrDict
 from cfgm_common.tests.test_common import retries
 from cfgm_common.tests.test_common import retry_exc_handler

@@ -1,23 +1,17 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-from builtins import str
-from builtins import range
-from builtins import object
 import logging
 import sys
 import traceback
 import netaddr
 import subprocess
 import itertools
-import requests
 import gevent
-from gevent import Greenlet, monkey, pool, queue
-from pprint import pformat
+from gevent import Greenlet, pool, queue
 sys.path.append('/opt/contrail/fabric_ansible_playbooks/filter_plugins')
 sys.path.append('/opt/contrail/fabric_ansible_playbooks/common')
 from plugin_ironic import ImportIronicNodes
-from contrail_command import CreateCCNode, CreateCCNodeProfile
+from contrail_command import CreateCCNode
 import json
 import jsonschema
 from job_manager.job_utils import JobVncApi

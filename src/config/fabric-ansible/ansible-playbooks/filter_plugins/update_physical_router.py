@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-from builtins import object
-from builtins import str
 import json
 import sys
 import traceback

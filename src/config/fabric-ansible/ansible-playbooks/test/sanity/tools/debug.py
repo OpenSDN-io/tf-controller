@@ -1,4 +1,3 @@
-from __future__ import print_function
 from vnc_api.vnc_api import VncApi
 import json
 

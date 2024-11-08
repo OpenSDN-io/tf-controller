@@ -2,8 +2,6 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import absolute_import
-
 import json
 import uuid
 

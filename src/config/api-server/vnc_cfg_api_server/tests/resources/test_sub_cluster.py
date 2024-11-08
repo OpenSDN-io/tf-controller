@@ -1,7 +1,6 @@
 #
 # Copyright (c) 2020 Juniper Networks, Inc. All rights reserved.
 #
-from builtins import object
 import logging
 
 from cfgm_common.exceptions import BadRequest

@@ -6,15 +6,11 @@
 # This file contains code to support fabric device configuration operations
 #
 
-from __future__ import print_function
 
 import argparse
-from builtins import object
-from builtins import str
 import json
 import os
 import re
-import shutil  # noqa
 import sys
 import traceback
 

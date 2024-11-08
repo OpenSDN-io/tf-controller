@@ -1,4 +1,4 @@
-from __future__ import print_function
+import sys
 # Before running this script do "source /opt/contrail/api-venv/bin/activate"
 # Usage: python encap_set.py <add|update|delete> <username> <password> <tenant_name> <config_node_ip>
 from vnc_api.vnc_api import *

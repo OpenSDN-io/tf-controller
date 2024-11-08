@@ -6,7 +6,6 @@
 """
 Service monitor DB to store VM, SI information
 """
-from builtins import str
 import inspect
 
 from cfgm_common import jsonutils as json

@@ -15,8 +15,6 @@ o contrail-named-base.conf will be merged with contrail-named.conf
    by the script and config applied to named
 """
 
-from future import standard_library
-standard_library.install_aliases()
 import os
 import subprocess
 import configparser

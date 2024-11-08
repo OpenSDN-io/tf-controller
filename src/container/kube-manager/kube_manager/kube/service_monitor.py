@@ -2,8 +2,6 @@
 # Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-
 from kube_manager.common.kube_config_db import ServiceKM
 from kube_manager.kube.kube_monitor import KubeMonitor
 

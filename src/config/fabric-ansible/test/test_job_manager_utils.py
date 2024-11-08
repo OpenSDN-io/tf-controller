@@ -1,4 +1,3 @@
-from builtins import object
 import json
 from flexmock import flexmock
 

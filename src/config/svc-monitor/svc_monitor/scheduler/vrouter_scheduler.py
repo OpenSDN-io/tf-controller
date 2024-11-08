@@ -17,23 +17,15 @@
 #
 # @author: Edouard Thuleau, Cloudwatt.
 
-from builtins import str
-from builtins import object
 import abc
-import ast
-from distutils.version import StrictVersion as V
 import random
 import six
 
 from cfgm_common import analytics_client
-from cfgm_common import svc_info
 from sandesh_common.vns import constants
-from vnc_api.vnc_api import NoIdError
 
 from svc_monitor.config_db import *
 
-from sandesh_common.vns.constants import \
-     ANALYTICS_API_SERVER_DISCOVERY_SERVICE_NAME as analytics_svc_name
 
 @six.add_metaclass(abc.ABCMeta)
 class VRouterScheduler(object):

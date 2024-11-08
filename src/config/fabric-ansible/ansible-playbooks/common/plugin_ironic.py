@@ -1,11 +1,5 @@
 #!/usr/bin/python
 
-from __future__ import print_function
-from builtins import str
-from builtins import object
-from future import standard_library
-standard_library.install_aliases()  # noqa
-
 from ironicclient import client as ironicclient
 from urllib.parse import urlparse
 from keystoneauth1.identity import v3

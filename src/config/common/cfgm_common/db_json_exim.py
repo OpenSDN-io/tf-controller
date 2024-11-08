@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
 # USAGE STEPS:
 # To upload db
 # Stop all contrail services including zookeeper.

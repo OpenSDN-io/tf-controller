@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-
-from builtins import object
-from builtins import str
 import logging
 import uuid
 

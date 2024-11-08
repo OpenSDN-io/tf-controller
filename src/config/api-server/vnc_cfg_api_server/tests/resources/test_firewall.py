@@ -2,11 +2,8 @@
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 import abc
-from builtins import object
-from builtins import str
 import logging
 
-from future.utils import native_str
 from mock import patch
 from sandesh_common.vns import constants
 import six
@@ -1891,7 +1888,7 @@ class FirewallDraftModeCommonTestSuite(object):
 
         self.assertTrue(
             isinstance(
-                self.api.firewall_policy_read_draft(), native_str))
+                self.api.firewall_policy_read_draft(), str))
         self.assertTrue(
             isinstance(
                 self.api.firewall_policy_read_draft(fq_name=future_fq_name),

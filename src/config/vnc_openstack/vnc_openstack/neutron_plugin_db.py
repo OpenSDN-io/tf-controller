@@ -2,10 +2,7 @@
 #
 
 """.. attention:: Fix the license string."""
-from __future__ import absolute_import
 
-from builtins import object
-from builtins import str
 from collections import namedtuple
 import copy
 import datetime
@@ -25,12 +22,10 @@ from cfgm_common import SG_NO_RULE_FQ_NAME, UUID_PATTERN
 from cfgm_common.utils import _DEFAULT_ZK_LOCK_PATH_PREFIX
 from cfgm_common.utils import _DEFAULT_ZK_LOCK_TIMEOUT
 from cfgm_common.utils import cgitb_hook
-from future import standard_library
 import gevent
 from kazoo.exceptions import LockTimeout
 import netaddr
 from netaddr import IPAddress, IPNetwork, IPSet
-from past.builtins import basestring
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 import requests
 from sandesh_common.vns.constants import TagTypeIdToName
@@ -55,8 +50,6 @@ import vnc_openstack
 from vnc_openstack.utils import filter_fields
 
 from .context import get_context, use_context
-
-standard_library.install_aliases()
 
 
 operations = ['NOOP', 'CREATE', 'READ', 'UPDATE', 'DELETE']
@@ -2749,7 +2742,7 @@ class DBInterface(object):
                                 for k, v in port_q.items() if
                                 k.startswith('binding:'))
         for k, v in vmi_binding_kvps.items():
-            if isinstance(v, basestring):
+            if isinstance(v, str):
                 continue
             vmi_binding_kvps[k] = json.dumps(v)
 

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from vnc_api.vnc_api import (
     FloatingIp, FloatingIpPool,
     IpamSubnetType,

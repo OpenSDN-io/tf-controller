@@ -2,7 +2,6 @@
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
 
-from past.utils import old_div
 import re
 from distutils.util import strtobool
 import kombu
@@ -188,7 +187,7 @@ class VncKombuClientBase(object):
                 msg = 'Error in rabbitmq heartbeat greenlet for %s: %s' %(conn, str(e))
                 self._logger(msg, level=SandeshLevel.SYS_ERR)
             finally:
-                gevent.sleep(float(old_div(self._heartbeat_seconds,2)))
+                gevent.sleep(self._heartbeat_seconds / 2)
     # end _connection_heartbeat
 
     def _publisher(self):

@@ -2,9 +2,6 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import copy
 from unittest import skip
 

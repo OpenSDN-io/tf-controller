@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from cfgm_common.uve.config_updater import ttypes as config_update
 
 

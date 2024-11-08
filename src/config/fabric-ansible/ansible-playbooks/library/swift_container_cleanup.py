@@ -6,16 +6,10 @@
 
 """Contains cleaning up the swift container of residual chucks."""
 
-from builtins import object
-from builtins import str
-
-from future import standard_library  # noqa
-standard_library.install_aliases()   # noqa
 import logging                       # noqa
 import re
 from threading import RLock
 import time
-from urllib.parse import urlparse  # noqa
 
 from ansible.module_utils.fabric_utils import FabricAnsibleModule
 import requests

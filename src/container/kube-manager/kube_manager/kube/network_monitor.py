@@ -2,8 +2,6 @@
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-
 import json
 from kube_manager.common.kube_config_db import NetworkKM
 from kube_manager.kube.kube_monitor import KubeMonitor

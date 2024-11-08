@@ -9,7 +9,6 @@ from cfgm_common import _obj_serializer_all
 from cfgm_common import jsonutils as json
 from cfgm_common.exceptions import HttpError
 from cfgm_common.exceptions import NoIdError
-from future.utils import with_metaclass
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from sandesh_common.vns import constants
 from vnc_api.gen.resource_xsd import QuotaType
@@ -31,7 +30,7 @@ class ResourceMixinMeta(type):
         return cls.db_conn._zk_db
 
 
-class ResourceMixin(object, with_metaclass(ResourceMixinMeta)):
+class ResourceMixin(metaclass=ResourceMixinMeta):
     server = None
 
     @classmethod

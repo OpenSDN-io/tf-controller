@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 # always try to load simplejson first
 # as we get better performance
 try:

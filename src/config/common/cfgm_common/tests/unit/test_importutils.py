@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 # Copyright 2011 OpenStack Foundation.
 # All Rights Reserved.
 #

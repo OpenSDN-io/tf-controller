@@ -4,8 +4,6 @@
 # Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import absolute_import
-from builtins import str
 import time
 from .sanity_base import SanityBase
 from . import config

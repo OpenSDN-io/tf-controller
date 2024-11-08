@@ -3,7 +3,6 @@
 #
 """Contains utility functions used for Sandesh initialization and logging."""
 
-from builtins import object
 import time
 
 from job_manager.job_exception import JobException

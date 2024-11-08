@@ -1,9 +1,6 @@
 #!/usr/bin/python
 
-from builtins import object
-from builtins import str
 import glob
-import json  # noqa
 import os
 import re
 import sys

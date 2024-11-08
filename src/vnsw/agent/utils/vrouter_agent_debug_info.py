@@ -66,18 +66,11 @@ provider_config:
       ssh_pwd: c0ntrail123
   gcore_needed: true
 """
-from __future__ import print_function
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from builtins import object
 import subprocess
 import time
 import paramiko
 import sys
-import json
 import yaml
 import warnings
 warnings.filterwarnings(action='ignore',module='.*paramiko.*')

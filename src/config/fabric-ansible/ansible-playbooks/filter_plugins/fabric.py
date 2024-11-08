@@ -4,12 +4,8 @@
 #
 # This file contains implementation for fabric related Ansible filter plugins
 #
-from __future__ import print_function
 
 import argparse
-from builtins import object
-from builtins import range
-from builtins import str
 import copy
 import ipaddress
 import json

@@ -1,12 +1,8 @@
-from __future__ import absolute_import
-from builtins import str
 import gevent
 import kombu
 import sys
 import logging
-import uuid
 import unittest
-import testtools
 import os
 
 from flexmock import flexmock
@@ -14,9 +10,6 @@ from cfgm_common import vnc_kombu
 sys.path.append('../common/cfgm_common/tests/mocked_libs')
 from vnc_cfg_api_server.vnc_db import VncServerKombuClient
 from distutils.version import LooseVersion
-from vnc_api.vnc_api import VirtualNetwork, NetworkIpam, VnSubnetsType
-
-from . import test_case
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

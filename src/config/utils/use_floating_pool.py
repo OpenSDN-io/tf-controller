@@ -3,15 +3,9 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import argparse
 import configparser
 
-import json
-import copy
 from netaddr import IPNetwork
 
 from vnc_api.vnc_api import *

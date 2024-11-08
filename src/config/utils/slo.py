@@ -3,15 +3,9 @@
 #Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
 #
 
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
 import sys
 import argparse
 
-from requests.exceptions import ConnectionError
 from vnc_api.vnc_api import *
 
 class CreateDeleteSLO(object):
