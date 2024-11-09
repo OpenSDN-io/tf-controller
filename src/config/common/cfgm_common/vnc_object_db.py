@@ -15,12 +15,6 @@ class VncObjectDBClient(object):
                  debug_obj_cache_types=None, connection=None,
                  db_engine='cassandra', ssl_enabled=False, ca_certs=None,
                  zk_servers=None,
-                 # TODO(sahid): For projects that are using
-                 # VncObjectDBClient like: kube-manager,
-                 # db-loader, schema_transformer, device_manager,
-                 # svc_monitor, we consider to continue using `thrift`
-                 # until we are sure they are compliant with other
-                 # drivers.
                  cassandra_driver=None, num_workers=2, num_groups=2):
             if db_engine == 'cassandra':
                 self._object_db = vnc_cassandra.VncCassandraClient(

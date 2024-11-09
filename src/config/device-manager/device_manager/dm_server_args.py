@@ -46,7 +46,7 @@ def default_options():
         'admin_tenant_name': 'default-domain',
         'cassandra_user': None,
         'cassandra_password': None,
-        'cassandra_driver': "thrift",
+        'cassandra_driver': "cql",
         'rabbit_server': 'localhost',
         'rabbit_port': '5672',
         'rabbit_user': 'guest',
@@ -123,7 +123,7 @@ def add_parser_arguments(parser):
                         help="Enable TLS for cassandra communication")
     parser.add_argument("--cassandra_ca_certs", help="Cassandra CA certs")
     parser.add_argument("--cassandra_driver", help="Cassandra driver",
-                        choices=["thrift", "cql"])
+                        choices=["cql"])
     parser.add_argument("--reset_config", action="store_true",
                         help="Warning! Destroy previous configuration and "
                              "start clean")

@@ -22,21 +22,16 @@ import cgitb
 import gevent
 
 from cassandra import cluster, auth
-from pycassa.connection import default_socket_factory
-from pycassa import ConnectionPool
-from pycassa import ColumnFamily
-from pycassa.system_manager import SystemManager
-from pycassa import NotFoundException
 import kazoo.client
 import kazoo.handlers.gevent
 import kazoo.exceptions
-from thrift.transport import TSSLSocket, TTransport
-import ssl
 
 from cfgm_common import utils
 from cfgm_common.vnc_cassandra import VncCassandraClient
 
+
 logger = logging.getLogger(__name__)
+
 
 class NotEmptyError(Exception): pass
 class InvalidArguments(Exception): pass
@@ -98,33 +93,17 @@ class DatabaseExim(object):
     # end __init__
 
     def init_cassandra(self, ks_cf_info=None):
-        ssl_enabled = (self._api_args.cassandra_use_ssl
-                       if 'cassandra_use_ssl' in self._api_args else False)
-        try:
-            self._cassandra = VncCassandraClient(
-                self._api_args.cassandra_server_list,
-                db_prefix=self._api_args.cluster_id,
-                rw_keyspaces=ks_cf_info,
-                ro_keyspaces=None,
-                logger=self.log,
-                reset_config=False,
-                ssl_enabled=self._api_args.cassandra_use_ssl,
-                ca_certs=self._api_args.cassandra_ca_certs,
-                cassandra_driver=self._api_args.cassandra_driver)
-        except NotFoundException:
-            # in certain  multi-node setup, keyspace/CF are not ready yet when
-            # we connect to them, retry later
-            gevent.sleep(20)
-            self._cassandra = VncCassandraClient(
-                self._api_args.cassandra_server_list,
-                db_prefix=self._api_args.cluster_id,
-                rw_keyspaces=ks_cf_info,
-                ro_keyspaces=None,
-                logger=self.log,
-                reset_config=False,
-                ssl_enabled=self._api_args.cassandra_use_ssl,
-                ca_certs=self._api_args.cassandra_ca_certs,
-                cassandra_driver=self._api_args.cassandra_driver)
+        self._cassandra = VncCassandraClient(
+            self._api_args.cassandra_server_list,
+            db_prefix=self._api_args.cluster_id,
+            rw_keyspaces=ks_cf_info,
+            ro_keyspaces=None,
+            logger=self.log,
+            reset_config=False,
+            ssl_enabled=self._api_args.cassandra_use_ssl,
+            ca_certs=self._api_args.cassandra_ca_certs,
+            cassandra_driver=self._api_args.cassandra_driver,
+            zk_servers=self._api_args.zk_server_ip)
         self.driver = self._cassandra._cassandra_driver
         logger.info("Connected to Cassandra")
 
@@ -177,7 +156,7 @@ class DatabaseExim(object):
         logger.addHandler(stdout)
         logger.setLevel('DEBUG' if self._args.debug else 'INFO')
         if not getattr(self._api_args, "cassandra_driver"):
-            self._api_args.cassandra_driver = "thrift"
+            self._api_args.cassandra_driver = "cql"
 
         if args_obj.import_from is not None and args_obj.export_to is not None:
             raise InvalidArguments(
@@ -256,64 +235,6 @@ class DatabaseExim(object):
                 zookeeper.create(path, value.encode(), makepath=True)
             logger.info("Zookeeper DB restored")
             zookeeper.stop()
-
-    def _make_ssl_socket_factory(self, ca_certs, validate=True):
-        # copy method from pycassa library because no other method
-        # to override ssl version
-        def ssl_socket_factory(host, port):
-            TSSLSocket.TSSLSocket.SSL_VERSION = ssl.PROTOCOL_TLSv1_2
-            return TSSLSocket.TSSLSocket(host, port, ca_certs=ca_certs, validate=validate)
-        return ssl_socket_factory
-
-    def _cassandra_dump(self):
-        logger.info("Cassandra DB start")
-        cassandra_contents = {}
-        creds = None
-        if self._api_args.cassandra_user and self._api_args.cassandra_password:
-            creds = {'username': self._api_args.cassandra_user,
-                     'password': self._api_args.cassandra_password}
-        socket_factory = default_socket_factory
-        if ('cassandra_use_ssl' in self._api_args and
-                self._api_args.cassandra_use_ssl):
-            socket_factory = self._make_ssl_socket_factory(
-                self._api_args.cassandra_ca_certs, validate=False)
-        sys_mgr = None
-        # try all servers
-        for server in self._api_args.cassandra_server_list:
-            try:
-                sys_mgr = SystemManager(
-                    server,
-                    credentials=creds,
-                    socket_factory=socket_factory)
-                break
-            except TTransport.TTransportException:
-                continue
-        if not sys_mgr:
-            raise AllServersUnavailable("Unable to reach any server in Cassandra Server List")
-        existing_keyspaces = sys_mgr.list_keyspaces()
-        for ks_name in set(KEYSPACES) - set(self._args.omit_keyspaces or []):
-            if self._api_args.cluster_id:
-                full_ks_name = '%s_%s' % (self._api_args.cluster_id, ks_name)
-            else:
-                full_ks_name = ks_name
-            if full_ks_name not in existing_keyspaces:
-                continue
-            cassandra_contents[ks_name] = {}
-
-            pool = ConnectionPool(
-                full_ks_name, self._api_args.cassandra_server_list,
-                pool_timeout=120, max_retries=-1, timeout=5,
-                socket_factory=socket_factory, credentials=creds)
-            for cf_name in sys_mgr.get_keyspace_column_families(full_ks_name):
-                cassandra_contents[ks_name][cf_name] = {}
-                cf = ColumnFamily(pool, cf_name,
-                                  buffer_size=self._args.buffer_size)
-                for r, c in cf.get_range(column_count=10000000, include_timestamp=True):
-                    cassandra_contents[ks_name][cf_name][r] = c
-            pool.dispose()
-        sys_mgr.close()
-        logger.info("Cassandra DB dumped")
-        return cassandra_contents
 
     def _cassandra_dump_cql(self):
         logger.info("Cassandra DB start")
@@ -406,7 +327,7 @@ class DatabaseExim(object):
         if self._api_args.cassandra_driver == 'cql':
             cass_dump = pool.apply_async(self._cassandra_dump_cql)
         else:
-            cass_dump = pool.apply_async(self._cassandra_dump)
+            raise Exception("driver is not supported " + self._api_args.cassandra_driver)
         zoo_dump = pool.apply_async(self._zookeeper_dump)
         db_contents = {
             'cassandra': cass_dump.get(timeout=self._args.dump_timeout),

@@ -7,22 +7,11 @@ from collections import OrderedDict
 import contextlib
 import copy
 from datetime import datetime
-import sys
-import time
 
 import six
 
 
-try:
-    # Even if we don't want import pycassa anymore. Only
-    # CassandraDriverThrift should doing that. We have to because some
-    # part of the code like db_manage.py is still refering some
-    # pycassa objects.
-    import pycassa.NotFoundException
-
-    BaseExceptionClass = pycassa.NotFoundException
-except ImportError:
-    BaseExceptionClass = Exception
+BaseExceptionClass = Exception
 
 
 class NotFoundException(BaseExceptionClass):
@@ -239,9 +228,6 @@ class _CassandraFakeServerTable(_TableCQLSupport):
         self.name = name
 
         self.__rows__ = {}
-
-        # Thrift related
-        self._cfdef = self.ColumnFamilyDefType(keyspace)
 
     def send(self):
         pass
@@ -508,129 +494,3 @@ class PatchContext(object):
             else:
                 raise Exception(
                     "Unknown patch type %s in un-patching" % patch_type)
-
-
-#
-# This is to support modules that are still using pycassa (db_manage)
-#
-
-class FakePool(object):
-
-    class AllServersUnavailable(Exception):  # noqa: D106
-        pass
-
-    class MaximumRetryException(Exception):  # noqa: D106
-        pass
-
-    class ConnectionPool(object):  # noqa: D106
-
-        def __init__(*args, **kwargs):
-            self = args[0]
-            if "keyspace" in kwargs:
-                self.keyspace = kwargs['keyspace']
-            else:
-                self.keyspace = args[1]
-
-
-class FakeUtils(object):
-
-    @staticmethod
-    def convert_uuid_to_time(time_uuid_in_db):
-        ts = time.mktime(time_uuid_in_db.timetuple())
-        return ts
-
-
-class FakeConnection(object):
-
-    def __init__(*args, **kwargs):
-        pass
-
-    @staticmethod
-    def default_socket_factory(*args, **kwargs):
-        pass
-
-
-class FakeSystemManager(CassandraFakeServer):
-
-    SIMPLE_STRATEGY = 'SimpleStrategy'
-
-    class SystemManager(object):  # noqa: D106
-
-        def __init__(*args, **kwargs):
-            pass
-
-        def list_keyspaces(self):
-            return list(CassandraFakeServer.__keyspaces__.keys())
-
-        def get_keyspace_properties(self, ks_name):
-            return {'strategy_options': {'replication_factor': '1'}}
-
-        def get_keyspace_column_families(self, keyspace):
-            return CassandraFakeServer.__keyspaces__.get(
-                keyspace, {}).__tables__.keys()
-
-        def create_column_family(self, keyspace, name, *args, **kwargs):
-            CassandraFakeServer.__keyspaces__[keyspace].create_table(name)
-
-
-class FakeColumnFamily(_CassandraFakeServerTable):
-
-    def __init__(self, pool, name, *args, **kwargs):
-        self._pool = pool
-        self._name = name
-        super(FakeColumnFamily, self).__init__(self._pool.keyspace, self._name)
-
-        # We proxy pycassa and CassandraFakeServer
-        ks = CassandraFakeServer.create_keyspace(self._pool.keyspace)
-        self.__rows__ = ks.create_table(self._name).__rows__
-
-
-class FakeBatch(object):
-
-    class Mutator(object):  # noqa: D106
-        def send(self):
-            pass
-
-
-class FakeTtypes(object):
-
-    class InvalidRequestException(Exception):  # noqa: D106
-        pass
-
-    class ConsistencyLevel(object):  # noqa: D106
-        QUORUM = 42
-
-
-class FakePycassa(object):
-    connection = FakeConnection
-    ConnectionPool = FakePool.ConnectionPool
-    ColumnFamily = FakeColumnFamily
-    util = FakeUtils
-    NotFoundException = NotFoundException
-
-
-sys.modules["pycassa"] = FakePycassa
-sys.modules["pycassa.batch"] = FakeBatch
-sys.modules["pycassa.connection"] = FakeConnection
-sys.modules["pycassa.system_manager"] = FakeSystemManager
-sys.modules["pycassa.pool"] = FakePool
-sys.modules["pycassa.cassandra"] = FakeTtypes
-sys.modules["pycassa.cassandra.ttypes"] = FakeTtypes
-sys.modules["pycassa.cassandra.ttypes.ConsistencyLevel"] =\
-    FakeTtypes.ConsistencyLevel
-
-
-class FakeThriftPackages(object):
-    class TSSLSocket(object):  # noqa: D106
-        pass
-
-    class TTransport(object):  # noqa: D106
-        pass
-
-
-class FakeThrift(object):
-    transport = FakeThriftPackages
-
-
-sys.modules["thrift"] = FakeThrift
-sys.modules["thrift.transport"] = FakeThriftPackages

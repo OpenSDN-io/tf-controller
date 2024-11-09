@@ -3,13 +3,9 @@
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 
+from cassandra import cluster, auth
 from cfgm_common.vnc_cassandra import VncCassandraClient
-from contrail_issu import issu_contrail_config
-from pycassa.system_manager import SystemManager
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
-from thrift.transport import TTransport
-from thrift.transport import TSSLSocket
-import ssl
 
 
 class ICCassandraInfo():
@@ -70,52 +66,50 @@ class ICCassandraClient():
         )
         self.issu_prepare()
 
-    def _make_ssl_socket_factory(self, ca_certs, validate=True):
-        # copy method from pycassa library because no other method
-        # to override ssl version
-        def ssl_socket_factory(host, port):
-            TSSLSocket.TSSLSocket.SSL_VERSION = ssl.PROTOCOL_TLSv1_2
-            return TSSLSocket.TSSLSocket(host, port,
-                                         ca_certs=ca_certs, validate=validate)
-        return ssl_socket_factory
-
     def issu_prepare(self):
         self._logger(
             "Issu contrail cassandra prepare...",
             level=SandeshLevel.SYS_INFO,
         )
-        socket_factory = None
-        if self._odb_use_ssl:
-            socket_factory = self._make_ssl_socket_factory(
-                self._odb_ca_certs, validate=False)
+
+        auth_provider = None
+        if self._old_creds:
+            auth_provider = auth.PlainTextAuthProvider(
+                username=self._old_creds.get('username'),
+                password=self._old_creds.get('password'))
+
         for server in self._oldversion_server_list:
             try:
-                if socket_factory:
-                    old_sys_mgr = SystemManager(server,
-                                                socket_factory=socket_factory,
-                                                credentials=self._old_creds)
-                else:
-                    old_sys_mgr = SystemManager(server,
-                                                credentials=self._old_creds)
+                temp_cluster = cluster.Cluster(
+                    [server.split(':')[0]],
+                    auth_provider=auth_provider)
+                temp_cluster.connect()
                 break
-            except TTransport.TTransportException as err:
+            except Exception as err:
                 self._logger(
                     "Issu contrail cassandra connect to %s failed with %s" % (server, err),
                     level=SandeshLevel.SYS_DEBUG,
                 )
                 continue
-        old_keyspaces = old_sys_mgr.list_keyspaces()
+        else:
+            raise Exception("can't connect to old cassandra DB")
 
+        old_keyspaces = [x.name for x in temp_cluster.metadata.parser.get_all_keyspaces()]
         for issu_func, ks, cflist in self._issu_info:
             # new keyspaces such as
             # dm_ni_ipv6_ll_table, dm_pr_asn_table,
             # healthmonitor_table, loadbalancer_table do not exist in old db
             if ks not in old_keyspaces:
                 continue
-            for cf in set(cflist.keys()) - set(old_sys_mgr.get_keyspace_column_families(ks).keys()):
-                issu_contrail_config.lognprint("Skip syncing {} column family".format(cf),
-                                               level=SandeshLevel.SYS_INFO)
-                del cflist[cf]
+
+            # ==========================================================
+            # TODO: restore this
+            # for cf in set(cflist.keys()) - set(old_sys_mgr.get_keyspace_column_families(ks).keys()):
+            #     issu_contrail_config.lognprint("Skip syncing {} column family".format(cf),
+            #                                    level=SandeshLevel.SYS_INFO)
+            #     del cflist[cf]
+            # ==========================================================
+
             if issu_func is None:
                 issu_func = self._issu_basic_function
             ks_issu_func_info = {ks: issu_func}
@@ -127,14 +121,14 @@ class ICCassandraClient():
             self._ks_issu_func_info.update(ks_issu_func_info)
 
         self._oldversion_handle = VncCassandraClient(
-            self._oldversion_server_list, cassandra_driver='thrift',
+            self._oldversion_server_list, cassandra_driver='cql',
             db_prefix=self._odb_prefix, ro_keyspaces=self._okeyspaces,
             logger=self._logger, credential=self._old_creds,
             ssl_enabled=self._odb_use_ssl,
             ca_certs=self._odb_ca_certs)
 
         self._newversion_handle = VncCassandraClient(
-            self._newversion_server_list, cassandra_driver='thrift',
+            self._newversion_server_list, cassandra_driver='cql',
             db_prefix=self._ndb_prefix, rw_keyspaces=self._nkeyspaces,
             logger=self._logger, credential=self._new_creds,
             ssl_enabled=self._ndb_use_ssl,

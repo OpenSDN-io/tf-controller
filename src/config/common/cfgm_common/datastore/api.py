@@ -340,4 +340,4 @@ class CassandraDriver(API):
 
     def get_cf(self, cf_name):
         """Returns table/CF context based on name."""
-        return self._cf_dict.get(cf_name)
+        return self._cf_dict[cf_name]

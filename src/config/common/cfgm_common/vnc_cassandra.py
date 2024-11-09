@@ -17,7 +17,6 @@ from . import utils
 import datetime
 from operator import itemgetter
 from collections import OrderedDict
-from cfgm_common.datastore.drivers.cassandra_thrift import CassandraDriverThrift
 from cfgm_common.datastore.drivers.cassandra_cql import CassandraDriverCQL
 from cfgm_common.datastore import api as datastore_api
 
@@ -100,18 +99,6 @@ class VncCassandraClient(object):
 
         if cassandra_driver == 'cql':
             driverClass = CassandraDriverCQL
-        elif cassandra_driver == 'thrift':
-            driverClass = CassandraDriverThrift
-
-            # TODO(sahid): To satisfy test-framework which has its
-            # specific py3 support for thrift we can have the above
-            # condition, when that will be fixed we could uncomment
-            # the code.
-            #if six.PY3:
-            #    raise VncError(
-            #        "selected driver `{}` not supported for Python 3.".format(
-            #            cassandra_driver))
-
         else:
             raise VncError(
                 "datastore driver not selected, see `cassandra_driver`.")

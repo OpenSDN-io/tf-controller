@@ -15,7 +15,6 @@ from pysandesh.gen_py.process_info.ttypes import ConnectionType as ConnType
 
 # Drivers
 from cfgm_common.datastore.drivers import cassandra_cql
-from cfgm_common.datastore.drivers import cassandra_thrift
 
 
 class FakeDriver(datastore_api.CassandraDriver):
@@ -219,88 +218,6 @@ class TestStatus(unittest.TestCase):
             message='',
             server_addrs=['a', 'b', 'c'])
         self.assertEqual(ConnectionStatus.INIT, drv.get_status())
-
-
-class TestCassandraDriverThrift(unittest.TestCase):
-    # The aim here is not to test the legacy driver which already runs
-    # in production, but test new methods updated to avoid
-    # regressions.
-
-    def setUp(self):
-        # Mock the libraries
-        cassandra_thrift.pycassa = mock.MagicMock()
-        cassandra_thrift.transport = mock.MagicMock()
-
-        # Mock creating keyspaces
-        def _Init_Cluster(self):
-            self._cf_dict = {
-                datastore_api.OBJ_UUID_CF_NAME: mock.MagicMock(),
-                datastore_api.OBJ_FQ_NAME_CF_NAME: mock.MagicMock(),
-                datastore_api.OBJ_SHARED_CF_NAME: mock.MagicMock(),
-            }
-
-        # Mock handle_exceptions
-        def _handle_exceptions(self, func, oper=None):
-            def wrapper(*args, **kwargs):
-                return func(*args, **kwargs)
-            return wrapper
-        p = []
-        p.append(mock.patch(
-            'cfgm_common.datastore.drivers.cassandra_thrift.CassandraDriverThrift._Init_Cluster',
-            _Init_Cluster))
-        p.append(mock.patch(
-            'cfgm_common.datastore.drivers.cassandra_thrift.CassandraDriverThrift._handle_exceptions',
-            _handle_exceptions))
-        [x.start() for x in p]
-
-        self.drv = cassandra_thrift.CassandraDriverThrift(['a', 'b'])
-
-        # Ensure to cleanup mockings
-        [self.addCleanup(x.stop) for x in p]
-
-    def test_import_error(self):
-        cassandra_thrift.pycassa = None
-        self.assertRaises(ImportError, cassandra_thrift.CassandraDriverThrift, ['a', 'b'])
-
-    def test_get_count(self):
-        self.drv.get_count(
-            datastore_api.OBJ_UUID_CF_NAME, '<uuid>', start='a', finish='z')
-        self.drv._cf_dict[
-            datastore_api.OBJ_UUID_CF_NAME].get_count.assert_called_once_with(
-                '<uuid>', column_finish='z', column_start='a')
-
-    def test_xget(self):
-        self.drv.xget(
-            datastore_api.OBJ_UUID_CF_NAME, '<uuid>', start='a', finish='z')
-        self.drv._cf_dict[
-            datastore_api.OBJ_UUID_CF_NAME].xget.assert_called_once_with(
-                '<uuid>', column_finish='z', column_start='a')
-
-    def test_get_range(self):
-        self.drv.get_range(
-            datastore_api.OBJ_UUID_CF_NAME, columns=['type', 'fq_name'])
-        self.drv._cf_dict[
-            datastore_api.OBJ_UUID_CF_NAME].get_range.assert_called_once_with(
-                column_count=100000, columns=['type', 'fq_name'], include_timestamp=False)
-
-    def test_remove(self):
-        self.drv.remove(
-            cf_name=datastore_api.OBJ_FQ_NAME_CF_NAME, key='<uuid>', columns=['fq_name'])
-        self.drv._cf_dict[
-            datastore_api.OBJ_FQ_NAME_CF_NAME].remove.assert_called_once_with(
-                '<uuid>', ['fq_name'])
-
-    def test_insert(self):
-        self.drv.insert(
-            cf_name=datastore_api.OBJ_FQ_NAME_CF_NAME, key='<uuid>', columns=['fq_name'])
-        self.drv._cf_dict[
-            datastore_api.OBJ_FQ_NAME_CF_NAME].insert.assert_called_once_with(
-                '<uuid>', ['fq_name'])
-
-    def test_get_cf(self):
-        self.assertEqual(
-            self.drv._cf_dict[datastore_api.OBJ_FQ_NAME_CF_NAME],
-            self.drv.get_cf(datastore_api.OBJ_FQ_NAME_CF_NAME))
 
 
 class TestCassandraDriverCQL(unittest.TestCase):

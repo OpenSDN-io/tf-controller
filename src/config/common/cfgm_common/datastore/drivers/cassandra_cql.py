@@ -43,7 +43,6 @@ except ImportError:
 
 
 DEFAULT_CQL_PORT = 9042
-DEFAULT_THRIFT_PORT = 9160
 
 # Properties passed to the column familly
 TABLE_PROPERTIES = {
@@ -373,18 +372,6 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
                 endpoints.append(server)
             except ValueError:
                 endpoints.append(address)
-
-        # Best-effort to support upgrade from thrift to cql
-        if port == DEFAULT_THRIFT_PORT:
-            self.options.logger(
-                "Usage of thrift port '{}' detected for CQL driver. "
-                "Please consider fixing port number. Trying "
-                "best-effort by switching to default port for "
-                "CQL '{}'.".format(
-                    DEFAULT_THRIFT_PORT,
-                    DEFAULT_CQL_PORT),
-                level=SandeshLevel.SYS_WARN)
-            port = None
 
         connector.ProtocolVersion.SUPPORTED_VERSIONS = self.ProtocolVersions
         try:
@@ -899,8 +886,9 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
                 aggregator = [row]
 
         # Handle last rows
-        for k, rows in treat(current_key, aggregator):
-            yield k, rows
+        if current_key is not None:
+            for k, rows in treat(current_key, aggregator):
+                yield k, rows
 
     def _Get_Count(self, cf_name, key, start='', finish='',
                    keyspace_name=None):
@@ -1003,6 +991,8 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
                 if len(batch) >= self.options.batch_limit:
                     batch.send()
                 batch.add_remove(key, cql, [StringType(key)])
+                if local_batch:
+                    batch.send()
             else:
                 ses.execute(cql, [StringType(key)])
         else:

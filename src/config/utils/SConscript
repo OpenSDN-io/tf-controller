@@ -9,7 +9,6 @@ env = CfgmEnv.Clone()
 
 utils_scripts = [
     'add_route_target.py',
-    'contrail_utils.py',
     'del_route_target.py',
     'provision_bgp.py',
     'provision.py',
@@ -24,7 +23,6 @@ utils_scripts = [
     'provision_encap.py',
     'provision_vgw_interface.py',
     'use_floating_pool.py',
-    'contrail_veth_port.py',
     'encap.py',
     'provision_forwarding_mode.py',
     'provision_vrouter.py',
@@ -36,8 +34,6 @@ utils_scripts = [
     'net_policy_join.py',
     'provision_mx.py',
     'service-instance.py',
-    'config_db_obj_name_validate.sh',
-    'config_db_obj_name_validate.py',
     'provision_analytics_node.py',
     'provision_analytics_snmp_node.py',
     'provision_analytics_alarm_node.py',

@@ -634,7 +634,7 @@ def parse_args(args_str):
     cassandraopts = {
         'cassandra_user': None,
         'cassandra_password': None,
-        'cassandra_driver': "thrift",
+        'cassandra_driver': "cql",
         'num_workers': None,
         'num_groups': None,
     }
@@ -741,7 +741,7 @@ def parse_args(args_str):
     parser.add_argument("--cassandra_user", help="Cassandra user name")
     parser.add_argument("--cassandra_password", help="Cassandra password")
     parser.add_argument("--cassandra_driver", help="Cassandra driver",
-                        choices=["thrift", "cql"])
+                        choices=["cql"])
     parser.add_argument("--rabbit_server", help="Rabbitmq server address")
     parser.add_argument("--rabbit_port", help="Rabbitmq server port")
     parser.add_argument("--rabbit_user", help="Username for rabbit")

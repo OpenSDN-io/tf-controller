@@ -227,12 +227,8 @@ def parse_args(args_str):
         nargs='+')
     parser.add_argument(
         "--cassandra_driver",
-        choices=['thrift', 'cql'],
-        help="The Cassandra's driver used. "
-        "The `trift`'s driver is *deprecated*, only supported with Python 2.  "
-        "The `cql`'s driver is supported with Python 2 and 3. `cql` is the "
-        "recommmanded driver.  Please note that Cassandra exposes different "
-        "port for `thrift` and `cql`, usualy 9160 and 9042.")
+        choices=['cql'],
+        help="The Cassandra's driver used. ")
     parser.add_argument(
         "--cassandra_use_ssl", action="store_true",
         help="Enable TLS for cassandra connection")

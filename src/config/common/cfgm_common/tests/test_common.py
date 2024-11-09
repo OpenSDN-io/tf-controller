@@ -12,7 +12,6 @@ from cfgm_common.tests import cassandra_fake_impl
 from cfgm_common.datastore.drivers import cassandra_fake
 
 # Patch drivers
-sys.modules["cfgm_common.datastore.drivers.cassandra_thrift"] = cassandra_fake
 sys.modules["cfgm_common.datastore.drivers.cassandra_cql"] = cassandra_fake
 
 import logging
