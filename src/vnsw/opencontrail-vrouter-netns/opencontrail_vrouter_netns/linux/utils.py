@@ -24,7 +24,6 @@ import signal
 import socket
 import struct
 import subprocess
-import sys
 import tempfile
 from eventlet import greenthread
 
@@ -67,8 +66,7 @@ def execute(cmd, root_helper=None, process_input=None, addl_env=None,
                     f"\nCommand: {cmd}\nExit code: {obj.returncode}\nStdout: {_stdout}\nStderr: {_stderr}"
                 )
     finally:
-        if sys.version_info[:2] != (2, 6):
-            greenthread.sleep(0)
+        greenthread.sleep(0)
 
     return (_stdout, _stderr) if return_stderr else _stdout
 

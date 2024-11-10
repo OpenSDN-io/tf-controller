@@ -13,7 +13,6 @@ from multiprocessing.queues import Queue
 import queue
 import socket
 import ssl
-import sys
 
 import gevent
 import gevent.lock
@@ -58,12 +57,9 @@ REPLICATION_PROPERTIES = {
 }
 
 # SSL related configurations
-if sys.version_info >= (3, 6):
-    # Python3.6 Introduces PROTOCOL_TLS which is using the best
-    # version supported.
-    SSL_VERSION = ssl.PROTOCOL_TLS
-else:
-    SSL_VERSION = ssl.PROTOCOL_TLSv1_2
+# Python3.6 Introduces PROTOCOL_TLS which is using the best
+# version supported.
+SSL_VERSION = ssl.PROTOCOL_TLS
 
 # Set hard limit of the columns returned.
 MAX_COLUMNS = 10000000

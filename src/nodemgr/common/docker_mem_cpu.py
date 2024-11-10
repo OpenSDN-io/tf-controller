@@ -2,7 +2,6 @@
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 
-import sys
 import os
 import docker
 
@@ -19,10 +18,7 @@ class DockerMemCpuUsageData(object):
         self._id = format(_id, 'x').zfill(64)
 
     def _get_container_stats(self):
-        if sys.version_info[0] == 3:
-            return self.client.stats(self._id, stream=False)
-        else:
-            return self.client.stats(self._id, decode=True, stream=False)
+        return self.client.stats(self._id, stream=False)
 
     def _get_process_cpu_share(self, current_cpu):
         # sometimes docker returns empty arrays

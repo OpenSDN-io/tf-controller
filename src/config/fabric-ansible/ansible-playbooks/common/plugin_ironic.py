@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from ironicclient import client as ironicclient
 from urllib.parse import urlparse

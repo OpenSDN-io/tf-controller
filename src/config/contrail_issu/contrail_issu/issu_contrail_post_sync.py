@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
@@ -7,11 +7,6 @@ import logging
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from contrail_issu.issu_contrail_common import ICCassandraClient
 from contrail_issu import issu_contrail_config
-
-
-def _myprint(x, level):
-    print(x)
-    logging.info(x)
 
 
 def _issu_cassandra_post_sync_main():

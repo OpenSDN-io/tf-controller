@@ -1,16 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
 #
 
-import sys
-if sys.version_info[0] < 3:
-    reload(sys) # noqa
-    sys.setdefaultencoding('UTF8')
-import configparser
-from six import string_types
 import argparse
+import configparser
 import logging
+from six import string_types
+import sys
 
 from cfgm_common.datastore.keyspace import ConfigKeyspaceMap
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
