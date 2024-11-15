@@ -5,7 +5,7 @@
 """
 VNC pod management for kubernetes.
 """
-from six import StringIO
+from io import StringIO
 import json
 import uuid
 

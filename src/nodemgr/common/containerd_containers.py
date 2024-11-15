@@ -4,7 +4,6 @@ import json
 import logging
 import datetime
 import random
-import six
 import string
 import subprocess
 import binascii
@@ -220,7 +219,7 @@ class ContainerdContainersInterface:
         if e:
             logging.critical(e)
 
-        if isinstance(o, six.binary_type):
+        if isinstance(o, bytes):
             o = o.decode()
         return (p.returncode, o)
 

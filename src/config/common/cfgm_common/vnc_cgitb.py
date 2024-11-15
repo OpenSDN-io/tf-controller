@@ -30,7 +30,7 @@ formatted/masked traceback as string and use it ,
 import re
 import sys
 import cgitb
-from six import StringIO
+from io import StringIO
 
 
 # License: Apache-2.0

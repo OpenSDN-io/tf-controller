@@ -13,11 +13,12 @@
 #    under the License.
 #
 
-import uuid
-
-from cfgm_common import protocols as constants
 from gevent import monkey
 monkey.patch_all()
+
+import uuid  # noqa
+
+from cfgm_common import protocols as constants
 from mock import patch
 from tests import test_case
 from vnc_api.exceptions import BadRequest

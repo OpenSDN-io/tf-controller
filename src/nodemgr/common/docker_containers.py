@@ -1,6 +1,5 @@
 import docker
 import logging
-import six
 from nodemgr.common.docker_mem_cpu import DockerMemCpuUsageData
 
 
@@ -32,7 +31,7 @@ class DockerContainersInterface:
                 part = socket.recv(1024)
                 if len(part) == 0:
                     break
-                if isinstance(part, six.binary_type):
+                if isinstance(part, bytes):
                     part = part.decode()
                 res += part
         finally:

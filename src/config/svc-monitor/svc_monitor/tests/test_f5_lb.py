@@ -1,19 +1,16 @@
 import mock
-from mock import patch
-from six.moves import configparser
+import configparser
 import unittest
 from cfgm_common.vnc_db import DBBase
 from svc_monitor import config_db
 from svc_monitor import loadbalancer_agent
 from vnc_api.vnc_api import *
 import argparse
-import six
 
 
 class F5LBTest(unittest.TestCase):
     def setUp(self):
-        if six.PY3:
-            self.assertItemsEqual = self.assertCountEqual
+        self.assertItemsEqual = self.assertCountEqual
         self.vnc_lib = mock.Mock()
         self.object_db = mock.Mock()
         self.logger = mock.Mock()
@@ -56,7 +53,7 @@ class F5LBTest(unittest.TestCase):
 
         conf_parser = argparse.ArgumentParser(add_help=False)
         config = configparser.ConfigParser({'admin_token': ''})
-        self._args, remaining_argv = conf_parser.parse_known_args()
+        self._args, _ = conf_parser.parse_known_args()
         self._args.config_sections = config
 
         def sas_read_side_effect(obj_type, uuids, **kwargs):

@@ -9,7 +9,7 @@ from collections import defaultdict
 import copy
 from functools import wraps
 import inspect
-from six import StringIO
+from io import StringIO
 import itertools
 import logging
 import os

@@ -1,6 +1,6 @@
 import socket
 import gevent
-from six import StringIO
+from io import StringIO
 from pprint import pformat
 from requests.exceptions import ConnectionError
 

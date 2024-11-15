@@ -4,7 +4,6 @@ import copy
 import cProfile
 import functools
 import os
-import six
 
 from cfgm_common.datastore.keyspace import ConfigKeyspaceMap
 from sandesh_common.vns import constants as vns_constants
@@ -127,8 +126,7 @@ class Trace(object):
 
 # Defines API that drivers should implement.
 
-@six.add_metaclass(abc.ABCMeta)
-class API(Trace):
+class API(Trace, metaclass=abc.ABCMeta):
 
     def __init__(self, server_list, **options):
         super(API, self).__init__()

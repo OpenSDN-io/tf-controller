@@ -8,7 +8,6 @@ from pprint import pformat
 import bottle
 from cfgm_common import jsonutils as json
 from cfgm_common.utils import CacheContainer
-import six
 
 from .neutron_plugin_db import DBInterface
 
@@ -162,7 +161,7 @@ class NeutronPluginInterface(object):
         for fil in supported_filters:
             if fil in filters:
                 tags[fil] = filters.pop(fil)
-                if isinstance(tags[fil], six.string_types):
+                if isinstance(tags[fil], str):
                     tags[fil] = tags[fil].split(',')
 
         tags_to_fetch = {}
@@ -223,7 +222,7 @@ class NeutronPluginInterface(object):
         for fil in supported_filters:
             if fil in filters:
                 tags[fil] = filters.pop(fil)
-                if isinstance(tags[fil], six.string_types):
+                if isinstance(tags[fil], str):
                     tags[fil] = tags[fil].split(',')
 
         # fetch all backrefs for given tags

@@ -14,7 +14,6 @@ import configparser
 import socket
 import hashlib
 import random
-import six
 
 from keystoneauth1.identity import v3 as ks_v3
 from keystoneauth1 import session as ks_session
@@ -362,13 +361,13 @@ def parse_args(args_str):
     SandeshConfig.add_parser_arguments(parser)
 
     args_obj = parser.parse_args(remaining_argv)
-    if isinstance(args_obj.collectors, six.string_types):
+    if isinstance(args_obj.collectors, str):
         args_obj.collectors = args_obj.collectors.split()
-    if isinstance(args_obj.introspect_port, six.string_types):
+    if isinstance(args_obj.introspect_port, str):
         args_obj.introspect_port = int(args_obj.introspect_port)
-    if isinstance(args_obj.insecure, six.string_types):
+    if isinstance(args_obj.insecure, str):
         args_obj.insecure = args_obj.insecure.lower() == 'true'
-    if isinstance(args_obj.rabbit_use_ssl, six.string_types):
+    if isinstance(args_obj.rabbit_use_ssl, str):
         args_obj.rabbit_use_ssl = args_obj.rabbit_use_ssl.lower() == 'true'
     return args_obj
 

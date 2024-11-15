@@ -4,7 +4,6 @@
 import logging
 import unittest
 
-import six
 from vnc_api.exceptions import RefsExistError
 # Pawel Z.: I decided to import with an asterisk because in this file
 # I need all available vnc_api objects. Importing hundreds of objects
@@ -29,8 +28,7 @@ class TestInPlaceUpgradeR2002(test_case.InPlaceUpgradeTestCase):
         The other way would be to randomize fq_names for each object.
         :return:
         """
-        py_v = '-py2' if six.PY2 else '-py3'
-        return super(TestInPlaceUpgradeR2002, self).id() + py_v
+        return super(TestInPlaceUpgradeR2002, self).id() + '-py3'
 
     @property
     def api(self):
@@ -424,7 +422,7 @@ class TestInPlaceUpgradeR2002(test_case.InPlaceUpgradeTestCase):
 
         vn = VirtualNetwork(name=self.id())
         vn_properties = VirtualNetworkType()
-        vn_properties.set_vxlan_network_identifier(2001 if six.PY2 else 2002)
+        vn_properties.set_vxlan_network_identifier(2002)
         vn_properties.set_forwarding_mode('l2_l3')
         vn.set_virtual_network_properties(vn_properties)
         vn.add_network_ipam(net_ipam, VnSubnetsType(
@@ -708,7 +706,7 @@ class TestInPlaceUpgradeR2002(test_case.InPlaceUpgradeTestCase):
             "id_perms": IdPermsType(enable=True),
             "logical_router_gateway_external": False,
             "logical_router_type": 'vxlan-routing',
-            "vxlan_network_identifier": '1111' if six.PY2 else '1212',
+            "vxlan_network_identifier": '1212',
             "configured_route_target_list": None,
             "logical_router_dhcp_relay_server": ip,
             'annotations': {}

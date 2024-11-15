@@ -3,7 +3,5 @@ greenlet
 netaddr<1
 contrail-config-common
 jsonpickle
-future
-six
 sandesh==0.1.dev0
 sandesh_common

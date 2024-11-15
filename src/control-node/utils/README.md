@@ -63,7 +63,6 @@ python3.7 --version
 python3.7 get-pip.py
 
 Install other libraries using pip:
-pip install future
 pip install paramiko
 pip install pyyaml
 

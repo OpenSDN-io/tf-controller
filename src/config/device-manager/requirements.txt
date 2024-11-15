@@ -2,7 +2,6 @@ lxml
 gevent
 netaddr<1
 attrdict
-future
 bitarray
 psutil
 kombu

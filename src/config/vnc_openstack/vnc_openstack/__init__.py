@@ -5,8 +5,10 @@
 import gevent.monkey
 gevent.monkey.patch_all()
 
+import configparser
 import copy
 from datetime import datetime
+from io import StringIO
 import logging
 import logging.handlers
 import queue
@@ -29,8 +31,6 @@ from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
 from pysandesh.gen_py.process_info.ttypes import ConnectionType as ConnType
 import requests
-from six import StringIO
-from six.moves import configparser
 from vnc_api import vnc_api
 from vnc_api.gen.resource_xsd import (
     ActionListType, AddressType, FirewallRuleEndpointType, FirewallSequence,

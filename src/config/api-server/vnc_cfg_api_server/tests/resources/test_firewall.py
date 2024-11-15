@@ -6,7 +6,6 @@ import logging
 
 from mock import patch
 from sandesh_common.vns import constants
-import six
 from testtools import ExpectedException
 from vnc_api.exceptions import BadRequest
 from vnc_api.exceptions import HttpError
@@ -1199,8 +1198,7 @@ class TestFirewall(TestFirewallBase):
         self.assertRaises(BadRequest, self.api.firewall_rule_create, global_fr)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class TestFirewallDraftModeBase(TestFirewallBase):
+class TestFirewallDraftModeBase(TestFirewallBase, metaclass=abc.ABCMeta):
     SECURITY_RESOURCES = [
         ApplicationPolicySet,
         FirewallPolicy,

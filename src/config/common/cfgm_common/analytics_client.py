@@ -17,8 +17,9 @@
 #
 # @author: Sylvain Afchain, eNovance.
 
+from urllib import parse as urlparse
+
 import requests
-from six.moves.urllib import parse as urlparse
 
 
 class OpenContrailAPIFailed(Exception):

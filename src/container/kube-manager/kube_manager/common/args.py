@@ -8,7 +8,6 @@ import sys
 import argparse
 from enum import Enum
 import configparser
-from six import string_types
 
 from pysandesh.sandesh_base import Sandesh, SandeshConfig
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
@@ -184,29 +183,29 @@ def parse_args(args_str=None):
     parser.set_defaults(**defaults)
     args = parser.parse_args(args_str)
 
-    if isinstance(args.cassandra_server_list, string_types):
+    if isinstance(args.cassandra_server_list, str):
         args.cassandra_server_list = args.cassandra_server_list.split()
-    if isinstance(args.cassandra_use_ssl, string_types):
+    if isinstance(args.cassandra_use_ssl, str):
         args.cassandra_use_ssl = args.cassandra_use_ssl.lower() == 'true'
-    if isinstance(args.collectors, string_types):
+    if isinstance(args.collectors, str):
         args.collectors = args.collectors.split()
-    if isinstance(args.pod_subnets, string_types):
+    if isinstance(args.pod_subnets, str):
         args.pod_subnets = args.pod_subnets.split()
-    if isinstance(args.service_subnets, string_types):
+    if isinstance(args.service_subnets, str):
         args.service_subnets = args.service_subnets.split()
-    if isinstance(args.ip_fabric_subnets, string_types):
+    if isinstance(args.ip_fabric_subnets, str):
         args.ip_fabric_subnets = args.ip_fabric_subnets.split()
-    if isinstance(args.ip_fabric_forwarding, string_types):
+    if isinstance(args.ip_fabric_forwarding, str):
         if args.ip_fabric_forwarding.lower() == 'true':
             args.ip_fabric_forwarding = True
         else:
             args.ip_fabric_forwarding = False
-    if isinstance(args.ip_fabric_snat, string_types):
+    if isinstance(args.ip_fabric_snat, str):
         if args.ip_fabric_snat.lower() == 'true':
             args.ip_fabric_snat = True
         else:
             args.ip_fabric_snat = False
-    if isinstance(args.host_network_service, string_types):
+    if isinstance(args.host_network_service, str):
         if args.host_network_service.lower() == 'true':
             args.host_network_service = True
         else:

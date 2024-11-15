@@ -14,7 +14,6 @@ import socket
 import time
 import copy
 import uuid
-import six
 import fcntl
 import tempfile
 import threading
@@ -519,10 +518,10 @@ class MiniResp(object):
             self.body = ['']
         else:
             # The WSGIServer handler in waiting for a bytes object.
-            self.body = [six.b(error_message)]
+            self.body = [error_message.encode()]
         self.headers = list(headers)
-        self.headers.append((six.ensure_str('Content-type'),
-                             six.ensure_str('text/plain')))
+        self.headers.append(
+            ('Content-type', 'text/plain'))
 
 """
 Fake Keystone Middleware.
@@ -567,7 +566,7 @@ class FakeAuthProtocol(object):
 
     def _add_headers(self, env, headers):
         """Add http headers to environment."""
-        for (k, v) in six.iteritems(headers):
+        for k, v in headers.items():
             env_key = self._header_to_env_var(k)
             env[env_key] = v
 
@@ -618,11 +617,10 @@ class FakeAuthProtocol(object):
         :returns HTTPUnauthorized http response
 
         """
-        headers = [(six.ensure_str('WWW-Authenticate'),
-                    (six.ensure_str('Keystone uri=\'%s\'') %
-                     six.ensure_str(self.auth_uri)))]
+        headers = [
+            ('WWW-Authenticate', 'Keystone uri=\'%s\'' % self.auth_uri)]
         resp = MiniResp('Authentication required', env, headers)
-        start_response(six.ensure_str('401 Unauthorized'), resp.headers)
+        start_response('401 Unauthorized', resp.headers)
         return resp.body
 
     def __call__(self, env, start_response):
@@ -632,14 +630,11 @@ class FakeAuthProtocol(object):
         we can't authenticate.
 
         """
-        # print 'FakeAuthProtocol: Authenticating user token'
         user_token = self._get_header(env, 'X-Auth-Token')
-        if user_token:
-            user_token = six.ensure_str(user_token)
-        elif self.delay_auth_decision:
-            self._add_headers(env, {'X-Identity-Status': 'Invalid'})
-            return self.app(env, start_response)
-        else:
+        if not user_token:
+            if self.delay_auth_decision:
+                self._add_headers(env, {'X-Identity-Status': 'Invalid'})
+                return self.app(env, start_response)
             # print 'Missing token or Unable to authenticate token'
             return self._reject_request(env, start_response)
 

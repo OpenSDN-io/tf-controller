@@ -9,7 +9,7 @@ Logger for config services
 import datetime
 import logging
 import socket
-from six import StringIO
+from io import StringIO
 
 from cfgm_common.utils import cgitb_hook
 

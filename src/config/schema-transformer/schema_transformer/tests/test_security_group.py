@@ -7,7 +7,6 @@ import uuid
 
 from cfgm_common import protocols
 from cfgm_common import rest
-import six
 from vnc_api.vnc_api import NoIdError
 from vnc_api.vnc_api import SecurityGroup
 
@@ -87,10 +86,9 @@ class VerifySecurityGroup(VerifyPolicy):
                 break
         self.assertTrue(acl is not None)
         for rule in acl.access_control_list_entries.acl_rule:
-            self.assertEqual(rule.match_condition.protocol,
-                             six.text_type(
-                                 protocols.IP_PROTOCOL_MAP.get(
-                                     protocol.lower())))
+            self.assertEqual(
+                rule.match_condition.protocol,
+                str(protocols.IP_PROTOCOL_MAP.get(protocol.lower())))
 
     @retries(5)
     def check_no_policies_for_sg(self, fq_name):

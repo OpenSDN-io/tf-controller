@@ -4,7 +4,6 @@ from gevent import monkey
 from mock import MagicMock
 monkey.patch_all()
 
-from six import string_types
 from netaddr import IPNetwork, IPAddress
 
 from vnc_api.gen.resource_client import VirtualNetwork
@@ -89,7 +88,7 @@ class VncEndpointsTestBase(test_case.KMTestCase):
 
     @staticmethod
     def _create_subnet_data(vn_subnet):
-        subnets = [vn_subnet] if isinstance(vn_subnet, string_types) else vn_subnet
+        subnets = [vn_subnet] if isinstance(vn_subnet, str) else vn_subnet
         subnet_infos = []
         for subnet in subnets:
             cidr = IPNetwork(subnet)

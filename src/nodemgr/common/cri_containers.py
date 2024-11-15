@@ -3,7 +3,6 @@ import grpc
 import json
 import logging
 import datetime
-import six
 from nodemgr.common import utils
 from nodemgr.common.cri import api_pb2
 from nodemgr.common.cri import api_pb2_grpc
@@ -201,7 +200,7 @@ class CriContainersInterface:
                 logging.critical(a.stderr)
 
             res = a.stdout
-            if isinstance(res, six.binary_type):
+            if isinstance(res, bytes):
                 res = res.decode()
             return (a.exit_code, res)
 

@@ -1,6 +1,4 @@
 bottle<0.13
-future
-six
 requests
 python-keystoneclient
 python-ironic-inspector-client

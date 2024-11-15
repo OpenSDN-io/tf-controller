@@ -19,7 +19,6 @@
 
 import abc
 import random
-import six
 
 from cfgm_common import analytics_client
 from sandesh_common.vns import constants
@@ -27,8 +26,7 @@ from sandesh_common.vns import constants
 from svc_monitor.config_db import *
 
 
-@six.add_metaclass(abc.ABCMeta)
-class VRouterScheduler(object):
+class VRouterScheduler(metaclass=abc.ABCMeta):
 
     def __init__(self, vnc_lib, nova_client, disc, logger, args):
         self._vnc_lib = vnc_lib

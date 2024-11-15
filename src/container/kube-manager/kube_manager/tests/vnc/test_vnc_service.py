@@ -6,7 +6,6 @@ from gevent import monkey
 
 monkey.patch_all()
 
-from six import string_types
 from collections import namedtuple
 from netaddr import IPNetwork, IPAddress
 import uuid
@@ -626,7 +625,7 @@ class VncServiceTest(KMTestCase):
 
     @staticmethod
     def _create_subnet_data(vn_subnet):
-        subnets = [vn_subnet] if isinstance(vn_subnet, string_types) else vn_subnet
+        subnets = [vn_subnet] if isinstance(vn_subnet, str) else vn_subnet
         subnet_infos = []
         for subnet in subnets:
             cidr = IPNetwork(subnet)

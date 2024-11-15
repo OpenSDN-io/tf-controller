@@ -8,7 +8,6 @@ subprocess32
 jsonschema
 inflection
 pyroute2
-future
 configparser
 pysnmp
 pycrypto

@@ -2,13 +2,8 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
-import copy
-import types
 import uuid
-import six
 import sys
-import io
-import string
 import unittest
 from netaddr import *
 
@@ -28,7 +23,7 @@ def todict(obj):
         obj_dict = {}
         for k in list(obj.keys()):
             obj_dict[k] = todict(obj[k])
-    elif hasattr(obj, "__iter__") and not isinstance(obj,six.string_types):
+    elif hasattr(obj, "__iter__") and not isinstance(obj, str):
         obj_dict = [todict(v) for v in obj]
     elif hasattr(obj, "__dict__"):
         obj_dict = dict([(key, todict(value))

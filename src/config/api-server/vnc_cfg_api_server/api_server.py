@@ -27,7 +27,6 @@ import os
 import re
 import random
 import socket
-import traceback
 from cfgm_common import jsonutils as json
 from .provision_defaults import *
 import uuid
@@ -1229,8 +1228,6 @@ class VncApiServer(object):
         except Exception as e:
             self.config_log(f"Error in pre_{obj_type}_read extension: {type(e).__name__}: {str(e)}",
                 level=SandeshLevel.SYS_WARN)
-            self.config_log(f"Traceback:\n{traceback.format_exc()}",
-                level=SandeshLevel.SYS_WARN)
 
 
         etag = get_request().headers.get('If-None-Match')
@@ -1328,8 +1325,6 @@ class VncApiServer(object):
                 'post_%s_read' %(obj_type), id, rsp_body)
         except Exception as e:
             self.config_log(f"Error in pre_{obj_type}_read extension: {type(e).__name__}: {str(e)}",
-                level=SandeshLevel.SYS_WARN)
-            self.config_log(f"Traceback:\n{traceback.format_exc()}",
                 level=SandeshLevel.SYS_WARN)
 
 
@@ -1665,8 +1660,6 @@ class VncApiServer(object):
                 except cfgm_common.exceptions.NoIdError as e:
                     self.config_log(f"Error in http_resource_list: {type(e).__name__}: {str(e)}", 
                                     level=SandeshLevel.SYS_WARN)
-                    self.config_log(f"Traceback:\n{traceback.format_exc()}",
-                                    level=SandeshLevel.SYS_WARN)
 
         elif 'parent_id' in get_request().query:
             parent_uuids = get_request().query.parent_id.split(',')
@@ -1687,8 +1680,6 @@ class VncApiServer(object):
                     obj_uuids.append(obj_uuid)
                 except cfgm_common.exceptions.NoIdError as e:
                     self.config_log(f"Error in http_resource_list: {type(e).__name__}: {str(e)}", 
-                                    level=SandeshLevel.SYS_WARN)
-                    self.config_log(f"Traceback:\n{traceback.format_exc()}",
                                     level=SandeshLevel.SYS_WARN)
 
             if obj_uuids is None:
@@ -3492,8 +3483,6 @@ class VncApiServer(object):
                 except NoOptionError as e:
                     self.config_log(f"Error in sighup_handler: {type(e).__name__}: {str(e)}",
                                     level=SandeshLevel.SYS_WARN)
-                    self.config_log(f"Traceback:\n{traceback.format_exc()}",
-                                    level=SandeshLevel.SYS_WARN)
 
     # end sighup_handler
 
@@ -3613,8 +3602,6 @@ class VncApiServer(object):
             except NoIdError as e:
                 self.config_log(f"Error in _ensure_id_perms_present: {type(e).__name__}: {str(e)}",
                                 level=SandeshLevel.SYS_WARN)
-                self.config_log(f"Traceback:\n{traceback.format_exc()}",
-                                level=SandeshLevel.SYS_WARN)
 
 
         # not all fields can be updated
@@ -3727,8 +3714,6 @@ class VncApiServer(object):
                         perms2[field] = value
             except NoIdError as e:
                 self.config_log(f"Error in _ensure_id_perms_present: {type(e).__name__}: {str(e)}",
-                                level=SandeshLevel.SYS_WARN)
-                self.config_log(f"Traceback:\n{traceback.format_exc()}",
                                 level=SandeshLevel.SYS_WARN)
 
 
@@ -3967,8 +3952,6 @@ class VncApiServer(object):
         except NoIdError as e:
             self.config_log(f"Error in _create_default_rbac_rule: {type(e).__name__}: {str(e)}",
                             level=SandeshLevel.SYS_WARN)
-            self.config_log(f"Traceback:\n{traceback.format_exc()}",
-                            level=SandeshLevel.SYS_WARN)
 
 
         rge = RbacRuleEntriesType([])
@@ -4014,8 +3997,6 @@ class VncApiServer(object):
         except NoIdError as e:
             # doesn't exist in cassandra as well as zookeeper, proceed normal
             self.config_log(f"Entry not found in Cassandra or ZooKeeper for {fq_name}: {str(e)}", 
-                            level=SandeshLevel.SYS_WARN)
-            self.config_log(f"Traceback:\n{traceback.format_exc()}", 
                             level=SandeshLevel.SYS_WARN)
         # TODO backward compat END
 
@@ -4282,8 +4263,6 @@ class VncApiServer(object):
         except KeyError as e:
             self.config_log(f"Parent key not found for resource {resource_type}: {str(e)}", 
                             level=SandeshLevel.SYS_WARN)
-            self.config_log(f"Traceback:\n{traceback.format_exc()}", 
-                            level=SandeshLevel.SYS_WARN)
 
 
         for field, field_info in itertools.chain(
@@ -4297,8 +4276,6 @@ class VncApiServer(object):
                     link['href'] = self.generate_url(type, link['uuid'])
             except KeyError as e:
                 self.config_log(f"Key not found for field {field} in resource {resource_type}: {str(e)}", 
-                                level=SandeshLevel.SYS_WARN)
-                self.config_log(f"Traceback:\n{traceback.format_exc()}", 
                                 level=SandeshLevel.SYS_WARN)
 
 
@@ -4757,8 +4734,6 @@ class VncApiServer(object):
         except NoIdError as e:
             self.config_log(f"Object with fq_name {obj_dict['fq_name']} not found in DB: {str(e)}", 
                             level=SandeshLevel.SYS_WARN)
-            self.config_log(f"Traceback:\n{traceback.format_exc()}", 
-                            level=SandeshLevel.SYS_WARN)
 
 
         self.validate_parent_type(obj_type, obj_dict)
@@ -4797,8 +4772,6 @@ class VncApiServer(object):
                     pformat(fq_name))
             except NoIdError as e:
                 self.config_log(f"UUID {uuid_in_req} not found in DB: {str(e)}", 
-                                level=SandeshLevel.SYS_WARN)
-                self.config_log(f"Traceback:\n{traceback.format_exc()}", 
                                 level=SandeshLevel.SYS_WARN)
             apiConfig.identifier_uuid = uuid_in_req
 

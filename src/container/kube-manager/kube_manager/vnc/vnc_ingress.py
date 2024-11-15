@@ -6,7 +6,7 @@
 VNC Ingress management for kubernetes.
 """
 import copy
-from six import StringIO
+from io import StringIO
 import uuid
 
 from cfgm_common.utils import cgitb_hook

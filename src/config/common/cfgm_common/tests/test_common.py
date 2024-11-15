@@ -556,7 +556,7 @@ class TestCase(testtools.TestCase, fixtures.TestWithFixtures):
 
     def _add_detailed_traceback(self, exc_info):
         vnc_cgitb.enable(format='text')
-        from six import StringIO
+        from io import StringIO
 
         tmp_file = StringIO()
         cgitb_hook(format="text", file=tmp_file, info=exc_info)

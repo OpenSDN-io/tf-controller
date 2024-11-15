@@ -2,7 +2,6 @@
 
 import os
 import re
-import six
 import subprocess
 import sys
 
@@ -32,7 +31,8 @@ proc = subprocess.Popen([make, '-f', Dir(vpath).abspath + '/Makefile', 'info'],
                         stdout = subprocess.PIPE,
                         env = BUILD_ENV)
 output, _ = proc.communicate()
-output = six.ensure_str(output)
+if isinstance(output, bytes):
+    output = output.decode()
 
 for line in output.split('\n'):
     m = re.match('tbb_build_prefix=(.*)$', line)

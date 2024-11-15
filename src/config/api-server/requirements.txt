@@ -12,6 +12,4 @@ netifaces
 bottle<0.13
 stevedore
 kazoo
-future
 pycrypto
-six

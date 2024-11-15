@@ -20,8 +20,6 @@ import gevent.queue
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from sandesh_common.vns import constants as vns_constants
-import six
-import six.moves
 
 from cfgm_common import jsonutils as json
 from cfgm_common import utils
@@ -76,9 +74,6 @@ DEFAULT_NUM_GROUPS = 2
 # Number of workers used to execute SELECT queries
 DEFAULT_NUM_WORKERS = 2
 
-# String will be encoded in UTF-8 if necessary (Python2 support)
-StringType = six.text_type
-
 # Decodes JSON string in Python Object.
 JsonToObject = json.loads
 
@@ -87,7 +82,7 @@ RowsResultType = collections.OrderedDict
 
 # This is encapsulating the ResultSet iterator that to provide feature
 # to filter the columns, decode JSON or add timestamp.
-class Iter(six.Iterator):
+class Iter(object):
     def __init__(self, result, columns,
                  include_timestamp=False,
                  decode_json=True,
@@ -677,9 +672,9 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
         # Ensures keyspaces/tables are ready before to continue
         while not self.are_keyspaces_ready(self.options.rw_keyspaces):
             gevent.sleep(1)
-        for ks, cf_dict in six.iteritems(self.options.rw_keyspaces):
+        for ks, cf_dict in self.options.rw_keyspaces.items():
             keyspace = self.keyspace(ks)
-            while not self.are_tables_ready(keyspace, six.viewkeys(cf_dict)):
+            while not self.are_tables_ready(keyspace, cf_dict.keys()):
                 gevent.sleep(1)
         while not self.are_keyspaces_ready(self.options.ro_keyspaces):
             gevent.sleep(1)
@@ -744,13 +739,13 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
 
         args = []
         for key in keys:
-            arg = [StringType(key)]
+            arg = [str(key)]
             if self.AllowColumnsFiltering and columns:
-                arg += [StringType(x) for x in columns]
+                arg += [str(x) for x in columns]
             if start:
-                arg.append(StringType(start))
+                arg.append(str(start))
             if finish:
-                arg.append(StringType(finish))
+                arg.append(str(finish))
             if self.SupportsPerPartitionLimit and num_columns:
                 arg.append(num_columns)
             args.append(arg)
@@ -790,7 +785,7 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
 
         wanted, received = len(keys), len(results)
         if wanted != received:
-            missing = keys - six.viewkeys(results)
+            missing = keys - results.keys()
             self.options.logger(
                 "Inconsistency discovered. wanted={}, received={}, "
                 "missing={}. This may indicate that the cluster needs a "
@@ -808,7 +803,9 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
             finish=finish,
             columns=columns,
             _decode_json=False)
-        return six.iteritems(rows or {})
+        if not rows:
+            return []
+        return rows.items()
 
     def _Get(self, cf_name, key, columns=None, start='', finish='',
              # XGet never wants auto-decode json. TODO(sahid): fix
@@ -845,7 +842,7 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
         if self.AllowColumnsFiltering and columns:
             cql += "WHERE column1 IN ({}) ".format(
                 ", ".join(["textAsBlob(%s)"] * len(columns)))
-            arg += [StringType(x) for x in columns]
+            arg += [str(x) for x in columns]
         if self.SupportsPerPartitionLimit:
             if column_count and column_count != DEFAULT_COLUMN_COUNT:
                 cql += "PER PARTITION LIMIT %s "
@@ -893,13 +890,13 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
           SELECT COUNT(*) FROM "{}"
           WHERE key = textAsBlob(%s)
         """.format(cf_name)
-        arg = [StringType(key)]
+        arg = [str(key)]
         if start:
             cql += "AND column1 >= textAsBlob(%s) "
-            arg.append(StringType(start))
+            arg.append(str(start))
         if finish:
             cql += "AND column1 <= textAsBlob(%s) "
-            arg.append(StringType(finish))
+            arg.append(str(finish))
         return ses.execute(cql, arg).one()[0]
 
     def _Insert(self, key, columns, keyspace_name=None, cf_name=None,
@@ -930,9 +927,9 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
             for column, value in columns.items():
                 if len(batch) >= self.options.batch_limit:
                     batch.send()
-                batch.add_insert(key, cql, [StringType(key),
-                                            StringType(column),
-                                            StringType(value)])
+                batch.add_insert(key, cql, [str(key),
+                                            str(column),
+                                            str(value)])
             if local_batch:
                 batch.send()
         else:
@@ -942,15 +939,15 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
         args = []
         if isinstance(columns, dict):
             # Case of insert {column: value}
-            for column, value in six.iteritems(columns):
-                args.append([StringType(key),
-                             StringType(column),
-                             StringType(value)])
+            for column, value in columns.items():
+                args.append([str(key),
+                             str(column),
+                             str(value)])
         else:
             # Case of remove [column, ...]
             for column in columns:
-                args.append([StringType(key),
-                             StringType(column)])
+                args.append([str(key),
+                             str(column)])
         self.apply(ses, cql, args)
 
     def apply(self, ses, cql, args):
@@ -986,11 +983,11 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
             if batch is not None:
                 if len(batch) >= self.options.batch_limit:
                     batch.send()
-                batch.add_remove(key, cql, [StringType(key)])
+                batch.add_remove(key, cql, [str(key)])
                 if local_batch:
                     batch.send()
             else:
-                ses.execute(cql, [StringType(key)])
+                ses.execute(cql, [str(key)])
         else:
             cql = """
               DELETE FROM "{}"
@@ -999,8 +996,8 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
             """.format(cf_name)
             if batch is not None:
                 for column in columns:
-                    batch.add_remove(key, cql, [StringType(key),
-                                                StringType(column)])
+                    batch.add_remove(key, cql, [str(key),
+                                                str(column)])
                 if local_batch:
                     batch.send()
             else:
@@ -1068,9 +1065,9 @@ class Pool(object):
         self.groups = gevent.queue.Queue()
 
     def prefork(self):
-        for group_id in six.moves.xrange(self.num_groups):
+        for group_id in range(self.num_groups):
             group = []
-            for worker_id in six.moves.xrange(self.num_workers):
+            for worker_id in range(self.num_workers):
                 qin, qout = CoopQueue(), CoopQueue()
 
                 def my_loop():
@@ -1122,7 +1119,7 @@ class Pool(object):
         gsize = math.ceil(len(args) / float(len(group))) or 1
 
         workers = []
-        for i, n in enumerate(six.moves.xrange(0, len(args), gsize)):
+        for i, n in enumerate(range(0, len(args), gsize)):
             _, qin, _ = group[i]
             qin.put((args[n:n + gsize], append_args))
             workers.append(i)

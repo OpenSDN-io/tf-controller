@@ -5,7 +5,6 @@
 import copy
 
 from cfgm_common import protocols
-import six
 from vnc_api.gen.resource_xsd import AclEntriesType, AclRuleType
 from vnc_api.gen.resource_xsd import ActionListType, MatchConditionType
 from vnc_api.gen.resource_xsd import PortType
@@ -160,11 +159,10 @@ class SecurityGroupST(ResourceBaseST):
             # Previsouly we were convertir this transparently, so we
             # have to keep it.
             pproto = protocols.PROTO_NAME_IPV6_ICMP
-        return six.text_type(
-            # Protocol ID should be returned in string according the
-            # spec.  TODO(sahid): Creating helper function in
-            # protocols's module would make more sense.
-            protocols.IP_PROTOCOL_MAP[pproto])
+        # Protocol ID should be returned in string according the
+        # spec.  TODO(sahid): Creating helper function in
+        # protocols's module would make more sense.
+        return str(protocols.IP_PROTOCOL_MAP[pproto])
 
     def policy_to_acl_rule(self, prule):
         ingress_acl_rule_list = []

@@ -1,12 +1,10 @@
 bitarray
 contrail-api-client
 contrail-config-common
-future
 gevent
 kazoo
 kombu
 requests
 sandesh==0.1.dev0
 sandesh-common
-six
 python-novaclient

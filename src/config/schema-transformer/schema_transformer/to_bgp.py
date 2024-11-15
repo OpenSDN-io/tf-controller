@@ -36,7 +36,6 @@ from pysandesh.gen_py.process_info.ttypes import ConnectionType as ConnType
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from pysandesh.sandesh_base import Sandesh, SandeshConfig
 import requests
-from six import string_types
 
 from configparser import ConfigParser, NoOptionError
 
@@ -554,7 +553,7 @@ class SchemaTransformer(object):
             if 'DEFAULTS' in config.sections():
                 try:
                     collectors = config.get('DEFAULTS', 'collectors')
-                    if isinstance(collectors, string_types):
+                    if isinstance(collectors, str):
                         collectors = collectors.split()
                         new_chksum = hashlib.md5(
                             "".join(collectors).encode()).hexdigest()
@@ -782,9 +781,9 @@ def parse_args(args_str):
 
     args = parser.parse_args(remaining_argv)
     args.conf_file = saved_conf_file
-    if isinstance(args.cassandra_server_list, string_types):
+    if isinstance(args.cassandra_server_list, str):
         args.cassandra_server_list = args.cassandra_server_list.split()
-    if isinstance(args.collectors, string_types):
+    if isinstance(args.collectors, str):
         args.collectors = args.collectors.split()
     args.sandesh_config = SandeshConfig.from_parser_arguments(args)
     args.cassandra_use_ssl = (str(args.cassandra_use_ssl).lower() == 'true')

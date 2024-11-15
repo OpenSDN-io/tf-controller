@@ -6,7 +6,7 @@
 This file contains implementation of database model for contrail config daemons
 """
 from collections import OrderedDict
-from six import StringIO
+from io import StringIO
 from vnc_api.gen.resource_client import *
 
 from cfgm_common.utils import cgitb_hook

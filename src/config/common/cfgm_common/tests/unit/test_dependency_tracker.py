@@ -5,7 +5,6 @@
 import unittest
 
 import mock
-import six
 
 from cfgm_common.dependency_tracker import DependencyTracker
 from cfgm_common.vnc_db import DBBase
@@ -318,8 +317,7 @@ class DepTrackTester(unittest.TestCase):
     # end purple_read_with_multi_refs
 
     def setUp(self):
-        if six.PY3:
-            self.assertItemsEqual = self.assertCountEqual
+        self.assertItemsEqual = self.assertCountEqual
         DBBase.init(self, None, None)
         DBBase._OBJ_TYPE_MAP['red'] = RedSM
         DBBase._OBJ_TYPE_MAP['blue'] = BlueSM

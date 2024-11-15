@@ -12,7 +12,7 @@ from gevent import monkey
 monkey.patch_all(thread=not 'unittest' in sys.modules)
 
 from cfgm_common.zkclient import ZookeeperClient
-from six import StringIO
+from io import StringIO
 import configparser
 import requests
 import argparse

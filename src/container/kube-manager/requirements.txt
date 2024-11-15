@@ -6,7 +6,5 @@ greenlet
 keystoneauth1
 contrail-config-common
 contrail-api-client
-future
-six
 sandesh==0.1.dev0
 sandesh_common

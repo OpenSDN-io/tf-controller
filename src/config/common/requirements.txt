@@ -4,7 +4,6 @@ bottle<0.13
 cassandra-driver
 configparser
 contrail-api-client
-future
 gevent
 greenlet
 kazoo
@@ -13,5 +12,4 @@ requests
 sandesh==0.1.dev0
 sandesh-common
 simplejson
-six
 stevedore

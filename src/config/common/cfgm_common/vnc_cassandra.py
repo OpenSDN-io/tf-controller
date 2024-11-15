@@ -6,7 +6,6 @@ import copy
 
 import gevent
 from pprint import pformat
-import six
 
 from vnc_api import vnc_api
 from vnc_api import utils as vncutils
@@ -811,7 +810,7 @@ class VncCassandraClient(object):
                 gevent.sleep(0)
 
                 full_match = True
-                for filter_key, filter_values in list(filters.items()):
+                for filter_key, filter_values in filters.items():
                     property = 'prop:%s' % filter_key
                     if property not in properties:
                         full_match = False
@@ -823,8 +822,8 @@ class VncCassandraClient(object):
                                 filter_dict = json.loads(filter_value)
                             except ValueError:
                                 continue
-                            if (six.viewitems(filter_dict) <=
-                                six.viewitems(prop_value)):
+                            if (filter_dict.items() <=
+                                prop_value.items()):
                                 break
                         else:
                             full_match = False

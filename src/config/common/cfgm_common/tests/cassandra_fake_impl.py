@@ -8,8 +8,6 @@ import contextlib
 import copy
 from datetime import datetime
 
-import six
-
 
 BaseExceptionClass = Exception
 
@@ -150,7 +148,7 @@ class _TableCQLSupport(object):
                 # get_gange
                 def generator():
                     for key, col_dict in self.get_range(**args):
-                        for column, value in six.iteritems(col_dict):
+                        for column, value in col_dict.items():
                             if query.timestamp:
                                 yield key, column, value[0], value[1]
                             else:
@@ -158,7 +156,7 @@ class _TableCQLSupport(object):
                 return generator()
             # get
             try:
-                r = six.iteritems(self.get(**args))
+                r = self.get(**args).items()
                 if query.timestamp:
                     return True, [(c, v[0], v[1])
                                   for c, v in r]
@@ -237,11 +235,11 @@ class _CassandraFakeServerTable(_TableCQLSupport):
 
     def get(self, key, columns=None, column_start=None, column_finish=None,
             column_count=0, include_timestamp=False, include_ttl=False):
-        if not isinstance(key, six.string_types):
+        if not isinstance(key, str):
             raise TypeError("A str or unicode value was expected, but %s "
                             "was received instead (%s)"
                             % (key.__class__.__name__, str(key)))
-        if isinstance(key, six.binary_type):
+        if isinstance(key, bytes):
             key = key.decode('utf-8')
         if key not in self.__rows__:
             raise NotFoundException
@@ -268,7 +266,7 @@ class _CassandraFakeServerTable(_TableCQLSupport):
                     col_dict[col_name] = col_value
         else:
             col_dict = {}
-            for col_name in six.viewkeys(self.__rows__[key]):
+            for col_name in self.__rows__[key].keys():
                 if not self._column_within_range(
                         col_name, column_start, column_finish):
                     continue
@@ -355,13 +353,13 @@ class _CassandraFakeServerTable(_TableCQLSupport):
         except NotFoundException:
             col_dict = {}
 
-        for k, v in six.iteritems(col_dict):
+        for k, v in col_dict.items():
             yield (k, v)
 
     def get_count(self, key, column_start=None, column_finish=None):
         col_names = []
         if key in self.__rows__:
-            col_names = six.viewkeys(self.__rows__[key])
+            col_names = list(self.__rows__[key].keys())
 
         counter = 0
         for col_name in col_names:

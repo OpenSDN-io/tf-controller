@@ -6,6 +6,7 @@
 from collections import namedtuple
 import copy
 import datetime
+from io import StringIO
 import re
 import sys
 import time
@@ -29,7 +30,6 @@ from netaddr import IPAddress, IPNetwork, IPSet
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 import requests
 from sandesh_common.vns.constants import TagTypeIdToName
-from six import StringIO
 from vnc_api.vnc_api import (
     ActionListType, AddressType, AllowedAddressPair,
     AllowedAddressPairs, ApplicationPolicySet, AuthFailed, BadRequest,

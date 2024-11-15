@@ -6,7 +6,6 @@
 import argparse
 import configparser
 import logging
-from six import string_types
 import sys
 
 from cfgm_common.datastore.keyspace import ConfigKeyspaceMap
@@ -271,10 +270,10 @@ def parse_args(args_str=None):
     args_obj, remaining_argv = parser.parse_known_args(remaining_argv)
     if args.conf_file:
         args_obj.config_sections = config
-    if isinstance(args_obj.old_cassandra_address_list, string_types):
+    if isinstance(args_obj.old_cassandra_address_list, str):
         args_obj.old_cassandra_address_list =\
             args_obj.old_cassandra_address_list.split()
-    if isinstance(args_obj.new_cassandra_address_list, string_types):
+    if isinstance(args_obj.new_cassandra_address_list, str):
         args_obj.new_cassandra_address_list =\
             args_obj.new_cassandra_address_list.split()
     args_obj.old_rabbit_use_ssl = (str(args_obj.old_rabbit_use_ssl).lower() == 'true')

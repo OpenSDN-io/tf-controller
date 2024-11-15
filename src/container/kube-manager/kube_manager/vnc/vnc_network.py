@@ -6,7 +6,6 @@
 VNC network management for kubernetes.
 """
 from netaddr import IPNetwork, IPAddress
-from six import string_types
 import uuid
 
 from cfgm_common.exceptions import RefsExistError, NoIdError
@@ -143,7 +142,7 @@ class VncNetwork(VncCommon):
         return vn_fq_name
 
     def _create_subnet_data(self, vn_subnet):
-        subnets = [vn_subnet] if isinstance(vn_subnet, string_types) else vn_subnet
+        subnets = [vn_subnet] if isinstance(vn_subnet, str) else vn_subnet
         subnet_infos = []
         for subnet in subnets:
             cidr = IPNetwork(subnet)

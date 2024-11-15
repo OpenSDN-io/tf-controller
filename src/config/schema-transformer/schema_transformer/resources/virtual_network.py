@@ -14,7 +14,6 @@ from cfgm_common.exceptions import NoIdError, RefsExistError
 from cfgm_common.uve.virtual_network.ttypes import UveVirtualNetworkConfig
 from cfgm_common.uve.virtual_network.ttypes import UveVirtualNetworkConfigTrace
 from netaddr import IPNetwork
-import six
 from vnc_api.gen.resource_client import InstanceIp
 from vnc_api.gen.resource_xsd import AclEntriesType, AclRuleType
 from vnc_api.gen.resource_xsd import ActionListType, AddressType
@@ -832,11 +831,10 @@ class VirtualNetworkST(ResourceBaseST):
             # Previsouly we were convertir this transparently, so we
             # have to keep it.
             pproto = protocols.PROTO_NAME_IPV6_ICMP
-        return six.text_type(
-            # Protocol ID should be returned in string according the
-            # spec.  TODO(sahid): Creating helper function in
-            # protocols's module would make more sense.
-            protocols.IP_PROTOCOL_MAP[pproto])
+        # Protocol ID should be returned in string according the
+        # spec.  TODO(sahid): Creating helper function in
+        # protocols's module would make more sense.
+        return str(protocols.IP_PROTOCOL_MAP[pproto])
     # end protocol_policy_to_acl
 
     def address_list_policy_to_acl(self, addr):

@@ -19,7 +19,6 @@
 
 import mock
 import unittest
-import six
 from sandesh_common.vns import constants
 import svc_monitor.scheduler.vrouter_scheduler as scheduler
 
@@ -151,7 +150,7 @@ class TestRandomScheduler(unittest.TestCase):
                 self._add_details(info)
 
             def _add_details(self, info):
-                for (k, v) in six.iteritems(info):
+                for k, v in info.items():
                     try:
                         setattr(self, k, v)
                         self._info[k] = v

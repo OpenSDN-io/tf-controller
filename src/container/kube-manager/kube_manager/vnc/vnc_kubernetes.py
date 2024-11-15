@@ -6,7 +6,7 @@
 VNC management for kubernetes.
 """
 from datetime import datetime
-from six import StringIO
+from io import StringIO
 import gevent
 import time
 import sys

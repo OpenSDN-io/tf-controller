@@ -18,15 +18,13 @@
 # @author: Rudra Rugge
 
 import abc
-import six
 
 from cfgm_common import svc_info
 from vnc_api.vnc_api import *
 from .config_db import *
 
 
-@six.add_metaclass(abc.ABCMeta)
-class InstanceManager(object):
+class InstanceManager(metaclass=abc.ABCMeta):
 
     def __init__(self, vnc_lib, db, logger, vrouter_scheduler,
                  nova_client, agent_manager, args=None):

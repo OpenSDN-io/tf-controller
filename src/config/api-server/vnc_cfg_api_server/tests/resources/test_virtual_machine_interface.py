@@ -6,7 +6,6 @@ import logging
 
 from cfgm_common.exceptions import BadRequest, HttpError
 from cfgm_common.tests import test_common
-import six
 from testtools import ExpectedException
 from vnc_api.gen.resource_xsd import KeyValuePair
 from vnc_api.gen.resource_xsd import KeyValuePairs
@@ -32,8 +31,7 @@ VMIPT = VirtualMachineInterfacePropertiesType
 class TestVirtualMachineInterface(test_case.ApiServerTestCase):
     def setUp(self):
         super(TestVirtualMachineInterface, self).setUp()
-        if six.PY3:
-            self.assertItemsEqual = self.assertCountEqual
+        self.assertItemsEqual = self.assertCountEqual
 
     @classmethod
     def setUpClass(cls, *args, **kwargs):
@@ -440,8 +438,7 @@ class TestVMIVirtualPortGroupRelation(test_case.ApiServerTestCase):
 
     def setUp(self):
         super(TestVMIVirtualPortGroupRelation, self).setUp()
-        if six.PY3:
-            self.assertItemsEqual = self.assertCountEqual
+        self.assertItemsEqual = self.assertCountEqual
 
         # Create project
         self.proj_obj = Project('%s-project' % (self.id()))

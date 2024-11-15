@@ -6,7 +6,7 @@
 VNC service management for kubernetes
 """
 from netaddr import IPNetwork, IPAddress
-from six import StringIO
+from io import StringIO
 
 from cfgm_common import importutils
 from cfgm_common.utils import cgitb_hook
