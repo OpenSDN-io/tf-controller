@@ -1026,10 +1026,6 @@ class AddrMgmt(object):
                         f"Error in subnet delete instance-ip check: {str(e)}",
                         level=SandeshLevel.SYS_WARN
                     )
-                    self.config_log(
-                        f"Traceback:\n{traceback.format_exc()}",
-                        level=SandeshLevel.SYS_WARN
-                    )
 
 
         vn_category = vn_dict.get('virtual_network_category') or None
@@ -1085,10 +1081,6 @@ class AddrMgmt(object):
             except KeyError as e:
                 self.config_log(
                     f"Error in subnet delete during net_delete_notify for obj_id {obj_id}: {str(e)}",
-                    level=SandeshLevel.SYS_WARN
-                )
-                self.config_log(
-                    f"Traceback:\n{traceback.format_exc()}",
                     level=SandeshLevel.SYS_WARN
                 )
     # end net_delete_notify
@@ -2420,11 +2412,6 @@ class AddrMgmt(object):
                     f"Error in subnet delete during ipam_delete_notify for obj_id {obj_id}: {str(e)}",
                     level=SandeshLevel.SYS_WARN
                 )
-                self.config_log(
-                    f"Traceback:\n{traceback.format_exc()}",
-                    level=SandeshLevel.SYS_WARN
-                )
-
     # end ipam_delete_notify
 
     def ipam_update_req(self, ipam_fq_name, db_ipam_dict, req_ipam_dict,
@@ -2510,10 +2497,6 @@ class AddrMgmt(object):
                 except KeyError as e:
                     self.config_log(
                         f"Error in subnet delete during ipam_update_notify for obj_id {obj_id}: {str(e)}",
-                        level=SandeshLevel.SYS_WARN
-                    )
-                    self.config_log(
-                        f"Traceback:\n{traceback.format_exc()}",
                         level=SandeshLevel.SYS_WARN
                     )
 

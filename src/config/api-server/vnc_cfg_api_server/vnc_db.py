@@ -1803,10 +1803,6 @@ class VncDbClient(object):
                                         f"Node {tagged_vn_validation_znode} already exists: {str(e)}",
                                         level=SandeshLevel.SYS_WARN
                                     )
-                                    self.config_log(
-                                        f"Traceback:\n{traceback.format_exc()}",
-                                        level=SandeshLevel.SYS_WARN
-                                    )
                                 try:
                                     self._zk_db._zk_client.create_node(
                                         tagged_vlan_validation_znode,
@@ -1814,10 +1810,6 @@ class VncDbClient(object):
                                 except ResourceExistsError as e:
                                     self.config_log(
                                         f"Node {tagged_vlan_validation_znode} already exists: {str(e)}",
-                                        level=SandeshLevel.SYS_WARN
-                                    )
-                                    self.config_log(
-                                        f"Traceback:\n{traceback.format_exc()}",
                                         level=SandeshLevel.SYS_WARN
                                     )
                                 try:
@@ -1829,10 +1821,6 @@ class VncDbClient(object):
                                         f"Node {tagged_fabric_vn_validation_znode} already exists: {str(e)}",
                                         level=SandeshLevel.SYS_WARN
                                     )
-                                    self.config_log(
-                                        f"Traceback:\n{traceback.format_exc()}",
-                                        level=SandeshLevel.SYS_WARN
-                                    )
                                 try:
                                     self._zk_db._zk_client.create_node(
                                         tagged_fabric_vlan_validation_znode,
@@ -1840,10 +1828,6 @@ class VncDbClient(object):
                                 except ResourceExistsError as e:
                                     self.config_log(
                                         f"Node {tagged_fabric_vlan_validation_znode} already exists: {str(e)}",
-                                        level=SandeshLevel.SYS_WARN
-                                    )
-                                    self.config_log(
-                                        f"Traceback:\n{traceback.format_exc()}",
                                         level=SandeshLevel.SYS_WARN
                                     )
                         # Remove vpg annotations
@@ -1855,10 +1839,6 @@ class VncDbClient(object):
                     except ResourceExistsError as e:
                         self.config_log(
                             f"Node {untagged_validation_znode} or {tagged_validation_znode} already exists: {str(e)}",
-                            level=SandeshLevel.SYS_WARN
-                        )
-                        self.config_log(
-                            f"Traceback:\n{traceback.format_exc()}",
                             level=SandeshLevel.SYS_WARN
                         )
                         return
@@ -2283,11 +2263,6 @@ class VncDbClient(object):
                     f"Object with UUID {ref_uuid} not found during implicit update for {obj_type}: {str(e)}",
                     level=SandeshLevel.SYS_WARN
                 )
-                self.config_log(
-                    f"Traceback:\n{traceback.format_exc()}",
-                    level=SandeshLevel.SYS_WARN
-                )
-
     # end _dbe_publish_update_implicit
 
     @dbe_trace('update')
@@ -2375,11 +2350,6 @@ class VncDbClient(object):
                         f"UUID {obj_uuid} not found during collect_shared: {str(e)}",
                         level=SandeshLevel.SYS_WARN
                     )
-                    self.config_log(
-                        f"Traceback:\n{traceback.format_exc()}",
-                        level=SandeshLevel.SYS_WARN
-                    )
-
 
             return shared_result, marker
         # end collect_shared
