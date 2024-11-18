@@ -229,7 +229,7 @@ class FabricManager(object):
                                                      physical_role_uuid,
                                                      None, 'ADD')
                     except NoIdError:
-                        self.logger.warn(
+                        self._logger.warning(
                             f"Physical role '{physical_role}' not found for" +
                             f" physical router {pr.get('uuid')}"
                         )
@@ -247,12 +247,12 @@ class FabricManager(object):
                                                          overlay_role_uuid,
                                                          None, 'ADD')
                         except NoIdError:
-                            self.logger.warn(
+                            self._logger.warning(
                                 f"Overlay role '{overlay_role}' not found" +
                                 f" for physical router {pr.get('uuid')}"
                             )
             except NoIdError:
-                self.logger.warn(
+                self._logger.warning(
                     f"NoIdError: {pr.get('uuid')}"
                 )
 
@@ -275,7 +275,7 @@ class FabricManager(object):
                     ]
                 )
             except NoIdError:
-                self.logger.warn(
+                self._logger.warning(
                     f"NoIdError: default-domain:admin:master-LR"
                 )
 
@@ -335,7 +335,7 @@ class FabricManager(object):
                                                   vmi_refs=vmi_refs,
                                                   pr_refs=pr_refs)
             except NoIdError:
-                self.logger.warn(
+                self._logger.warning(
                     f"NoIdError: {id_lr}"
                 )
             except Exception as exc:
@@ -368,7 +368,7 @@ class FabricManager(object):
                                               perms2,
                                               fabric_obj=fab_obj)
             except RefsExistError:
-                self.logger.warn(
+                self._logger.warning(
                     f"RefsExistError: {fabric.get('uuid')}"
                 )
             except Exception as exc:
@@ -385,7 +385,7 @@ class FabricManager(object):
                 self._vnc_api.job_template_delete(
                     fq_name=['default-global-system-config', jt_name])
             except NoIdError:
-                self.logger.warn(
+                self._logger.warning(
                     f"NoIdError: {jt_name}"
                 )
 
