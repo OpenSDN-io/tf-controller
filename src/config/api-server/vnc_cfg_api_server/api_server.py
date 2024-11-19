@@ -3538,7 +3538,7 @@ class VncApiServer(object):
         debug_obj_cache_types = \
             [t.replace('-', '_').strip() for t in
              self._args.debug_object_cache_types.split(',')]
-
+        filter_optimization_enabled = self._args.filter_optimization_enabled
         db_engine = self._args.db_engine
         self._db_engine = db_engine
         cred = None
@@ -3561,6 +3561,7 @@ class VncApiServer(object):
             obj_cache_entries=obj_cache_entries,
             obj_cache_exclude_types=obj_cache_exclude_types,
             debug_obj_cache_types=debug_obj_cache_types,
+            filter_optimization_enabled=filter_optimization_enabled,
             cassandra_use_ssl=self._args.cassandra_use_ssl,
             cassandra_ca_certs=self._args.cassandra_ca_certs,
             cassandra_driver=self._args.cassandra_driver,

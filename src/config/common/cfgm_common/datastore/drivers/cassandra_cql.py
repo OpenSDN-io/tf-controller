@@ -829,6 +829,37 @@ class CassandraDriverCQL(datastore_api.CassandraDriver):
             raise NoIdError(key)
         return rows[column]
 
+    def _Get_Keys(self, cf_name, rows):
+
+        ses = self.get_cf(cf_name)
+
+        cql = """
+        SELECT blobAsText(key), value
+        FROM "{}"
+        """.format(cf_name)
+
+        if self.AllowColumnsFiltering and rows:
+            cql += "WHERE column1 = textAsBlob(%s) "
+            cql += "AND value = %s "
+            cql += "ALLOW FILTERING "
+        else:
+            return []
+
+        args = []
+        for column, values in rows.items():
+            for value in values:
+                args.append([str(column), str(value)])
+
+        requests = self.apply(ses, cql, args)
+
+        results = []
+        for request in requests:
+            if request.success:
+                for key, _ in request.result_or_exc:
+                    results.append(key)
+
+        return results
+
     def _Get_Range(self, cf_name, columns=None,
                    column_count=DEFAULT_COLUMN_COUNT,
                    include_timestamp=False):

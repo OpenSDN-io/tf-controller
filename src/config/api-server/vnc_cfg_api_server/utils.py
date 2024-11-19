@@ -8,6 +8,7 @@ Provides utility routines for modules in api-server
 import argparse
 from ast import literal_eval
 import base64
+from collections import OrderedDict
 from cfgm_common import jsonutils as json
 from configparser import ConfigParser
 import vnc_api.gen.resource_xsd
@@ -92,6 +93,7 @@ def parse_args(args_str):
         'object_cache_exclude_types': '', # csv of object types to *not* cache
         'debug_object_cache_types': '', # csv of object types to debug cache
         'db_engine': 'cassandra',
+        'filter_optimization_enabled': False,
         'max_request_size': 1024000,
         'amqp_timeout': 660,
         'config_api_ssl_enable': False,
@@ -458,7 +460,7 @@ def get_filters(data, skips=None):
     check==a,check==b,name==Bob
     """
     skips = skips or []
-    res = {}
+    res = OrderedDict()
 
     if not data:
         return res

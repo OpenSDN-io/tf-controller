@@ -91,13 +91,15 @@ class VncCassandraClient(object):
         return db_info
     # end get_db_info
 
-    def __init__(self, server_list, cassandra_driver, **options):
+    def __init__(self, server_list, cassandra_driver, 
+                 filter_optimization_enabled=False, **options):
         self._logger = options["logger"]
         self._logger('VNCCassandra started with driver {}'.format(cassandra_driver),
                      level=SandeshLevel.SYS_NOTICE)
 
         if cassandra_driver == 'cql':
             driverClass = CassandraDriverCQL
+            self._filter_optimization_enabled = filter_optimization_enabled
         else:
             raise VncError(
                 "datastore driver not selected, see `cassandra_driver`.")
@@ -986,34 +988,55 @@ class VncCassandraClient(object):
                 else:
                     start = ''
 
-                cols = self._cassandra_driver.xget(
-                    datastore_api.OBJ_FQ_NAME_CF_NAME, '%s' %(obj_type),
-                    start=start)
+                filtered_rows = []
 
-                def filter_rows_no_anchor():
-                    marker = None
-                    all_obj_infos = {}
-                    read_in = 0
-                    for col_name, _ in cols:
-                        # give chance for zk heartbeat/ping
-                        gevent.sleep(0)
-                        col_name_arr = utils.decode_string(col_name).split(':')
-                        obj_uuid = col_name_arr[-1]
-                        all_obj_infos[obj_uuid] = (col_name_arr[:-1], obj_uuid)
-                        read_in += 1
-                        if paginate_start and read_in >= paginate_count:
-                            marker = col_name
-                            break
+                if self._filter_optimization_enabled and filters:
+                    # Only works correctly if filters as OrderedDict
+                    # The first filters should screen out most of the elements
+                    filter = filters.items()
+                    filter_key, filter_values = next(filter)
 
-                    filt_obj_infos = filter_rows(all_obj_infos, filters)
-                    return list(filt_obj_infos.values()), marker
-                # end filter_rows_no_anchor
+                    rows = {'prop:%s' % filter_key: [u'%s' % json.dumps(value) for value in filter_values]}
 
-                if count and not filters:
-                    # when listing all objects of a type
-                    # return early if only count query is in request
-                    return (True, sum(1 for col in cols), None)
-                filtered_rows, ret_marker = filter_rows_no_anchor()
+                    uuids = self._cassandra_driver.get_keys(cf_name=datastore_api.OBJ_UUID_CF_NAME, rows=rows)
+                    obj_infos = self._cassandra_driver.multiget(cf_name=datastore_api.OBJ_UUID_CF_NAME,
+                                                                keys=uuids, columns=[u'fq_name',u'type'])
+                    coll_infos = {}
+                    for uuid, info in obj_infos.items():
+                        if info['type'] == obj_type:
+                            coll_infos[uuid] = (info['fq_name'], uuid)
+
+                    filtered_rows = filter_rows(coll_infos=coll_infos, filters=dict(filter))
+                    filtered_rows, ret_marker = list(filtered_rows.values()), None
+                else:
+                    cols = self._cassandra_driver.xget(
+                        datastore_api.OBJ_FQ_NAME_CF_NAME, '%s' %(obj_type),
+                        start=start)
+
+                    def filter_rows_no_anchor():
+                        marker = None
+                        all_obj_infos = {}
+                        read_in = 0
+                        for col_name, _ in cols:
+                            # give chance for zk heartbeat/ping
+                            gevent.sleep(0)
+                            col_name_arr = utils.decode_string(col_name).split(':')
+                            obj_uuid = col_name_arr[-1]
+                            all_obj_infos[obj_uuid] = (col_name_arr[:-1], obj_uuid)
+                            read_in += 1
+                            if paginate_start and read_in >= paginate_count:
+                                marker = col_name
+                                break
+
+                        filt_obj_infos = filter_rows(all_obj_infos, filters)
+                        return list(filt_obj_infos.values()), marker
+                    # end filter_rows_no_anchor
+
+                    if count and not filters:
+                        # when listing all objects of a type
+                        # return early if only count query is in request
+                        return (True, sum(1 for col in cols), None)
+                    filtered_rows, ret_marker = filter_rows_no_anchor()
                 children_fq_names_uuids.extend(filtered_rows)
 
         if count:

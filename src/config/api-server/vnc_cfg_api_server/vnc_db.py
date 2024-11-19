@@ -102,7 +102,7 @@ class VncServerCassandraClient(VncCassandraClient):
                  cassandra_credential, walk, obj_cache_entries,
                  obj_cache_exclude_types, debug_obj_cache_types,
                  log_response_time=None, ssl_enabled=False, ca_certs=None,
-                 pool_size=20,
+                 pool_size=20, filter_optimization_enabled=False,
                  # cassandra_driver default to None, VncCassandraClient
                  # will raise an exception if not well configured.
                  cassandra_driver=None, zk_servers=None, zk_ssl_enable=False,
@@ -121,6 +121,7 @@ class VncServerCassandraClient(VncCassandraClient):
             debug_obj_cache_types=debug_obj_cache_types,
             log_response_time=log_response_time, ssl_enabled=ssl_enabled,
             ca_certs=ca_certs, cassandra_driver=cassandra_driver,
+            filter_optimization_enabled=filter_optimization_enabled,
             zk_servers=zk_servers, zk_ssl_enable=zk_ssl_enable,
             zk_ssl_keyfile=zk_ssl_keyfile,
             zk_ssl_certificate=zk_ssl_certificate,
@@ -1205,7 +1206,8 @@ class VncDbClient(object):
                  db_engine='cassandra', cassandra_use_ssl=False,
                  cassandra_ca_certs=None, cassandra_driver=None,
                  zk_ssl_enable=False, zk_ssl_keyfile=None,
-                 zk_ssl_certificate=None, zk_ssl_ca_cert=None, **kwargs):
+                 zk_ssl_certificate=None, zk_ssl_ca_cert=None,
+                 filter_optimization_enabled=False, **kwargs):
         self._db_engine = db_engine
         self._api_svr_mgr = api_svr_mgr
         self._sandesh = api_svr_mgr._sandesh
@@ -1267,6 +1269,7 @@ class VncDbClient(object):
                     self.log_cassandra_response_time,
                     ssl_enabled=cassandra_use_ssl, ca_certs=cassandra_ca_certs,
                     cassandra_driver=cassandra_driver,
+                    filter_optimization_enabled=filter_optimization_enabled,
                     zk_servers=zk_servers, zk_ssl_enable=zk_ssl_enable,
                     zk_ssl_keyfile=zk_ssl_keyfile,
                     zk_ssl_certificate=zk_ssl_certificate,
