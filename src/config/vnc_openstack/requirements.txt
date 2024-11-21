@@ -12,3 +12,4 @@ kazoo
 netaddr<1
 sandesh==0.1.dev0
 sandesh-common
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
