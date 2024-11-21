@@ -16,3 +16,4 @@ cityhash
 contrail-config-common
 configparser
 sandesh==0.1.dev0
+urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
