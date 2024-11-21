@@ -9,3 +9,4 @@ flexmock==0.10.4
 mock<=4.0.2
 WebTest==2.0.34
 junitxml==0.7
+setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
