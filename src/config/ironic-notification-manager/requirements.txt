@@ -8,3 +8,4 @@ python-ironic-inspector-client
 python-novaclient
 keystoneauth1
 netaddr<1
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
