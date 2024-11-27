@@ -363,7 +363,7 @@ static void FillBgpNeighborConfigInfo(ShowBgpNeighborConfig *sbnc,
     }
 
     vector<ShowBgpNeighborFamilyConfig> sbnfc_list;
-    for (const auto family_config :
+    for (const auto& family_config :
         neighbor->family_attributes_list()) {
         ShowBgpNeighborFamilyConfig sbnfc;
         sbnfc.set_family(family_config.family);

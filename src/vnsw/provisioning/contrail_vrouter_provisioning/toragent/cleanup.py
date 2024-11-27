@@ -16,7 +16,15 @@ from .setup import TorAgentSetup
 from contrail_vrouter_provisioning.base import ContrailSetup
 from distutils.version import LooseVersion
 
-(PLATFORM, VERSION, EXTRA) = platform.linux_distribution()
+try:
+    import distro
+except ImportError:
+    pass
+
+if hasattr(platform, 'linux_distribution'):
+    (PLATFORM, VERSION, EXTRA) = platform.linux_distribution()
+else:
+    (PLATFORM, VERSION, EXTRA) = distro.linux_distribution()
 
 log = logging.getLogger('contrail_vrouter_provisioning.common')
 

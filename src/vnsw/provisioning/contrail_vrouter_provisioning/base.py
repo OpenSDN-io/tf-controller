@@ -12,6 +12,11 @@ import tempfile
 import platform
 import logging
 
+try:
+    import distro
+except ImportError:
+    pass
+
 
 from contrail_vrouter_provisioning import local, ExtList
 
@@ -21,7 +26,11 @@ log = logging.getLogger('contrail_vrouter_provisioning.base')
 
 class ContrailSetup(object):
     def __init__(self):
-        (self.pdist, self.pdistversion, self.pdistrelease) = platform.dist()
+        if hasattr(platform, 'dist'):
+            (self.pdist, self.pdistversion, self.pdistrelease) = platform.dist()
+        else:
+            self.pdist = distro.id()
+            self.pdistversion = distro.version(best=True)
         self.hostname = socket.getfqdn()
         self.running_in_container = False
         if os.path.exists('/.dockerenv'):
@@ -236,6 +245,7 @@ class ContrailSetup(object):
             local("sudo chkconfig iptables off", warn_only=True)
         local("sudo iptables --flush", warn_only=True)
         if self.pdist == 'redhat' or \
+           self.pdist == 'rocky' or \
            self.pdist == 'centos' and self.pdistversion.startswith('7'):
             local("sudo service iptables stop", warn_only=True)
             local("sudo service ip6tables stop", warn_only=True)
@@ -270,7 +280,7 @@ class ContrailSetup(object):
               (initf, initf), warn_only=True)
         local("sudo mv %s.new %s" % (initf, initf), warn_only=True)
 
-        if self.pdist in ['centos', 'fedora', 'redhat']:
+        if self.pdist in ['centos', 'fedora', 'redhat', 'rocky']:
             core_unlim = "echo DAEMON_COREFILE_LIMIT=\"'unlimited'\""
             local("sudo %s >> %s" % (core_unlim, initf))
 
@@ -291,7 +301,7 @@ class ContrailSetup(object):
         local('sudo chmod 777 /var/crashes', warn_only=True)
 
         try:
-            if self.pdist in ['fedora', 'centos', 'redhat']:
+            if self.pdist in ['fedora', 'centos', 'redhat', 'rocky']:
                 self.enable_kernel_core()
             if self.pdist == 'Ubuntu':
                 self.setup_crashkernel_params()
@@ -299,7 +309,7 @@ class ContrailSetup(object):
             log.warning("Ignoring failure kernel core dump")
 
         try:
-            if self.pdist in ['fedora', 'centos', 'redhat']:
+            if self.pdist in ['fedora', 'centos', 'redhat', 'rocky']:
                 self.enable_kdump()
         except Exception as e:
             log.warning("Ignoring failure when enabling kdump")

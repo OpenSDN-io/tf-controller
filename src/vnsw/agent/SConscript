@@ -11,6 +11,11 @@ import shutil
 import subprocess
 import time
 
+try:
+    import distro
+except ImportError:
+    pass
+
 Import('BuildEnv')
 env = BuildEnv.Clone()
 
@@ -337,9 +342,15 @@ subdirs = [
     'nexthop_server',
 ]
 
-subdirs += [
+if hasattr(platform, 'dist'):
+   (distname, version, _) = platform.dist()
+else:
+   distname = distro.id()
+
+if distname != 'rocky':
+   subdirs += [
     'ovs_tor_agent',
-]
+   ]
 
 AgentUveDocFiles = []
 AgentUveDocFiles += AgentEnv.SandeshGenDoc('uve/vrouter.sandesh')

@@ -125,7 +125,17 @@ private:
     };
 
     struct Stats {
-        Stats() { memset(this, 0, sizeof(Stats)); }
+        Stats():
+            init(0),
+            close(0),
+            nested(0),
+            deletes(0),
+            stale(0),
+            llgr_stale(0),
+            sweep(0),
+            gr_timer(0),
+            llgr_timer(0) {
+        }
 
         struct RouteStats {
             RouteStats() { reset(); }
