@@ -2,7 +2,6 @@ timeout-decorator
 bitarray
 bottle<0.13
 cassandra-driver
-configparser
 contrail-api-client
 gevent
 greenlet

@@ -1,6 +1,5 @@
 contrail-config-common
 contrail-api-client
-configparser
 sandesh==0.1.dev0
 sandesh-common
 keystonemiddleware

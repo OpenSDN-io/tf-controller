@@ -8,7 +8,6 @@ subprocess32
 jsonschema
 inflection
 pyroute2
-configparser
 pysnmp
 pycrypto
 sandesh==0.1.dev0

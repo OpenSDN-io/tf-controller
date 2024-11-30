@@ -8,3 +8,4 @@ python-ironic-inspector-client
 python-novaclient
 keystoneauth1
 netaddr<1
+kombu

@@ -14,7 +14,6 @@ inflection
 jsonschema
 cityhash
 contrail-config-common
-configparser
 sandesh==0.1.dev0
 junos-eznc
 ncclient
