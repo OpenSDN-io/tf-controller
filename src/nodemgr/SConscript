@@ -67,16 +67,6 @@ sdist_gen = OpEnv.Command(
 
 OpEnv.Depends(sdist_gen, sdist_depends)
 OpEnv.Default(sdist_gen)
-OpEnv.Alias("contrail-nodemgr", sdist_gen)
-
-install_root = GetOption('install_root')
-if install_root is None:
-    install_root = '.'
-OpEnv.Alias(
-        "contrail-nodemgr",
-        OpEnv.Install(
-            install_root + '/opt/opensdn/pip/nodemgr/',
-            Entry('#controller/src/nodemgr/requirements.txt')))
 
 test_target = OpEnv.SetupPyTestSuite(sdist_gen, use_tox=True)
 OpEnv.Alias('controller/src/nodemgr:test', test_target)
@@ -85,3 +75,9 @@ doc_files = OpEnv.SandeshGenDoc('sandesh/database.sandesh')
 OpEnv.Alias('install', OpEnv.Install(
     OpEnv['INSTALL_MESSAGE_DOC'] + '/contrail-database/',
     doc_files))
+
+install_whl_cmd = OpEnv.Command(
+    None, 'setup.py',
+    cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
+OpEnv.Depends(install_whl_cmd, sdist_depends)
+OpEnv.Alias('install', install_whl_cmd)

@@ -66,8 +66,8 @@ def SymLink(target, source, env):
     os.symlink(os.path.abspath(str(source[0])), os.path.abspath(str(target[0])))
 
 if 'install' in BUILD_TARGETS:
-    install_cmd = env.Command(
+    install_whl_cmd = env.Command(
         None, 'setup.py',
-        cd_cmd + 'python3 setup.py install %s' % env['PYTHON_INSTALL_OPT'])
-    env.Depends(install_cmd, sdist_depends)
-    env.Alias('install', install_cmd)
+        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
+    env.Depends(install_whl_cmd, sdist_depends)
+    env.Alias('install', install_whl_cmd)

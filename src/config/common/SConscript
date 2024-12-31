@@ -98,17 +98,8 @@ def SymLink(target, source, env):
 env.SetupPyTestSuite(sdist_gen, use_tox=True)
 
 if 'install' in BUILD_TARGETS:
-    install_cmd = env.Command(None, 'setup.py',
-                              cd_cmd + 'python3 setup.py install %s' %
-                              env['PYTHON_INSTALL_OPT'])
-    env.Depends(install_cmd, sdist_gen)
-    env.Alias('install', install_cmd)
-
-    install_root = GetOption('install_root')
-    if install_root is None:
-        install_root = ''
-    env.Alias(
-        'install',
-        env.Install(
-            install_root + '/opt/opensdn/pip/cfgm_common/',
-            Entry('#controller/src/config/common/requirements.txt')))
+    install_whl_cmd = env.Command(
+        None, 'setup.py',
+        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
+    env.Depends(install_whl_cmd, sdist_gen)
+    env.Alias('install', install_whl_cmd)

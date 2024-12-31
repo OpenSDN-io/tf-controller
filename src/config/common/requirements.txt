@@ -2,13 +2,13 @@ timeout-decorator
 bitarray
 bottle<0.13
 cassandra-driver
-contrail-api-client
+contrail-api-client==0.1.dev0
 gevent
 greenlet
 kazoo
 kombu
 requests
 sandesh==0.1.dev0
-sandesh-common
+sandesh_common==0.1.dev0
 simplejson
 stevedore

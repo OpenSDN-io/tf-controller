@@ -48,18 +48,11 @@ doc_files += env.SandeshGenDoc('ironic_notification_manager.sandesh')
 doc_files += env['CFGM_DOC_FILES']
 
 if 'install_ironic_notification_manager' in BUILD_TARGETS:
-    env.Alias('install_ironic_notification_manager',
-              env.Command(None, setup_sources + local_sources,
-                          cd_cmd + 'python3 setup.py install %s' %
-                          env['PYTHON_INSTALL_OPT']))
-    install_root = GetOption('install_root')
-    if install_root is None:
-        install_root = ''
-    env.Alias(
-        'install',
-        env.Install(
-            install_root + '/opt/opensdn/pip/ironic/',
-            Entry('#controller/src/config/ironic-notification-manager/requirements.txt')))
+    install_whl_cmd = env.Command(
+        None, setup_sources + local_sources,
+        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
+    env.Depends(install_whl_cmd, sdist_depends)
+    env.Alias('install_ironic_notification_manager', install_whl_cmd)
 
 env.Alias('install', env.Install(env['INSTALL_CONF'],
           'ironic-notification-manager.conf'))

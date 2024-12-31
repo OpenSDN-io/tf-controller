@@ -5,7 +5,7 @@ gevent
 greenlet
 psutil>=0.6.0,!=5.5.0,!=5.5.1
 sandesh==0.1.dev0
-sandesh-common
+sandesh_common==0.1.dev0
 grpcio==1.29.0
 protobuf==3.17.3
 docker<=3.0.0

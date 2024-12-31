@@ -1,5 +1,5 @@
-contrail-config-common
-contrail-api-client
-sandesh
-sandesh-common
+contrail-config-common==0.1.dev0
+contrail-api-client==0.1.dev0
+sandesh==0.1.dev0
+sandesh_common==0.1.dev0
 ansible==2.6.13

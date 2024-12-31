@@ -43,19 +43,11 @@ doc_files += env.SandeshGenDoc('traces.sandesh')
 doc_files += env['CFGM_DOC_FILES']
 
 if 'install' in BUILD_TARGETS:
-    install_cmd = env.Command(None, 'setup.py',
-                              cd_cmd + 'python3 setup.py install %s' %
-                              env['PYTHON_INSTALL_OPT'])
-    env.Depends(install_cmd, sdist_gen)
-    env.Alias('install', install_cmd)
-    install_root = GetOption('install_root')
-    if install_root is None:
-        install_root = ''
-    env.Alias(
-        'install',
-        env.Install(
-            install_root + '/opt/opensdn/pip/api_server/',
-            Entry('#controller/src/config/api-server/requirements.txt')))
+    install_whl_cmd = env.Command(
+        None, 'setup.py',
+        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
+    env.Depends(install_whl_cmd, sdist_gen)
+    env.Alias('install', install_whl_cmd)
 
 env.Alias('install', env.Install(env['INSTALL_CONF'], 'contrail-api.conf'))
 env.Alias('install', env.Install(

@@ -1,7 +1,7 @@
-contrail-config-common
-contrail-api-client
+contrail-config-common==0.1.dev0
+contrail-api-client==0.1.dev0
 sandesh==0.1.dev0
-sandesh-common
+sandesh_common==0.1.dev0
 keystonemiddleware
 keystoneauth1
 gevent
@@ -12,3 +12,4 @@ bottle<0.13
 stevedore
 kazoo
 pycrypto
+uwsgi

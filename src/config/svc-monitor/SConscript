@@ -93,18 +93,10 @@ doc_files += env.SandeshGenDoc('port_tuple.sandesh')
 doc_files += env.SandeshGenDoc('snat_agent.sandesh')
 
 if 'install' in BUILD_TARGETS:
-    install_cmd = env.Command(None, sources,
-                              cd_cmd + 'python3 setup.py install %s' %
-                              env['PYTHON_INSTALL_OPT'])
-    env.Alias('install', install_cmd)
-    install_root = GetOption('install_root')
-    if install_root is None:
-        install_root = ''
-    env.Alias(
-        'install',
-        env.Install(
-            install_root + '/opt/opensdn/pip/svc_monitor/',
-            Entry('#controller/src/config/svc-monitor/requirements.txt')))
+    install_whl_cmd = env.Command(
+        None, sources,
+        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
+    env.Alias('install', install_whl_cmd)
 
 env.Alias('install', env.Install(env['INSTALL_CONF'], 'contrail-svc-monitor.conf'))
 env.Alias('install', env.Install(

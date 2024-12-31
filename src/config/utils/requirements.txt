@@ -1,5 +1,6 @@
-contrail-api-client
+contrail-api-client==0.1.dev0
 sandesh==0.1.dev0
-sandesh-common
+sandesh_common==0.1.dev0
+contrail-config-common==0.1.dev0
 requests
 netaddr<1

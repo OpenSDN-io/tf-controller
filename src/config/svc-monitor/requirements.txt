@@ -1,10 +1,11 @@
+contrail-api-client==0.1.dev0
+contrail-config-common==0.1.dev0
+sandesh==0.1.dev0
+sandesh_common==0.1.dev0
 bitarray
-contrail-api-client
-contrail-config-common
 gevent
 kazoo
 kombu
 requests
-sandesh==0.1.dev0
-sandesh-common
+pyyaml
 python-novaclient

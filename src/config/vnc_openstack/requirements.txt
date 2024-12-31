@@ -5,10 +5,10 @@ python-ironic-inspector-client
 timeout-decorator
 keystoneauth1
 python-novaclient
-contrail-config-common
-contrail-api-client
+contrail-config-common==0.1.dev0
+contrail-api-client==0.1.dev0
 gevent
 kazoo
 netaddr<1
 sandesh==0.1.dev0
-sandesh-common
+sandesh_common==0.1.dev0

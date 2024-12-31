@@ -1,4 +1,4 @@
-contrail-vrouter-api
+contrail-vrouter-api==0.1.dev0
 eventlet
 netaddr<1
-requests >= 2.20.0
+requests>=2.20.0
