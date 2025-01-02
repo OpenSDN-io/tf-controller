@@ -4333,7 +4333,9 @@ class DBInterface(object):
                                                    net_id=network_id)
 
                 self._router_set_external_gateway(rtr_obj, net_obj)
-            else:
+            # request with empty external_gateway_info dict means
+            # that external gateway should be cleared
+            if router_q.get('external_gateway_info') == {}:
                 self._router_clear_external_gateway(rtr_obj)
 
     def _router_set_external_gateway(self, router_obj, ext_net_obj):
