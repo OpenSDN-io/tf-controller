@@ -1541,10 +1541,6 @@ class DBInterface(object):
 
         # get route table routes
         rt_q_dict['routes'] = rt_q_dict.pop('routes', None)
-        if rt_q_dict['routes']:
-            for route in rt_q_dict['routes']['route']:
-                if route['next_hop_type']:
-                    route['next_hop'] = route['next_hop_type']
         return rt_q_dict
     # end _route_table_vnc_to_neutron
 
