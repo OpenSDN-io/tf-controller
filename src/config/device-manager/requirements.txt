@@ -15,5 +15,6 @@ jsonschema
 cityhash
 contrail-config-common
 sandesh==0.1.dev0
+sandesh_common==0.1.dev0
 junos-eznc
 ncclient

@@ -13,7 +13,7 @@ def requirements(filename):
 
 setuptools.setup(
     name='opencontrail-vrouter-netns',
-    version='0.1',
+    version='0.1.dev0',
     packages=setuptools.find_packages(),
 
     # metadata

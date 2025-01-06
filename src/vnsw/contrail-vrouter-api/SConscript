@@ -21,10 +21,10 @@ sdist_gen = env.Command('dist/contrail-vrouter-api-1.0.tar.gz',
 env.Alias('controller/src/vnsw/contrail_vrouter_api:sdist', sdist_gen)
 
 if 'install' in BUILD_TARGETS:
-    install_cmd = env.Command(None, sources,
-                              cd_cmd + 'python3 setup.py install %s' %
-                              env['PYTHON_INSTALL_OPT'])
-    env.Alias('install', install_cmd)
+    install_whl_cmd = env.Command(
+        None, sources,
+        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
+    env.Alias('install', install_whl_cmd)
 
 # Local Variables:
 # mode: python

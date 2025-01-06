@@ -22,7 +22,6 @@ subdirs = [
            'xml',
            'xmpp',
            'nodemgr',
-           'stats'
            ]
  
 if platform.system() != 'Darwin':

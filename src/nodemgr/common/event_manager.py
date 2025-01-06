@@ -408,10 +408,10 @@ class EventManager(object):
         node_status_uve.send()
 
     def _get_package_version(self):
-        pkg_version = utils.get_package_version('contrail-nodemgr')
+        pkg_version = utils.get_package_version('contrail-lib')
         if pkg_version is None:
             self.msg_log('Error getting %s package version' % (
-                'contrail-nodemgr'), SandeshLevel.SYS_ERR)
+                'contrail-lib'), SandeshLevel.SYS_ERR)
             pkg_version = "unknown"
         return pkg_version
 

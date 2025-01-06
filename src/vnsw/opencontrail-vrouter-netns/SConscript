@@ -81,19 +81,10 @@ env.Alias('controller/src/vnsw/opencontrail_vrouter_netns:test',
 env.Alias('controller/src/opencontrail-vrouter-netns/opencontrail_vrouter_netns:test', test)
 
 if 'install' in BUILD_TARGETS:
-    install_cmd = env.Command(None, sources,
-                              cd_cmd + 'python3 setup.py install %s' %
-                              env['PYTHON_INSTALL_OPT'])
-    env.Alias('install', install_cmd)
-
-    install_root = GetOption('install_root')
-    if install_root is None:
-        install_root = ''
-    env.Alias(
-        'install',
-        env.Install(
-            install_root + '/opt/opensdn/pip/vrouter-netns/',
-            Entry('#controller/src/vnsw/opencontrail-vrouter-netns/requirements.txt')))
+    install_whl_cmd = env.Command(
+        None, sources,
+        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
+    env.Alias('install', install_whl_cmd)
 
 # Local Variables:
 # mode: python
