@@ -87,8 +87,6 @@ class DatabaseExim(object):
             'lockpath',
             'analytics-discovery-',
             'analytics-discovery-' + self._api_args.cluster_id,
-            'vcenter-plugin',
-            'vcenter-fabric-manager',
         ])
     # end __init__
 

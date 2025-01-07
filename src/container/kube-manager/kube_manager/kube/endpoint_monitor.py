@@ -30,7 +30,6 @@ class EndPointMonitor(KubeMonitor):
         ctrl_plane_endpoints = [
             "kube-controller-manager",
             "kube-scheduler",
-            "openshift-master-controllers"
         ]
         if name in ctrl_plane_endpoints:
             self._log(

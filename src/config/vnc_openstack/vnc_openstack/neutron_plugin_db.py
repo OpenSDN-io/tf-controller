@@ -539,7 +539,6 @@ class DBInterface(object):
                     resource='security_group_rule',
                     id=rule_uuid,
                     rule_id=rule_uuid)
-
         except LockTimeout:
             # If the lock was not acquired and timeout of 5 seconds happened,
             # then raise

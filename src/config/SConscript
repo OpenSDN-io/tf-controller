@@ -35,7 +35,6 @@ subdirs=[
     'api-server',
     'common',
     'device-manager',
-    'ironic-notification-manager',
     'schema-transformer',
     'utils',
     'uve',
