@@ -10,7 +10,7 @@ from vnc_api.gen.resource_xsd import KeyValuePairs
 
 from .test_case import UtilsTestCase
 
-sys.path.append("%s/.." % os.path.dirname(__file__))
+sys.path.append("%s/../contrail_config_utils" % os.path.dirname(__file__))
 import provision_vrouter # noqa
 
 logger = logging.getLogger(__name__)

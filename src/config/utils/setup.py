@@ -16,7 +16,7 @@ def requirements(filename):
 setup(
     name='contrail_config_utils',
     version='0.1.dev0',
-    packages=['.'],
+    packages=['contrail_config_utils'],
     package_data={'': ['*.xml']},
     zip_safe=False,
     description="Contrail VNC Configuration Utils",
