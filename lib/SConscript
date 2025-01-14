@@ -37,7 +37,6 @@ if distname in ['centos', 'redhat', 'rocky'] and LooseVersion(version) >= LooseV
 if distname != 'rocky':
    subdirs += [
       'openvswitch',
-      'tbb'
    ]
 
 for dir in subdirs:

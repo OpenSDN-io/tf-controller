@@ -7,7 +7,6 @@ Import('DnsEnv')
 import platform
 
 env = DnsEnv.Clone()
-env.CppDisableExceptions()
 
 env.Append(CPPPATH = env['TOP'])
 env.Append(LIBPATH = ['#/' + Dir('..').path,
