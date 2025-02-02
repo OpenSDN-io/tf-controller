@@ -4,10 +4,15 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 Import('CfgmEnv')
-env = CfgmEnv.Clone()
+cniEnv = CfgmEnv.Clone()
 
-subdirs=[
-    'kube_cni',
-]
+cni_path = cniEnv.Dir('#/' + cniEnv.Dir('.').srcnode().path).abspath
 
-env.SConscript(dirs=subdirs, exports='CfgmEnv', duplicate = 0)
+def cniBuild(env, target, source):
+    env.GoBuild(cni_path, './cmd/kube_cni')
+
+gobin = cniEnv.Command(cniEnv['TOP'] + '/container/cni/bin/kube_cni', 'go.mod', cniBuild)
+
+cniEnv.Alias('contrail-k8s-cni', gobin)
+cniEnv.Alias('install', cniEnv.InstallAs(cniEnv['INSTALL_BIN'] + '/contrail-k8s-cni', gobin))
+cniEnv.Default(gobin)

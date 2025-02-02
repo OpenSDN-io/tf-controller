@@ -1,23 +1,22 @@
 // vim: tabstop=4 expandtab shiftwidth=4 softtabstop=4
 //
 // Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
-//
-package contrailCni
+package contrail
 
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 
-	cniIntf "../common"
-	log "../logging"
+	"opensdn-k8s-cni/internal/common"
+	log "opensdn-k8s-cni/internal/logging"
+
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types"
-	"github.com/containernetworking/cni/pkg/types/current"
+	current "github.com/containernetworking/cni/pkg/types/100"
 )
 
 /* Example configuration file
@@ -122,7 +121,7 @@ func (cni *ContrailCni) Log() {
 
 func readConf(dir string) ([]byte, error) {
 	var dataBytes []byte
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		log.Errorf("Failed to open %s. Error %+v\n", dir, err)
 		return nil, err
@@ -134,7 +133,7 @@ func readConf(dir string) ([]byte, error) {
 			strings.HasSuffix(fname, TF_CONF_FILE) {
 
 			log.Infof("Read file *%s\n", fname)
-			dataBytes, err = ioutil.ReadFile(fname)
+			dataBytes, err = os.ReadFile(fname)
 			if err != nil {
 				log.Errorf("Failed to read %s. Error %+v\n", fname, err)
 				return nil, err
@@ -186,7 +185,7 @@ func (cni *ContrailCni) getPodInfo(args string) {
 func (cni *ContrailCni) isMetaPlugin() bool {
 	ppid := os.Getppid()
 	commPath := fmt.Sprintf("/proc/%d/comm", ppid)
-	dataBytes, err := ioutil.ReadFile(commPath)
+	dataBytes, err := os.ReadFile(commPath)
 	if err != nil {
 		log.Errorf("Error in Getting Process Details for pid %d\n. Error %+v",
 			ppid, err)
@@ -225,7 +224,7 @@ func (cni *ContrailCni) readVrouterPollResults() (*[]Result, error) {
 	if _, err := os.Stat(containerFile); os.IsNotExist(err) {
 		return nil, nil
 	}
-	bytes, err := ioutil.ReadFile(containerFile)
+	bytes, err := os.ReadFile(containerFile)
 	if err != nil {
 		log.Errorf("Error Reading Vrouter Poll Results from file %s. "+
 			"Error : %s", containerFile, err)
@@ -248,7 +247,7 @@ func (cni *ContrailCni) writeVrouterPollResults(results *[]Result) error {
 		log.Errorf("Error Encoding Vrouter Poll Results. Error : %+v", err)
 		return err
 	}
-	err = ioutil.WriteFile(containerFile, bytes, 0644)
+	err = os.WriteFile(containerFile, bytes, 0644)
 	if err != nil {
 		log.Errorf("Error Writing Vrouter Poll Results in file %s. "+
 			"Error : %s", containerFile, err)
@@ -283,7 +282,7 @@ func Init(args *skel.CmdArgs) (*ContrailCni, error) {
 	 */
 	contrailCni := ContrailCni{ClusterName: K8S_CLUSTER_NAME,
 		Mode: CNI_MODE_K8S, VifType: VIF_TYPE_VETH,
-		VifParent: CONTRAIL_PARENT_INTERFACE, Mtu: cniIntf.CNI_MTU,
+		VifParent: CONTRAIL_PARENT_INTERFACE, Mtu: common.CNI_MTU,
 		MetaPlugin: META_PLUGIN, LogLevel: LOG_LEVEL, LogFile: LOG_FILE}
 	json_args := cniJson{ContrailCni: contrailCni}
 	json_args.ContrailCni.loggingInit()
@@ -343,14 +342,14 @@ func (cni *ContrailCni) UpdateContainerUuid(containerUuid string) {
  *  makeInterface- Method to intialize interface object of type VETh or MACVLAN
  */
 func (cni *ContrailCni) makeInterface(
-	vlanId int, containerIntfName string) cniIntf.CniIntfMethods {
+	vlanId int, containerIntfName string) common.CniIntfMethods {
 	if cni.VifType == VIF_TYPE_MACVLAN {
-		return cniIntf.CniIntfMethods(cniIntf.InitMacVlan(cni.VifParent,
+		return common.CniIntfMethods(common.InitMacVlan(cni.VifParent,
 			containerIntfName, cni.cniArgs.ContainerID, cni.ContainerUuid,
 			cni.cniArgs.Netns, cni.Mtu, vlanId))
 	}
 
-	return cniIntf.CniIntfMethods(cniIntf.InitVEth(
+	return common.CniIntfMethods(common.InitVEth(
 		containerIntfName, cni.cniArgs.ContainerID,
 		cni.ContainerUuid, cni.cniArgs.Netns, cni.Mtu))
 }
@@ -456,7 +455,6 @@ func (cni *ContrailCni) CmdAdd() error {
 	// Value : VRouter result
 	vrouterResultMap := make(map[string]Result)
 
-	var finalTypesResult *current.Result
 	var results *[]Result
 	var err error
 	vrouterPoll := true
@@ -556,6 +554,7 @@ func (cni *ContrailCni) CmdAdd() error {
 		vrouterResultMap[vRouterResult.VmiUuid] = vRouterResult
 	}
 
+	var finalTypesResult *current.Result
 	log.Infof("About to configure %d interfaces for container",
 		len(containerIntfNames))
 	for vmiUuid := range containerIntfNames {
@@ -576,12 +575,8 @@ func (cni *ContrailCni) CmdAdd() error {
 			return err
 		}
 
-		if MetaPluginCall {
+		if MetaPluginCall || containerIntfName == "eth0" {
 			finalTypesResult = typesResult
-		} else {
-			if containerIntfName == "eth0" {
-				finalTypesResult = typesResult
-			}
 		}
 	}
 
