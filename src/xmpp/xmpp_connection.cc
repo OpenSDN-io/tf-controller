@@ -385,7 +385,6 @@ void XmppConnection::ProcessSslHandShakeResponse(SslSessionPtr session,
             string err = error.message();
             err = string(" (")
                          +boost::lexical_cast<string>(ERR_GET_LIB(error.value()))+","
-                         +boost::lexical_cast<string>(ERR_GET_FUNC(error.value()))+","
                          +boost::lexical_cast<string>(ERR_GET_REASON(error.value()))+") ";
 
              char buf[128];

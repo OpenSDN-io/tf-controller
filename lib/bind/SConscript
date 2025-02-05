@@ -1,7 +1,19 @@
 # -*- mode: python; -*-
 import platform
+import sys
+try:
+    import distro
+except ImportError:
+    pass
+
+if hasattr(platform, 'dist'):
+    distribution = platform.dist()[0]
+else:
+    distribution = distro.id()
 
 vpath = '#/third_party/bind-9.10.4-P2/'
+if distribution == 'rocky':
+    vpath = '#/third_party/bind-9.21.3/'
 env = DefaultEnvironment()
 
 build_dir = str(Dir('#/build'))
@@ -14,8 +26,6 @@ cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
         'mv ' + build_dir + '/sbin/rndc-confgen ' + build_dir + '/sbin/contrail-rndc-confgen;)')
 
 include_products = [
-    '#build/include/isc/hmacmd5.h',
-    '#build/include/isc/hmacsha.h',
     '#build/include/isc/lang.h',
     '#build/include/isc/md5.h',
     '#build/include/isc/platform.h',
@@ -43,6 +53,11 @@ include_products = [
     '#build/include/isc/lib.h',
     '#build/include/isc/msgcat.h',
 ]
+if distribution == 'rocky':
+    include_products.append('#build/include/isc/hmac.h')
+else:
+    include_products.append('#build/include/isc/hmacmd5.h')
+    include_products.append('#build/include/isc/hmacsha.h')
 
 products = [ str(File('#/build/lib/librndc' + env['LIBSUFFIX'])),
              str(File('#/build/lib/libisc' + env['LIBSUFFIX'])),
