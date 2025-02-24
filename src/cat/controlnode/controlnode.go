@@ -4,8 +4,10 @@ package controlnode
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -94,18 +96,18 @@ func (c *ControlNode) start() error {
 
 	c.Cmd = exec.Command(controlNodeBinary, "--config_file="+c.Component.ConfFile)
 	env := sut.EnvMap{
-		"USER": os.Getenv("USER"),
-		"CAT_CONTROL_NODE_TEST_SELF_NAME":      c.Name,
-                "CAT_BGP_IP_ADDRESS":                   c.IPAddress,
-                "CAT_BGP_PORT":                         strconv.Itoa(c.Config.BGPPort),
-                "CAT_XMPP_PORT":                        strconv.Itoa(c.Config.XMPPPort),
-                "CAT_CONTROL_NODE_TEST_INTROSPECT":     strconv.Itoa(c.Config.HTTPPort),
-                "CAT_CONTROL_NODE_TEST_PAUSE":          "1",
-                //"LOG_DISABLE" :                       strconv.FormatBool(c.Verbose),
-                "CAT_CONTROL_NODE_TEST_DATA_FILE":      c.ConfFile,
-                "LD_LIBRARY_PATH":                      "../../../../build/lib",
-                "CONTRAIL_CAT_FRAMEWORK":               "1",
-                "USER_DIR":                             c.ConfDir + "/..",
+		"USER":                             os.Getenv("USER"),
+		"CAT_CONTROL_NODE_TEST_SELF_NAME":  c.Name,
+		"CAT_BGP_IP_ADDRESS":               c.IPAddress,
+		"CAT_BGP_PORT":                     strconv.Itoa(c.Config.BGPPort),
+		"CAT_XMPP_PORT":                    strconv.Itoa(c.Config.XMPPPort),
+		"CAT_CONTROL_NODE_TEST_INTROSPECT": strconv.Itoa(c.Config.HTTPPort),
+		"CAT_CONTROL_NODE_TEST_PAUSE":      "1",
+		//"LOG_DISABLE" :                       strconv.FormatBool(c.Verbose),
+		"CAT_CONTROL_NODE_TEST_DATA_FILE": c.ConfFile,
+		"LD_LIBRARY_PATH":                 "../../../../build/lib",
+		"CONTRAIL_CAT_FRAMEWORK":          "1",
+		"USER_DIR":                        c.ConfDir + "/..",
 	}
 
 	c.Cmd.Stdout = output
@@ -157,12 +159,56 @@ func (c *ControlNode) readPortNumbers() error {
 	return err
 }
 
+// Bgp Neighbor xml response structure
+type BgpNeighborListResp struct {
+	XMLName   xml.Name `xml:"BgpNeighborListResp"`
+	Text      string   `xml:",chardata"`
+	Type      string   `xml:"type,attr"`
+	Neighbors struct {
+		Text       string `xml:",chardata"`
+		Type       string `xml:"type,attr"`
+		Identifier string `xml:"identifier,attr"`
+		List       struct {
+			Text            string `xml:",chardata"`
+			Type            string `xml:"type,attr"`
+			Size            string `xml:"size,attr"`
+			BgpNeighborResp struct {
+				Text  string `xml:",chardata"`
+				State struct {
+					Text       string `xml:",chardata"`
+					Type       string `xml:"type,attr"`
+					Identifier string `xml:"identifier,attr"`
+				} `xml:"state"`
+			} `xml:"BgpNeighborResp"`
+		} `xml:"list"`
+	} `xml:"neighbors"`
+}
+
 // CheckXMPPConnection checks whether XMPP connection to an agent has reached
 // ESTABLISHED sate (up).
 func (c *ControlNode) CheckXMPPConnection(agent *agent.Agent) error {
-	url := fmt.Sprintf("/usr/bin/curl --connect-timeout 5 -s http://%s:%d/Snh_BgpNeighborReq?x=%s | xmllint --format  - | grep -iw state | grep -i Established", c.IPAddress, c.Config.HTTPPort, agent.Component.Name)
-	_, err := exec.Command("/bin/bash", "-c", url).Output()
-	return err
+
+	url := fmt.Sprintf("http://%s:%d/Snh_BgpNeighborReq?x=%s", c.IPAddress, c.Config.HTTPPort, agent.Component.Name)
+	resp, err := http.Get(url)
+
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	log.Infof("Get request %s completed with status %v\n", url, err)
+
+	// Parse response
+	var parse_resp BgpNeighborListResp
+	data, err := ioutil.ReadAll(resp.Body)
+	xml.Unmarshal(data, &parse_resp)
+
+	// session should be down, so expect an error here from the grep!
+	if parse_resp.Neighbors.List.BgpNeighborResp.State.Text == "Established" {
+		return nil
+	}
+
+	return fmt.Errorf("XMPP is not established")
 }
 
 // CheckXMPPConnections checks whether XMPP connections to all agents provided
@@ -210,7 +256,7 @@ func (c *ControlNode) CheckXmppFlaps() error {
 	// Check if there is any xmpp flap
 	url := fmt.Sprintf("/usr/bin/curl --connect-timeout 5 -s http://%s:%d/Snh_ShowBgpNeighborSummaryReq?search_string= | xmllint --format - | grep -iw flap_count | grep 0", c.IPAddress, c.Config.HTTPPort)
 	flaps, err := exec.Command("/bin/bash", "-c", url).Output()
-	log.Infof("Command %s completed %s with status %v\n", url, flaps , err)
+	log.Infof("Command %s completed %s with status %v\n", url, flaps, err)
 	if err != nil {
 		return fmt.Errorf("There are %d flaps", flaps)
 	}
@@ -221,15 +267,28 @@ func (c *ControlNode) CheckXmppFlaps() error {
 // CheckBGPConnection checks whether BGP connection to an agent has reached
 // ESTABLISHED sate (up) (or DOWN) as requested in the down bool parameter.
 func (c *ControlNode) CheckBGPConnection(name string, down bool) error {
-	url := fmt.Sprintf("/usr/bin/curl --connect-timeout 5 -s http://%s:%d/Snh_BgpNeighborReq?x=%s | xmllint --format  - | grep -wi state | grep -i Established", c.IPAddress, c.Config.HTTPPort, name)
-	_, err := exec.Command("/bin/bash", "-c", url).Output()
-	log.Debugf("Command %s completed with status %v\n", url, err)
+
+	url := fmt.Sprintf("http://%s:%d/Snh_BgpNeighborReq?x=%s", c.IPAddress, c.Config.HTTPPort, name)
+	resp, err := http.Get(url)
+
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	log.Infof("Get request %s completed with status %v\n", url, err)
+
+	// Parse response
+	var parse_resp BgpNeighborListResp
+	data, err := ioutil.ReadAll(resp.Body)
+	xml.Unmarshal(data, &parse_resp)
+
 	if !down {
 		return err
 	}
 
 	// session should be down, so expect an error here from the grep!
-	if err != nil {
+	if parse_resp.Neighbors.List.BgpNeighborResp.State.Text != "Established" {
 		return nil
 	}
 
@@ -262,19 +321,77 @@ func (c *ControlNode) CheckBGPConnections(components []*sut.Component, down bool
 
 // checkConfiguration checks whether a particular configuration object count
 // matches what is reflected in memory data base of control-node.
-//
-// TODO: Parse xml to do specific checks in the data received from curl.
+type IFMapNodeTableListShowResp struct {
+	XMLName   xml.Name `xml:"IFMapNodeTableListShowResp"`
+	Text      string   `xml:",chardata"`
+	Type      string   `xml:"type,attr"`
+	TableList struct {
+		Text       string `xml:",chardata"`
+		Type       string `xml:"type,attr"`
+		Identifier string `xml:"identifier,attr"`
+		List       struct {
+			Text                        string `xml:",chardata"`
+			Type                        string `xml:"type,attr"`
+			Size                        string `xml:"size,attr"`
+			IFMapNodeTableListShowEntry []struct {
+				Text      string `xml:",chardata"`
+				TableName struct {
+					Text       string `xml:",chardata"`
+					Type       string `xml:"type,attr"`
+					Identifier string `xml:"identifier,attr"`
+					Link       string `xml:"link,attr"`
+				} `xml:"table_name"`
+				Size struct {
+					Text       string `xml:",chardata"`
+					Type       string `xml:"type,attr"`
+					Identifier string `xml:"identifier,attr"`
+				} `xml:"size"`
+			} `xml:"IFMapNodeTableListShowEntry"`
+		} `xml:"list"`
+	} `xml:"table_list"`
+	More struct {
+		Text       string `xml:",chardata"`
+		Type       string `xml:"type,attr"`
+		Identifier string `xml:"identifier,attr"`
+	} `xml:"more"`
+}
+
 func (c *ControlNode) checkConfiguration(tp string, count int) error {
-	url := fmt.Sprintf("/usr/bin/curl --connect-timeout 5 -s http://%s:%d/Snh_IFMapNodeTableListShowReq? | xmllint format -  | grep -iw -A1 '>%s</table_name>' | grep -w '>'%d'</size>'", c.IPAddress, c.Config.HTTPPort, tp, count)
-	_, err := exec.Command("/bin/bash", "-c", url).Output()
+	url := fmt.Sprintf("http://%s:%d/Snh_IFMapNodeTableListShowReq", c.IPAddress, c.Config.HTTPPort)
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	log.Infof("Get request %s completed with status %v\n", url, err)
+
+	// Parse response
+	var parse_resp IFMapNodeTableListShowResp
+	data, err := ioutil.ReadAll(resp.Body)
+	xml.Unmarshal(data, &parse_resp)
+
+	flag := false
+	cnt := 0
+	for _, entry := range parse_resp.TableList.List.IFMapNodeTableListShowEntry {
+		cnt, err = strconv.Atoi(entry.Size.Text)
+		if err == nil && entry.TableName.Text == tp && cnt == count {
+			flag = true
+		}
+	}
+
+	if !flag && count != 0 {
+		return fmt.Errorf("error: incorrect configuration")
+	}
 
 	if count == 0 {
-		if err == nil {
+		if flag {
 			return fmt.Errorf("%s config is still present", tp)
 		}
 		return nil
 	}
-	return err
+
+	return nil
 }
 
 // CheckConfiguration calls checkConfiguration with retries and wait times as
@@ -306,7 +423,7 @@ func UpdateConfigDB(rootdir string, controlNodes []*ControlNode, fqNameTable *co
 	return nil
 }
 
-func GetConfFile() (string) {
+func GetConfFile() string {
 	if fileExists(controlNodeConfFile) {
 		return controlNodeConfFile
 	} else {
@@ -315,7 +432,7 @@ func GetConfFile() (string) {
 }
 
 func fileExists(filename string) bool {
-	_, err := os.Stat(filename) 
+	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
 	}

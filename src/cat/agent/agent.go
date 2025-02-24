@@ -3,15 +3,17 @@
 package agent
 
 import (
-        "encoding/json"
 	"bufio"
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-        "time"
+	"time"
 
 	"cat/sut"
 
@@ -56,9 +58,9 @@ func New(m sut.Manager, name, binary, test string, endpoints []sut.Endpoint) (*A
 	if err := a.start(binary); err != nil {
 		return nil, fmt.Errorf("failed to start agent binary: %v", err)
 	}
-        if err := a.readAgentHttpPort(); err != nil {
-                return nil, fmt.Errorf("failed to read http port for agent: %v", err)
-        }
+	if err := a.readAgentHttpPort(); err != nil {
+		return nil, fmt.Errorf("failed to read http port for agent: %v", err)
+	}
 	return a, nil
 }
 
@@ -84,9 +86,24 @@ func (a *Agent) start(binary string) error {
 
 // AddVirtualPort adds a mock VMI port into the mocked vrouter agent process.
 func (a *Agent) AddVirtualPort(vmi_uuid, vm_uuid, vn_uuid, project_uuid, ipv4_address, mac_address, tap_if, portnum, vm_name string) error {
-	cmd := fmt.Sprintf("sudo %s --oper=add --uuid=%s --instance_uuid=%s --vn_uuid=%s --vm_project_uuid=%s --ip_address=%s  --ipv6_address= --vm_name=%s --tap_name=%s --mac=%s --rx_vlan_id=0 --tx_vlan_id=0 --agent_port=%s", agentAddPortBinary, vmi_uuid, vm_uuid, vn_uuid, project_uuid, ipv4_address, vm_name, tap_if, mac_address, portnum)
-	log.Infof("AddVirtualPort: %q", cmd)
-	_, err := exec.Command("/bin/bash", "-c", cmd).Output()
+	uuid := fmt.Sprintf("--uuid=%s", vmi_uuid)
+	instance_uuid := fmt.Sprintf("--instance_uuid=%s", vm_uuid)
+	vn_uuid_ := fmt.Sprintf("--vn_uuid=%s", vn_uuid)
+	vm_project_uuid := fmt.Sprintf("--vm_project_uuid=%s", project_uuid)
+	ip_address := fmt.Sprintf("--ip_address=%s", ipv4_address)
+	vm_name_ := fmt.Sprintf("--vm_name=%s", vm_name)
+	tap_name := fmt.Sprintf("--tap_name=%s", tap_if)
+	mac := fmt.Sprintf("--mac=%s", mac_address)
+	agent_port := fmt.Sprintf("--agent_port=%s", portnum)
+
+	log.Infof(
+		"AddVirtualPort: python3 %s --oper=add %s %s %s %s %s --ipv6_address=  %s %s %s --rx_vlan_id=0 --tx_vlan_id=0 %s",
+		agentAddPortBinary, uuid, instance_uuid, vn_uuid_, vm_project_uuid, ip_address, vm_name_, tap_name, mac, agent_port)
+
+	_, err := exec.Command(
+		"python3", agentAddPortBinary, "--oper=add", uuid, instance_uuid, vn_uuid_, vm_project_uuid, ip_address,
+		"--ipv6_address=", vm_name_, tap_name, mac, "--rx_vlan_id=0", "--tx_vlan_id=0", agent_port).Output()
+
 	return err
 }
 
@@ -127,29 +144,94 @@ func (a *Agent) writeConfiguration() error {
 }
 
 func (a *Agent) readAgentHttpPort() error {
-        a.PortsFile = fmt.Sprintf("%d.json", a.Cmd.Process.Pid)
-        retry := 30
-        var err error
-        for retry > 0 {
-                if bytes, err := ioutil.ReadFile(a.PortsFile); err == nil {
-                        if err := json.Unmarshal(bytes, &a.Config); err == nil {
-                                return nil
-                        }
-                }
-                time.Sleep(1 * time.Second)
-                retry = retry - 1
-        }
-        return err
+	a.PortsFile = fmt.Sprintf("%d.json", a.Cmd.Process.Pid)
+	retry := 30
+	var err error
+	for retry > 0 {
+		if bytes, err := ioutil.ReadFile(a.PortsFile); err == nil {
+			if err := json.Unmarshal(bytes, &a.Config); err == nil {
+				return nil
+			}
+		}
+		time.Sleep(1 * time.Second)
+		retry = retry - 1
+	}
+	return err
+}
+
+type ItfRespList struct {
+	XMLName xml.Name `xml:"__ItfResp_list"`
+	Text    string   `xml:",chardata"`
+	Type    string   `xml:"type,attr"`
+	ItfResp struct {
+		Text    string `xml:",chardata"`
+		Type    string `xml:"type,attr"`
+		ItfList struct {
+			Text       string `xml:",chardata"`
+			Type       string `xml:"type,attr"`
+			Identifier string `xml:"identifier,attr"`
+			List       struct {
+				Text           string `xml:",chardata"`
+				Type           string `xml:"type,attr"`
+				Size           string `xml:"size,attr"`
+				ItfSandeshData struct {
+					Text  string `xml:",chardata"`
+					Index struct {
+						Text       string `xml:",chardata"`
+						Type       string `xml:"type,attr"`
+						Identifier string `xml:"identifier,attr"`
+					} `xml:"index"`
+					Name struct {
+						Text       string `xml:",chardata"`
+						Type       string `xml:"type,attr"`
+						Identifier string `xml:"identifier,attr"`
+					} `xml:"name"`
+					Uuid struct {
+						Text       string `xml:",chardata"`
+						Type       string `xml:"type,attr"`
+						Identifier string `xml:"identifier,attr"`
+					} `xml:"uuid"`
+					VrfName struct {
+						Text       string `xml:",chardata"`
+						Type       string `xml:"type,attr"`
+						Identifier string `xml:"identifier,attr"`
+						Link       string `xml:"link,attr"`
+					} `xml:"vrf_name"`
+					Active struct {
+						Text       string `xml:",chardata"`
+						Type       string `xml:"type,attr"`
+						Identifier string `xml:"identifier,attr"`
+					} `xml:"active"`
+				} `xml:"ItfSandeshData"`
+			} `xml:"list"`
+		} `xml:"itf_list"`
+		More struct {
+			Text       string `xml:",chardata"`
+			Type       string `xml:"type,attr"`
+			Identifier string `xml:"identifier,attr"`
+		} `xml:"more"`
+	} `xml:"ItfResp"`
 }
 
 // Check interface Active/Incative state in agent introspect
 func (a *Agent) VerifyIntrospectInterfaceState(intf string, active bool) error {
-        url := fmt.Sprintf("/usr/bin/curl --connect-timeout 5 -s http://%s:%d/Snh_ItfReq?name=%s | xmllint --format - | grep  \\/active | grep Active", "0.0.0.0", a.Config.HTTPPort, intf)
-        port_active, err := exec.Command("/bin/bash", "-c", url).Output()
-        log.Infof("Command %s completed %s with status %v\n", url, port_active, err)
-        if (err != nil  && active) {
-                return fmt.Errorf("Interface not active in agent: %v ", err)
-        }
+	url := fmt.Sprintf("http://%s:%d/Snh_ItfReq?name=%s", "0.0.0.0", a.Config.HTTPPort, intf)
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 
-        return nil
+	log.Infof("Get request %s completed with status %v\n", url, err)
+
+	// Parse response
+	var parse_resp ItfRespList
+	data, err := ioutil.ReadAll(resp.Body)
+	xml.Unmarshal(data, &parse_resp)
+
+	if parse_resp.ItfResp.ItfList.List.ItfSandeshData.Active.Text != "Active" && active {
+		return fmt.Errorf("interface not active in agent: %v ", err)
+	}
+
+	return nil
 }
