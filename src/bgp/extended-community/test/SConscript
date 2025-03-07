@@ -84,5 +84,3 @@ test_suite = [
 
 test = env.TestSuite('bgp-test', test_suite)
 env.Alias('controller/src/bgp/extended-community:test', test)
-
-Return('test_suite')

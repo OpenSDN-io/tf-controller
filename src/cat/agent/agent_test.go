@@ -9,13 +9,14 @@ import (
 	"cat"
 	"cat/agent"
 	"cat/sut"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAgent(t *testing.T) {
 	c, err := cat.New()
-	if err != nil {
-		t.Errorf("Failed to create CAT object: %v", err)
-	}
+	require.NoError(t, err, "Failed to create CAT object")
 
 	endpoints := []sut.Endpoint{
 		sut.Endpoint{
@@ -28,34 +29,23 @@ func TestAgent(t *testing.T) {
 		},
 	}
 	a, err := agent.New(c.SUT.Manager, "agent", " ", "test", endpoints)
-	if err != nil {
-		t.Errorf("Failed to create agent: %v", err)
-	}
-
-	if a.Name != "agent" {
-		t.Errorf("incorrect agent name %s; want %s", a.Name, "agent")
-	}
+	require.NoError(t, err, "Failed to create agent")
+	assert.Equal(t, "agent", a.Name)
 
 	// Verify that agent process is started
 	pid := a.Cmd.Process.Pid
-	if pid == 0 {
-		t.Errorf("%s: process id is zero; want non-zero", a.Name)
-	}
+	assert.NotEqual(t, 0, pid, "agent process id is zero; want non-zero")
 
 	// Verify that component directory is created
-	if _, err := os.Stat(a.Component.ConfDir); err != nil {
-		t.Errorf("%s: Conf directory %s is not created", a.Name, a.Component.ConfDir)
-	}
-	if _, err := os.Stat(a.Component.LogDir); err != nil {
-		t.Errorf("%s: Log directory %s is not created", a.Name, a.Component.LogDir)
-	}
+	_, err = os.Stat(a.Component.ConfDir)
+	assert.NoError(t, err, "Conf directory %s is not created", a.Component.ConfDir)
+	_, err = os.Stat(a.Component.LogDir)
+	assert.NoError(t, err, "Log directory %s is not created", a.Component.LogDir)
 
-	if err := a.Teardown(); err != nil {
-		t.Fatalf("CAT objects cleanup failed: %v", err)
-	}
+	err = a.Teardown()
+	require.NoError(t, err, "CAT objects cleanup failed")
 
 	// Verify that process indeed went down.
-	if err := syscall.Kill(pid, syscall.Signal(0)); err != nil {
-		t.Fatalf("%s process %d did not die", a.Name, pid)
-	}
+	err = syscall.Kill(pid, syscall.Signal(0))
+	require.NoError(t, err, "agent process %d did not die", pid)
 }

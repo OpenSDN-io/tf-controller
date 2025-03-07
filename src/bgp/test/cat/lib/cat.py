@@ -465,7 +465,6 @@ class Configuration(Component):
             json.dump(bas_temp, out_file, indent=4)
 
     def add_virtual_port(self):
-
         c1 = "./controller/src/vnsw/agent/port_ipc/vrouter-port-control"
         vmi = self.project.vmis[0]
         rest = " --ip_address=1.1.1.4 --ipv6_address= --vm_name=tapasvm1 --tap_name=tapas_tap_name --mac=00:25:90:c7:50:50 --rx_vlan_id=0 --tx_vlan_id=0"

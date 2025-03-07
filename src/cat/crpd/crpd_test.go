@@ -18,11 +18,11 @@ func TestCRPD(t *testing.T) {
 	}
 	c, err := cat.New()
 	if err != nil {
-		t.Errorf("Failed to create CAT object: %v", err)
+		t.Fatalf("Failed to create CAT object: %v", err)
 	}
 	cr, err := c.AddCRPD("test-crpd", "test-crpd1")
 	if err != nil {
-		t.Errorf("Failed to create crpd object: %v", err)
+		t.Fatalf("Failed to create crpd object: %v", err)
 	}
 	if !strings.HasPrefix(cr.Name, "test-crpd1-") {
 		t.Errorf("incorrect crpd name %s; want %s", cr.Name, "test-crpd1")
@@ -50,12 +50,9 @@ set protocols bgp group test allow 0.0.0.0/0`
 
 	for i := 0; i < 3; i++ {
 		retrievedConf, err := sut.ShellCommandWithRetry(3, 3, "sudo", "--non-interactive", "docker", "exec", "-i", cr.Name, "cli", "show", "configuration", "|", "display", "set")
-
 		if err != nil {
 			t.Errorf("Cannot get crpd confiugration: %v", err)
-		}
-
-		if retrievedConf == expectedConf {
+		} else if retrievedConf == expectedConf {
 			break
 		}
 
@@ -65,11 +62,11 @@ set protocols bgp group test allow 0.0.0.0/0`
 		time.Sleep(3 * time.Second)
 	}
 	if err := cr.Teardown(); err != nil {
-		t.Fatalf("crpd object cleanup failed: %v", err)
+		t.Errorf("crpd object cleanup failed: %v", err)
 	}
 
 	// Verify that docker process does not exist any more.
 	if _, err := exec.Command("sudo", "--non-interactive", "docker", "inspect", cr.Name).Output(); err != nil {
-		t.Fatalf("crpd docker cleanup failed: %v", err)
+		t.Errorf("crpd docker cleanup failed: %v", err)
 	}
 }

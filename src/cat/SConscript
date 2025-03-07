@@ -1,0 +1,70 @@
+#
+# Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
+#
+
+Import('BuildEnv')
+catEnv = BuildEnv.Clone()
+
+ut_depends = []
+
+sources = [
+    'agent',
+    'config',
+    'controlnode',
+    'crpd',
+    'sut',
+    'test',
+    'test_upgrade',
+    'cat.go',
+    'go.mod',
+    'go.sum',
+]
+
+ut_depends = []
+for file in sources:
+    ut_depends.append(catEnv.Install(Dir("."), '#controller/src/cat/' + file))
+
+autogen_infra_sources = [
+    '#/src/contrail-api-client/generateds/generateDS.py',
+    '#/src/contrail-api-client/generateds/TypeGenerator.py',
+    '#/src/contrail-api-client/generateds/ccmap.py',
+    '#/src/contrail-api-client/generateds/idl_parser.py',
+    '#/src/contrail-api-client/generateds/ifmap_global.py',
+    '#/src/contrail-api-client/generateds/ifmap_model.py',
+    '#/src/contrail-api-client/generateds/ifmap_frontend.py',
+]
+
+autogen_sources = [
+    '#/src/contrail-api-client/schema/ietf-l3vpn-schema.xsd',
+    '#/src/contrail-api-client/schema/bgp_schema.xsd',
+    '#/src/contrail-api-client/schema/vnc_cfg.xsd',
+]
+
+autogen_script = File('#src/contrail-api-client/generateds/generateDS.py').path
+autogen_cmd = '%s -f -o %s -g golang-api' % (autogen_script, Dir('types').path)
+
+generated_files = [
+    'types/routing_instance.go',
+    'types/bgp_router.go',
+    'types/config_node.go',
+]
+for i in range(3):
+    rule = catEnv.Command(
+        generated_files[i],
+        autogen_sources[i],
+        autogen_cmd + ' $SOURCE')
+    ut_depends.append(rule)
+    catEnv.Depends(rule, [autogen_infra_sources, autogen_sources])
+
+ut_depends.append('#build/debug/bgp/test/bgp_cat_control_node_test')
+ut_depends.append('contrail-vrouter-agent')
+ut_depends.append('vrouter-port-control')
+
+gomod_path = Dir('.').abspath
+
+def catUnitTest(env, target, source):
+    env.GoUnitTest(gomod_path)
+
+bgp_cat_test = catEnv.Command('catUnitTest', 'go.mod', catUnitTest)
+catEnv.Alias('controller/src/cat:test', bgp_cat_test)
+catEnv.Depends(bgp_cat_test, dependency=ut_depends)

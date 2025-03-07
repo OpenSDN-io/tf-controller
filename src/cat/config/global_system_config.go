@@ -1,15 +1,15 @@
 package config
 
 import (
-	"encoding/json"
 	"cat/types"
+	"encoding/json"
 )
 
 // GlobalSystemsConfig represents global-systems-config configuration construct.
 type GlobalSystemsConfig struct {
 	*ContrailConfig
-	AutonomousSystem string `json:"prop:autonomous_system"`
-	GracefulRestartParams   types.GracefulRestartParametersType `json:"prop:graceful_restart_parameters"`
+	AutonomousSystem      string                              `json:"prop:autonomous_system"`
+	GracefulRestartParams types.GracefulRestartParametersType `json:"prop:graceful_restart_parameters"`
 }
 
 func NewGlobalSystemsConfig(fqNameTable *FQNameTableType, uuidTable *UUIDTableType, as string) (*GlobalSystemsConfig, error) {
@@ -21,11 +21,11 @@ func NewGlobalSystemsConfig(fqNameTable *FQNameTableType, uuidTable *UUIDTableTy
 		ContrailConfig:   co,
 		AutonomousSystem: as,
 		GracefulRestartParams: types.GracefulRestartParametersType{
-			Enable:                 false,
-			RestartTime:            60,
-			LongLivedRestartTime:   300,
-			EndOfRibTimeout:        30,
-			BgpHelperEnable:        false,
+			Enable:               false,
+			RestartTime:          60,
+			LongLivedRestartTime: 300,
+			EndOfRibTimeout:      30,
+			BgpHelperEnable:      false,
 		},
 	}
 

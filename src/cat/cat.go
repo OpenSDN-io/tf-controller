@@ -13,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -46,7 +45,7 @@ type CAT struct {
 // Timestamp format for logfiles.
 const timestamp = "20060102_150405"
 
-// Utiulity command to load CRPD docker image dynamically.
+// Utility command to load CRPD docker image dynamically.
 const crpdImageGetCommand = "sshpass -p c0ntrail123 ssh 10.84.5.39 cat /cs-shared/crpd/crpd.tgz | sudo --non-interactive docker load"
 
 // File where release numbers of previous releases are stored
@@ -242,7 +241,7 @@ func GetNumOfControlNodes() (ConNodesDS map[string]interface{}, err error) {
 	}
 
 	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, _ := io.ReadAll(jsonFile)
 	var result map[string]interface{}
 	json.Unmarshal([]byte(byteValue), &result)
 
@@ -284,7 +283,7 @@ func GetNumOfControlNodes() (ConNodesDS map[string]interface{}, err error) {
 	result["cassandra"] = cassandra
 
 	write, _ := json.Marshal(result)
-	err = ioutil.WriteFile(confile, write, os.ModePerm)
+	err = os.WriteFile(confile, write, os.ModePerm)
 	jsonFile.Sync()
 	return ConNodesDS, nil
 }
@@ -367,7 +366,7 @@ func ExtractTarGz(path string, gzipStream io.Reader) {
 
 		default:
 			log.Fatalf(
-				"ExtractTarGz: unknown type: %s in %s",
+				"ExtractTarGz: unknown type: %v in %s",
 				header.Typeflag,
 				header.Name)
 		}
@@ -412,7 +411,7 @@ func GetParamsAddPort(vmi_id string) (vm_id, vn_id, proj_id, vm_name string, err
 		return "", "", "", "", fmt.Errorf("failed to open ConfFile: %v", err)
 	}
 
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, _ := io.ReadAll(jsonFile)
 	jsonFile.Close()
 	var result map[string]interface{}
 

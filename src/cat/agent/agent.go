@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -23,7 +23,7 @@ import (
 const agentName = "control-vrouter-agent"
 const agentConfFile = "../agent/contrail-vrouter-agent.conf"
 const agentBinary = "../../../../build/debug/vnsw/agent/contrail/contrail-vrouter-agent"
-const agentAddPortBinary = "../../../../controller/src/vnsw/agent/port_ipc/vrouter-port-control"
+const agentAddPortBinary = "vrouter-port-control"
 
 // Agent is a SUT component for VRouter Agent.
 type Agent struct {
@@ -97,11 +97,11 @@ func (a *Agent) AddVirtualPort(vmi_uuid, vm_uuid, vn_uuid, project_uuid, ipv4_ad
 	agent_port := fmt.Sprintf("--agent_port=%s", portnum)
 
 	log.Infof(
-		"AddVirtualPort: python3 %s --oper=add %s %s %s %s %s --ipv6_address=  %s %s %s --rx_vlan_id=0 --tx_vlan_id=0 %s",
+		"AddVirtualPort: %s --oper=add %s %s %s %s %s --ipv6_address=  %s %s %s --rx_vlan_id=0 --tx_vlan_id=0 %s",
 		agentAddPortBinary, uuid, instance_uuid, vn_uuid_, vm_project_uuid, ip_address, vm_name_, tap_name, mac, agent_port)
 
 	_, err := exec.Command(
-		"python3", agentAddPortBinary, "--oper=add", uuid, instance_uuid, vn_uuid_, vm_project_uuid, ip_address,
+		agentAddPortBinary, "--oper=add", uuid, instance_uuid, vn_uuid_, vm_project_uuid, ip_address,
 		"--ipv6_address=", vm_name_, tap_name, mac, "--rx_vlan_id=0", "--tx_vlan_id=0", agent_port).Output()
 
 	return err
@@ -137,7 +137,7 @@ func (a *Agent) writeConfiguration() error {
 	}
 
 	a.Component.ConfFile = fmt.Sprintf("%s/%s.conf", a.Component.ConfDir, a.Component.Name)
-	if err := ioutil.WriteFile(a.Component.ConfFile, []byte(strings.Join(config, "\n")), 0644); err != nil {
+	if err := os.WriteFile(a.Component.ConfFile, []byte(strings.Join(config, "\n")), 0644); err != nil {
 		return fmt.Errorf("failed to write to agent conf file: %v", err)
 	}
 	return nil
@@ -148,7 +148,7 @@ func (a *Agent) readAgentHttpPort() error {
 	retry := 30
 	var err error
 	for retry > 0 {
-		if bytes, err := ioutil.ReadFile(a.PortsFile); err == nil {
+		if bytes, err := os.ReadFile(a.PortsFile); err == nil {
 			if err := json.Unmarshal(bytes, &a.Config); err == nil {
 				return nil
 			}
@@ -226,8 +226,14 @@ func (a *Agent) VerifyIntrospectInterfaceState(intf string, active bool) error {
 
 	// Parse response
 	var parse_resp ItfRespList
-	data, err := ioutil.ReadAll(resp.Body)
-	xml.Unmarshal(data, &parse_resp)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	err = xml.Unmarshal(data, &parse_resp)
+	if err != nil {
+		return err
+	}
 
 	if parse_resp.ItfResp.ItfList.List.ItfSandeshData.Active.Text != "Active" && active {
 		return fmt.Errorf("interface not active in agent: %v ", err)

@@ -11,19 +11,20 @@ Import('contrail_common_base_doc_files')
 Import('contrail_common_io_doc_files')
 
 subdirs = [
-           'bfd',
-           'bgp',
-           'db',
-           'dns',
-           'ifmap',
-           'net',
-           'route',
-           'sandesh',
-           'xml',
-           'xmpp',
-           'nodemgr',
-           ]
- 
+    'cat',
+    'bfd',
+    'bgp',
+    'db',
+    'dns',
+    'ifmap',
+    'net',
+    'route',
+    'sandesh',
+    'xml',
+    'xmpp',
+    'nodemgr',
+]
+
 if platform.system() != 'Darwin':
     subdirs += ['ksync']
 

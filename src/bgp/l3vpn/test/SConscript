@@ -173,8 +173,6 @@ flaky_test_suite = [
 flaky_test = env.TestSuite('l3vpn-flaky-test', flaky_test_suite)
 env.Alias('controller/src/bgp/l3vpn:flaky-test', flaky_test)
 
-Return('test_suite')
-
 # Local Variables:
 # mode: python
 # End:

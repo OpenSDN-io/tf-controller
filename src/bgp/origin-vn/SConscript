@@ -12,4 +12,3 @@ liborigin_vn = env.Library('origin_vn', ['origin_vn.cc'])
 
 originvn_test_cases = env.SConscript('test/SConscript', exports='BuildEnv',
                                      duplicate = 0)
-Return('originvn_test_cases')

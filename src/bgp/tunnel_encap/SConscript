@@ -12,4 +12,3 @@ libtunnel_encap = env.Library('tunnel_encap', ['tunnel_encap.cc'])
 
 tunnelencap_test_cases = env.SConscript('test/SConscript', exports='BuildEnv',
                                     duplicate = 0)
-Return('tunnelencap_test_cases')

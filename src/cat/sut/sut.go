@@ -57,7 +57,7 @@ type EnvMap map[string]string
 func ShellCommandWithRetry(retry, delay int, name string, args ...string) (string, error) {
 	for {
 		cmd := exec.Command(name, args...)
-		b, err := cmd.Output()
+		b, err := cmd.CombinedOutput()
 		if err == nil {
 			return strings.TrimRight(string(b), "\n"), nil
 		}
@@ -68,7 +68,7 @@ func ShellCommandWithRetry(retry, delay int, name string, args ...string) (strin
 		if retry == 0 {
 			return "", fmt.Errorf("Failed to execute command %s: %v", name, err)
 		}
-		log.Debugf("Retry command %s after %d seconds", name, args, delay)
+		log.Debugf("Retry command %s (%v) after %d seconds", name, args, delay)
 		time.Sleep(time.Duration(delay) * time.Second)
 	}
 }

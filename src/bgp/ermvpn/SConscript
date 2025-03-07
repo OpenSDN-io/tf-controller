@@ -17,4 +17,3 @@ libbgp_ermvpn = env.Library('bgp_ermvpn',
 
 ermvpn_unit_tests = env.SConscript('test/SConscript', exports='BuildEnv',
                                    duplicate = 0)
-Return('ermvpn_unit_tests')
