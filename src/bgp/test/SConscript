@@ -797,36 +797,6 @@ env.Alias('controller/src/bgp:test', [
     'controller/src/bgp/tunnel_encap:test',
 ])
 
-# TODO: switch below test to pure golang call (instead of calling cpp test which call golang)
-
-cat_test_env = env.Clone()
-cat_test_env.Alias('controller/src/cat:test', cat_test_env.Textfile(target = 'todo-cat.txt', source = ['TODO']))
-
-cat_test_upgrade_env = env.Clone()
-cat_test_upgrade_env.Alias('controller/src/cat:test_upgrade', cat_test_upgrade_env.Textfile(target = 'todo-cat-upgrade.txt', source = ['TODO']))
-
-#bgp_cat_test = env.UnitTest('bgp_cat_test', ['bgp_cat_test.cc'])
-#env.Alias('src/bgp:bgp_cat_test', bgp_cat_test)
-#cat_test_env = env.Clone()
-#cat_test_env['ENV']['CONTRAIL_UT_TEST_TIMEOUT'] = '600'
-#cat_tests = cat_test_env.TestSuite('cat-test', [ bgp_cat_test ])
-#cat_test_env.Alias('controller/src/cat:test', [ cat_tests ])
-#env.Depends(bgp_cat_test, dependency = [
-#    'src/bgp:bgp_cat_control_node_test',
-#    'contrail-vrouter-agent'
-#])
-
-#bgp_cat_test_upgrade = env.UnitTest('bgp_cat_test_upgrade', ['bgp_cat_test_upgrade.cc'])
-#env.Alias('src/bgp:bgp_cat_test_upgrade', bgp_cat_test_upgrade)
-#cat_test_upgrade_env = env.Clone()
-#cat_test_upgrade_env['ENV']['CONTRAIL_UT_TEST_TIMEOUT'] = '1200'
-#cat_tests_upgrade = cat_test_upgrade_env.TestSuite('cat-test-upgrade', [ bgp_cat_test_upgrade ])
-#cat_test_upgrade_env.Alias('controller/src/cat:test_upgrade', [ cat_tests_upgrade ])
-#env.Depends(bgp_cat_test_upgrade, dependency = [
-#    'src/bgp:bgp_cat_control_node_test',
-#    'contrail-vrouter-agent'
-#])
-
 flaky_test_suite = [
 ]
 flaky_test_suite += graceful_restart_flaky_tests
@@ -846,18 +816,18 @@ env.Alias('controller/src/bgp:all-test', [
 # Stress Tests
 envs = env.Dictionary()["ENV"]
 if 'BGP_STRESS_TEST_SUITE' in envs and envs['BGP_STRESS_TEST_SUITE'] != "0":
-    env.Alias('src/bgp:bgp_stress_test_suite', env.TestSuite('bgp-stress-test',
-              [
-                  env.UnitTest('bgp_stress_test1', ['bgp_stress_test1.cc']),
-                  env.UnitTest('bgp_stress_test2', ['bgp_stress_test2.cc']),
-                  env.UnitTest('bgp_stress_test3', ['bgp_stress_test3.cc']),
-                  env.UnitTest('bgp_stress_test4', ['bgp_stress_test4.cc']),
-                  env.UnitTest('bgp_stress_test5', ['bgp_stress_test5.cc']),
-                  env.UnitTest('bgp_stress_test6', ['bgp_stress_test6.cc']),
-                  env.UnitTest('bgp_stress_test7', ['bgp_stress_test7.cc']),
-              ]))
-
-Return('test_suite')
+    env.Alias(
+        'src/bgp:bgp_stress_test_suite',
+        env.TestSuite('bgp-stress-test',
+        [
+            env.UnitTest('bgp_stress_test1', ['bgp_stress_test1.cc']),
+            env.UnitTest('bgp_stress_test2', ['bgp_stress_test2.cc']),
+            env.UnitTest('bgp_stress_test3', ['bgp_stress_test3.cc']),
+            env.UnitTest('bgp_stress_test4', ['bgp_stress_test4.cc']),
+            env.UnitTest('bgp_stress_test5', ['bgp_stress_test5.cc']),
+            env.UnitTest('bgp_stress_test6', ['bgp_stress_test6.cc']),
+            env.UnitTest('bgp_stress_test7', ['bgp_stress_test7.cc']),
+        ]))
 
 # Local Variables:
 # mode: python

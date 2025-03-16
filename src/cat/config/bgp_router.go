@@ -41,12 +41,12 @@ func NewBGPRouter(fqNameTable *FQNameTableType, uuidTable *UUIDTableType, name, 
 	}
 
 	bgp_router_paramters := types.BgpRouterParams{
-		AdminDown:        false,
-		Vendor:           "contrail",
-		AutonomousSystem: 64512,
-		Identifier:       address,
-		Address:          address,
-		Port:             port,
+		AdminDown:             false,
+		Vendor:                "contrail",
+		AutonomousSystem:      64512,
+		Identifier:            address,
+		Address:               address,
+		Port:                  port,
 		LocalAutonomousSystem: 64512,
 		RouterType:            router_type,
 		AddressFamilies: &types.AddressFamilies{

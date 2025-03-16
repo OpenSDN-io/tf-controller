@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -148,7 +148,7 @@ func (c *ControlNode) readPortNumbers() error {
 	retry := 30
 	var err error
 	for retry > 0 {
-		if bytes, err := ioutil.ReadFile(c.PortsFile); err == nil {
+		if bytes, err := os.ReadFile(c.PortsFile); err == nil {
 			if err := json.Unmarshal(bytes, &c.Config); err == nil {
 				return nil
 			}
@@ -184,24 +184,37 @@ type BgpNeighborListResp struct {
 	} `xml:"neighbors"`
 }
 
-// CheckXMPPConnection checks whether XMPP connection to an agent has reached
-// ESTABLISHED sate (up).
-func (c *ControlNode) CheckXMPPConnection(agent *agent.Agent) error {
-
-	url := fmt.Sprintf("http://%s:%d/Snh_BgpNeighborReq?x=%s", c.IPAddress, c.Config.HTTPPort, agent.Component.Name)
+func (c *ControlNode) getBGPNeighborList(name string) (*BgpNeighborListResp, error) {
+	url := fmt.Sprintf("http://%s:%d/Snh_BgpNeighborReq?x=%s", c.IPAddress, c.Config.HTTPPort, name)
 	resp, err := http.Get(url)
-
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer resp.Body.Close()
-	log.Infof("Get request %s completed with status %v\n", url, err)
+	log.Infof("Get BgpNeighborReq request %s completed with status %v\n", url, err)
 
 	// Parse response
 	var parse_resp BgpNeighborListResp
-	data, err := ioutil.ReadAll(resp.Body)
-	xml.Unmarshal(data, &parse_resp)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	err = xml.Unmarshal(data, &parse_resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &parse_resp, nil
+}
+
+// CheckXMPPConnection checks whether XMPP connection to an agent has reached
+// ESTABLISHED sate (up).
+func (c *ControlNode) CheckXMPPConnection(agent *agent.Agent) error {
+	parse_resp, err := c.getBGPNeighborList(agent.Component.Name)
+	if err != nil {
+		return err
+	}
 
 	// session should be down, so expect an error here from the grep!
 	if parse_resp.Neighbors.List.BgpNeighborResp.State.Text == "Established" {
@@ -267,21 +280,10 @@ func (c *ControlNode) CheckXmppFlaps() error {
 // CheckBGPConnection checks whether BGP connection to an agent has reached
 // ESTABLISHED sate (up) (or DOWN) as requested in the down bool parameter.
 func (c *ControlNode) CheckBGPConnection(name string, down bool) error {
-
-	url := fmt.Sprintf("http://%s:%d/Snh_BgpNeighborReq?x=%s", c.IPAddress, c.Config.HTTPPort, name)
-	resp, err := http.Get(url)
-
+	parse_resp, err := c.getBGPNeighborList(name)
 	if err != nil {
 		return err
 	}
-
-	defer resp.Body.Close()
-	log.Infof("Get request %s completed with status %v\n", url, err)
-
-	// Parse response
-	var parse_resp BgpNeighborListResp
-	data, err := ioutil.ReadAll(resp.Body)
-	xml.Unmarshal(data, &parse_resp)
 
 	if !down {
 		return err
@@ -364,31 +366,35 @@ func (c *ControlNode) checkConfiguration(tp string, count int) error {
 	}
 	defer resp.Body.Close()
 
-	log.Infof("Get request %s completed with status %v\n", url, err)
+	log.Infof("Get IFMapNodeTableListShowReq request %s completed with status %v\n", url, err)
 
 	// Parse response
 	var parse_resp IFMapNodeTableListShowResp
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 	xml.Unmarshal(data, &parse_resp)
+	if err != nil {
+		return err
+	}
 
-	flag := false
-	cnt := 0
 	for _, entry := range parse_resp.TableList.List.IFMapNodeTableListShowEntry {
-		cnt, err = strconv.Atoi(entry.Size.Text)
-		if err == nil && entry.TableName.Text == tp && cnt == count {
-			flag = true
+		if entry.TableName.Text != tp {
+			continue
 		}
-	}
-
-	if !flag && count != 0 {
-		return fmt.Errorf("error: incorrect configuration")
-	}
-
-	if count == 0 {
-		if flag {
-			return fmt.Errorf("%s config is still present", tp)
+		cnt, err := strconv.Atoi(entry.Size.Text)
+		if err != nil {
+			return err
+		}
+		if cnt != count {
+			return fmt.Errorf("incorrect configuration: tp = %s, count = %d, data = %+v", tp, count, entry)
 		}
 		return nil
+	}
+
+	if count != 0 {
+		return fmt.Errorf("incorrect configuration: tp = %s must be present but it's absent", tp)
 	}
 
 	return nil
@@ -397,13 +403,14 @@ func (c *ControlNode) checkConfiguration(tp string, count int) error {
 // CheckConfiguration calls checkConfiguration with retries and wait times as
 // requested.
 func (c *ControlNode) CheckConfiguration(tp string, count int, retry int, wait time.Duration) error {
+	var err error
 	for r := 0; r < retry; r++ {
-		if err := c.checkConfiguration(tp, count); err == nil {
+		if err = c.checkConfiguration(tp, count); err == nil {
 			return nil
 		}
 		time.Sleep(wait * time.Second)
 	}
-	return fmt.Errorf("CheckConfiguration failed")
+	return fmt.Errorf("CheckConfiguration failed: %v", err)
 }
 
 // UpdateConfigDB updates the configuration by regnerating all objects into

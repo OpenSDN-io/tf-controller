@@ -30,4 +30,3 @@ libextended_community = env.Library('extended_community',
 
 extended_community_test_cases = env.SConscript('test/SConscript', exports='BuildEnv',
                                      duplicate = 0)
-Return('extended_community_test_cases')

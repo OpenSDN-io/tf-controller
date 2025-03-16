@@ -14,11 +14,11 @@ import (
 func TestControlNode(t *testing.T) {
 	c, err := cat.New()
 	if err != nil {
-		t.Errorf("Failed to create CAT object: %v", err)
+		t.Fatalf("Failed to create CAT object: %v", err)
 	}
 	cn, err := controlnode.New(c.SUT.Manager, "control-node", "127.0.0.1", "conf_file", "test", 0)
 	if err != nil {
-		t.Errorf("Failed to create control-node: %v", err)
+		t.Fatalf("Failed to create control-node: %v", err)
 	}
 
 	if cn.Name != "control-node" {

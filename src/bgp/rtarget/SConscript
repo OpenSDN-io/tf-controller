@@ -19,4 +19,3 @@ librtarget = env.Library('rtarget',
                      
 rtarget_test_cases = env.SConscript('test/SConscript', exports='BuildEnv',
                                     duplicate = 0)
-Return('rtarget_test_cases')

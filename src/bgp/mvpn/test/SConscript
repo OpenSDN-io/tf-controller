@@ -159,8 +159,6 @@ test_suite = [
 test = env.TestSuite('bgp-test', test_suite)
 env.Alias('controller/src/bgp/mvpn:test', test)
 
-Return('test_suite')
-
 # Local Variables:
 # mode: python
 # End:

@@ -43,7 +43,7 @@ type ContrailConfig struct {
 	ParentType string   `json:"parent_type"`
 	FqName     []string `json:"fq_name"`
 
-	Perms2      types.PermType2    `json:"prop:perms2"`
+	Perms2      types.PermType2   `json:"prop:perms2"`
 	IdPerms     types.IdPermsType `json:"prop:id_perms"`
 	DisplayName string            `json:"prop:display_name"`
 }
@@ -144,15 +144,15 @@ func createContrailConfig(fqNameTable *FQNameTableType, tp, name, parentType str
 			Created:      ts,
 			LastModified: ts,
 			UserVisible:  true,
-			Permissions:  &types.PermType{
+			Permissions: &types.PermType{
 				Owner:       "cloud-admin",
 				OwnerAccess: 7,
 				OtherAccess: 7,
 				Group:       "cloud-admin-group",
 				GroupAccess: 7,
 			},
-			Description:  "",
-			Creator:      "",
+			Description: "",
+			Creator:     "",
 		},
 		FqName: fqName,
 	}

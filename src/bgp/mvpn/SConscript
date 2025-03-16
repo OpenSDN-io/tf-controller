@@ -14,4 +14,3 @@ libbgp_mvpn = env.Library('bgp_mvpn',
 
 mvpn_unit_tests = env.SConscript('test/SConscript', exports='BuildEnv',
                                    duplicate = 0)
-Return('mvpn_unit_tests')

@@ -19,4 +19,3 @@ libbgp_inet6vpn = env.Library('bgp_inet6vpn',
 
 inet6vpn_test_cases = env.SConscript('test/SConscript', exports='BuildEnv',
                                      duplicate = 0)
-Return('inet6vpn_test_cases')
