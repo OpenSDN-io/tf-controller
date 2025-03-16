@@ -4,10 +4,6 @@
 
 # -*- mode: python; -*-
 
-import platform
-if platform.system() == 'Darwin':
-    Return()
-
 Import('AgentEnv')
 env = AgentEnv.Clone()
 

@@ -4,9 +4,6 @@
 
 #include <sys/types.h>
 #include <net/ethernet.h>
-#if defined(__FreeBSD__)
-# include "vr_os.h"
-#endif
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 

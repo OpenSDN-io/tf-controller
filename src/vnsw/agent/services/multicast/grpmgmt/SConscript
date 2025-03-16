@@ -5,10 +5,6 @@
 # -*- mode: python; -*-
 # grpmgmt directory
 
-import platform
-if platform.system() == 'Darwin':
-    Return()
-
 Import('GmpEnv')
 env = GmpEnv.Clone()
 

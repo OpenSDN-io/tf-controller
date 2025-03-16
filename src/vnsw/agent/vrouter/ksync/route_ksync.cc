@@ -33,9 +33,6 @@
 #include "vr_defs.h"
 #include "vr_nexthop.h"
 #include "vr_vrf_table.h"
-#if defined(__FreeBSD__)
-#include "vr_os.h"
-#endif
 
 RouteKSyncEntry::RouteKSyncEntry(RouteKSyncObject* obj,
                                  const RouteKSyncEntry *entry,

@@ -4,7 +4,6 @@
 #
 
 
-import platform
 Import('AgentEnv')
 env = AgentEnv.Clone()
 
@@ -159,8 +158,7 @@ mockEnv.Prepend(LIBS=[
     'crypto'
     ])
 
-if platform.system() != 'Darwin':
-    mockEnv.Append(LIBS = ['rt'])
+mockEnv.Append(LIBS = ['rt'])
 
 libpath = MapBuildDir([
     'base',

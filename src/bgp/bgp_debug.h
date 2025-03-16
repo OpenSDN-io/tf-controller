@@ -35,11 +35,7 @@ private:
 // server, instance, table, peer, route, etc.
 //
 //
-#ifdef __APPLE__
-#define __FUNC__ __PRETTY_FUNCTION__
-#else
 #define __FUNC__ __FUNCTION__
-#endif
 
 #define BGP_DEBUG(dtable, dpeer, droute, format, args...)                      \
 do {                                                                           \

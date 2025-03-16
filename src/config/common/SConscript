@@ -9,7 +9,6 @@ Import('CfgmEnv')
 env = CfgmEnv.Clone()
 
 setup_sources = [
-    '.coveragerc',
     '.stestr.conf',
     'setup.py',
     'requirements.txt',

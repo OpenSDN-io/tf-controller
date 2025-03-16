@@ -5,8 +5,6 @@
 #-*- mode: pythos; -*-
 
 import platform
-if platform.system() == 'Darwin':
-    Return()
 
 Import('AgentEnv')
 env = AgentEnv.Clone()
@@ -22,8 +20,6 @@ sandesh_objs = AgentEnv.BuildExceptionCppObj(env, SandeshGenSrcs)
 except_files = ['vnswif_listener_base.cc']
 if platform.system() == 'Linux':
     except_files += ['vnswif_listener_base_nix.cc', 'linux/vnswif_listener.cc']
-elif platform.system() == 'FreeBSD':
-    except_files += ['vnswif_listener_base_nix.cc', 'freebsd/vnswif_listener.cc']
 
 except_objs = AgentEnv.BuildExceptionCcObj(env, except_files)
 

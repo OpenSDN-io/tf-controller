@@ -24,9 +24,8 @@ env.Prepend(LIBS=['xmpp', 'peer_sandesh',
                   'ssl', 'crypto', 'gunit', 'boost_regex', 'boost_filesystem',
                   'cpuinfo', 'pugixml'])
 
-if platform.system() != 'Darwin':
-    env.Append(LIBS=['rt'])
-    env.Prepend(LIBS=['ksync', 'ksyncnl'])
+env.Append(LIBS=['rt'])
+env.Prepend(LIBS=['ksync', 'ksyncnl'])
 
 libs = MapBuildDir(['db', 'bgp', 'xmpp', 'xml', 'pugixml', 'io', 'ksync',
                     'base', 'base/test', 'boost_regex', 'route', 'schema',

@@ -59,37 +59,9 @@ do {                                                             \
         BgpStressTestEvent::log_ = false;                               \
     } while (false)
 
-#undef __BGP_PROFILE__
-
-#if defined(__BGP_PROFILE__) && ! defined(__APPLE__)
-#include <valgrind/memcheck.h>
-
-#define HEAP_PROFILER_START(prefix)  \
-    do {                             \
-        if (!d_profile_heap_) break; \
-        HeapProfilerStart(prefix);   \
-    } while (false)
-
-#define HEAP_PROFILER_STOP()         \
-    do {                             \
-        if (!d_profile_heap_) break; \
-        HeapProfilerStop();          \
-    } while (false)
-
-#define HEAP_PROFILER_DUMP(reason)   \
-    do {                             \
-        if (!d_profile_heap_) break; \
-        HeapProfilerDump(reason);    \
-        VALGRIND_DO_LEAK_CHECK;      \
-    } while (false)
-
-#else
-
 #define HEAP_PROFILER_START(prefix)
 #define HEAP_PROFILER_STOP()
 #define HEAP_PROFILER_DUMP(reason)
-
-#endif
 
 #define XMPP_CONTROL_SERV "bgp.contrail.com"
 #define PUBSUB_NODE_ADDR  "bgp-node.contrail.com"

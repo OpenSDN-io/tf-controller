@@ -13,7 +13,6 @@ function usage {
   echo "  -u, --update                Update the virtual environment with any newer package versions"
   echo "  -p, --pep8                  Just run PEP8 and HACKING compliance check"
   echo "  -P, --no-pep8               Don't run static code checks"
-  echo "  -c, --coverage              Generate coverage report"
   echo "  -d, --debug                 Run tests with testtools instead of testr. This allows you to use the debugger."
   echo "  -h, --help                  Print this usage message"
   echo "  --hide-elapsed              Don't print the elapsed time for each test along with slow test list"
@@ -48,7 +47,6 @@ function process_options {
       -u|--update) update=1;;
       -p|--pep8) just_pep8=1;;
       -P|--no-pep8) no_pep8=1;;
-      -c|--coverage) coverage=1;;
       -d|--debug) debug=1;;
       --virtual-env-path)
         (( i++ ))
@@ -96,7 +94,6 @@ testropts=
 wrapper=""
 just_pep8=0
 no_pep8=0
-coverage=0
 debug=0
 update=0
 concurrency=0
@@ -129,17 +126,13 @@ function run_tests {
     fi
     ${wrapper} python -m testtools.run $testropts $testrargs
 
-    # Short circuit because all of the testr and coverage stuff
+    # Short circuit because all of the testr stuff
     # below does not make sense when running testtools.run for
     # debugging purposes.
     return $?
   fi
 
-  if [ $coverage -eq 1 ]; then
-    TESTRTESTS="$TESTRTESTS --coverage"
-  else
-    TESTRTESTS="$TESTRTESTS"
-  fi
+  TESTRTESTS="$TESTRTESTS"
 
   # Just run the test suites in current environment
   set +e
@@ -163,14 +156,6 @@ function run_tests {
 
   copy_subunit_log
   cat subunit.log | ${wrapper} subunit-1to2 | ${wrapper} subunit2junitxml
-
-  if [ $coverage -eq 1 ]; then
-    echo "Generating coverage report in covhtml/"
-    # Don't compute coverage for common code, which is tested elsewhere
-    ${wrapper} coverage combine | true
-    ${wrapper} coverage html --include='./*' --omit='./tests/*' -d covhtml -i
-    ${wrapper} coverage report
-  fi
 
   return $RESULT
 }
@@ -230,11 +215,6 @@ fi
 # Override contrail-api-version with the local built version (CEM-6028)
 # TODO: remove that workaround when we will use correct package versioning
 [ -f ${build_top}/api-lib/dist/*.tar.gz ] && ${wrapper} pip install ${build_top}/api-lib/dist/*.tar.gz
-
-# Delete old coverage data from previous runs
-if [ $coverage -eq 1 ]; then
-    ${wrapper} coverage erase
-fi
 
 if [ $just_pep8 -eq 1 ]; then
     run_pep8

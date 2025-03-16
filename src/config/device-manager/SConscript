@@ -47,7 +47,6 @@ abstract_generated_rule = env.Command(abstract_generated_files,
                              abstract_gen_cmd + ' $SOURCE')
 
 setup_sources = [
-           '.coveragerc',
            '.stestr.conf',
            'tox.ini',
            'setup.py',
@@ -56,7 +55,6 @@ setup_sources = [
            'requirements.txt',
            'test-requirements.txt',
            '.testr.conf',
-           '.coveragerc',
            'test',
 ]
 

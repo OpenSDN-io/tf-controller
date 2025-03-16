@@ -34,26 +34,3 @@ bfd_test_suite = env.SConscript('rest_api/SConscript', exports='BuildEnv',
                                  duplicate = 0)
 bfd_test_suite += env.SConscript('test/SConscript', exports='BuildEnv',
                                  duplicate = 0)
-
-def code_coverage(target, source, env):
-    shutil.rmtree(target[0].path, ignore_errors = True)
-    os.system('lcov --base-directory . --directory ' + Dir('.').path +
-              ' --zerocounters -q')
-    # execute tests
-    ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
-    for test in bfd_test_suite:
-        cmd = test[0].path
-        logfile = open(cmd + '.log', 'w')
-        print(cmd)
-        subprocess.call([cmd], stdout=logfile, env=ShEnv)
-
-    os.system('lcov --base-directory . --directory ' + Dir('.').path +
-              ' -c -o bfd.info')
-    os.system('genhtml -o ' + target[0].path +
-              ' -t "test coverage" --num-spaces 4 bfd.info')
-
-
-if env['OPT'] == 'coverage':
-    test_coverage = env.Command(Dir('test_coverage'), '', code_coverage)
-    env.AlwaysBuild(test_coverage)
-    env.Alias('src/bfd:test_coverage', test_coverage)

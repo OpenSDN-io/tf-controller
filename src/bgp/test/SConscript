@@ -77,38 +77,19 @@ env.Prepend(LIBS = ['control_test',
                     'db', 'sandeshvns', 'process_info',
                     'io', 'crypto', 'ssl', 'base', 'gunit'])
 
-if platform.system() == 'Darwin':
-    bgp_inet = Dir('../inet').path + '/libbgp_inet.a'
-    bgp_ermvpn = Dir('../ermvpn').path + '/libbgp_ermvpn.a'
-    bgp_mvpn = Dir('../mvpn').path + '/libbgp_mvpn.a'
-    bgp_evpn = Dir('../evpn').path + '/libbgp_evpn.a'
-    bgp_l3vpn = Dir('../l3vpn').path + '/libbgp_l3vpn.a'
-    bgp_rtarget = Dir('../rtarget').path + '/librtarget.a'
-    bgp_inet6 = Dir('../inet6').path + '/libbgp_inet6.a'
-    bgp_inet6vpn = Dir('../inet6vpn').path + '/libbgp_inet6vpn.a'
-    env.Prepend(LINKFLAGS =
-                ['-Wl,-force_load,' + bgp_inet,
-                 '-Wl,-force_load,' + bgp_ermvpn,
-                 '-Wl,-force_load,' + bgp_mvpn,
-                 '-Wl,-force_load,' + bgp_evpn,
-                 '-Wl,-force_load,' + bgp_l3vpn,
-                 '-Wl,-force_load,' + bgp_inet6,
-                 '-Wl,-force_load,' + bgp_inet6vpn,
-                 '-Wl,-force_load,' + bgp_rtarget])
-else:
-    env.Prepend(LINKFLAGS =
-                ['-Wl,--whole-archive',
-                 '-rdynamic',
-                 '-lbase',
-                 '-lbgp_inet',
-                 '-lbgp_ermvpn',
-                 '-lbgp_mvpn',
-                 '-lbgp_evpn',
-                 '-lbgp_l3vpn',
-                 '-lrtarget',
-                 '-lbgp_inet6',
-                 '-lbgp_inet6vpn',
-                 '-Wl,--no-whole-archive'])
+env.Prepend(LINKFLAGS = [
+    '-Wl,--whole-archive',
+    '-rdynamic',
+    '-lbase',
+    '-lbgp_inet',
+    '-lbgp_ermvpn',
+    '-lbgp_mvpn',
+    '-lbgp_evpn',
+    '-lbgp_l3vpn',
+    '-lrtarget',
+    '-lbgp_inet6',
+    '-lbgp_inet6vpn',
+    '-Wl,--no-whole-archive'])
 
 env.Append(LIBS = [
     'bgp_xmpp',
@@ -136,8 +117,7 @@ env.Append(LIBS = ['extended_community', 'origin_vn', 'security_group', 'tunnel_
 env.Append(LIBS = ['xmpp_unicast', 'xmpp_multicast', 'xmpp_mvpn', 'xmpp_enet',
                    'boost_regex', 'boost_program_options', 'boost_chrono'])
 
-if platform.system() != 'Darwin':
-    env.Append(LIBS=['rt'])
+env.Append(LIBS=['rt'])
 
 except_env = env.Clone()
 except_env.CppEnableExceptions()

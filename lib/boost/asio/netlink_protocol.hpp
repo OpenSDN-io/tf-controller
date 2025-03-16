@@ -55,8 +55,6 @@ public:
   {
 #if defined(__linux__)
     return AF_NETLINK;
-#elif defined(__FreeBSD__)
-    return AF_VENDOR00;
 #else
 #error "Unsupported platform"
 #endif

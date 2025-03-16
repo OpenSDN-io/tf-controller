@@ -5,7 +5,6 @@
 #    pip-compile --output-file=test-requirements.txt test-requirements.in
 #
 argparse==1.4.0           # via unittest2
-coverage==5.1             # via -r test-requirements.in
 fixtures==3.0.0           # via testrepository, testtools
 funcsigs==1.0.2           # via mock
 junitxml==0.7             # via -r test-requirements.in

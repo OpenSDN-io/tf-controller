@@ -22,8 +22,7 @@ env.Prepend(LIBS = ['db', 'dbtest', 'gunit', 'task_test', 'io', 'sandesh',
                     'http', 'http_parser', 'curl', 'io', 'ssl', 'crypto',
                     'pugixml', 'boost_program_options'])
 
-if platform.system() != 'Darwin':
-    env.Append(LIBS=['rt'])
+env.Append(LIBS=['rt'])
 
 db_test = env.UnitTest('db_test', ['db_test.cc'])
 env.Alias('src/db:db_test', db_test)

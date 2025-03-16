@@ -48,8 +48,6 @@ public:
       memset(&impl_, 0, sizeof(impl_));
 #if defined(__linux__)
       sa.nl_family = AF_NETLINK;
-#elif defined(__FreeBSD__)
-      sa.sa_family = AF_VENDOR00;
 #endif
   }
 
@@ -76,8 +74,6 @@ private:
       data_type impl_;
 #if defined(__linux__)
       struct sockaddr_nl sa;
-#elif defined(__FreeBSD__)
-      struct sockaddr sa;
 #endif
   };
 };

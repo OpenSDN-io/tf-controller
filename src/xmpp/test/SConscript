@@ -5,7 +5,6 @@
 # -*- mode: python; -*-
 
 Import('BuildEnv')
-import platform
 env = BuildEnv.Clone()
 env.Append(CPPPATH = [env['TOP']])
 env.Append(CPPPATH = [env['TOP'] + '/tools/sandesh/library/common'])
@@ -32,8 +31,7 @@ env.Prepend(LIBS = ['task_test', 'gunit', 'xmpp', 'xml', 'pugixml', 'sandesh',
 env.Append(LIBS = ['ifmapio', 'ifmap_vnc', 'ifmap_server',
                        'ifmap_common', 'cassandra_cql', 'cassandra'])
 
-if platform.system() not in ['Darwin']:
-    env.Append(LIBS = ['rt'])
+env.Append(LIBS = ['rt'])
 
 xmpp_server_test = env.UnitTest('xmpp_server_test', ['xmpp_server_test.cc'])
 env.Alias('controller/xmpp:xmpp_server_test', xmpp_server_test)
