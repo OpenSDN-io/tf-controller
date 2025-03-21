@@ -240,7 +240,8 @@ void BgpRouterConfig::ConfigAddChange(IFMapNode *node) {
     if (bgp_router_cfg == NULL)
         return;
     autogen::BgpRouterParams params = bgp_router_cfg->parameters();
-    if (strcmp(params.router_type.c_str(), BGP_ROUTER_TYPE) != 0)
+    if ((strcmp(params.router_type.c_str(), BGP_ROUTER_TYPE) != 0) &&
+        (strcmp(params.router_type.c_str(), BGP_ROUTER_EXT_TYPE) != 0))
         return;
 
     std::string name = node->name();
@@ -270,7 +271,8 @@ void BgpRouterConfig::ConfigDelete(IFMapNode *node) {
     if (bgp_router_cfg == NULL)
         return;
     autogen::BgpRouterParams params = bgp_router_cfg->parameters();
-    if (strcmp(params.router_type.c_str(), BGP_ROUTER_TYPE) != 0)
+    if ((strcmp(params.router_type.c_str(), BGP_ROUTER_TYPE) != 0) &&
+        (strcmp(params.router_type.c_str(), BGP_ROUTER_EXT_TYPE) != 0))
         return;
 
     std::string name = node->name();

@@ -355,6 +355,7 @@ void IFMapGraphWalker::AddNodesToWhitelist() {
                 ("global-system-config-virtual-router")
                 ("provider-attachment-virtual-router")
                 ("virtual-router-virtual-machine-interface")
+                ("virtual-router-sub-cluster")
                     .convert_to_container<set<string> >())
         ("virtual-router-network-ipam", list_of("virtual-router-network-ipam")
             .convert_to_container<set<string> >())
@@ -364,6 +365,9 @@ void IFMapGraphWalker::AddNodesToWhitelist() {
                 ("virtual-machine-tag")
                     .convert_to_container<set<string> >())
         ("control-node-zone", set<string>())
+        ("sub-cluster",
+         list_of("bgp-router-sub-cluster")
+                    .convert_to_container<set<string> >())
         ("bgp-router",
          list_of("instance-bgp-router")
                 ("physical-router-bgp-router")

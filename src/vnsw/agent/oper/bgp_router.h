@@ -10,6 +10,7 @@
 #include <bgp_schema_types.h>
 
 #define BGP_ROUTER_TYPE "control-node"
+#define BGP_ROUTER_EXT_TYPE "external-control-node"
 #define CONTROL_NODE_ZONE_CONFIG_NAME "control-node-zone"
 
 class IFMapNode;
