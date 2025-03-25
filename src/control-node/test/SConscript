@@ -51,8 +51,7 @@ env.Prepend(LIBS = [
                     'SimpleAmqpClient', 'rabbitmq',
                     'boost_filesystem', 'boost_program_options', 'boost_chrono'])
 
-if platform.system() != 'Darwin':
-    env.Append(LIBS = ['rt'])
+env.Append(LIBS = ['rt'])
 
 options_test = env.UnitTest('options_test', ['../buildinfo.o', '../options.o',
                                              'options_test.cc'])

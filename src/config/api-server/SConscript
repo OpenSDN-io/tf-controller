@@ -7,7 +7,6 @@ Import('CfgmEnv')
 env = CfgmEnv.Clone()
 
 setup_sources = [
-    '.coveragerc',
     '.stestr.conf',
     'MANIFEST.in',
     'README.md',

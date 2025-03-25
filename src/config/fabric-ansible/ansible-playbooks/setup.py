@@ -8,22 +8,15 @@ import re
 
 class RunTestsCommand(Command):
     description = "Test command to run testr in virtualenv"
-    user_options = [
-        ('coverage', 'c',
-         "Generate code coverage report"),
-        ]
-    boolean_options = ['coverage']
+    user_options = []
+    boolean_options = []
     def initialize_options(self):
         self.cwd = None
-        self.coverage = False
     def finalize_options(self):
         self.cwd = os.getcwd()
     def run(self):
         logfname = 'test.log'
         args = '-V'
-        if self.coverage:
-            logfname = 'coveragetest.log'
-            args += ' -c'
         rc_sig = os.system('./run_tests.sh %s' % args)
         if rc_sig >> 8:
             os._exit(rc_sig>>8)

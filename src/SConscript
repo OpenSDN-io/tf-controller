@@ -25,8 +25,7 @@ subdirs = [
     'nodemgr',
 ]
 
-if platform.system() != 'Darwin':
-    subdirs += ['ksync']
+subdirs += ['ksync']
 
 subdirs += [
     'config',
@@ -64,8 +63,6 @@ if gpp_version_major >= 11:
 
 if platform.system() == 'Linux':
     common.Append(CCFLAGS = ['-Wno-unused-local-typedefs'])
-elif platform.system() == 'FreeBSD':
-    common.Append(CCFLAGS = ['-Wno-unused-local-typedefs'])
 common.Append(CPPPATH = include)
 common.Append(CCFLAGS = [common['CPPDEFPREFIX'] + 'RAPIDJSON_NAMESPACE=contrail_rapidjson'])
 
@@ -73,10 +70,6 @@ BuildEnv = common.Clone()
 
 if platform.system() == 'Linux':
     BuildEnv.Append(CCFLAGS = ['-DLINUX'])
-elif platform.system() == 'Darwin':
-    BuildEnv.Append(CCFLAGS = ['-DDARWIN'])
-elif platform.system() == 'FreeBSD':
-    BuildEnv.Prepend(LINKFLAGS = ['-lprocstat'])
 
 #
 # Message documentation for common modules

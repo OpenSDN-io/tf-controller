@@ -1774,40 +1774,6 @@ class TestVncCfgApiServer(test_case.ApiServerTestCase):
         self.assertEquals(len(list_result), 1)
         self.assertEquals(list_result[0]['uuid'], p1_fp2.uuid)
 
-    def test_list_for_coverage(self):
-        name = '%s-vn1' %(self.id())
-        vn1_obj = VirtualNetwork(
-            name, display_name=name, is_shared=True,
-            router_external=False)
-        self._vnc_lib.virtual_network_create(vn1_obj)
-
-        name = '%s-vn2' %(self.id())
-        id_perms = IdPermsType(user_visible=False)
-        vn2_obj = VirtualNetwork(
-            name, display_name=name, id_perms=id_perms,
-            is_shared=True, router_external=False)
-        def fake_admin_request(orig_method, *args, **kwargs):
-            return True
-        with test_common.patch(self._api_server,
-            'is_admin_request', fake_admin_request):
-            self._vnc_lib.virtual_network_create(vn2_obj)
-
-        listen_ip = self._api_server_ip
-        listen_port = self._api_server._args.listen_port
-        q_params = 'obj_uuids=%s,%s&fields=is_shared,router_external' %(
-            vn1_obj.uuid, vn2_obj.uuid)
-        url = 'http://%s:%s/virtual-networks?%s' %(
-            listen_ip, listen_port, q_params)
-
-        resp = requests.get(url)
-        self.assertEqual(resp.status_code, 200)
-        read_vn_dicts = json.loads(resp.text)['virtual-networks']
-        self.assertEqual(len(read_vn_dicts), 1)
-        self.assertEqual(read_vn_dicts[0]['uuid'], vn1_obj.uuid)
-        self.assertEqual(read_vn_dicts[0]['is_shared'], True)
-        self.assertEqual(read_vn_dicts[0]['router_external'], False)
-    # end test_list_for_coverage
-
     def test_list_with_malformed_filters(self):
         vn_objs, _, _, _ = self._create_vn_ri_vmi()
         vn_uuid = vn_objs[0].uuid

@@ -24,8 +24,7 @@ env.Prepend(LIBS = ['bfd_udp', 'bfd', 'gunit', 'io', 'sandesh', 'sandeshvns',
                     'crypto', 'http_parser', 'curl', 'pugixml',
                     'boost_program_options', 'boost_thread'])
 
-if platform.system() != 'Darwin':
-    env.Append(LIBS=['rt'])
+env.Append(LIBS=['rt'])
 
 except_env = env.Clone()
 except_env.CppEnableExceptions()

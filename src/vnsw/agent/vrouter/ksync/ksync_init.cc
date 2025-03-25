@@ -11,10 +11,6 @@
 #include <linux/genetlink.h>
 #include <linux/if_ether.h>
 #include <netinet/ether.h>
-#elif defined(__FreeBSD__)
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include "vr_os.h"
 #endif
 
 #include "ksync_init.h"
@@ -450,19 +446,6 @@ void KSync::CreateVhostIntf() {
     assert((resp = nl_parse_reply(cl)) != NULL);
     assert(resp->nl_type == NL_MSG_TYPE_ERROR);
     nl_free_client(cl);
-#elif defined(__FreeBSD__)
-    struct ifreq ifr;
-    memset(&ifr, 0, sizeof(ifr));
-    ifr.ifr_flags = IFF_UP;
-
-    int s = socket(PF_LOCAL, SOCK_DGRAM, 0);
-    assert(s > 0);
-
-    strncpy(ifr.ifr_name, agent_->vhost_interface_name().c_str(),
-        sizeof(ifr.ifr_name));
-
-    assert(ioctl(s, SIOCSIFFLAGS, &ifr) != -1);
-    close(s);
 #endif
 }
 
@@ -499,31 +482,6 @@ void KSync::UpdateVhostMac() {
     assert((resp = nl_parse_reply(cl)) != NULL);
     assert(resp->nl_type == NL_MSG_TYPE_ERROR);
     nl_free_client(cl);
-#elif defined(__FreeBSD__)
-    struct ifreq ifr;
-    memset(&ifr, 0, sizeof(ifr));
-
-    int s = socket(PF_LOCAL, SOCK_DGRAM, 0);
-    assert(s >= 0);
-
-    strncpy(ifr.ifr_name, agent_->vhost_interface_name().c_str(),
-            sizeof(ifr.ifr_name));
-
-    // on l3mh compute vhost0 mac is set to vrrp mac instead of phy interface mac
-    if (agent_->is_l3mh()) {
-        ifr.ifr_addr = agent_->vrrp_mac();
-        ifr.ifr_addr.sa_len = agent_->vrrp_mac().size();
-    } else {
-        PhysicalInterfaceKey key(agent_->fabric_interface_name());
-        Interface *eth = static_cast<Interface *>
-            (agent_->interface_table()->FindActiveEntry(&key));
-        ifr.ifr_addr = eth->mac();
-        ifr.ifr_addr.sa_len = eth->mac().size();
-    }
-
-    assert(ioctl(s, SIOCSIFLLADDR, &ifr) != -1);
-
-    close(s);
 #endif
 }
 

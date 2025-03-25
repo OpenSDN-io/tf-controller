@@ -175,8 +175,6 @@ TEST_F(MacAddressTest, CastTo_sockaddr) {
     struct sockaddr b =  { 0x00 } ;
 #if defined(__linux__)
     struct sockaddr ref = { 0x00, { 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f } };
-#elif defined(__FreeBSD__)
-    struct sockaddr ref = { 0x00, 0x00, { 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f } };
 #endif
     MacAddress mac(a);
     EXPECT_EQ("0a:0b:0c:0d:0e:0f", mac.ToString());

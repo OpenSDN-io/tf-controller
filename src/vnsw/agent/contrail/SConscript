@@ -93,9 +93,7 @@ env.Prepend(LIBS = AgentEnv['CONTRAIL_LIBS'])
 env.Prepend(LINKFLAGS = ['-Wl,--whole-archive', '-rdynamic', '-lkstate', '-ldiag',
                              '-Wl,--no-whole-archive'])
 
-if platform.system() == 'FreeBSD':
-    platform_dependent = 'freebsd/pkt0_interface.cc'
-elif platform.system() == 'Linux':
+if platform.system() == 'Linux':
     platform_dependent = 'linux/pkt0_interface.cc'
 
 

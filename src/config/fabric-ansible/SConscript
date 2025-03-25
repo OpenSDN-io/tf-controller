@@ -19,7 +19,6 @@ subdirs=[
 ]
 
 setup_sources = [
-           '.coveragerc',
            '.stestr.conf',
            'setup.py',
            'MANIFEST.in',

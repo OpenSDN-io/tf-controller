@@ -363,11 +363,7 @@ LifetimeManager *XmppServer::lifetime_manager() {
 
 TcpSession *XmppServer::CreateSession() {
     typedef boost::asio::detail::socket_option::boolean<
-#ifdef __APPLE__
-        SOL_SOCKET, SO_REUSEPORT> reuse_port_t;
-#else
         SOL_SOCKET, SO_REUSEADDR> reuse_addr_t;
-#endif
     TcpSession *session = TcpServer::CreateSession();
     Socket *socket = session->socket();
 
@@ -377,11 +373,7 @@ TcpSession *XmppServer::CreateSession() {
         XMPP_WARNING(ServerOpenFail, err.message());
     }
 
-#ifdef __APPLE__
-    socket->set_option(reuse_port_t(true), err);
-#else
     socket->set_option(reuse_addr_t(true), err);
-#endif
     if (err) {
         XMPP_WARNING(SetSockOptFail, "", XMPP_PEER_DIR_OUT, err.message());
     }

@@ -13,7 +13,6 @@ sources = [
     'test-requirements.txt',
     '.stestr.conf',
     'tox.ini',
-    '.coveragerc',
     'MANIFEST.in',
     'svc_monitor/__init__.py',
     'svc_monitor/agent.py',

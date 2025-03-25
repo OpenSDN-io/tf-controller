@@ -51,16 +51,6 @@ For example, the following would run only a single test or test case:
       $ tox -e py27 test.test_job_manager.TestJobManager.test_execute_job_success
       $ tox -e py27 test.test_job_manager.TestJobManager
 
-### Coverage
-
-Contrail has a fast growing code base and there are plenty of areas that need
-better coverage.
-
-To get a grasp of the areas where tests are needed, you can check current unit
-tests coverage by running:
-
-    $ tox -e cover
-
 ### Debugging
 
 By default, calls to pdb.set_trace() will be ignored when tests are run. For

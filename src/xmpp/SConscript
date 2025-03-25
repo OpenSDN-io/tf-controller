@@ -5,7 +5,6 @@
 # -*- mode: python; -*-
 
 import subprocess
-import platform
 import shutil
 import os
 
@@ -47,8 +46,7 @@ libxmpp = env.Library('xmpp',
 env.Prepend(LIBS=['sandesh', 'http_parser', 'curl', 'http',
                   'io', 'ssl', 'pugixml', 'xml', 'boost_regex'])
 
-if platform.system() != 'Darwin':
-    env.Append(LIBS=['rt'])
+env.Append(LIBS=['rt'])
 
 libs = MapBuildDir(['io'])
 env.Append(LIBPATH=libs)
@@ -66,31 +64,3 @@ env.Append(CPPPATH = [env['TOP'] + '/tools/sandesh/library/common'])
 
 xmpp_test_suite = env.SConscript('test/SConscript',
                                  exports='BuildEnv', duplicate = 0)
-
-def code_coverage(target, source, env):
-    shutil.rmtree(target[0].path, ignore_errors = True)
-
-    # lcov --base-directory $ROOT -- directory . --zerocounters -q
-    os.system('lcov --base-directory . --directory ' + Dir('.').path +
-              ' --zerocounters -q')
-    # execute tests
-    ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
-
-    for test in xmpp_test_suite:
-        cmd = test[0].path
-        logfile = open(cmd + '.log', 'w')
-        subprocess.call([cmd], stdout=logfile, env=ShEnv)
-
-    # lcov --base-directory $ROOT -- directory . -c -o bgp_test.info
-    os.system('lcov --base-directory . --directory ' + Dir('.').path +
-              ' -c -o xmpp_test.info')
-
-    # genhtml -o xmpp/test_coverage xmpp_test.info
-    os.system('genhtml -o ' + target[0].path +
-              ' -t "test coverage" --num-spaces 4 xmpp_test.info')
-
-
-if env['OPT'] == 'coverage':
-    test_coverage = env.Command(Dir('test_coverage'), '', code_coverage)
-    env.AlwaysBuild(test_coverage)
-    env.Alias('src/xmpp:test_coverage', test_coverage)

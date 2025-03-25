@@ -5,20 +5,11 @@
 # -*- mode: python; -*-
 # gmp_map directory
 
-import platform
-if platform.system() == 'Darwin':
-    Return()
-
 Import('GmpEnv')
 env = GmpEnv.Clone()
 
 env.CppEnableExceptions()
 env.Append(CCFLAGS = ['-fexceptions'])
 
-libgmp_map = env.Library('gmp_map',
-                    [
-                    'gmp_proto.cc',
-                    'gmp_map.cc',
-                    'task_map.cc',
-                     ])
+libgmp_map = env.Library('gmp_map', ['gmp_proto.cc', 'gmp_map.cc', 'task_map.cc'])
 

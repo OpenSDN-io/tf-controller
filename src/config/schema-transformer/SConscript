@@ -15,7 +15,6 @@ setup_sources = [
            'test-requirements.txt',
            '.stestr.conf',
            'tox.ini',
-           '.coveragerc',
            'schema_transformer',
 ]
 

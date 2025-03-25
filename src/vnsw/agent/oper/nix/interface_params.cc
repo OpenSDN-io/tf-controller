@@ -41,8 +41,6 @@ void Interface::ObtainOsSpecificParams(const std::string &name, Agent *agent) {
     if (agent->is_l3mh() && name.compare("vhost0") == 0) {
         os_params_.mac_ = MacAddress::FromString("00:00:5e:00:01:00");
     }
-#elif defined(__FreeBSD__)
-    os_params_.mac_ = ifr.ifr_addr;
 #endif
 
     int idx = if_nametoindex(name.c_str());

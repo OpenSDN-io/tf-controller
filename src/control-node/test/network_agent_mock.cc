@@ -1086,15 +1086,6 @@ XmppChannelConfig *NetworkAgentMock::CreateXmppConfig() {
     XmppChannelConfig *config = new XmppChannelConfig(true);
     config->endpoint.address(address::from_string(server_address_));
 
-#ifdef __APPLE__
-
-    //
-    // XXX On darwin, for non 127.0.0.1, explicitly add the address to lo0
-    //
-    // e.g. sudo /sbin/ifconfig lo0 alias 127.0.0.2
-    //
-#endif
-
     if (xmpp_auth_enabled_) {
         config->auth_enabled = true;
         config->path_to_server_cert =

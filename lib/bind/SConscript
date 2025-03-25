@@ -1,6 +1,5 @@
 # -*- mode: python; -*-
 import platform
-import sys
 
 vpath = '#/third_party/bind-9.10.4-P2/'
 env = DefaultEnvironment()
@@ -8,24 +7,11 @@ env = DefaultEnvironment()
 build_dir = str(Dir('#/build'))
 config_opts = '--prefix=' + build_dir + ' --enable-threads' + ' --enable-fixed-rrset'
 
-if platform.machine() == "ppc64le":
-    config_opts += ' --build=powerpc64le'
-
-if sys.platform.startswith('freebsd'):
-    # TODO(md): There is a known bug with gsskrb5 linking on FreeBSD and libgss
-    # has to be disabled for now.
-    config_opts += ' --without-gssapi'
-    cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
-           '/configure' + ' ' + config_opts + '; gmake clean; gmake; gmake install; ' +
-           'mv ' + build_dir + '/sbin/named ' + build_dir + '/sbin/contrail-named; ' +
-           'mv ' + build_dir + '/sbin/rndc ' + build_dir + '/sbin/contrail-rndc; ' +
-           'mv ' + build_dir + '/sbin/rndc-confgen ' + build_dir + '/sbin/contrail-rndc-confgen;)')
-else:
-    cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
-           '/configure' + ' ' + config_opts + '; make clean; make; make install; ' +
-           'mv ' + build_dir + '/sbin/named ' + build_dir + '/sbin/contrail-named; ' +
-           'mv ' + build_dir + '/sbin/rndc ' + build_dir + '/sbin/contrail-rndc; ' +
-           'mv ' + build_dir + '/sbin/rndc-confgen ' + build_dir + '/sbin/contrail-rndc-confgen;)')
+cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
+        '/configure' + ' ' + config_opts + '; make clean; make; make install; ' +
+        'mv ' + build_dir + '/sbin/named ' + build_dir + '/sbin/contrail-named; ' +
+        'mv ' + build_dir + '/sbin/rndc ' + build_dir + '/sbin/contrail-rndc; ' +
+        'mv ' + build_dir + '/sbin/rndc-confgen ' + build_dir + '/sbin/contrail-rndc-confgen;)')
 
 include_products = [
     '#build/include/isc/hmacmd5.h',

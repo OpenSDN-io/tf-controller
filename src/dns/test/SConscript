@@ -34,11 +34,10 @@ env.Prepend(LIBS = ['dbtest', 'ifmap_vnc', 'task_test',
 env.Prepend(LIBS=['dns_cfg', 'cmn', 'mgr', 'agent_xmpp', 'bind_interface'])
 env.Append(LIBS=['sandesh', 'http', 'http_parser'])
 
-if platform.system() not in ['Darwin']:
-    env.Prepend(LINKFLAGS =
-                ['-Wl,--whole-archive',
-                 '-rdynamic',
-                 '-Wl,--no-whole-archive'])
+env.Prepend(LINKFLAGS = [
+    '-Wl,--whole-archive',
+    '-rdynamic',
+    '-Wl,--no-whole-archive'])
 
 dns_config_test = env.UnitTest('dns_config_test', ['dns_config_test.cc'])
 env.Alias('src/dns:dns_config_test', dns_config_test)

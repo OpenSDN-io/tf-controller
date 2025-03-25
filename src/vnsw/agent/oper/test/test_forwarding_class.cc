@@ -13,11 +13,6 @@
 #include <linux/if_packet.h>
 #endif
 
-#ifdef __FreeBSD__
-#include <sys/sockio.h>
-#include <ifaddrs.h>
-#endif
-
 #include "testing/gunit.h"
 
 #include <base/logging.h>

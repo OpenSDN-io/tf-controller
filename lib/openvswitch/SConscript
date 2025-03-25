@@ -1,6 +1,5 @@
 # -*- mode: python; -*-
 import os
-import sys
 
 vpath = '#/third_party/openvswitch-2.3.0'
 
@@ -9,12 +8,8 @@ env['ENV']['CFLAGS'] = '-DOPEN_CONTRAIL_CLIENT -g'
 
 config_opts = '--prefix=' + str(Dir('#/build'))
 
-if not sys.platform.startswith('freebsd'):
-    cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
-           '/configure' + ' ' + config_opts + '; make clean; make; make install)')
-else:
-    cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
-           '/configure' + ' ' + config_opts + '; gmake clean; gmake; gmake install)')
+cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
+        '/configure' + ' ' + config_opts + '; make clean; make; make install)')
 
 libs = [str(File('#build/lib/libopenvswitch.a'))]
 

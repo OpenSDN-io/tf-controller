@@ -6,8 +6,6 @@
 # services directory
 
 import platform
-if platform.system() == 'Darwin':
-    Return()
 
 Import('AgentEnv')
 env = AgentEnv.Clone()
@@ -23,9 +21,7 @@ platform_dependent = 'nix/default_dns_list_builder.cc'
 
 # Metadata6  OS-dependent part
 metadata_platform_dependent =''
-if platform.system() == 'FreeBSD':
-    metadata_platform_dependent = 'nix/freebsd/metadata_ipv6_netlink.cc'
-elif platform.system() == 'Linux':
+if platform.system() == 'Linux':
     metadata_platform_dependent = 'nix/linux/metadata_ipv6_netlink.cc'
 
 libservices = env.Library('agent_services',

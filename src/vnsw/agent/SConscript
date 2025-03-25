@@ -3,9 +3,6 @@
 #
 
 import platform
-if platform.system() == 'Darwin':
-    Return()
-
 import os
 import shutil
 import subprocess
@@ -54,8 +51,6 @@ cpppath = [
 
 if platform.system() == 'Linux':
     cpppath.append('vnsw/agent/vrouter/ksync/linux')
-elif platform.system() == 'FreeBSD':
-    cpppath.append('vnsw/agent/vrouter/ksync/freebsd')
 
 env.Prepend(CPPPATH = AddTopDir(cpppath))
 
@@ -346,10 +341,9 @@ if hasattr(platform, 'dist'):
 else:
    distname = distro.id()
 
+# TODO: restore it for rocky
 if distname != 'rocky':
-   subdirs += [
-    'ovs_tor_agent',
-   ]
+    subdirs += ['ovs_tor_agent']
 
 AgentUveDocFiles = []
 AgentUveDocFiles += AgentEnv.SandeshGenDoc('uve/vrouter.sandesh')
@@ -408,77 +402,12 @@ for dir in subdirs:
 env.SConscript('contrail/SConscript', exports=['AgentEnv', 'BuildEnv'],
                duplicate=0)
 
-# TODO(md): Currently not supported on FreeBSD
-#if platform.system() != 'FreeBSD':
-#    env.SConscript('vxlan_agent/SConscript', exports=['AgentEnv', 'BuildEnv'],
-#                   duplicate=0)
-
 env.SConscript('test-xml/SConscript', exports=['AgentEnv', 'BuildEnv'],
                duplicate=0)
 
 ##########################################################################
 # Utility functions
 ##########################################################################
-#cflags = AgentEnv['CCFLAGS']
-#cflags.remove('-Wno-return-type')
-#AgentEnv.Replace(CCFLAGS = cflags)
-#Export('AgentEnv')
-
-def valgrind_run(target, source, env):
-    #execute tests with valgrind
-    ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
-
-    # Get test alias from agent-test test suite
-    for test in env.ans['agent-test'].sources:
-        cmd = test.sources[0].path
-        logfile = open(cmd + '.log', 'w')
-        valgrindfile = '--log-file=' + cmd + '.valgrind'
-        supp_file = '--suppressions=' + 'src/vnsw/agent/test/valgrind.supp'
-        print((cmd + ' logfile=' + cmd + '.log' + ' valgrind_file=' + cmd + '.valgrind '))
-        code = subprocess.call(['valgrind', '-v', '--track-origins=yes',
-                                '--leak-check=full', '--error-exitcode=1',
-                                '--show-reachable=yes', supp_file, valgrindfile,
-                                cmd], stdout=logfile, stderr=logfile, env=ShEnv)
-        if code == 0:
-            print((cmd + '\033[94m' + " PASS" + '\033[0m'))
-        else:
-            if code < 0:
-                logfile.write('Terminated by signal: ' + str(-code) + '\n')
-            print((cmd + '\033[91m' + " FAIL" + '\033[0m'))
-
-#test_valgrind = env.Command(Dir('test_valgrind'), '', valgrind_run)
-#env.Alias('agent:test_valgrind', test_valgrind)
-
-def code_coverage(target, source, env):
-    # rm -rf vnsw/agent/test_coverage
-    shutil.rmtree(target[0].path, ignore_errors = True)
-
-    # lcov --base-directory $ROOT -- directory . --zerocounters -q
-    os.system('lcov --base-directory . --directory ' + Dir('.').path +
-              ' --zerocounters -q')
-    # execute tests
-    ShEnv = {env['ENV_SHLIB_PATH']: 'build/lib'}
-
-    # Get test alias from agent-test test suite 
-    for test in env.ans['agent-test'].sources:
-        cmd = test.sources[0].path
-        print(cmd)
-        logfile = open(cmd + '.log', 'w')
-        subprocess.call([cmd], stdout=logfile, stderr=logfile, env=ShEnv)
-
-    # lcov --base-directory $ROOT -- directory . -c -o bgp_test.info
-    os.system('lcov --base-directory . --directory ' + Dir('.').path +
-              ' -c --ignore-errors gcov -o agent_test.info')
-
-    # genhtml -o bgp/test_coverage bgp_test.info
-    os.system('genhtml -o ' + target[0].path +
-              ' -t "test coverage" --num-spaces 4 agent_test.info')
-
-
-if env['OPT'] == 'coverage':
-    test_coverage = env.Command(Dir('test_coverage'), '', code_coverage)
-    env.AlwaysBuild(test_coverage)
-    env.Alias('agent:test_coverage', test_coverage)
 
 def run_ut(target, source, env):
     # execute tests
@@ -514,7 +443,6 @@ def run_ut(target, source, env):
             else:
                 logfile.write('Program returned ' + str(code) + '\n')
             print((cmd + '\033[91m' + " FAIL" + '\033[0m'))
-
 
 
 run_ut = env.Command(Dir('run_ut'), '', run_ut)
