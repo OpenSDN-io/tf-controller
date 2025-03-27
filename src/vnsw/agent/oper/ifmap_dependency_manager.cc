@@ -120,6 +120,7 @@ void IFMapDependencyManager::Initialize(Agent *agent) {
         "service-instance",
         "service-template",
         "subnet",
+        "sub-cluster",
         "tag",
         "virtual-ip",
         "virtual-machine",
@@ -1001,6 +1002,15 @@ void IFMapDependencyManager::InitializeDependencyRules(Agent *agent) {
                                 "firewall-rule", false));
     RegisterConfigHandler(this, "security-logging-object",
                           agent ? agent->slo_table() : NULL);
+
+    ////////////////////////////////////////////////////////////////////////
+    // VR <----> Subcluster <----> bgp-router
+    ////////////////////////////////////////////////////////////////////////
+    AddDependencyPath("virtual-router",
+                       MakePath("virtual-router-sub-cluster",
+                                "sub-cluster", true,
+                                "bgp-router-sub-cluster",
+                                "bgp-router", true));
 
     // Register callback for ifmap node not having corresponding oper-dbtable
     RegisterConfigHandler(this, "virtual-router", agent->oper_db()->vrouter());
