@@ -30,7 +30,7 @@ env.Depends(interface_port_bmap_pkg, interface_pkg)
 
 setup_sources = [
     'setup.py',
-    'requirements.txt'
+    'requirements.txt',
     'MANIFEST.in',
 ]
 
