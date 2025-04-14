@@ -50,9 +50,9 @@ class FloatingIpServer(ResourceMixin, FloatingIp):
         req_ip = obj_dict.get('floating_ip_address')
         if req_ip and cls.addr_mgmt.is_ip_allocated(req_ip, vn_fq_name):
             return False, (409, 'IP address already in use')
-        req_ip_version = 4
-        if req_ip and req_ip.find(':') > -1:
-            req_ip_version = 6
+        req_ip_version = None
+        if req_ip:
+            req_ip_version = 6 if ':' in req_ip else 4
         try:
             ok, result = cls.addr_mgmt.get_ip_free_args(vn_fq_name)
             if not ok:
