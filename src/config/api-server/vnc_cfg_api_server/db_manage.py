@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 
 import gevent
 import gevent.monkey
@@ -498,7 +499,8 @@ class DatabaseManager(object):
             logger=self.log,
             reset_config=False,
             ssl_enabled=self._api_args.cassandra_use_ssl,
-            ca_certs=self._api_args.cassandra_ca_certs)
+            ca_certs=self._api_args.cassandra_ca_certs,
+            zk_servers=self._api_args.zk_server_ip)
 
         # Get the system global autonomous system
         self.global_asn = self.get_autonomous_system()
@@ -913,8 +915,11 @@ class DatabaseManager(object):
                 raise FQNStaleIndexError(msg)
 
             ipam_method = network_ipam.get('prop:ipam_subnet_method')
-            if isinstance(ipam_method, str):
-                ipam_method = json.loads(ipam_method)
+            if isinstance(ipam_method, str) and ipam_method:
+                try:
+                    ipam_method = json.loads(ipam_method)
+                except:
+                    pass
 
             attr_dict = json.loads(attr_json_dict)['attr']
             zero_prefix = {u'ip_prefix': u'0.0.0.0',
@@ -1567,7 +1572,7 @@ class DatabaseChecker(DatabaseManager):
                 zk_client = kazoo.client.KazooClient(server)
                 zk_client.start()
                 self._logger.debug("Issuing 'stat' on %s: ", server)
-                stat_out = zk_client.command('stat')
+                stat_out = zk_client.command('stat'.encode())
                 self._logger.debug("Got: %s" % (stat_out))
                 zk_client.stop()
                 stats[server] = stat_out
@@ -1619,8 +1624,10 @@ class DatabaseChecker(DatabaseManager):
                 password=self.credentials.get('password'))
         for server in self._cassandra_servers:
             try:
+                s = server.split(':')
                 temp_cluster = cluster.Cluster(
-                    [server.split(':')[0]],
+                    contact_points=[s[0]],
+                    port=s[1],
                     auth_provider=auth_provider)
             except Exception as error:
                 raise CassandraConnectionError("error, {}: {}".format(
