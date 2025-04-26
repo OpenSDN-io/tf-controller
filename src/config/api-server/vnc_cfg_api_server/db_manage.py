@@ -945,6 +945,8 @@ class DatabaseManager(object):
                     finish='propl:ipam_subnets;')
                 for _, subnet_unicode in ipam_subnets:
                     sdict = subnet_unicode
+                    if isinstance(sdict, str):
+                        sdict = json.loads(sdict)
                     sdict.update([('ipam_method', ipam_method),
                                   ('nw_ipam_fq',
                                    network_ipam['fq_name'])])
