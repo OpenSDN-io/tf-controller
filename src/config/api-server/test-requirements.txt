@@ -6,3 +6,4 @@ kombu==4.0.2
 python-novaclient==16.0.0
 junitxml==0.7
 sseclient-py==1.7
+requests>=2.32.0 # not directly required, pinned by Snyk to avoid a vulnerability
