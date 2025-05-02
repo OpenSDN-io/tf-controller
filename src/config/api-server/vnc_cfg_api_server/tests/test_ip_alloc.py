@@ -488,7 +488,7 @@ class TestIpAlloc(test_case.ApiServerTestCase):
         vn.add_network_ipam(ipam, VnSubnetsType([]))
         # put a add method to add flag for ip allocation user-only
         self._vnc_lib.virtual_network_create(vn)
-        net_obj = self._vnc_lib.virtual_network_read(id = vn.uuid)
+        net_obj = self._vnc_lib.virtual_network_read(id=vn.uuid)
 
         # Create v4 Ip objects
         ipv4_obj1 = InstanceIp(name=str(uuid.uuid4()), instance_ip_family='v4',
@@ -1731,8 +1731,9 @@ class TestIpAlloc(test_case.ApiServerTestCase):
         # Change dns_server_address and free .2 address
         ipam1_sn_v4.set_dns_server_address('11.1.1.100')
         vn1._pending_field_updates.add('network_ipam_refs')
+        logger.debug('Updating vn1 with following settings: %s' % vn1.network_ipam_refs)
         self._vnc_lib.virtual_network_update(vn1)
-        net_obj = self._vnc_lib.virtual_network_read(id = vn1.uuid)
+        net_obj = self._vnc_lib.virtual_network_read(id=vn1.uuid)
 
         # Create v4 Ip object for 2nd VM
         ipv4_obj2 = InstanceIp(name=str(uuid.uuid4()), instance_ip_family='v4')
@@ -3702,6 +3703,7 @@ class TestIpAlloc(test_case.ApiServerTestCase):
                 ipam_sn_v4)
 
 #end class TestIpAlloc
+
 
 if __name__ == '__main__':
     ch = logging.StreamHandler()

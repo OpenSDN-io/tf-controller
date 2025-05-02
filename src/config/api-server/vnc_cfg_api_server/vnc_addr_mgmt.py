@@ -1385,6 +1385,117 @@ class AddrMgmt(object):
         return True, ""
     # end _check_subnet_delete
 
+    # check if any ip address from given subnet sets is used in
+    # in given virtual network and exist in a new subnet, this includes instance_ip, fip and
+    # alias_ip
+    def _check_subnet_update(self, subnets_set, vn_dict):
+        db_conn = self._get_db_conn()
+        instip_refs = vn_dict.get('instance_ip_back_refs') or []
+        for ref in instip_refs:
+            try:
+                (ok, result) = db_conn.dbe_read('instance_ip', ref['uuid'])
+            except cfgm_common.exceptions.NoIdError:
+                continue
+            if not ok:
+                self.config_log(
+                    "Error in subnet update instance-ip check: %s" % (result),
+                    level=SandeshLevel.SYS_ERR)
+                return False, result
+
+            inst_ip = result.get('instance_ip_address')
+            if not inst_ip:
+                self.config_log(
+                    "Error in subnet update ip null: %s" % (ref['uuid']),
+                    level=SandeshLevel.SYS_ERR)
+                continue
+            if not all_matching_cidrs(inst_ip, subnets_set):
+                return (False,
+                        "Cannot update IP Block, IP(%s) is not in subnets (%s)"
+                        % (inst_ip, subnets_set))
+
+        fip_pool_refs = vn_dict.get('floating_ip_pools') or []
+        for ref in fip_pool_refs:
+            try:
+                (ok, result) = db_conn.dbe_read('floating_ip_pool', ref['uuid'])
+            except cfgm_common.exceptions.NoIdError:
+                continue
+            if not ok:
+                self.config_log(
+                    "Error in subnet update floating-ip-pool check: %s"
+                    % (result),
+                    level=SandeshLevel.SYS_ERR)
+                return False, result
+
+            floating_ips = result.get('floating_ips') or []
+            for floating_ip in floating_ips:
+                try:
+                    (read_ok, read_result) = db_conn.dbe_read(
+                        'floating_ip', floating_ip['uuid'])
+                except cfgm_common.exceptions.NoIdError:
+                    continue
+                if not read_ok:
+                    self.config_log(
+                        "Error in subnet update floating-ip check: %s"
+                        % (read_result),
+                        level=SandeshLevel.SYS_ERR)
+                    return False, result
+
+                fip_addr = read_result.get('floating_ip_address')
+                if not fip_addr:
+                    self.config_log(
+                        "Error in subnet update fip null: %s"
+                        % (floating_ip['uuid']),
+                        level=SandeshLevel.SYS_ERR)
+                    continue
+                if not all_matching_cidrs(fip_addr, subnets_set):
+                    return (False,
+                            "Cannot update IP Block, Floating IP(%s) is not in subnets (%s)"
+                            % (fip_addr, subnets_set))
+        # TODO Check that new network in allocation pool, if allocation pool exist
+        aip_pool_refs = vn_dict.get('alias_ip_pools') or []
+        for ref in aip_pool_refs:
+            try:
+                (ok, result) = db_conn.dbe_read('alias_ip_pool', ref['uuid'])
+            except cfgm_common.exceptions.NoIdError:
+                continue
+            if not ok:
+                self.config_log(
+                    "Error in subnet update alias-ip-pool check: %s"
+                    % (result),
+                    level=SandeshLevel.SYS_ERR)
+                return False, result
+
+            alias_ips = result.get('alias_ips') or []
+            for alias_ip in alias_ips:
+                # get alias_ip_address and this should be in
+                # new subnet_list
+                try:
+                    (read_ok, read_result) = db_conn.dbe_read(
+                        'alias_ip', floating_ip['uuid'])
+                except cfgm_common.exceptions.NoIdError:
+                    continue
+                if not read_ok:
+                    self.config_log(
+                        "Error in subnet delete floating-ip check: %s"
+                        % (read_result),
+                        level=SandeshLevel.SYS_ERR)
+                    return False, result
+
+                aip_addr = read_result.get('alias_ip_address')
+                if not aip_addr:
+                    self.config_log(
+                        "Error in subnet delete aip null: %s"
+                        % (alias_ip['uuid']),
+                        level=SandeshLevel.SYS_ERR)
+                    continue
+                if not all_matching_cidrs(aip_addr, subnets_set):
+                    return (False,
+                            "Cannot update IP Block, Floating Alias IP(%s) is not in subnets (%s)"
+                            % (aip_addr, subnets_set))
+
+        return True, ""
+    # end _check_subnet_update
+
     # check subnets associated with a ipam, return error if
     # any subnet is being deleted and has backref to
     # instance-ip/floating-ip/alias-ip
@@ -1454,7 +1565,9 @@ class AddrMgmt(object):
         if not delete_set:
             return True, ""
 
-        return self._check_subnet_delete(delete_set, db_vn_dict)
+        # return self._check_subnet_delete(delete_set, db_vn_dict)
+        return self._check_subnet_update(requested_subnets, db_vn_dict)
+
     # end net_check_subnet_delete
 
     # validate any change in subnet and reject if

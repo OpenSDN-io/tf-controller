@@ -4,6 +4,7 @@
 import copy
 import uuid
 
+
 from cfgm_common import get_bgp_rtgt_max_id
 from cfgm_common import get_bgp_rtgt_min_id
 from cfgm_common import LINK_LOCAL_VN_FQ_NAME
@@ -11,6 +12,8 @@ from cfgm_common import PERMS_NONE, PERMS_RWX, PERMS_RX
 from cfgm_common.exceptions import HttpError
 from cfgm_common.exceptions import NoIdError
 from cfgm_common.exceptions import ResourceExistsError
+from cfgm_common.utils import _DEFAULT_ZK_LOCK_TIMEOUT
+from kazoo.exceptions import LockTimeout, NodeExistsError
 from netaddr import IPAddress, IPNetwork, valid_ipv4
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from vnc_api.gen.resource_common import RoutingInstance
@@ -894,17 +897,21 @@ class VirtualNetworkServer(ResourceMixin, VirtualNetwork):
             if not ok:
                 return (False, (409, error))
         try:
+            instip_refs = read_result.get('instance_ip_back_refs') or []
+            zk_entry_prefix = fq_name[:]
+            if ipam_refs:
+                cls._update_subnet_iip_refs(instip_refs=instip_refs,
+                                            zk_entry_prefix=zk_entry_prefix,
+                                            network_ipam_refs=ipam_refs,
+                                            db_conn=db_conn,
+                                            vn_uuid=obj_dict['uuid'])
             cls.addr_mgmt.net_update_req(fq_name, read_result, obj_dict, id)
-            # update link with a subnet_uuid if ipam in read_result or obj_dict
-            # does not have it already
             for ipam in ipam_refs:
                 ipam_fq_name = ipam['to']
                 ipam_uuid = db_conn.fq_name_to_uuid('network_ipam',
                                                     ipam_fq_name)
-                (ok, ipam_dict) = db_conn.dbe_read(
-                    obj_type='network_ipam',
-                    obj_id=ipam_uuid,
-                    obj_fields=['ipam_subnet_method'])
+                (ok, ipam_dict) = db_conn.dbe_read(obj_type='network_ipam',
+                                                   obj_id=ipam_uuid)
                 if not ok:
                     return (ok, (409, ipam_dict))
 
@@ -934,6 +941,96 @@ class VirtualNetworkServer(ResourceMixin, VirtualNetwork):
             'deallocated_vxlan_network_identifier':
                 deallocated_vxlan_network_identifier,
         }
+
+    @classmethod
+    def _update_subnet_iip_refs(cls, instip_refs, zk_entry_prefix,
+                                network_ipam_refs, db_conn, vn_uuid):
+
+        for ref in instip_refs:
+            zk_prefix = zk_entry_prefix[:]
+            try:
+                (ok, result) = db_conn.dbe_read('instance_ip',
+                                                ref['uuid'])
+            except NoIdError:
+                continue
+            inst_ip = result.get('instance_ip_address')
+            for ipam in network_ipam_refs:
+                for subnet in ipam['attr']['ipam_subnets']:
+                    ip_prefix = subnet['subnet']['ip_prefix']
+                    ip_prefix_len = str(subnet['subnet']['ip_prefix_len'])
+                    if IPAddress(inst_ip) in IPNetwork("/".join(
+                            [ip_prefix,
+                             ip_prefix_len]
+                    )
+                    ):
+                        new_subnet_id = subnet['subnet_uuid']
+                        ip_str = "%(#)010d" % {'#': int(IPAddress(
+                            inst_ip))
+                        }
+                        zk_prefix.append(ip_prefix)
+                        zk_entry_prefix_str = ":".join(zk_prefix)
+                        zk_entry_full = "/".join(
+                            [cls.vnc_zk_client._subnet_path,
+                             zk_entry_prefix_str,
+                             ip_prefix_len,
+                             ip_str]
+                        )
+                        result['subnet_uuid'] = new_subnet_id
+                        ok, result = db_conn.dbe_update(
+                            'instance_ip',
+                            ref['uuid'],
+                            result
+                        )
+                        if not ok:
+                            return (ok, (409, result))
+                        msg = "Creating zk path %s %s" % (zk_entry_full,
+                                                          inst_ip)
+                        cls.addr_mgmt.config_log(
+                            msg,
+                            level=SandeshLevel.SYS_ERR
+                        )
+                        zk = cls.vnc_zk_client._zk_client
+                        vn_lock_prefix = '%s/vnc_api_server_locks/' \
+                                         'virtual_network/%s' % \
+                                         (zk.host_ip, vn_uuid)
+                        zk_client = cls.vnc_zk_client._zk_client._zk_client
+                        lock = zk.lock(vn_lock_prefix)
+                        try:
+                            lock.acquire(timeout=_DEFAULT_ZK_LOCK_TIMEOUT)
+                            cls.addr_mgmt.config_log(
+                                "ZK Lock acquired"
+                                " for %s" % _DEFAULT_ZK_LOCK_TIMEOUT,
+                                level=SandeshLevel.SYS_DEBUG)
+                            try:
+                                zk_client.create(zk_entry_full,
+                                                 ref['uuid'].encode(),
+                                                 makepath=True
+                                                 )
+                            except (NodeExistsError, ResourceExistsError):
+                                iip_uuid = zk_client.get(zk_entry_full)[0]
+                                zk_path_exist = "Creating zk path" \
+                                                ": %s (%s)." \
+                                                " Addr lock already" \
+                                                " exists for IIP %s" %\
+                                                (zk_entry_full, inst_ip,
+                                                 iip_uuid)
+                                cls.addr_mgmt.config_log(
+                                    zk_path_exist,
+                                    level=SandeshLevel.SYS_ERR
+                                )
+                                pass
+                        except LockTimeout:
+                            cls.addr_mgmt.config_log(
+                                "ZK Lock timeout raised",
+                                level=SandeshLevel.SYS_ERR
+                            )
+                        finally:
+                            lock.release()
+                            cls.addr_mgmt.config_log(
+                                "ZK Lock released",
+                                level=SandeshLevel.SYS_DEBUG
+                            )
+        return
 
     @classmethod
     def post_dbe_update(cls, id, fq_name, obj_dict, db_conn, **kwargs):
