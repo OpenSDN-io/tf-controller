@@ -154,7 +154,7 @@ class ServiceInstanceCmd(object):
         if st_prop.get_image_name():
             # check if image exists
             try:
-                self._nova.images.find(name=st_prop.get_image_name())
+                self._nova.glance.find_image(name_or_id=st_prop.get_image_name())
             except nc_exc.NotFound:
                 print("Error: Image %s not found" % (st_prop.get_image_name()))
                 return

@@ -102,7 +102,7 @@ class VirtualMachineManagerTest(unittest.TestCase):
             intf_list=['', 'left-vn', 'right-vn'])
 
         def nova_oper(resource, oper, proj_name, **kwargs):
-            if resource == 'images' and oper == 'find':
+            if resource == 'glance' and oper == 'find_image':
                 return None
             else:
                 return mock.MagicMock()

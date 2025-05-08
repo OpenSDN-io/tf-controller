@@ -79,10 +79,10 @@ class FakeNovaClient(object):
             return 1
     # end class flavors
 
-    class images(object):
+    class glance(object):
 
         @staticmethod
-        def find(name):
+        def find_image(name_or_id):
             return 1
     # end class images
 

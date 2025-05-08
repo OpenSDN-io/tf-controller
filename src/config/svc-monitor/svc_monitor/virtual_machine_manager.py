@@ -41,7 +41,7 @@ class VirtualMachineManager(InstanceManager):
             return None
 
         try:
-            image = self._nc.oper('images', 'find', proj_name, name=si.image)
+            image = self._nc.oper('glance', 'find_image', proj_name, name_or_id=si.image)
         except nc_exc.NotFound:
             image = None
         if not image:
