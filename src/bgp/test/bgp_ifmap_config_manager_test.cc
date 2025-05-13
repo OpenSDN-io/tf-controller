@@ -372,6 +372,8 @@ static void ValidateShowGlobalSystemResponse(
                       resp_global.get_bgpaas_port_start());
             EXPECT_EQ(global.get_bgpaas_port_end(),
                       resp_global.get_bgpaas_port_end());
+            EXPECT_EQ(global.get_all_tags_are_global(),
+                      resp_global.get_all_tags_are_global());
             continue;
         }
         EXPECT_TRUE(found);
@@ -1732,6 +1734,7 @@ TEST_F(BgpIfmapConfigManagerShowTest, ShowGlobalSystemConfig) {
     sbgc.set_rd_cluster_seed(bgsc->rd_cluster_seed());
     sbgc.set_bgpaas_port_start(bgsc->bgpaas_port_start());
     sbgc.set_bgpaas_port_end(bgsc->bgpaas_port_end());
+    sbgc.set_all_tags_are_global(bgsc->all_tags_are_global());
     show_list.push_back(sbgc);
 
     bool validate_done = false;

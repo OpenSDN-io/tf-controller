@@ -145,6 +145,13 @@ public:
               new_config->xmpp_hold_time());
         }
 
+        // Process a change in all-tags-are-global knob.
+        if (server_->global_config()->all_tags_are_global() !=
+            new_config->all_tags_are_global()) {
+          server_->global_config()->set_all_tags_are_global(
+              new_config->all_tags_are_global());
+        }
+
         bool clear_bgpaas_peers = false;
 
         // Clear bgpaas peers if there's a change in bgpaas-port-start.

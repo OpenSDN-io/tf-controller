@@ -748,6 +748,18 @@ bool BgpConfigParser::ParseGlobalSystemConfig(const xml_node &node,
                     "bgp-always-compare-med", requests);
             }
         }
+        if (strcmp(child.name(), "bgp-all-tags-are-global") == 0) {
+            unique_ptr<autogen::GlobalSystemConfig::OolProperty> property(
+                new autogen::GlobalSystemConfig::OolProperty);
+            property->data = (string(child.child_value()) == "true");
+            if (add_change) {
+                MapObjectSetProperty("global-system-config", "",
+                    "bgp-all-tags-are-global", property.release(), requests);
+            } else {
+                MapObjectClearProperty("global-system-config", "",
+                    "bgp-all-tags-are-global", requests);
+            }
+        }
         if (strcmp(child.name(), "enable-4byte-as") == 0) {
             unique_ptr<autogen::GlobalSystemConfig::OolProperty> property(
                 new autogen::GlobalSystemConfig::OolProperty);

@@ -616,7 +616,8 @@ public:
             nh_check_enabled_(false),
             always_compare_med_(false),
             rd_cluster_seed_(0),
-            xmpp_hold_time_(90) {
+            xmpp_hold_time_(90),
+            all_tags_are_global_(false) {
     }
     ~BgpGlobalSystemConfig() { }
 
@@ -672,6 +673,10 @@ public:
     void set_bgpaas_port_end(uint16_t bgpaas_port_end) {
         bgpaas_port_end_ = bgpaas_port_end;
     }
+    bool all_tags_are_global() const { return all_tags_are_global_; }
+    void set_all_tags_are_global(bool all_tags_are_global) {
+        all_tags_are_global_ = all_tags_are_global;
+    }
 private:
     mutable uint64_t last_change_at_;
     uint16_t gr_time_;
@@ -688,6 +693,7 @@ private:
     bool always_compare_med_;
     uint16_t rd_cluster_seed_;
     uint8_t xmpp_hold_time_;
+    bool all_tags_are_global_;
 
     DISALLOW_COPY_AND_ASSIGN(BgpGlobalSystemConfig);
 };

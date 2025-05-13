@@ -2112,6 +2112,11 @@ bool BgpIfmapGlobalSystemConfig::Update(BgpIfmapConfigManager *manager,
         changed |= true;
     }
 
+    if (data_.all_tags_are_global() != system->bgp_all_tags_are_global()) {
+        data_.set_all_tags_are_global(system->bgp_all_tags_are_global());
+        changed |= true;
+    }
+
     return changed;
 }
 

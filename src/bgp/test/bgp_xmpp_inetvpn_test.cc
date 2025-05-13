@@ -301,6 +301,47 @@ static const char *config_2_control_nodes_different_asn = "\
 </config>\
 ";
 
+static const char *config_2_control_nodes_different_asn_all_tags_are_global = "\
+<config>\
+    <global-system-config>\
+        <bgp-all-tags-are-global>true</bgp-all-tags-are-global>\
+    </global-system-config>\
+    <bgp-router name=\'X\'>\
+        <autonomous-system>64511</autonomous-system>\
+        <identifier>192.168.0.1</identifier>\
+        <address>127.0.0.1</address>\
+        <port>%d</port>\
+        <router-type>external-control-node</router-type>\
+        <session to=\'Y\'>\
+            <address-families>\
+                <family>route-target</family>\
+                <family>inet-vpn</family>\
+            </address-families>\
+        </session>\
+    </bgp-router>\
+    <bgp-router name=\'Y\'>\
+        <autonomous-system>64512</autonomous-system>\
+        <identifier>192.168.0.2</identifier>\
+        <address>127.0.0.2</address>\
+        <port>%d</port>\
+        <router-type>external-control-node</router-type>\
+        <session to=\'X\'>\
+            <address-families>\
+                <family>route-target</family>\
+                <family>inet-vpn</family>\
+            </address-families>\
+        </session>\
+    </bgp-router>\
+    <virtual-network name='blue'>\
+        <network-id>1</network-id>\
+    </virtual-network>\
+    <routing-instance name='blue'>\
+        <virtual-network>blue</virtual-network>\
+        <vrf-target>target:1:1</vrf-target>\
+    </routing-instance>\
+</config>\
+";
+
 static const char *config_2_control_nodes_route_aggregate = "\
 <config>\
     <bgp-router name=\'X\'>\
@@ -3908,6 +3949,58 @@ TEST_F(BgpXmppInetvpn2ControlNodeTest, TagListDifferentAsn) {
        agent_a_, "blue", route_a.str(), "192.168.1.1", vector<int>(), tag_list);
     VerifyRouteExists(agent_b_, "blue", route_a.str(),
                       "192.168.1.1", vector<int>(), global_tags);
+
+    // Delete route from agent A.
+    agent_a_->DeleteRoute("blue", route_a.str());
+    task_util::WaitForIdle();
+
+    // Verify that route is deleted at agents A and B.
+    VerifyRouteNoExists(agent_a_, "blue", route_a.str());
+    VerifyRouteNoExists(agent_b_, "blue", route_a.str());
+
+    // Close the sessions.
+    agent_a_->SessionDown();
+    agent_b_->SessionDown();
+}
+
+TEST_F(BgpXmppInetvpn2ControlNodeTest, TagListDifferentAsnAllTagsAreGlobal) {
+    Configure(config_2_control_nodes_different_asn_all_tags_are_global);
+    task_util::WaitForIdle();
+
+    // Create XMPP Agent A connected to XMPP server X.
+    agent_a_.reset(
+        new test::NetworkAgentMock(&evm_, "agent-a", xs_x_->GetPort(),
+            "127.0.0.1", "127.0.0.1"));
+    TASK_UTIL_EXPECT_TRUE(agent_a_->IsEstablished());
+
+    // Create XMPP Agent B connected to XMPP server Y.
+    agent_b_.reset(
+        new test::NetworkAgentMock(&evm_, "agent-b", xs_y_->GetPort(),
+            "127.0.0.2", "127.0.0.2"));
+    TASK_UTIL_EXPECT_TRUE(agent_b_->IsEstablished());
+
+    // Register to blue instance
+    agent_a_->Subscribe("blue", 1);
+    agent_b_->Subscribe("blue", 1);
+
+    // Add route from agent A.
+    stringstream route_a;
+    route_a << "10.1.1.1/32";
+    vector<int> tag_list = list_of
+        (Tag::kMinGlobalId - 1)(Tag::kMinGlobalId + 1)
+        (Tag::kMinGlobalId - 2)(Tag::kMinGlobalId + 2);
+    test::NextHop next_hop("192.168.1.1", 0, tag_list);
+    agent_a_->AddRoute("blue", route_a.str(), next_hop, 100);
+    task_util::WaitForIdle();
+
+    // Verify that route showed up on agents A and B with both local and global tags.
+    sort(tag_list.begin(), tag_list.end());
+
+    // Verify that route showed up on agents A and B.
+    VerifyRouteExists(
+       agent_a_, "blue", route_a.str(), "192.168.1.1", vector<int>(), tag_list);
+    VerifyRouteExists(
+       agent_b_, "blue", route_a.str(), "192.168.1.1", vector<int>(), tag_list);
 
     // Delete route from agent A.
     agent_a_->DeleteRoute("blue", route_a.str());

@@ -35,8 +35,9 @@ RibOutAttr::NextHop::NextHop(const BgpTable *table, IpAddress address,
       origin_vn_index_(-1) {
     if (ext_community) {
         as_t asn = table ? table->server()->autonomous_system() : 0;
+        bool all = table ? table->server()->global_config()->all_tags_are_global() : false;
         encap_ = ext_community->GetTunnelEncap();
-        tag_list_ = ext_community->GetTag4List(asn);
+        tag_list_ = ext_community->GetTag4List(all ? 0 : asn);
         origin_vn_index_ = ext_community->GetOriginVnIndex();
     }
     if (origin_vn_index_ < 0 && vrf_originated) {
