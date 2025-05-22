@@ -627,13 +627,15 @@ class VirtualNetworkST(ResourceBaseST):
         # find the missing RI->RT ref and add to the rt_add_* list
         ri = self.get_primary_routing_instance()
         if ri:
-            for rt in old_rt_list | old_bgpvpn_rt_list:
+            for rt in (old_rt_list | old_bgpvpn_rt_list) - rt_del:
                 if rt not in ri.route_targets:
                     rt_add.add(rt)
-            for rt in old_import_rt_list | old_bgpvpn_import_rt_list:
+            for rt in ((old_import_rt_list | old_bgpvpn_import_rt_list) -
+                       rt_del):
                 if rt not in ri.route_targets:
                     rt_add_import.add(rt)
-            for rt in old_export_rt_list | old_bgpvpn_export_rt_list:
+            for rt in ((old_export_rt_list | old_bgpvpn_export_rt_list) -
+                       rt_del):
                 if rt not in ri.route_targets:
                     rt_add_export.add(rt)
 
