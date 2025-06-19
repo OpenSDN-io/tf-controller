@@ -478,6 +478,8 @@ bool RoutePathReplicator::RouteListener(TableState *ts,
     bool route_unchanged = false;
     //List of tables that needs replication of route
     RtGroup::RtGroupMemberList addedTables;
+    //List of tables that doesn't need replication of route
+    RtGroup::RtGroupMemberList deletedTables;
     //List of tables having the latest changes in route
     RtGroup::RtGroupMemberList previousTables;
     //Threshold used for optimised replication
@@ -612,6 +614,15 @@ bool RoutePathReplicator::RouteListener(TableState *ts,
             std::set_difference(secondary_tables.begin(), secondary_tables.end(),
                                 previousTables.begin(), previousTables.end(),
                                 std::inserter(addedTables, addedTables.end()));
+            std::set_difference(previousTables.begin(), previousTables.end(),
+                                secondary_tables.begin(), secondary_tables.end(),
+                                std::inserter(deletedTables, deletedTables.end()));
+            BOOST_FOREACH (RtReplicated::SecondaryRouteInfo path,
+                       dbstate->GetList()){
+                if (deletedTables.find(path.table_)!=deletedTables.end()) {
+                    replicated_path_list.erase(path);
+                }
+            }
 	    //Updating the secondary tables with the difference.
             secondary_tables = addedTables;
 
