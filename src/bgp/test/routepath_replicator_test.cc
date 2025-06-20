@@ -2848,6 +2848,9 @@ TEST_F(ReplicationTest, AddDeleteNetworkOptimization) {
                                     "routing-instance", "red",
                                     "connection");
     task_util::WaitForIdle();
+    VERIFY_EQ(1, RouteCount("blue"));
+    VERIFY_EQ(0, RouteCount("red"));
+    VERIFY_EQ(1, RouteCount("green"));
 
     DeleteVPNRoute(peers_[0], "192.2.0.1:1:10.0.1.1/32");
     task_util::WaitForIdle();
