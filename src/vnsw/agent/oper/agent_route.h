@@ -278,6 +278,8 @@ public:
     void set_intf_route_type(const std::string &intf_route_type) {
         intf_route_type_ = intf_route_type;
     }
+    const std::string &origin_vn_name() const {return origin_vn_name_; };
+    void set_origin_vn_name(const std::string &origin_vn_name) { origin_vn_name_ = origin_vn_name; };
 
     AgentPath *FindLocalPath() const;
     AgentPath *FindLocalVmPortPath() const;
@@ -351,6 +353,7 @@ private:
     // (ex. subnet multicast). Flag to specify if this is multicast route
     bool is_multicast_;
     std::string intf_route_type_;
+    std::string origin_vn_name_;
     AgentRouteTable *dependent_route_table_;
     DEPENDENCY_LIST(AgentRoute, AgentRoute, dependant_routes_);
     DEPENDENCY_LIST(NextHop, AgentRoute, tunnel_nh_list_);

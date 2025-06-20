@@ -269,6 +269,13 @@ void VxlanRoutingManager::WhenBridgeInetIntfWasDeleted(
 
     bool ok_to_delete = inet_rt->IsDeleted() ||
         evpn_rt->FindPath(routing_vrf_interface_peer_);
+
+    if ((ok_to_delete) && (!inet_rt->origin_vn_name().empty()) &&
+        (inet_rt->origin_vn_name()!=inet_rt->vrf()->vn()->GetName()) &&
+        (inet_rt->origin_vn_name()!=routing_vrf->vn()->GetName())) {
+        return;
+    }
+
     if (ok_to_delete) {
         // Delete EVPN Type 5 record in the routing VRF
         EvpnAgentRouteTable::DeleteReq(
