@@ -164,7 +164,7 @@ void DecodeSandeshMessages(char *buf, uint32_t buf_len, SandeshContext *sandesh_
 /////////////////////////////////////////////////////////////////////////////
 KSyncSock::KSyncSock() :
     nl_client_(NULL), wait_tree_(), send_queue_(this),
-    max_bulk_msg_count_(kMaxBulkMsgCount), max_bulk_buf_size_(kMaxBulkMsgSize),
+    max_bulk_msg_count_(kMaxBulkMsgCount),
     bulk_seq_no_(kInvalidBulkSeqNo), bulk_buf_size_(0), bulk_msg_count_(0),
     rx_buff_(NULL), read_inline_(true), bulk_msg_context_(NULL),
     use_wait_tree_(true), process_data_inline_(false),
@@ -592,9 +592,6 @@ KSyncBulkMsgContext *KSyncSock::LocateBulkContext
 //  - false : if message cannot be added to bulk context
 bool KSyncSock::TryAddToBulk(KSyncBulkMsgContext *bulk_message_context,
                              IoContext *ioc) {
-    if ((bulk_buf_size_ + ioc->GetMsgLen()) >= max_bulk_buf_size_)
-        return false;
-
     if (bulk_msg_count_ >= max_bulk_msg_count_)
         return false;
 

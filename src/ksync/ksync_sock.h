@@ -317,8 +317,6 @@ public:
 
     // Number of messages that can be bunched together
     const static unsigned kMaxBulkMsgCount = 16;
-    // Max size of buffer that can be bunched together
-    const static unsigned kMaxBulkMsgSize = (4*1024);
     // Sequence number to denote invalid builk-context
     const static unsigned kInvalidBulkSeqNo = 0xFFFFFFFF;
 

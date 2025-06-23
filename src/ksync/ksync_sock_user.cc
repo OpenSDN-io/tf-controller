@@ -555,37 +555,36 @@ bool KSyncSockTypeMap::Validate(char *data) {
     }
     return true;
 }
-static int IoVectorToData(char *data, uint32_t len, KSyncBufferList *iovec) {
+
+static void IoVectorToData(std::string& data, KSyncBufferList *iovec) {
     KSyncBufferList::iterator it = iovec->begin();
-    int offset = 0;
     while (it != iovec->end()) {
         unsigned char *buf = boost::asio::buffer_cast<unsigned char *>(*it);
-        assert((offset + boost::asio::buffer_size(*it)) < len);
-        memcpy(data + offset, buf, boost::asio::buffer_size(*it));
-        offset +=  boost::asio::buffer_size(*it);
+        int buffer_size = boost::asio::buffer_size(*it);
+        data.append(reinterpret_cast<const char*>(buf), buffer_size);
         it++;
     }
-    return offset;
 }
 
 //send or store in map
 void KSyncSockTypeMap::AsyncSendTo(KSyncBufferList *iovec, uint32_t seq_no,
                                    HandlerCb cb) {
-    char data[4096];
-    int data_len = IoVectorToData(data, 4096, iovec);
+    std::string data = "";
+    IoVectorToData(data, iovec);
 
     KSyncUserSockContext ctx(seq_no);
     //parse and store info in map [done in Process() callbacks]
-    ProcessSandesh((const uint8_t *)(data), data_len, &ctx);
+    ProcessSandesh((const uint8_t *)(data.c_str()), data.size(), &ctx);
 }
 
 //send or store in map
 std::size_t KSyncSockTypeMap::SendTo(KSyncBufferList *iovec, uint32_t seq_no) {
-    char data[4096];
-    int data_len = IoVectorToData(data, 4096, iovec);
+    std::string data = "";
+    IoVectorToData(data, iovec);
+
     KSyncUserSockContext ctx(seq_no);
     //parse and store info in map [done in Process() callbacks]
-    ProcessSandesh((const uint8_t *)(data), data_len, &ctx);
+    ProcessSandesh((const uint8_t *)(data.c_str()), data.size(), &ctx);
     return 0;
 }
 
