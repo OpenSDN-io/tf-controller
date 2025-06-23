@@ -1030,6 +1030,62 @@ TEST_F(CfgTest, flat_subnet_config) {
     WAIT_FOR(1000, 1000, (VrfFind("vrf1") == false));
 }
 
+TEST_F(CfgTest, Change_vxlan_network_identifier) {
+   using boost::uuids::nil_uuid;
+    struct PortInfo input1[] = {
+        {"vnet1", 1, "1.1.1.10", "00:00:01:01:01:10", 1, 1},
+    };
+    IpamInfo ipam_info_1[] = {
+        {"1.1.1.0", 24, "1.1.1.254", true},
+    };
+    client->Reset();
+
+    // Bridge vrf
+    AddIPAM("vn1", ipam_info_1, 1);
+
+    CreateVmportEnv(input1, 1);
+
+    AddLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+            "instance_ip_1", 1);
+
+    // const char *routing_vrf_name = "l3evpn_1";
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmInterfaceGet(1)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(91)->logical_router_uuid() != nil_uuid());
+
+    VnEntry *vn = VnGet(101);
+    EXPECT_TRUE(vn->GetVxLanId() == 201);
+
+    std::stringstream str;
+
+    client->WaitForIdle();
+
+    EXPECT_TRUE(vn->vxlan_routing_vn() == true);
+
+    ModifyVxlanIdVn("l3evpn_1", 101, 54213);
+    client->WaitForIdle();
+    EXPECT_TRUE(vn->GetVxLanId() == 54213);
+
+    ModifyVxlanIdVn("l3evpn_1", 101, 5421);
+    client->WaitForIdle();
+    EXPECT_TRUE(vn->GetVxLanId() == 5421);
+
+    DelLrBridgeVrf("vn1", 1);
+    DelLrRoutingVrf(1);
+    DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+            "instance_ip_1", 1);
+    DeleteVmportEnv(input1, 1, true);
+    DelIPAM("vn1");
+
+    client->WaitForIdle();
+    DelEncapList();
+    client->WaitForIdle();
+    client->WaitForIdle();
+}
+
 int main(int argc, char **argv) {
     GETUSERARGS();
 

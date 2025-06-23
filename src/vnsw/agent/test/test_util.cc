@@ -2288,6 +2288,21 @@ void ModifyForwardingModeVn(const string &name, int id, const string &fw_mode) {
     AddNode("virtual-network", name.c_str(), id, str.str().c_str());
 }
 
+void ModifyVxlanIdVn(const string &name, int id, int vxlan_id) {
+    std::stringstream str;
+    str << "<virtual-network-properties>" << endl;
+    str << "    <network-id>" << 0 << "</network-id>" << endl;
+    str << "    <vxlan-network-identifier>" << vxlan_id << "</vxlan-network-identifier>" << endl;
+    str << "    <forwarding-mode>" << "l3" << "</forwarding-mode>" << endl;
+    str << "</virtual-network-properties>" << endl;
+    str << "<virtual-network-network-id>" << id << "</virtual-network-network-id>" << endl;
+    str << "<mac-ip-learning-enable>"
+        << "false"
+        << "</mac-ip-learning-enable>";
+
+    AddNode("virtual-network", name.c_str(), id, str.str().c_str());
+}
+
 void ModifyMirrorDestinationVn(const string &name, int id, const string &mirror_dest) {
     std::stringstream str;
     str << "<virtual-network-properties>" << endl;

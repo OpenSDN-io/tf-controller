@@ -212,7 +212,7 @@ bool VnEntry::ChangeHandler(Agent *agent, const DBRequest *req) {
     if (vxlan_id_ != data->vxlan_id_) {
         vxlan_id_ = data->vxlan_id_;
         ret = true;
-        if (agent->vxlan_network_identifier_mode() == Agent::CONFIGURED) {
+        if ((agent->vxlan_network_identifier_mode() == Agent::CONFIGURED)  || vxlan_routing_vn_ ) {
             rebake_vxlan = true;
         }
     }
