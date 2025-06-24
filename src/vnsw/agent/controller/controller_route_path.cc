@@ -355,6 +355,7 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
     }
     if (intf_exist) {
         comp_nh_policy = true;
+        composite_nh_type = Composite::LOCAL_ECMP;
     }
 
     tunnel_bmap_ = encap;
