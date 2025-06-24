@@ -426,7 +426,7 @@ bool VxlanRoutingManager::LeakRoutesIntoBridgeTables
             DBRequest nh_req(DBRequest::DB_ENTRY_ADD_CHANGE);
             nh_req.key.reset(new VrfNHKey(routing_vrf->GetName(), false, false));
             nh_req.data.reset(new VrfNHData(false, false, false));
-            inet_table->AddEvpnRoutingRoute(evpn_rt->prefix_address(),
+            inet_table->AddEvpnRoutingRouteReq(evpn_rt->prefix_address(),
                                     evpn_rt->prefix_length(),
                                     bridge_vrf,
                                     agent_->evpn_routing_peer(),

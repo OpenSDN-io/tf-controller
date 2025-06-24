@@ -433,6 +433,20 @@ public:
                              uint32_t vxlan_id,
                              const VnListType& vn_list,
                              const std::string& origin_vn = "");
+    void AddEvpnRoutingRouteReq(const IpAddress &ip_addr,
+                             uint8_t plen,
+                             const VrfEntry *vrf,
+                             const Peer *peer,
+                             const SecurityGroupList &sg_list,
+                             const CommunityList &communities,
+                             const PathPreference &path_preference,
+                             const EcmpLoadBalance &ecmp_load_balance,
+                             const TagList &tag_list,
+                             DBRequest &nh_req,
+                             uint32_t vxlan_id,
+                             const VnListType& vn_list,
+                             const std::string& origin_vn = "");
+
 
 private:
     Agent::RouteTableType type_;

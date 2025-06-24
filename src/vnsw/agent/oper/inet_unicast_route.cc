@@ -1991,3 +1991,35 @@ void InetUnicastAgentRouteTable::AddEvpnRoutingRoute(const IpAddress &ip_addr,
     Process(req);
 }
 
+void InetUnicastAgentRouteTable::AddEvpnRoutingRouteReq(const IpAddress &ip_addr,
+                                    uint8_t plen,
+                                    const VrfEntry *vrf,
+                                    const Peer *peer,
+                                    const SecurityGroupList &sg_list,
+                                    const CommunityList &communities,
+                                    const PathPreference &path_preference,
+                                    const EcmpLoadBalance &ecmp_load_balance,
+                                    const TagList &tag_list,
+                                    DBRequest &nh_req,
+                                    uint32_t vxlan_id,
+                                    const VnListType& vn_list,
+                                    const std::string& origin_vn) {
+    DBRequest req;
+    req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
+    //Set key and data
+    req.key.reset(new InetUnicastRouteKey(peer,
+                                          vrf_entry()->GetName(),
+                                          ip_addr,
+                                          plen));
+    req.data.reset(new EvpnRoutingData(nh_req,
+                                       sg_list,
+                                       communities,
+                                       path_preference,
+                                       ecmp_load_balance,
+                                       tag_list,
+                                       vrf,
+                                       vxlan_id,
+                                       vn_list,
+                                       origin_vn));
+    InetUnicastTableEnqueue(Agent::GetInstance(), vrf->GetName(), &req);
+}
