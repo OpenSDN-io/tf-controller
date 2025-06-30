@@ -10,6 +10,11 @@ import platform
 Import('contrail_common_base_doc_files')
 Import('contrail_common_io_doc_files')
 
+try:
+    import distro
+except ImportError:
+    pass
+
 subdirs = [
     'cat',
     'bfd',

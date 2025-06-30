@@ -95,10 +95,17 @@ class CassandraManager(object):
         unit_name = 'cassandra'
         return self.process_info_manager.exec_cmd(unit_name, cmd)
 
+    def _load_yaml(self, data):
+        if hasattr(yaml, 'FullLoader'):
+            # PyYAML >= 5.1
+            return yaml.load(data, Loader=yaml.FullLoader)
+        else:
+            return yaml.load(data)
+
     def _get_cassandra_config_option(self, config):
         # NOTE: assume that we have debian-based installation of cassandra
         raw_cfg = self.exec_cmd('cat /etc/cassandra/cassandra.yaml')
-        cfg = yaml.load(raw_cfg)  # ERROR: loader=yaml.FullLoader "'module' object has no attribute 'FullLoader'"
+        cfg = self._load_yaml(raw_cfg)  # ERROR: loader=yaml.FullLoader "'module' object has no attribute 'FullLoader'"
         return cfg[config]
 
     def disk_free(self, cdir):
@@ -225,9 +232,15 @@ class CassandraManager(object):
             self.exec_cmd(cqlsh_cmd)
             event_mgr.fail_status_bits &= ~event_mgr.FAIL_STATUS_SERVER_PORT
         except Exception as e:
-            msg = "Failed to connect to database by CQL: " + str(e)
-            event_mgr.msg_log(msg, level=SandeshLevel.SYS_ERR)
-            event_mgr.fail_status_bits |= event_mgr.FAIL_STATUS_SERVER_PORT
+            # TODO: upgrade cassandra version to use cqlsh with python3
+            if self.check_cassandra_socket(self.hostip, int(self.db_port)):
+                msg = "CQLSH failed, but Cassandra native transport port is open"
+                event_mgr.msg_log(msg, level=SandeshLevel.SYS_NOTICE)
+                event_mgr.fail_status_bits &= ~event_mgr.FAIL_STATUS_SERVER_PORT
+            else:
+                msg = f"Failed to connect to database by CQL and socket: {str(e)}"
+                event_mgr.msg_log(msg, level=SandeshLevel.SYS_ERR)
+                event_mgr.fail_status_bits |= event_mgr.FAIL_STATUS_SERVER_PORT
         event_mgr.send_nodemgr_process_status()
         # Send cassandra nodetool information
         self.send_database_status(event_mgr)
@@ -280,3 +293,11 @@ class CassandraManager(object):
         if fail_status_bits & event_mgr.FAIL_STATUS_DISK_SPACE_NA:
             description.append("Disk space for DB not retrievable.")
         return description
+
+    def check_cassandra_socket(self, host, port, timeout=5):
+        """Check TCP-connectivity to Cassandra on socket level."""
+        try:
+            with socket.create_connection((host, port), timeout):
+                return True
+        except Exception:
+            return False

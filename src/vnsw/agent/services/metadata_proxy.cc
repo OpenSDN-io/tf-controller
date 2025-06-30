@@ -8,8 +8,14 @@
 #include <boost/tokenizer.hpp>
 #include <boost/assign/list_of.hpp>
 
+#if defined(RHEL_MAJOR) && (RHEL_MAJOR >= 9)
+extern "C" {
+    #include <services/metadata_proxy_extern.h>
+}
+#else
 #include <isc/hmacmd5.h>
 #include <isc/hmacsha.h>
+#endif
 
 #include "base/contrail_ports.h"
 #include "http/http_request.h"
@@ -59,9 +65,23 @@ static std::string ErrorMessage(uint16_t ec) {
     return iter->second;
 }
 
-// Get HMAC SHA256 digest
-static std::string
-GetHmacSha256(const std::string &key, const std::string &data) {
+static std::string GetHmacSha256(const std::string &key, const std::string &data) {
+#if defined(RHEL_MAJOR) && (RHEL_MAJOR >= 9)
+    const isc_md_type_t *md_type = ISC_MD_SHA256;
+    unsigned char digest[ISC_MAX_MD_SIZE];
+    unsigned int digestlen = sizeof(digest);
+    isc_result_t result = isc_hmac(md_type, (const unsigned char *)key.c_str(), key.length(),
+                                   (const unsigned char *)data.c_str(), data.length(),
+                                   digest, &digestlen);
+    if (result != ISC_R_SUCCESS) {
+        return "";
+    }
+
+    std::stringstream str;
+    for (unsigned int i = 0; i < digestlen; i++) {
+        str << std::hex << std::setfill('0') << std::setw(2) << (int)digest[i];
+    }
+#else
     isc_hmacsha256_t hmacsha256;
     isc_hmacsha256_init(&hmacsha256, (const unsigned char *)key.c_str(),
                         key.length());
@@ -75,6 +95,7 @@ GetHmacSha256(const std::string &key, const std::string &data) {
         str << std::hex << std::setfill('0') << std::setw(2)
             << (int) hmac_sha256_digest[i];
     }
+#endif
     return str.str();
 }
 
