@@ -942,8 +942,7 @@ class DBInterface(object):
             fields=fields,
             detail=detail,
             count=count,
-            filters=filters,
-            shared=shared)
+            filters=filters)
     # end _virtual_network_list
 
     def _virtual_machine_interface_read(self, port_id=None, fq_name=None,
