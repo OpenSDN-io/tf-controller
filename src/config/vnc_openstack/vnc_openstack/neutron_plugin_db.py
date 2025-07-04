@@ -1454,12 +1454,14 @@ class DBInterface(object):
     def _svc_instance_neutron_to_vnc(self, si_q, oper):
         if oper == CREATE:
             project_obj = self._get_project_obj(si_q)
-            net_id = si_q['external_net']
-            ext_vn = self._vnc_lib.virtual_network_read(id=net_id)
+            ext_net_id = si_q['external_net']
+            ext_vn = self._vnc_lib.virtual_network_read(id=ext_net_id)
+            int_net_id = si_q['internal_net']
+            int_vn = self._vnc_lib.virtual_network_read(id=int_net_id)
             scale_out = ServiceScaleOutType(max_instances=1, auto_scale=False)
             si_prop = ServiceInstanceType(
                 auto_policy=True,
-                left_virtual_network="",
+                left_virtual_network=int_vn.get_fq_name_str(),
                 right_virtual_network=ext_vn.get_fq_name_str(),
                 scale_out=scale_out)
             si_prop.set_scale_out(scale_out)
@@ -1479,10 +1481,28 @@ class DBInterface(object):
         si_q_dict['name'] = si_obj.name
         si_props = si_obj.get_service_instance_properties()
         if si_props:
-            vn_fq_name = si_props.get_right_virtual_network()
-            vn_obj = self._vnc_lib.virtual_network_read(fq_name_str=vn_fq_name)
-            si_q_dict['external_net'] = str(vn_obj.uuid) + ' ' + vn_obj.name
-            si_q_dict['internal_net'] = ''
+            ext_vn_fq_name = si_props.get_right_virtual_network()
+            ext_vn_obj = \
+                self._vnc_lib.virtual_network_read(fq_name_str=ext_vn_fq_name)
+            try:
+                si_q_dict['external_net'] = \
+                    str(ext_vn_obj.uuid) + ' ' + ext_vn_obj.name
+            except AttributeError:
+                si_q_dict['external_net'] = \
+                    si_props.interface_list[0].virtual_network.split(':')[-1]
+
+            """ Make additional check for internal net """
+            int_vn_fq_name = si_props.get_left_virtual_network()
+            if int_vn_fq_name is not None and int_vn_fq_name != u'':
+                int_vn_obj = self._vnc_lib.virtual_network_read(
+                    fq_name_str=int_vn_fq_name)
+                si_q_dict['internal_net'] = str(int_vn_obj.uuid) + \
+                    ' ' + int_vn_obj.name
+            elif len(si_props.interface_list) > 1:
+                si_q_dict['internal_net'] = \
+                    si_props.interface_list[1].virtual_network.split(':')[-1]
+            else:
+                si_q_dict['internal_net'] = ''
         return si_q_dict
     # end _svc_instance_vnc_to_neutron
 
