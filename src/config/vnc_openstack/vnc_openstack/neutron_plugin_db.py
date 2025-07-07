@@ -3961,12 +3961,6 @@ class DBInterface(object):
                     'BadRequest', resource='subnet',
                     msg="update of gateway is not supported")
 
-        if 'allocation_pools' in subnet_q:
-            if subnet_q['allocation_pools'] is not None:
-                self._raise_contrail_exception(
-                    'BadRequest', resource='subnet',
-                    msg="update of allocation_pools is not allowed")
-
         net_obj = self._network_read(net_id)
         ipam_refs = net_obj.get_network_ipam_refs()
         subnet_found = False
