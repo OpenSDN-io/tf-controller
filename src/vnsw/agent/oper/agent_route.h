@@ -279,7 +279,18 @@ public:
         intf_route_type_ = intf_route_type;
     }
     const std::string &origin_vn_name() const {return origin_vn_name_; };
-    void set_origin_vn_name(const std::string &origin_vn_name) { origin_vn_name_ = origin_vn_name; };
+    void set_origin_vn_name(const VnListType &dest_vn_list) {
+        for (const auto &vn_nm : dest_vn_list) {
+            if (vn_nm == "unresolved") {
+                continue;
+            }
+            else {
+                origin_vn_name_ = vn_nm;
+                return;
+            }
+        };
+        origin_vn_name_ = Agent::NullString();
+    }
 
     AgentPath *FindLocalPath() const;
     AgentPath *FindLocalVmPortPath() const;

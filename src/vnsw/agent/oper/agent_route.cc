@@ -513,8 +513,7 @@ bool AgentRoute::SubOpAddChangeInput(VrfEntry *vrf, AgentRouteTable *table,
         path = data->CreateAgentPath(key->peer(), this);
         InsertPath(path);
         data->AddChangePath(table->agent(), path, this);
-        std::string origin_vn_name = path->dest_vn_name();
-        set_origin_vn_name(origin_vn_name);
+        set_origin_vn_name(path->dest_vn_list());
         ret = true;
         event = AgentRoute::ADD_PATH;
     } else {
