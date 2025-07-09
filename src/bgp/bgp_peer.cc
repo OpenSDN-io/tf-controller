@@ -1446,6 +1446,23 @@ void BgpPeer::RegisterAllTables() {
         Register(table, BuildRibExportPolicy(family));
     }
 
+
+    if (((router_type_ == "bgpaas-client") ||
+        (router_type_ == "bgpaas-server")) &&
+        (instance->routing_instance_vxlan() != "")) {
+        RoutingInstanceMgr *mgr = server()->routing_instance_mgr();
+        if (mgr != nullptr) {
+            RoutingInstance *vxlan_ri =
+                mgr->GetRoutingInstance(instance->routing_instance_vxlan());
+            if (vxlan_ri != nullptr) {
+                BgpTable *table = vxlan_ri->GetTable(Address::EVPN);
+                BGP_LOG_PEER_TABLE(this, SandeshLevel::SYS_INFO, BGP_LOG_FLAG_TRACE,
+                    table, "Register ribin for peer with the table");
+                Register(table);
+            }
+        }
+    }
+
     vpn_tables_registered_ = false;
     if (!IsFamilyNegotiated(Address::RTARGET)) {
         RegisterToVpnTables();
@@ -1826,6 +1843,61 @@ void BgpPeer::ProcessNlri(Address::Family family, DBRequest::DBOperation oper,
     }
 }
 
+template <typename PrefixT>
+void BgpPeer::ProcessNlriBgpaas(Address::Family family, DBRequest::DBOperation oper,
+    const BgpMpNlri *nlri, BgpAttrPtr attr, uint32_t flags) {
+
+    for (vector<BgpProtoPrefix *>::const_iterator it = nlri->nlri.begin();
+         it != nlri->nlri.end(); ++it) {
+        PrefixT prefix;
+        BgpAttrPtr new_attr(attr);
+        uint32_t label = 0;
+        uint32_t l3_label = 0;
+        int result = PrefixT::FromProtoPrefix(server_, **it,
+            (oper == DBRequest::DB_ENTRY_ADD_CHANGE ? attr.get() : NULL),
+            family, &prefix, &new_attr, &label, &l3_label);
+        if (result) {
+            BGP_LOG_PEER_WARNING(Message, this,
+                BGP_LOG_FLAG_ALL, BGP_PEER_DIR_IN,
+                "MP NLRI parse error for  " <<
+                Address::FamilyToString(family) << " route");
+            continue;
+        }
+
+        ProcessBgpaas(oper, prefix.addr(), prefix.prefixlen(), new_attr, flags);
+    }
+}
+
+void BgpPeer::ProcessBgpaas(DBRequest::DBOperation oper,
+    IpAddress addr, uint8_t addr_len, BgpAttrPtr attr, uint32_t flags) {
+
+    if (rtinstance_->routing_instance_vxlan() == "") {
+        return;
+    }
+    RoutingInstanceMgr *mgr = server()->routing_instance_mgr();
+    if (mgr == nullptr) {
+        return;
+    }
+    RoutingInstance *vxlan_ri =
+        mgr->GetRoutingInstance(rtinstance_->routing_instance_vxlan());
+    if (vxlan_ri == nullptr) {
+        return;
+    }
+    EvpnTable *table = static_cast<EvpnTable *>(vxlan_ri->GetTable(Address::EVPN));
+    EvpnPrefix prefix_evpn(RouteDistinguisher::kZeroRd, addr, addr_len);
+
+    DBRequest req;
+    req.oper = oper;
+    if (oper == DBRequest::DB_ENTRY_ADD_CHANGE) {
+        req.data.reset(new EvpnTable::RequestData(attr, flags, 0, 0, 0));
+    }
+    else {
+        req.data.reset(NULL);
+    }
+    req.key.reset(new EvpnTable::RequestKey(prefix_evpn, this));
+    table->Enqueue(&req);
+}
+
 uint32_t BgpPeer::GetPathFlags(Address::Family family,
     const BgpAttr *attr) const {
     uint32_t flags = resolve_paths_ ? BgpPath::ResolveNexthop : 0;
@@ -1891,7 +1963,7 @@ void BgpPeer::ProcessUpdate(const BgpProto::Update *msg, size_t msgsize) {
                                                        origin_override_.origin);
     }
 
-    if ((router_type_ == "bgpaas-client")  ||
+    if ((router_type_ == "bgpaas-client") ||
         (router_type_ == "bgpaas-server")) {
         attr = server_->attr_db()->ReplaceSubProtocolAndLocate(attr.get(),
                              MatchProtocolToString(MatchProtocol::BGPaaS));
@@ -1921,6 +1993,12 @@ void BgpPeer::ProcessUpdate(const BgpProto::Update *msg, size_t msgsize) {
                 continue;
             }
 
+            if ((router_type_ == "bgpaas-client") ||
+                (router_type_ == "bgpaas-server")) {
+                ProcessBgpaas(DBRequest::DB_ENTRY_DELETE, prefix.addr(),
+                              prefix.prefixlen(), attr, 0);
+            }
+
             DBRequest req;
             req.oper = DBRequest::DB_ENTRY_DELETE;
             req.data.reset(NULL);
@@ -1946,6 +2024,12 @@ void BgpPeer::ProcessUpdate(const BgpProto::Update *msg, size_t msgsize) {
             req.data.reset(new InetTable::RequestData(attr, flags, 0, 0, 0));
             req.key.reset(new InetTable::RequestKey(prefix, this));
             table->Enqueue(&req);
+
+            if ((router_type_ == "bgpaas-client") ||
+                (router_type_ == "bgpaas-server")) {
+                ProcessBgpaas(DBRequest::DB_ENTRY_ADD_CHANGE, prefix.addr(),
+                              prefix.prefixlen(), attr, flags);
+            }
         }
     }
 
@@ -2001,6 +2085,11 @@ void BgpPeer::ProcessUpdate(const BgpProto::Update *msg, size_t msgsize) {
         case Address::INETMPLS:
             ProcessNlri<InetTable, Ip4Prefix>(
                 family, oper, nlri, attr, flags);
+            if ((router_type_ == "bgpaas-client") ||
+                (router_type_ == "bgpaas-server")) {
+                ProcessNlriBgpaas<Ip4Prefix>(
+                    family, oper, nlri, attr, flags);
+            }
             break;
         case Address::INETVPN:
             ProcessNlri<InetVpnTable, InetVpnPrefix>(
@@ -2009,6 +2098,11 @@ void BgpPeer::ProcessUpdate(const BgpProto::Update *msg, size_t msgsize) {
         case Address::INET6:
             ProcessNlri<Inet6Table, Inet6Prefix>(
                 family, oper, nlri, attr, flags);
+            if ((router_type_ == "bgpaas-client") ||
+                (router_type_ == "bgpaas-server")) {
+                ProcessNlriBgpaas<Inet6Prefix>(
+                    family, oper, nlri, attr, flags);
+            }
             break;
         case Address::INET6VPN:
             ProcessNlri<Inet6VpnTable, Inet6VpnPrefix>(

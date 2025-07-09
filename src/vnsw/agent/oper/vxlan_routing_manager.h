@@ -758,17 +758,6 @@ private:
         const AgentRoute *inet_rt,
         bool strict_match = true);
 
-    /// @brief Finds in the given route the path that was announced using
-    /// BGPaaS. It is expected that this path has BGP_PEER peer type
-    /// and the interface or composite nexthop.
-    const AgentPath *FindBGPaaSPath(const InetUnicastRouteEntry *rt);
-
-    /// @brief Advertises BGPaaS interface path in the routing VRF instance
-    /// by selecting corresponding path components in a path from
-    /// the bridge VRF instance
-    void AdvertiseBGPaaSRoute(const IpAddress& prefix_ip, uint32_t prefix_len,
-        const AgentPath* path, EvpnAgentRouteTable *evpn_table);
-
     /// @brief Returns the MAC address for the IP of a given
     /// neighbouring compute
     static MacAddress NbComputeMac(const Ip4Address& compute_ip,
@@ -784,7 +773,8 @@ private:
     /// @brief Advertises an EVPN route received using XMPP channel
     void XmppAdvertiseEvpnRoute(const IpAddress& prefix_ip,
         const int prefix_len, uint32_t vxlan_id, const std::string vrf_name,
-        const RouteParameters& params, const Peer *bgp_peer);
+        const RouteParameters& params, const Peer *bgp_peer,
+        const std::vector<std::string> &peer_sources);
 
     /// @brief Advertises an Inet route received using XMPP channel
     void XmppAdvertiseInetRoute(const IpAddress& prefix_ip,
@@ -808,7 +798,8 @@ private:
     void XmppAdvertiseEvpnInterface(
         EvpnAgentRouteTable *inet_table, const IpAddress& prefix_ip,
         const int prefix_len, uint32_t vxlan_id, const std::string vrf_name,
-        const RouteParameters& params, const Peer *bgp_peer);
+        const RouteParameters& params, const Peer *bgp_peer,
+        const std::vector<std::string> &peer_sources);
 
     /// @brief Advertises in the Inet table a tunnel route that arrived
     /// via XMPP channel. Must be called only from XmppAdvertiseInetRoute.
@@ -846,7 +837,15 @@ private:
         const std::string& prefix_str,
         const std::string& vrf_name,
         const NhType &nh_item,
-        ComponentNHKeyList& comp_nh_list);
+        ComponentNHKeyList& comp_nh_list,
+        std::vector<std::string> &peer_sources);
+
+    template<typename NhType>
+    static void AddBgpaasInterfaceComponentToList(
+        const std::string& vrf_name,
+        const NhType &nh_item,
+        ComponentNHKeyList& comp_nh_list,
+        std::vector<std::string> &peer_sources);
 
     /// @brief Finds a route with the given prefix address and len
     /// in the EVPN table
@@ -898,6 +897,23 @@ private:
         const Peer *peer,
         const RouteParameters &params,
         InetUnicastAgentRouteTable *inet_table);
+
+    void XmppAdvertiseEvpnBgpaas(
+    EvpnAgentRouteTable *evpn_table, const IpAddress& prefix_ip,
+    const int prefix_len, uint32_t vxlan_id, const std::string vrf_name,
+    const RouteParameters& params, const Peer *bgp_peer,
+    const std::vector<std::string> &peer_sources);
+
+    void XmppAdvertiseEvpnBgpaasInterface(
+    EvpnAgentRouteTable *evpn_table, const IpAddress& prefix_ip,
+    const int prefix_len, uint32_t vxlan_id, const std::string vrf_name,
+    const RouteParameters& params, const Peer *bgp_peer,  const NextHop *nh);
+
+    void XmppAdvertiseEvpnBgpaasComposite(
+    EvpnAgentRouteTable *evpn_table, const IpAddress& prefix_ip,
+    const int prefix_len, uint32_t vxlan_id, const std::string vrf_name,
+    const RouteParameters& params, const Peer *bgp_peer,
+    ComponentNHKeyList &comp_nh_list);
 
 public:
 

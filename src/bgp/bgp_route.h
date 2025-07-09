@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 #include "bgp/bgp_path.h"
 #include "base/address.h"
@@ -81,8 +82,16 @@ public:
         const std::string &source = "", const std::string &protocol = "") const;
     uint32_t SubClusterId() const;
     void AddExtCommunitySubCluster(BgpPath *path);
+    const std::set<std::string> &peer_sources() const { return peer_sources_; }
+    void add_peer_sources(std::string val) { peer_sources_.insert(val); }
+    void del_peer_sources(std::string val) {
+        if (peer_sources_.find(val) != peer_sources_.end()) {
+            peer_sources_.erase(val);
+        };
+    }
 
 private:
+    std::set<std::string> peer_sources_;
     DISALLOW_COPY_AND_ASSIGN(BgpRoute);
 };
 

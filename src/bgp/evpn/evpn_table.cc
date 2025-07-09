@@ -219,7 +219,20 @@ BgpRoute *EvpnTable::RouteReplicate(BgpServer *server,
 
     if (IsMaster()) {
         if (evpn_prefix.route_distinguisher().IsZero()) {
-            evpn_prefix.set_route_distinguisher(new_attr->source_rd());
+            if (new_attr->sub_protocol() == "bgpaas") {
+                boost::system::error_code ec;
+                Ip4Address addr =
+                    Ip4Address::from_string(src_path->GetPeer()->ToString(), ec);
+                if ((ec.value() != 0)) {
+                    evpn_prefix.set_route_distinguisher(new_attr->source_rd());
+                } else {
+                    RouteDistinguisher new_source_rd =
+                        RouteDistinguisher(addr.to_ulong(), 0);
+                    evpn_prefix.set_route_distinguisher(new_source_rd);
+                }
+            } else {
+                evpn_prefix.set_route_distinguisher(new_attr->source_rd());
+            }
         }
     } else {
         if (evpn_prefix.type() == EvpnPrefix::AutoDiscoveryRoute ||

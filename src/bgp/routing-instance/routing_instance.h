@@ -196,6 +196,12 @@ public:
     void set_mvpn_project_manager_network(std::string network) {
         mvpn_project_manager_network_ = network;
     }
+    const std::string &routing_instance_vxlan() const {
+        return routing_instance_vxlan_;
+    }
+    void set_routing_instance_vxlan(const std::string &routing_instance_vxlan) {
+        routing_instance_vxlan_ = routing_instance_vxlan;
+    }
 
 private:
     friend class RoutingInstanceMgr;
@@ -252,6 +258,7 @@ private:
     boost::scoped_ptr<PeerManager> peer_manager_;
     std::string mvpn_project_manager_network_;
     RoutingPolicyAttachList routing_policies_;
+    std::string routing_instance_vxlan_;
 };
 
 

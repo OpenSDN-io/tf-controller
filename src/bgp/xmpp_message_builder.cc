@@ -379,6 +379,10 @@ void BgpXmppMessage::AddEnetReach(const BgpRoute *route,
         EncodeEnetNextHop(route, nexthop, &item);
     }
 
+    for (const auto &peer_name : route->peer_sources()) {
+        item.entry.peers.peer.push_back(peer_name);
+    }
+
     xml_node node = doc_.append_child("item");
     node.append_attribute("id") = route->ToXmppIdString().c_str();
 

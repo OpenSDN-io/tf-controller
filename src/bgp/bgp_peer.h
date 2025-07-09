@@ -423,6 +423,11 @@ private:
     template <typename TableT, typename PrefixT>
     void ProcessNlri(Address::Family family, DBRequest::DBOperation oper,
         const BgpMpNlri *nlri, BgpAttrPtr attr, uint32_t flags);
+    template <typename PrefixT>
+    void ProcessNlriBgpaas(Address::Family family, DBRequest::DBOperation oper,
+        const BgpMpNlri *nlri, BgpAttrPtr attr, uint32_t flags);
+    void ProcessBgpaas(DBRequest::DBOperation oper,
+        IpAddress addr, uint8_t addr_len, BgpAttrPtr attr, uint32_t flags);
 
     bool GetBestAuthKey(AuthenticationKey *auth_key, KeyType *key_type) const;
     bool ProcessAuthKeyChainConfig(const BgpNeighborConfig *config);

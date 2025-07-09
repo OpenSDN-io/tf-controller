@@ -885,6 +885,9 @@ bool BgpTable::InputCommon(DBTablePartBase *root, BgpRoute *rt, BgpPath *path,
         bool fc_enabled = (server()->IsNextHopCheckEnabled() &&
                        !rtinstance_->IsMasterRoutingInstance() && fc_family);
         if (new_path->NeedsResolution() || fc_enabled) {
+            if (peer && !(peer->IsXmppPeer()) ) {
+                rt->add_peer_sources(peer->ToString());
+            }
             Address::Family family = new_path->GetAttr()->nexthop_family();
             BgpTable *table;
             if (new_path->NeedsResolution()) {
@@ -911,6 +914,9 @@ bool BgpTable::InputCommon(DBTablePartBase *root, BgpRoute *rt, BgpPath *path,
 
     case DBRequest::DB_ENTRY_DELETE: {
         if (rt && !rt->IsDeleted()) {
+            if (peer && !(peer->IsXmppPeer()) ) {
+                rt->del_peer_sources(peer->ToString());
+            }
             BGP_LOG_ROUTE(this, const_cast<IPeer *>(peer), rt,
                           "Delete BGP path");
 

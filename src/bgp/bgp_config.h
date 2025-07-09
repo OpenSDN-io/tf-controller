@@ -508,6 +508,13 @@ public:
     void set_index(int index) { index_ = index; }
     int index() const { return index_; }
 
+    const std::string &routing_instance_vxlan() const {
+        return routing_instance_vxlan_;
+    }
+    void set_routing_instance_vxlan(const std::string &routing_instance_vxlan) {
+        routing_instance_vxlan_ = routing_instance_vxlan;
+    }
+
 private:
     friend class BgpInstanceConfigTest;
 
@@ -529,6 +536,7 @@ private:
     AggregateRouteList inet6_aggregate_routes_;
     ServiceChainList service_chain_list_;
     RoutingPolicyConfigList routing_policies_;
+    std::string routing_instance_vxlan_;
 
     DISALLOW_COPY_AND_ASSIGN(BgpInstanceConfig);
 };

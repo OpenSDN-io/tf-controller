@@ -18,6 +18,7 @@
 #include "bgp/extended-community/vrf_route_import.h"
 #include "bgp/inet/inet_route.h"
 #include "bgp/inet6/inet6_route.h"
+#include "bgp/evpn/evpn_route.h"
 #include "bgp/routing-instance/routing_instance.h"
 #include "bgp/rtarget/rtarget_address.h"
 
@@ -42,6 +43,20 @@ static bool RoutePrefixIsAddress(Address::Family family, const BgpRoute *route,
             inet6_route->GetPrefix().prefixlen() == Address::kMaxV6PrefixLen) {
             return true;
         }
+    } else if (family == Address::EVPN) {
+        const EvpnRoute *evpn_route = static_cast<const EvpnRoute *>(route);
+        if (evpn_route->GetPrefix().family() == Address::INET && address.is_v4()) {
+            if (evpn_route->GetPrefix().addr().to_v4() == address.to_v4() &&
+                evpn_route->GetPrefix().prefixlen() == Address::kMaxV4PrefixLen) {
+                return true;
+            }
+        } else if (evpn_route->GetPrefix().family() == Address::INET6 &&
+                   address.is_v6()) {
+            if (evpn_route->GetPrefix().addr().to_v6() == address.to_v6() &&
+                evpn_route->GetPrefix().prefixlen() == Address::kMaxV6PrefixLen) {
+                return true;
+            }
+        }
     }
     return false;
 }
@@ -56,9 +71,24 @@ bool PathResolver::RoutePrefixMatch(const BgpRoute *route,
     }
 
     const Inet6Route *inet6_route = dynamic_cast<const Inet6Route *>(route);
-    assert(inet6_route);
-    Inet6Prefix prefix(address.to_v6(), Address::kMaxV6PrefixLen);
-    return prefix.IsMoreSpecific(inet6_route->GetPrefix());
+    if (inet6_route) {
+        Inet6Prefix prefix(address.to_v6(), Address::kMaxV6PrefixLen);
+        return prefix.IsMoreSpecific(inet6_route->GetPrefix());
+    }
+
+    const EvpnRoute *evpn_route = static_cast<const EvpnRoute *>(route);
+    if (evpn_route == nullptr) {
+         return false;
+    }
+    if (evpn_route->GetPrefix().family() == Address::INET) {
+        Ip4Prefix prefix(address.to_v4(), Address::kMaxV4PrefixLen);
+        return prefix.IsMoreSpecific(evpn_route->GetPrefix().inet_prefix());
+    } else if (evpn_route->GetPrefix().family() == Address::INET6) {
+        Inet6Prefix prefix(address.to_v6(), Address::kMaxV6PrefixLen);
+        return prefix.IsMoreSpecific(evpn_route->GetPrefix().inet6_prefix());
+    } else {
+        return false;
+    }
 }
 
 class PathResolver::DeleteActor : public LifetimeActor {
@@ -666,8 +696,13 @@ void PathResolverPartition::StartPathResolution(BgpRoute *route,
     if (table() == nh_table && RoutePrefixIsAddress(family, route, address))
         return;
 
-    ResolverNexthop *rnexthop =
-        resolver_->LocateResolverNexthop(address, nh_table);
+    ResolverNexthop *rnexthop;
+    if (family != Address::EVPN) {
+        rnexthop = resolver_->LocateResolverNexthop(address, nh_table);
+    }
+    else {
+        rnexthop = resolver_->LocateResolverNexthop(address, table());
+    }
     assert(!FindResolverPath(path));
     ResolverPath *rpath = CreateResolverPath(path, route, rnexthop);
     TriggerPathResolution(rpath);
@@ -946,6 +981,7 @@ static ExtCommunityPtr UpdateExtendedCommunity(ExtCommunityDB *extcomm_db,
     ExtCommunity::ExtCommunityList encap_list;
     ExtCommunity::ExtCommunityValue const *source_as = NULL;
     ExtCommunity::ExtCommunityValue const *lb = NULL;
+    ExtCommunity::ExtCommunityValue const *rt_mac = nullptr;
     BOOST_FOREACH(const ExtCommunity::ExtCommunityValue &value,
         nh_ext_community->communities()) {
         if (ExtCommunity::is_security_group(value) ||
@@ -961,6 +997,8 @@ static ExtCommunityPtr UpdateExtendedCommunity(ExtCommunityDB *extcomm_db,
             source_as = &value;
         } else if (ExtCommunity::is_load_balance(value) && !lb) {
             lb = &value;
+        } else if (ExtCommunity::is_router_mac(value) && !rt_mac) {
+            rt_mac = &value;
         }
     }
 
@@ -978,6 +1016,10 @@ static ExtCommunityPtr UpdateExtendedCommunity(ExtCommunityDB *extcomm_db,
     if (lb) {
         ext_community = extcomm_db->ReplaceLoadBalanceAndLocate(
             ext_community.get(), *lb);
+    }
+    if (rt_mac) {
+        ext_community = extcomm_db->AppendAndLocate(
+            ext_community.get(), *rt_mac);
     }
     return ext_community;
 }
@@ -1172,7 +1214,7 @@ bool ResolverNexthop::Match(BgpServer *server, BgpTable *table,
 
     // Ignore if the route doesn't match the address.
     Address::Family family = table->family();
-    assert(family == Address::INET || family == Address::INET6);
+    assert(family == Address::INET || family == Address::INET6 || Address::EVPN);
 
     // If longest match based lookup is not enabled, do an exact match between
     // the route and the address.
@@ -1312,7 +1354,19 @@ bool ResolverNexthop::ResolverRouteCompare::operator()(
 
     const Inet6Route *lhs6 = dynamic_cast<const Inet6Route *>(lhs);
     const Inet6Route *rhs6 = dynamic_cast<const Inet6Route *>(rhs);
-    return lhs6->GetPrefix().prefixlen() > rhs6->GetPrefix().prefixlen();
+    if (lhs6) {
+        return lhs6->GetPrefix().prefixlen() > rhs6->GetPrefix().prefixlen();
+    }
+
+    const EvpnRoute *lhs_e = dynamic_cast<const EvpnRoute *>(lhs);
+    const EvpnRoute *rhs_e = dynamic_cast<const EvpnRoute *>(rhs);
+    if (lhs_e != nullptr) {
+        return lhs_e->GetPrefix().ip_address_length() >
+            rhs_e->GetPrefix().ip_address_length();
+    }
+    else {
+        return false;
+    }
 }
 
 // Insert route into the set of routes sorted based on the prefix length in

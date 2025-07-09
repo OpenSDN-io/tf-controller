@@ -90,20 +90,9 @@ bool VxlanRoutingManager::InetRouteNotify(DBTablePartBase *partition,
     if (evpn_table == NULL) {
         return true;
     }
-    
+
     const AgentPath *local_vm_port_path = NULL;
     local_vm_port_path = inet_rt->FindIntfOrCompLocalVmPortPath();
-
-    if (local_vm_port_path == NULL) {
-        // If BGPaaS path with interface (or interface/mixed composite) is
-        // found, then it is extracted and copied into EVPN Type5 table
-        local_vm_port_path = FindBGPaaSPath(inet_rt);
-        if (local_vm_port_path != NULL) {
-            AdvertiseBGPaaSRoute(inet_rt->prefix_address(), inet_rt->prefix_length(),
-                local_vm_port_path, evpn_table);
-            return true;
-        }
-    }
 
     // if path with LOCAL_VM_PORT hasn't been found, then
     // this probably may mean that it was deleted

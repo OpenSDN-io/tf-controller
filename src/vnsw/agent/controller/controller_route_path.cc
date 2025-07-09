@@ -201,6 +201,11 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
         vxlan_id_ = label;
     }
 
+    std::vector<std::string> peer_sources;
+    for (const auto &peer_addr : item->entry.peers.peer) {
+        peer_sources.push_back(peer_addr);
+    }
+
     PathPreference rp(item->entry.sequence_number, preference, false, false);
     path_preference_ = rp;
 
@@ -280,7 +285,8 @@ ControllerEcmpRoute::ControllerEcmpRoute(const BgpPeer *peer,
                     VxlanRoutingManager::AddInterfaceComponentToList(item->entry.nlri.address,
                         vrf_name,
                         item->entry.next_hops.next_hop[i],
-                        comp_nh_list);
+                        comp_nh_list,
+                        peer_sources);
                     intf_exist = true;
                 }
             }

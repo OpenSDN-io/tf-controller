@@ -116,6 +116,8 @@ public:
             return inet_condition_listener_.get();
         if (family == Address::INET6)
             return inet6_condition_listener_.get();
+        if (family == Address::EVPN)
+            return evpn_condition_listener_.get();
         assert(false);
         return NULL;
     }

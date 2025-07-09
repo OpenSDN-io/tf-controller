@@ -1226,6 +1226,10 @@ void AgentXmppChannel::AddEvpnRoute(const std::string &vrf_name,
        EcmpLoadBalance ecmp_load_balance;
        VnListType vn_list;
        vn_list.insert(item->entry.virtual_network);
+       std::vector<std::string> peer_sources;
+        for (const auto &peer_addr : item->entry.peers.peer) {
+           peer_sources.push_back(peer_addr);
+        }
        agent_->oper_db()->vxlan_routing_manager()->XmppAdvertiseEvpnRoute(
            ip_addr,
            plen,
@@ -1240,7 +1244,8 @@ void AgentXmppChannel::AddEvpnRoute(const std::string &vrf_name,
                path_preference,
                ecmp_load_balance,
                sequence_number()),
-            bgp_peer_id());
+            bgp_peer_id(),
+            peer_sources);
        return;
     }
 

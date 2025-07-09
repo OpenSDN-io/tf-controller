@@ -1754,7 +1754,8 @@ public:
         const string &vm_vrf,
         const Ip4Address &server_ip,
         const std::string& rewrite_dmac_str,
-        const BgpPeer *peer) {
+        const BgpPeer *peer,
+        const std::vector<std::string> &peer_sources) {
         messageWasTransmitted_ = false;
         const Agent *agent = Agent::GetInstance();
         VnListType vn_list;
@@ -1778,7 +1779,8 @@ public:
                     PathPreference(),
                     EcmpLoadBalance(),
                     0),   // sequence number
-                peer);
+                peer,
+                peer_sources);
             messageWasTransmitted_ = true;
         }
     };
@@ -1799,11 +1801,12 @@ bool BridgeTunnelRouteAdd(const BgpPeer *peer, const string &vm_vrf,
                           const IpAddress &vm_addr, uint8_t plen,
                           const std::string &rewrite_dmac,
                           uint32_t tag, bool leaf) {
+    std::vector<std::string> peer_sources;
     if (bmap == TunnelType::VxlanType() &&
         AgentXmppChannelVxlanInterface(vm_addr,
             plen, label, vm_vrf, server_ip,
             rewrite_dmac,
-            peer).
+            peer, peer_sources).
             messageWasTransmitted()) {
         return true;
     }
@@ -1828,11 +1831,12 @@ bool BridgeTunnelRouteAdd(const BgpPeer *peer, const string &vm_vrf,
                           uint32_t label, MacAddress &remote_vm_mac,
                           const IpAddress &vm_addr, uint8_t plen, uint32_t tag,
                           bool leaf) {
+    std::vector<std::string> peer_sources;
     if (bmap == TunnelType::VxlanType() &&
         AgentXmppChannelVxlanInterface(vm_addr,
             plen, label, vm_vrf, server_ip,
             std::string("00:00:00:00:00:00"),
-            peer).
+            peer, peer_sources).
             messageWasTransmitted()) {
         return true;
     }

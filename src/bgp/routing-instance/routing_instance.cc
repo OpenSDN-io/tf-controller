@@ -1205,6 +1205,7 @@ void RoutingInstance::ProcessConfig() {
     virtual_network_pbb_evpn_enable_ =
         config_->virtual_network_pbb_evpn_enable();
     vxlan_id_ = config_->vxlan_id();
+    routing_instance_vxlan_ = config_->routing_instance_vxlan();
 
     // Always subscribe (using RTF) for RTs of PNF service chain instances.
     always_subscribe_ = config_->has_pnf();
@@ -1342,6 +1343,7 @@ void RoutingInstance::UpdateConfig(const BgpInstanceConfig *cfg) {
     virtual_network_allow_transit_ = cfg->virtual_network_allow_transit();
     virtual_network_pbb_evpn_enable_ = cfg->virtual_network_pbb_evpn_enable();
     vxlan_id_ = cfg->vxlan_id();
+    routing_instance_vxlan_ = cfg->routing_instance_vxlan();
 
     // Master routing instance doesn't have import & export list
     // Master instance imports and exports all RT

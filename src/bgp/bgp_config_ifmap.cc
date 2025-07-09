@@ -1077,6 +1077,78 @@ static void SetServiceChainConfig(BgpInstanceConfig *rti,
     rti->swap_service_chain_list(&list);
 }
 
+// Get name of vxlan RI for bridge RI
+
+static string GetConnectedVxlanRiVn(DBGraph *graph, IFMapNode *node) {
+    const autogen::VirtualNetwork *vn_vxlan =
+        static_cast<autogen::VirtualNetwork *>(node->GetObject());
+    if (!vn_vxlan)
+        return "";
+    for (DBGraphVertex::adjacency_iterator iter_ri = node->begin(graph);
+        iter_ri != node->end(graph); ++iter_ri) {
+        IFMapNode *adj_ri = static_cast<IFMapNode *>(iter_ri.operator->());
+        if (strcmp(adj_ri->table()->Typename(), "routing-instance") == 0)  {
+            const autogen::RoutingInstance *iri =
+                    dynamic_cast<autogen::RoutingInstance *>(adj_ri->GetObject());
+            if (!iri)
+                continue;
+            return adj_ri->name();
+        }
+    }
+    return "";
+}
+
+static string GetConnectedVxlanRiLr(DBGraph *graph, IFMapNode *node) {
+    std::string ri_name = "";
+    for (DBGraphVertex::adjacency_iterator iter_lr = node->begin(graph);
+        iter_lr != node->end(graph); ++iter_lr) {
+        IFMapNode *adj_lr = static_cast<IFMapNode *>(iter_lr.operator->());
+        if (strcmp(adj_lr->table()->Typename(),
+                   "logical-router-virtual-network") == 0)  {
+            for (DBGraphVertex::adjacency_iterator iter_vn = adj_lr->begin(graph);
+                iter_vn != adj_lr->end(graph); ++iter_vn) {
+                IFMapNode *adj_vn = static_cast<IFMapNode *>(iter_vn.operator->());
+                if (strcmp(adj_vn->table()->Typename(), "virtual-network") == 0)  {
+                    ri_name = GetConnectedVxlanRiVn(graph, adj_vn);
+                    if (ri_name != "") {
+                        return ri_name;
+                    }
+                }
+            }
+        }
+    }
+    return "";
+}
+
+
+static string GetConnectedVxlanRi(DBGraph *graph, IFMapNode *node) {
+    std::string ri_name = "";
+    const autogen::VirtualNetwork *vn =
+        static_cast<autogen::VirtualNetwork *>(node->GetObject());
+    if (!vn) {
+        return "";
+    }
+    for (DBGraphVertex::adjacency_iterator iter_vmi = node->begin(graph);
+         iter_vmi != node->end(graph); ++iter_vmi) {
+        IFMapNode *adj_vmi = static_cast<IFMapNode *>(iter_vmi.operator->());
+        if (strcmp(adj_vmi->table()->Typename(),
+                   "virtual-machine-interface") == 0) {
+            for (DBGraphVertex::adjacency_iterator iter_lr = adj_vmi->begin(graph);
+                iter_lr != adj_vmi->end(graph); ++iter_lr) {
+                IFMapNode *adj_lr = static_cast<IFMapNode *>(iter_lr.operator->());
+                if (strcmp(adj_lr->table()->Typename(), "logical-router") == 0)  {
+                    ri_name = GetConnectedVxlanRiLr(graph, adj_lr);
+                    if (ri_name != "") {
+                        return ri_name;
+                    }
+                }
+            }
+        }
+    }
+    return "";
+}
+
+
 void BgpIfmapConfigManager::ProcessRoutingPolicyLink(
     const BgpConfigDelta &delta) {
     CHECK_CONCURRENCY("bgp::Config");
@@ -1276,6 +1348,7 @@ void BgpIfmapInstanceConfig::Update(BgpIfmapConfigManager *manager,
             data_.set_vxlan_id(GetVirtualNetworkVxlanId(graph, adj));
             data_.set_virtual_network_pbb_evpn_enable(
                 GetVirtualNetworkPbbEvpnEnable(graph, adj));
+            data_.set_routing_instance_vxlan(GetConnectedVxlanRi(graph, adj));
         }
     }
 
