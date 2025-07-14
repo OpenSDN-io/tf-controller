@@ -299,6 +299,12 @@ bool BridgeTunnelRouteAdd(const BgpPeer *peer, const string &vm_vrf,
                           uint32_t label, MacAddress &remote_vm_mac,
                           const char *vm_addr, uint8_t plen, uint32_t tag = 0,
                           bool leaf = false);
+bool BgpaasIntfRouteAdd(const BgpPeer *peer, const string &vm_vrf,
+                          TunnelType::TypeBmap bmap, const Ip4Address &server_ip,
+                          uint32_t label, VnListType vn_list,
+                          const IpAddress &vm_addr, uint8_t plen,
+                          std::vector<std::string> peer_sources, uint32_t tag = 0,
+                          bool leaf = false);
 bool Inet4TunnelRouteAdd(const BgpPeer *peer, const string &vm_vrf,
                          const Ip4Address &vm_addr,
                          uint8_t plen, const Ip4Address &server_ip, TunnelType::TypeBmap bmap,

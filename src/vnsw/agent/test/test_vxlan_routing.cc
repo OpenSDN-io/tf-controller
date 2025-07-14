@@ -76,7 +76,8 @@ static void ValidateSandeshResponse(Sandesh *sandesh, vector<int> &result) {
 void DoInterfaceSandesh(std::string name) {
     ItfReq *itf_req = new ItfReq();
     std::vector<int> result = boost::assign::list_of(1);
-    Sandesh::set_response_callback(boost::bind(ValidateSandeshResponse, _1, result));
+    Sandesh::set_response_callback(boost::bind(ValidateSandeshResponse, _1,
+                                               result));
     if (name != "") {
         itf_req->set_name(name);
     }
@@ -94,7 +95,7 @@ protected:
     virtual void SetUp() {
         client->Reset();
         agent_ = Agent::GetInstance();
-        bgp_peer_ = NULL;
+        bgp_peer_ = nullptr;
     }
 
     virtual void TearDown() {
@@ -125,18 +126,19 @@ protected:
         DelIPAM("vn1");
         DelIPAM("vn2");
         client->WaitForIdle();
-        // Verify subnet route is deleted on vn detach as lr vmi port is deleted
+        // Verify subnet route is deleted on vn detach as lr vmi port is
+        // deleted
         InetUnicastRouteEntry *subnet_rt_vn1 =
             RouteGet("vrf2", Ip4Address::from_string("1.1.1.0"), 24);
-        EXPECT_TRUE(subnet_rt_vn1 == NULL);
+        EXPECT_TRUE(subnet_rt_vn1 == nullptr);
         InetUnicastRouteEntry *subnet_rt_vn2 =
             RouteGet("vrf2", Ip4Address::from_string("2.2.2.0"), 24);
-            EXPECT_TRUE(subnet_rt_vn2 == NULL);
+        EXPECT_TRUE(subnet_rt_vn2 == nullptr);
         DeleteBgpPeer(bgp_peer_);
         DelNode("project", "admin");
         client->WaitForIdle(5);
-        EXPECT_TRUE(VrfGet("vrf1") == NULL);
-        EXPECT_TRUE(VrfGet("vrf2") == NULL);
+        EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+        EXPECT_TRUE(VrfGet("vrf2") == nullptr);
         EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
                     IsEmpty());
         EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
@@ -154,21 +156,21 @@ protected:
         if (participate) {
             InetUnicastRouteEntry *default_rt =
             RouteGet(bridge_vrf, Ip4Address::from_string("0.0.0.0"), 0);
-            EXPECT_TRUE(default_rt == NULL);
+            EXPECT_TRUE(default_rt == nullptr);
             EXPECT_TRUE(rt->GetActivePath()->peer()->GetType() ==
                         Peer::EVPN_ROUTING_PEER);
             const VrfNH *nh = dynamic_cast<const VrfNH *>
                 (rt->GetActiveNextHop());
             EXPECT_TRUE(nh->GetVrf()->GetName() == routing_vrf);
         } else {
-            if (rt == NULL)
+            if (rt == nullptr)
                 return;
 
             EXPECT_TRUE(rt->GetActivePath()->peer()->GetType() !=
                         Peer::EVPN_ROUTING_PEER);
             const VrfNH *nh = dynamic_cast<const VrfNH *>
                 (rt->GetActiveNextHop());
-            EXPECT_TRUE(nh == NULL);
+            EXPECT_TRUE(nh == nullptr);
         }
     }
 
@@ -186,14 +188,14 @@ protected:
                 (rt->GetActiveNextHop());
             EXPECT_TRUE(nh->GetVrf()->GetName() == routing_vrf);
         } else {
-            if (rt == NULL)
+            if (rt == nullptr)
                 return;
 
             EXPECT_TRUE(rt->GetActivePath()->peer()->GetType() !=
                         Peer::BGP_PEER);
             const VrfNH *nh = dynamic_cast<const VrfNH *>
                 (rt->GetActiveNextHop());
-            EXPECT_TRUE(nh == NULL);
+            EXPECT_TRUE(nh == nullptr);
         }
     }
 
@@ -303,10 +305,11 @@ TEST_F(VxlanRoutingTest, Route_1) {
 
     // Trigger vxlan routing manager's walker
     VxlanRoutingRouteWalker *walker = dynamic_cast<VxlanRoutingRouteWalker*>(
-                             agent_->oper_db()->vxlan_routing_manager()->walker());
+        agent_->oper_db()->vxlan_routing_manager()->walker());
     if (walker) {
-        VrfEntry *vrf = Agent::GetInstance()->vrf_table()->FindVrfFromName("vrf1");
-        if (vrf != NULL) {
+        VrfEntry *vrf = Agent::GetInstance()->vrf_table()->FindVrfFromName(
+            "vrf1");
+        if (vrf != nullptr) {
             walker->StartRouteWalk(vrf);
         }
     }
@@ -358,7 +361,7 @@ TEST_F(VxlanRoutingTest, Route_1) {
     // since routing vrf was deleted, route is not found in bridge vrf
     InetUnicastRouteEntry *rt_del =
         RouteGet("vrf1", Ip4Address::from_string("4.4.4.0"), 24);
-    EXPECT_TRUE( rt_del == NULL);
+    EXPECT_TRUE( rt_del == nullptr);
 
     // cleanup
     client->WaitForIdle();
@@ -366,7 +369,7 @@ TEST_F(VxlanRoutingTest, Route_1) {
     DelLrRoutingVrf(1);
     DeleteEnvironment(true);
     client->WaitForIdle();
-    EXPECT_TRUE (VrfGet("l3evpn_1") == NULL);
+    EXPECT_TRUE (VrfGet("l3evpn_1") == nullptr);
 }
 
 TEST_F(VxlanRoutingTest, Route_2) {
@@ -516,9 +519,9 @@ TEST_F(VxlanRoutingTest, Route_5) {
                     Ip4Address::from_string("1.1.1.11"), 32, false);
     ValidateBridge("vrf2", "l3evpn_1",
                     Ip4Address::from_string("2.2.2.20"), 32, false);
-    EvpnAgentRouteTable::DeleteReq(bgp_peer_, "l3evpn_1",
-                                    MacAddress(),
-                                    Ip4Address::from_string("1.1.1.20"), 32, 0, NULL);
+    EvpnAgentRouteTable::DeleteReq(bgp_peer_, "l3evpn_1", MacAddress(),
+                                   Ip4Address::from_string("1.1.1.20"), 32,
+                                   0, nullptr);
     DelLrBridgeVrf("vn1", 1);
     DelLrRoutingVrf(1);
     DeleteEnvironment(true);
@@ -541,17 +544,17 @@ TEST_F(VxlanRoutingTest, Route_6) {
     InetUnicastRouteEntry *rt2 =
         RouteGet("l3evpn_1", Ip4Address::from_string("1.1.1.11"), 32);
     ValidateRouting("l3evpn_1", Ip4Address::from_string("1.1.1.10"), 32,
-                    "vnet10", (rt2 == NULL));
+                    "vnet10", (rt2 == nullptr));
     ValidateRouting("l3evpn_1", Ip4Address::from_string("1.1.1.11"), 32,
-                    "vnet11", (rt1 == NULL));
+                    "vnet11", (rt1 == nullptr));
     ValidateRouting("l3evpn_1", Ip4Address::from_string("2.2.2.20"), 32,
                     "vnet20", false);
     ValidateBridge("vrf1", "l3evpn_1",
                     Ip4Address::from_string("0.0.0.0"), 0, true);
     ValidateBridge("vrf1", "l3evpn_1",
-                    Ip4Address::from_string("1.1.1.10"), 32, (rt2 == NULL));
+                    Ip4Address::from_string("1.1.1.10"), 32, (rt2 == nullptr));
     ValidateBridge("vrf1", "l3evpn_1",
-                    Ip4Address::from_string("1.1.1.11"), 32, (rt1 == NULL));
+                    Ip4Address::from_string("1.1.1.11"), 32, (rt1 == nullptr));
     ValidateBridge("vrf2", "l3evpn_1",
                     Ip4Address::from_string("2.2.2.20"), 32, false);
 #endif
@@ -568,7 +571,7 @@ TEST_F(VxlanRoutingTest, Route_7) {
 
     AddLrRoutingVrf(1);
     AddLrBridgeVrf("vn1", 1, "snat-routing");
-    EXPECT_TRUE(VmInterfaceGet(91) == NULL);
+    EXPECT_TRUE(VmInterfaceGet(91) == nullptr);
     DelLrBridgeVrf("vn1", 1);
     DelLrRoutingVrf(1);
     DeleteEnvironment(true);
@@ -659,16 +662,18 @@ TEST_F(VxlanRoutingTest, Lrvrf_Evpn_Type5_RouteAdd) {
     client->WaitForIdle();
     // Validate route is copied to bridge vrf
     InetUnicastRouteEntry *rt1 =
-        RouteGet(VrfGet("vrf1")->GetName(), Ip4Address::from_string("10.10.10.10"), 32);
-    EXPECT_TRUE( rt1 != NULL);
+        RouteGet(routing_vrf_name, Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE( rt1 != nullptr);
 
     // Validate external rt gets installed in lr vrf with lr vn vxlan id
     InetUnicastRouteEntry *lr_vrf_rt =
-        RouteGet(VrfGet(routing_vrf_name)->GetName(), Ip4Address::from_string("10.10.10.10"), 32);
-    EXPECT_TRUE( lr_vrf_rt != NULL);
-    EXPECT_TRUE(lr_vrf_rt->GetActivePath()->vxlan_id() == routing_vrf->vxlan_id());
+        RouteGet(routing_vrf_name, Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE( lr_vrf_rt != nullptr);
+    EXPECT_TRUE(lr_vrf_rt->GetActivePath()->vxlan_id() == routing_vrf->
+                                                          vxlan_id());
 
-    // Change label in external rt and verify rt path vxlan id is set to new label
+    // Change label in external rt and verify rt path vxlan id is set to new
+    // label
     nh.label = 8282;
     item.entry.next_hops.next_hop[0] = nh;
 
@@ -678,8 +683,8 @@ TEST_F(VxlanRoutingTest, Lrvrf_Evpn_Type5_RouteAdd) {
             32, &item);
     client->WaitForIdle();
     InetUnicastRouteEntry *lr_vrf_rt1 =
-        RouteGet(VrfGet(routing_vrf_name)->GetName(), Ip4Address::from_string("10.10.10.10"), 32);
-    EXPECT_TRUE( lr_vrf_rt1 != NULL);
+        RouteGet(routing_vrf_name, Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE( lr_vrf_rt1 != nullptr);
     EXPECT_TRUE(lr_vrf_rt1->GetActivePath()->vxlan_id() == 8282);
 
     // Verify route for local vm port is still present
@@ -694,36 +699,36 @@ TEST_F(VxlanRoutingTest, Lrvrf_Evpn_Type5_RouteAdd) {
     AddLrBridgeVrf("vn3", 1);
     client->WaitForIdle();
 
-    // check to see if the subnet route for vn3 added to the bridge vrf vrf1 inet table
+    // check to see if the subnet route for vn3 added to the bridge vrf1 inet
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("3.3.3.0"), 24, true);
 
-    // check to see if the subnet route for vn1 added to the bridge vrf vrf3 inet table
+    // check to see if the subnet route for vn1 added to the bridge vrf3 inet
     ValidateBridge("vrf3", routing_vrf_name,
             Ip4Address::from_string("1.1.1.0"), 24, true);
 
-    // Verify type5 route added to Lr evpn table is copied to bridge vrf, vrf3 inet table
+    // Verify type5 route added to Lr evpn table is copied to bridge vrf3 inet
     InetUnicastRouteEntry *static_rt_vrf3 =
         RouteGet("vrf3", Ip4Address::from_string("10.10.10.10"), 32);
-    EXPECT_TRUE(static_rt_vrf3 != NULL);
+    EXPECT_TRUE(static_rt_vrf3 != nullptr);
 
     // Send rt delete in lr vrf and see route gets deleted in bridge vrf
     EvpnAgentRouteTable *rt_table1 = static_cast<EvpnAgentRouteTable *>
-            (agent_->vrf_table()->GetEvpnRouteTable(routing_vrf_name));
-    rt_table1->DeleteReq(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id(),
+        (agent_->vrf_table()->GetEvpnRouteTable(routing_vrf_name));
+    rt_table1->DeleteReq(bgp_peer_,
         routing_vrf_name,
         MacAddress::FromString("00:00:00:00:00:00"),
         Ip4Address::from_string("10.10.10.10"),
         32, 0,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     client->WaitForIdle();
 
     InetUnicastRouteEntry *rt_del =
         RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
-    EXPECT_TRUE(rt_del == NULL);
+    EXPECT_TRUE(rt_del == nullptr);
     InetUnicastRouteEntry *rt_del_vrf3 =
-        RouteGet(VrfGet("vrf3")->GetName(), Ip4Address::from_string("10.10.10.10"), 32);
-    EXPECT_TRUE(rt_del_vrf3 == NULL);
+        RouteGet("vrf3", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del_vrf3 == nullptr);
 
     // Clean up
     client->WaitForIdle();
@@ -756,9 +761,9 @@ TEST_F(VxlanRoutingTest, Lrvrf_Evpn_Type5_RouteAdd) {
     client->WaitForIdle(5);
 
     // Checks
-    EXPECT_TRUE(VrfGet("vrf1") == NULL);
-    EXPECT_TRUE(VrfGet("vrf2") == NULL);
-    EXPECT_TRUE(VrfGet("vrf3") == NULL);
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf3") == nullptr);
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
             IsEmpty());
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
@@ -821,7 +826,7 @@ TEST_F(VxlanRoutingTest, SubnetRoute) {
                     Ip4Address::from_string("1.1.1.0"), 24, true);
     InetUnicastRouteEntry *rt =
         RouteGet("vrf2", Ip4Address::from_string("3.3.3.0"), 24);
-    EXPECT_TRUE(rt == NULL);
+    EXPECT_TRUE(rt == nullptr);
 
     DelIPAM("vn1");
     client->WaitForIdle();
@@ -829,10 +834,10 @@ TEST_F(VxlanRoutingTest, SubnetRoute) {
     // Verify both subnet routes for vn1 get deleted in vrf2 inet table
     InetUnicastRouteEntry *rt_sub_1 =
         RouteGet("vrf2", Ip4Address::from_string("1.1.1.0"), 24);
-    EXPECT_TRUE(rt_sub_1 == NULL);
+    EXPECT_TRUE(rt_sub_1 == nullptr);
     InetUnicastRouteEntry *rt_sub_2 =
         RouteGet("vrf2", Ip4Address::from_string("3.3.3.0"), 24);
-    EXPECT_TRUE(rt_sub_2 == NULL);
+    EXPECT_TRUE(rt_sub_2 == nullptr);
     client->WaitForIdle();
     DelLrBridgeVrf("vn2", 1);
     DelLrBridgeVrf("vn1", 1);
@@ -891,7 +896,8 @@ TEST_F(VxlanRoutingTest, Basic_IRT_32) {
     InetUnicastRouteEntry *rt =
         RouteGet("vrf1", static_route[0].addr_, static_route[0].plen_);
 
-    EXPECT_TRUE(rt->intf_route_type().compare(VmInterface::kInterfaceStatic) == 0);
+    EXPECT_TRUE(
+        rt->intf_route_type().compare(VmInterface::kInterfaceStatic) == 0);
 
 
     ValidateRouting("l3evpn_1", static_route[0].addr_, static_route[0].plen_,
@@ -978,7 +984,8 @@ TEST_F(VxlanRoutingTest, Basic_IRT_24) {
     InetUnicastRouteEntry *rt =
         RouteGet("vrf1", static_route[0].addr_, static_route[0].plen_);
 
-    EXPECT_TRUE(rt->intf_route_type().compare(VmInterface::kInterfaceStatic) == 0);
+    EXPECT_TRUE(
+        rt->intf_route_type().compare(VmInterface::kInterfaceStatic) == 0);
 
 
     ValidateRouting("l3evpn_1", static_route[0].addr_, static_route[0].plen_,
@@ -1065,7 +1072,8 @@ TEST_F(VxlanRoutingTest, Basic_IRT_16) {
     InetUnicastRouteEntry *rt =
         RouteGet("vrf1", static_route[0].addr_, static_route[0].plen_);
 
-    EXPECT_TRUE(rt->intf_route_type().compare(VmInterface::kInterfaceStatic) == 0);
+    EXPECT_TRUE(
+        rt->intf_route_type().compare(VmInterface::kInterfaceStatic) == 0);
 
 
     ValidateRouting("l3evpn_1", static_route[0].addr_, static_route[0].plen_,
@@ -1260,7 +1268,8 @@ TEST_F(VxlanRoutingTest, fip_test_initial_conf_with_lr2) {
     AddLrBridgeVrf("vn1", 1);
     client->WaitForIdle();
 
-    AddFloatingIp("fip1", 1, domestic_addr,  input[0].addr, "INGRESS", true, 80);
+    AddFloatingIp("fip1", 1, domestic_addr,  input[0].addr, "INGRESS",
+                  true, 80);
     AddLink("virtual-machine-interface", input[0].name, "floating-ip", "fip1");
     AddLink("floating-ip", "fip1", "instance-ip", "instance1");
     client->WaitForIdle();
@@ -1331,7 +1340,8 @@ TEST_F(VxlanRoutingTest, fip_test_initial_conf_with_lr3) {
     AddLrBridgeVrf("vn1", 1);
     client->WaitForIdle();
 
-    AddFloatingIp("fip1", 1, domestic_addr,  input[0].addr, "EGRESS", true, 80);
+    AddFloatingIp("fip1", 1, domestic_addr,  input[0].addr, "EGRESS",
+                  true, 80);
     AddLink("virtual-machine-interface", input[0].name, "floating-ip", "fip1");
     AddLink("floating-ip", "fip1", "instance-ip", "instance1");
     client->WaitForIdle();
@@ -1577,7 +1587,7 @@ TEST_F(VxlanRoutingTest, Aap_l3l2) {
     ValidateBridge("vrf1", "l3evpn_1", ip, 32, false);
 
     EXPECT_TRUE(vm_intf->allowed_address_pair_list().list_.size() == 0);
-    EXPECT_TRUE(agent_->mpls_table()->FindMplsLabel(label) == NULL);
+    EXPECT_TRUE(agent_->mpls_table()->FindMplsLabel(label) == nullptr);
 
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
@@ -1625,15 +1635,18 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces) {
                     Ip4Address::from_string("1.1.1.1"), 32, false);
 
     InetUnicastRouteEntry *lr_vrf_rt =
-        RouteGet(VrfGet("l3evpn_1")->GetName(), Ip4Address::from_string("1.1.1.1"), 32);
+        RouteGet("l3evpn_1", Ip4Address::from_string("1.1.1.1"), 32);
     const CompositeNH *comp_nh =
-                dynamic_cast<const CompositeNH *>(lr_vrf_rt->GetActiveNextHop());
+        dynamic_cast<const CompositeNH *>
+            (lr_vrf_rt->GetActiveNextHop());
     EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
     EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
-    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[0]->nh());
-    EXPECT_TRUE(nh_nh != NULL);
-    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[1]->nh());
-     EXPECT_TRUE(nh_nh2 != NULL);
+    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[0]->nh());
+    EXPECT_TRUE(nh_nh != nullptr);
+    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[1]->nh());
+     EXPECT_TRUE(nh_nh2 != nullptr);
 
     // cleanup
     client->WaitForIdle();
@@ -1645,7 +1658,7 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces) {
     DeleteVmportEnv(input, 2, true);
     DelIPAM("vn1");
     client->WaitForIdle();
-    EXPECT_TRUE (VrfGet("l3evpn_1") == NULL);
+    EXPECT_TRUE (VrfGet("l3evpn_1") == nullptr);
 }
 
 // Composite tunnel routes
@@ -1708,43 +1721,47 @@ TEST_F(VxlanRoutingTest, Composite_two_tunnels) {
     // Add type5 route 10.10.10.10/32 to lr evpn table
     VnListType vn_list;
     vn_list.insert(item.entry.virtual_network);
-    bgp_peer_->GetAgentXmppChannel()->AddEvpnEcmpRoute(routing_vrf_name, 
-                MacAddress::FromString("00:00:00:00:00:00"), Ip4Address::from_string("10.10.10.10"), 
-                32, &item, vn_list);
+    bgp_peer_->GetAgentXmppChannel()->AddEvpnEcmpRoute(
+        routing_vrf_name, MacAddress::FromString("00:00:00:00:00:00"),
+        Ip4Address::from_string("10.10.10.10"), 32, &item, vn_list);
     client->WaitForIdle();
 
     // Validate route is copied to bridge vrf
     InetUnicastRouteEntry *rt1 =
-        RouteGet(VrfGet("vrf1")->GetName(), Ip4Address::from_string("10.10.10.10"), 32);
-    EXPECT_TRUE( rt1 != NULL);
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE( rt1 != nullptr);
 
     // Validate external rt gets installed in lr vrf with lr vn vxlan id
     InetUnicastRouteEntry *lr_vrf_rt =
-        RouteGet(VrfGet(routing_vrf_name)->GetName(), Ip4Address::from_string("10.10.10.10"), 32);
-    EXPECT_TRUE( lr_vrf_rt != NULL);
-    EXPECT_TRUE(lr_vrf_rt->GetActivePath()->vxlan_id() == routing_vrf->vxlan_id());
+        RouteGet(routing_vrf_name, Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE( lr_vrf_rt != nullptr);
+    EXPECT_TRUE(
+        lr_vrf_rt->GetActivePath()->vxlan_id() == routing_vrf->vxlan_id());
     const CompositeNH *comp_nh =
-                dynamic_cast<const CompositeNH *>(lr_vrf_rt->GetActiveNextHop());
+        dynamic_cast<const CompositeNH *>
+            (lr_vrf_rt->GetActiveNextHop());
     EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
     EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
-    const TunnelNH *nh_nh = dynamic_cast<const TunnelNH *>(comp_nh->component_nh_list()[0]->nh());
-    EXPECT_TRUE(nh_nh != NULL);
-    const TunnelNH *nh_nh2 = dynamic_cast<const TunnelNH *>(comp_nh->component_nh_list()[1]->nh());
-     EXPECT_TRUE(nh_nh2 != NULL);
+    const TunnelNH *nh_nh = dynamic_cast<const TunnelNH *>
+        (comp_nh->component_nh_list()[0]->nh());
+    EXPECT_TRUE(nh_nh != nullptr);
+    const TunnelNH *nh_nh2 = dynamic_cast<const TunnelNH *>
+        (comp_nh->component_nh_list()[1]->nh());
+    EXPECT_TRUE(nh_nh2 != nullptr);
 
     // Verify route for local vm port is still present
     ValidateBridge("vrf1", routing_vrf_name,
-            Ip4Address::from_string("1.1.1.1"), 32, false);
+                   Ip4Address::from_string("1.1.1.1"), 32, false);
 
     // Send rt delete in lr vrf and see route gets deleted in bridge vrf
     EvpnAgentRouteTable *rt_table1 = static_cast<EvpnAgentRouteTable *>
-            (agent_->vrf_table()->GetEvpnRouteTable(routing_vrf_name));
-    rt_table1->DeleteReq(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id(),
+        (agent_->vrf_table()->GetEvpnRouteTable(routing_vrf_name));
+    rt_table1->DeleteReq(bgp_peer_,
         routing_vrf_name,
         MacAddress::FromString("00:00:00:00:00:00"),
         Ip4Address::from_string("10.10.10.10"),
         32, 0,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     client->WaitForIdle();
 
     // Clean up
@@ -1768,7 +1785,7 @@ TEST_F(VxlanRoutingTest, Composite_two_tunnels) {
     client->WaitForIdle(5);
 
     // Checks
-    EXPECT_TRUE(VrfGet("vrf1") == NULL);
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
             IsEmpty());
     client->WaitForIdle();
@@ -1833,20 +1850,15 @@ TEST_F(VxlanRoutingTest, Composite_tunnels_and_interfaces) {
     // Add type5 route 1.1.1.1/32 to lr evpn table
     VnListType vn_list;
     vn_list.insert(item.entry.virtual_network);
-    bgp_peer_->GetAgentXmppChannel()->AddEvpnEcmpRoute(routing_vrf_name,
-                MacAddress::FromString("00:00:00:00:00:00"), Ip4Address::from_string("1.1.1.1"),
-                32, &item, vn_list);
+    bgp_peer_->GetAgentXmppChannel()->AddEvpnEcmpRoute(
+        routing_vrf_name, MacAddress::FromString("00:00:00:00:00:00"),
+        Ip4Address::from_string("1.1.1.1"), 32, &item, vn_list);
     client->WaitForIdle();
-    // Validate route is copied to bridge vrf
-    //InetUnicastRouteEntry *rt1 =
-      //  RouteGet(VrfGet("vrf1")->GetName(), Ip4Address::from_string("1.1.1.1"), 32);
-    //EXPECT_TRUE( rt1 != NULL);
 
     // Validate external rt gets installed in lr vrf with lr vn vxlan id
     InetUnicastRouteEntry *lr_vrf_rt =
-        RouteGet(VrfGet(routing_vrf_name)->GetName(), Ip4Address::from_string("1.1.1.1"), 32);
-    EXPECT_TRUE( lr_vrf_rt != NULL);
-    //EXPECT_TRUE(lr_vrf_rt->GetActivePath()->vxlan_id() == routing_vrf->vxlan_id());
+        RouteGet(routing_vrf_name, Ip4Address::from_string("1.1.1.1"), 32);
+    EXPECT_TRUE( lr_vrf_rt != nullptr);
     if (lr_vrf_rt) {
         const Route::PathList & path_list = lr_vrf_rt->GetPathList();
         for (const auto& path_it : path_list) {
@@ -1854,22 +1866,25 @@ TEST_F(VxlanRoutingTest, Composite_tunnels_and_interfaces) {
                 dynamic_cast<const AgentPath*>(&path_it);
             if (!path)
                 continue;
-            if ((path->nexthop())&&(path->nexthop()->GetType() == NextHop::COMPOSITE)) {
-               CompositeNH *comp_nh = dynamic_cast<CompositeNH *>
+            if ((path->nexthop()) &&
+                (path->nexthop()->GetType() == NextHop::COMPOSITE)) {
+                CompositeNH *comp_nh = dynamic_cast<CompositeNH *>
                      (path->nexthop());
                 EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
                 EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
-                EXPECT_TRUE(comp_nh->PolicyEnabled()==true);
+                EXPECT_TRUE(comp_nh->PolicyEnabled() == true);
                 if (comp_nh->component_nh_list()[0] != nullptr)
                 {
-                    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>
-                        (comp_nh->component_nh_list()[0]->nh());
+                    const InterfaceNH *nh_nh =
+                        dynamic_cast<const InterfaceNH *>
+                            (comp_nh->component_nh_list()[0]->nh());
                     EXPECT_TRUE(comp_nh->component_nh_list()[1] == nullptr);
                 }
                 else
                 {
-                    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>
-                        (comp_nh->component_nh_list()[1]->nh());
+                    const InterfaceNH *nh_nh2 =
+                        dynamic_cast<const InterfaceNH *>
+                            (comp_nh->component_nh_list()[1]->nh());
                     EXPECT_TRUE(nh_nh2 != nullptr);
                 }
             }
@@ -1884,12 +1899,12 @@ TEST_F(VxlanRoutingTest, Composite_tunnels_and_interfaces) {
     // Send rt delete in lr vrf and see route gets deleted in bridge vrf
     EvpnAgentRouteTable *rt_table1 = static_cast<EvpnAgentRouteTable *>
             (agent_->vrf_table()->GetEvpnRouteTable(routing_vrf_name));
-    rt_table1->DeleteReq(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id(),
+    rt_table1->DeleteReq(bgp_peer_,
         routing_vrf_name,
         MacAddress::FromString("00:00:00:00:00:00"),
         Ip4Address::from_string("1.1.1.1"),
         32, 0,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     client->WaitForIdle();
 
     // Clean up
@@ -1913,7 +1928,7 @@ TEST_F(VxlanRoutingTest, Composite_tunnels_and_interfaces) {
     client->WaitForIdle(5);
 
     // Checks
-    EXPECT_TRUE(VrfGet("vrf1") == NULL);
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
             IsEmpty());
     client->WaitForIdle();
@@ -1963,15 +1978,18 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces_aap_l3l2) {
     EXPECT_TRUE(RouteFind("vrf1", ip2, 32));
 
      InetUnicastRouteEntry *lr_vrf_rt =
-        RouteGet(VrfGet("l3evpn_1")->GetName(), Ip4Address::from_string("1.1.1.1"), 32);
+        RouteGet("l3evpn_1", Ip4Address::from_string("1.1.1.1"), 32);
     const CompositeNH *comp_nh =
-                dynamic_cast<const CompositeNH *>(lr_vrf_rt->GetActiveNextHop());
+        dynamic_cast<const CompositeNH *>
+            (lr_vrf_rt->GetActiveNextHop());
     EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
     EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
-    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[0]->nh());
-    EXPECT_TRUE(nh_nh != NULL);
-    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[1]->nh());
-     EXPECT_TRUE(nh_nh2 != NULL);
+    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[0]->nh());
+    EXPECT_TRUE(nh_nh != nullptr);
+    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[1]->nh());
+    EXPECT_TRUE(nh_nh2 != nullptr);
 
     v.clear();
     AddAap("vnet1", 1, v);
@@ -1987,7 +2005,7 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces_aap_l3l2) {
     DeleteVmportEnv(input, 2, true);
     DelIPAM("vn1");
     client->WaitForIdle();
-    EXPECT_TRUE (VrfGet("l3evpn_1") == NULL);
+    EXPECT_TRUE (VrfGet("l3evpn_1") == nullptr);
 }
 
 TEST_F(VxlanRoutingTest, Composite_two_interfaces_aap_l3) {
@@ -2033,15 +2051,18 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces_aap_l3) {
     EXPECT_TRUE(RouteFind("vrf1", ip2, 32));
 
      InetUnicastRouteEntry *lr_vrf_rt =
-        RouteGet(VrfGet("l3evpn_1")->GetName(), Ip4Address::from_string("1.1.1.1"), 32);
+        RouteGet("l3evpn_1", Ip4Address::from_string("1.1.1.1"), 32);
     const CompositeNH *comp_nh =
-                dynamic_cast<const CompositeNH *>(lr_vrf_rt->GetActiveNextHop());
+        dynamic_cast<const CompositeNH *>
+            (lr_vrf_rt->GetActiveNextHop());
     EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
     EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
-    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[0]->nh());
-    EXPECT_TRUE(nh_nh != NULL);
-    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[1]->nh());
-     EXPECT_TRUE(nh_nh2 != NULL);
+    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[0]->nh());
+    EXPECT_TRUE(nh_nh != nullptr);
+    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[1]->nh());
+    EXPECT_TRUE(nh_nh2 != nullptr);
 
     v.clear();
     AddAap("vnet1", 1, v);
@@ -2056,7 +2077,7 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces_aap_l3) {
     DeleteVmportEnv(input, 2, true);
     DelIPAM("vn1");
     client->WaitForIdle();
-    EXPECT_TRUE (VrfGet("l3evpn_1") == NULL);
+    EXPECT_TRUE (VrfGet("l3evpn_1") == nullptr);
 }
 
 //Composite irt interface routes
@@ -2113,7 +2134,8 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces_irt) {
     InetUnicastRouteEntry *rt =
         RouteGet("vrf1", static_route[0].addr_, static_route[0].plen_);
 
-    EXPECT_TRUE(rt->intf_route_type().compare(VmInterface::kInterfaceStatic) == 0);
+    EXPECT_TRUE(
+        rt->intf_route_type().compare(VmInterface::kInterfaceStatic) == 0);
 
     client->WaitForIdle();
 
@@ -2123,15 +2145,18 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces_irt) {
                    Ip4Address::from_string("1.1.1.1"), 32, false);
 
      InetUnicastRouteEntry *lr_vrf_rt =
-        RouteGet(VrfGet("l3evpn_1")->GetName(), Ip4Address::from_string("1.1.1.1"), 32);
+        RouteGet("l3evpn_1", Ip4Address::from_string("1.1.1.1"), 32);
    const CompositeNH *comp_nh =
-                dynamic_cast<const CompositeNH *>(lr_vrf_rt->GetActiveNextHop());
+        dynamic_cast<const CompositeNH *>
+            (lr_vrf_rt->GetActiveNextHop());
     EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
     EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
-    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[0]->nh());
-    EXPECT_TRUE(nh_nh != NULL);
-    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[1]->nh());
-     EXPECT_TRUE(nh_nh2 != NULL);
+    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[0]->nh());
+    EXPECT_TRUE(nh_nh != nullptr);
+    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[1]->nh());
+     EXPECT_TRUE(nh_nh2 != nullptr);
 
     // cleanup
     client->WaitForIdle();
@@ -2142,7 +2167,7 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces_irt) {
     DeleteVmportEnv(input, 2, true);
     DelIPAM("vn1");
     client->WaitForIdle();
-    EXPECT_TRUE (VrfGet("l3evpn_1") == NULL);
+    EXPECT_TRUE (VrfGet("l3evpn_1") == nullptr);
 }
 
 //composite fip route
@@ -2212,15 +2237,18 @@ TEST_F(VxlanRoutingTest, Composite_two_interfaces_fip) {
     EXPECT_EQ(fip_list2.size(), 1);
 
      InetUnicastRouteEntry *lr_vrf_rt =
-        RouteGet(VrfGet("l3evpn_1")->GetName(), Ip4Address::from_string("1.1.1.2"), 32);
-   const CompositeNH *comp_nh =
-                dynamic_cast<const CompositeNH *>(lr_vrf_rt->GetActiveNextHop());
+        RouteGet("l3evpn_1", Ip4Address::from_string("1.1.1.2"), 32);
+    const CompositeNH *comp_nh =
+        dynamic_cast<const CompositeNH *>
+            (lr_vrf_rt->GetActiveNextHop());
     EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
     EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
-    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[0]->nh());
-    EXPECT_TRUE(nh_nh != NULL);
-    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>(comp_nh->component_nh_list()[1]->nh());
-     EXPECT_TRUE(nh_nh2 != NULL);
+    const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[0]->nh());
+    EXPECT_TRUE(nh_nh != nullptr);
+    const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>
+        (comp_nh->component_nh_list()[1]->nh());
+     EXPECT_TRUE(nh_nh2 != nullptr);
 
     DelLink("floating-ip", "fip1", "instance-ip", "instance1");
     DelLink("floating-ip", "fip2", "instance-ip", "instance1");
@@ -2322,7 +2350,7 @@ TEST_F(VxlanRoutingTest, Add_del_network) {
     VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
     EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
 
-    // check to see if the subnet route for vn3 added to the bridge vrf vrf1 inet table
+    // check to see if the subnet route for vn3 added to the bridge vrf1 inet
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("3.3.3.0"), 24, true);
     ValidateBridge("vrf1", routing_vrf_name,
@@ -2355,7 +2383,7 @@ TEST_F(VxlanRoutingTest, Add_del_network) {
             Ip4Address::from_string("2.2.2.20"), 32, false);
     ValidateBridge("vrf3", routing_vrf_name,
             Ip4Address::from_string("3.3.3.30"), 32, false);
-    // check to see if the subnet route for vn added to the bridge vrf inet table
+    // check to see if the subnet route for vn added to the bridge vrf inet
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("3.3.3.0"), 24, false);
     ValidateBridge("vrf1", routing_vrf_name,
@@ -2399,7 +2427,7 @@ TEST_F(VxlanRoutingTest, Add_del_network) {
     ValidateBridge("vrf4", routing_vrf_name,
             Ip4Address::from_string("4.4.4.40"), 32, false);
 
-    // check to see if the subnet route for vn3 added to the bridge vrf vrf1 inet table
+    // check to see if the subnet route for vn3 added to the bridge vrf1 inet
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("3.3.3.0"), 24, true);
     ValidateBridge("vrf1", routing_vrf_name,
@@ -2460,9 +2488,9 @@ TEST_F(VxlanRoutingTest, Add_del_network) {
     client->WaitForIdle(5);
 
     // Checks
-    EXPECT_TRUE(VrfGet("vrf1") == NULL);
-    EXPECT_TRUE(VrfGet("vrf2") == NULL);
-    EXPECT_TRUE(VrfGet("vrf3") == NULL);
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf3") == nullptr);
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
             IsEmpty());
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
@@ -2541,7 +2569,7 @@ TEST_F(VxlanRoutingTest, AddDelIPAM) {
     VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
     EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
 
-    // check to see if the subnet route for vn3 added to the bridge vrf vrf1 inet table
+    // check to see if the subnet route for vn3 added to the bridge vrf1 inet
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("3.3.3.0"), 24, true);
     ValidateBridge("vrf1", routing_vrf_name,
@@ -2582,12 +2610,12 @@ TEST_F(VxlanRoutingTest, AddDelIPAM) {
                     Ip4Address::from_string("1.1.1.0"), 24, true);
     InetUnicastRouteEntry *rt =
         RouteGet("vrf2", Ip4Address::from_string("5.5.5.0"), 24);
-    EXPECT_TRUE(rt == NULL);
+    EXPECT_TRUE(rt == nullptr);
     ValidateBridge("vrf3", "l3evpn_1",
                     Ip4Address::from_string("1.1.1.0"), 24, true);
     InetUnicastRouteEntry *rt2 =
         RouteGet("vrf3", Ip4Address::from_string("5.5.5.0"), 24);
-    EXPECT_TRUE(rt == NULL);
+    EXPECT_TRUE(rt == nullptr);
 
     DelIPAM("vn1");
     client->WaitForIdle();
@@ -2595,16 +2623,16 @@ TEST_F(VxlanRoutingTest, AddDelIPAM) {
     // Verify both subnet routes for vn1 get deleted in vrf2 inet table
     InetUnicastRouteEntry *rt_sub_1 =
         RouteGet("vrf2", Ip4Address::from_string("1.1.1.0"), 24);
-    EXPECT_TRUE(rt_sub_1 == NULL);
+    EXPECT_TRUE(rt_sub_1 == nullptr);
     InetUnicastRouteEntry *rt_sub_2 =
         RouteGet("vrf2", Ip4Address::from_string("5.5.5.0"), 24);
-    EXPECT_TRUE(rt_sub_2 == NULL);
+    EXPECT_TRUE(rt_sub_2 == nullptr);
     InetUnicastRouteEntry *rt_sub_21 =
         RouteGet("vrf3", Ip4Address::from_string("1.1.1.0"), 24);
-    EXPECT_TRUE(rt_sub_21 == NULL);
+    EXPECT_TRUE(rt_sub_21 == nullptr);
     InetUnicastRouteEntry *rt_sub_22 =
         RouteGet("vrf3", Ip4Address::from_string("5.5.5.0"), 24);
-    EXPECT_TRUE(rt_sub_22 == NULL);
+    EXPECT_TRUE(rt_sub_22 == nullptr);
     client->WaitForIdle();
     DelLrBridgeVrf("vn3", 1);
     DelLrBridgeVrf("vn2", 1);
@@ -2681,7 +2709,7 @@ TEST_F(VxlanRoutingTest, Add_del_network_policy_2_networks) {
     VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
     EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
 
-    // check to see if the subnet route for vn3 added to the bridge vrf vrf1 inet table
+    // check to see if the subnet route added to the bridge vrf
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("2.2.2.0"), 24, true);
     ValidateBridge("vrf2", routing_vrf_name,
@@ -2695,20 +2723,20 @@ TEST_F(VxlanRoutingTest, Add_del_network_policy_2_networks) {
     EcmpLoadBalance ecmp_load_balance;
     intf->SetPathPreference(&path_preference, false, Ip4Address(0));
     InetUnicastAgentRouteTable *table2 =
-            static_cast<InetUnicastAgentRouteTable*>
+        static_cast<InetUnicastAgentRouteTable*>
             (agent_->vrf_table()->GetInet4UnicastRouteTable("vrf2"));
     table2->AddLocalVmRouteReq(
-            bgp_peer_, "vrf2", Ip4Address::from_string("1.1.1.10"), 32, intf->GetUuid(),
-            vn_list, intf->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf->name());
+        bgp_peer_, "vrf2", Ip4Address::from_string("1.1.1.10"), 32,
+        intf->GetUuid(), vn_list, intf->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf->name());
     client->WaitForIdle();
 
-    // Verify type5 route added to Lr evpn table is copied to bridge vrf, vrf3 inet table
-    InetUnicastRouteEntry *static_rt_vrf2 =
+    // Verify type5 route added to Lr evpn table is copied to bridge vrf
+    InetUnicastRouteEntry *rt_vrf2 =
         RouteGet("vrf2", Ip4Address::from_string("1.1.1.10"), 32);
-    EXPECT_TRUE(static_rt_vrf2 != NULL);
+    EXPECT_TRUE(rt_vrf2 != nullptr);
     // Validate external rt gets installed in lr vrf with lr vn vxlan id
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("1.1.1.10"), 32, false);
@@ -2722,12 +2750,12 @@ TEST_F(VxlanRoutingTest, Add_del_network_policy_2_networks) {
     // Send rt delete in lr vrf and see route gets deleted in bridge vrf
     table2->DeleteReq(bgp_peer_, "vrf2",
         Ip4Address::from_string("1.1.1.10"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     client->WaitForIdle();
 
     InetUnicastRouteEntry *rt_del =
         RouteGet("vrf2", Ip4Address::from_string("1.1.1.10"), 32);
-    EXPECT_TRUE(rt_del == NULL);
+    EXPECT_TRUE(rt_del == nullptr);
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("1.1.1.10"), 32, false);
     ValidateBridge("vrf2", routing_vrf_name,
@@ -2762,8 +2790,8 @@ TEST_F(VxlanRoutingTest, Add_del_network_policy_2_networks) {
     client->WaitForIdle(5);
 
     // Checks
-    EXPECT_TRUE(VrfGet("vrf1") == NULL);
-    EXPECT_TRUE(VrfGet("vrf2") == NULL);
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
             IsEmpty());
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
@@ -2863,7 +2891,7 @@ TEST_F(VxlanRoutingTest, Add_del_network_policy_4_networks) {
     VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
     EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
 
-    // check to see if the subnet route for vn3 added to the bridge vrf vrf1 inet table
+    // check to see if the subnet route for vn3 added to the bridge vrf1 inet
     ValidateBridge("vrf1", routing_vrf_name,
             Ip4Address::from_string("2.2.2.0"), 24, true);
     ValidateBridge("vrf1", routing_vrf_name,
@@ -2909,128 +2937,128 @@ TEST_F(VxlanRoutingTest, Add_del_network_policy_4_networks) {
     intf3->SetPathPreference(&path_preference, false, Ip4Address(0));
     intf4->SetPathPreference(&path_preference, false, Ip4Address(0));
     InetUnicastAgentRouteTable *table1 =
-            static_cast<InetUnicastAgentRouteTable*>
+        static_cast<InetUnicastAgentRouteTable*>
             (agent_->vrf_table()->GetInet4UnicastRouteTable("vrf1"));
     InetUnicastAgentRouteTable *table2 =
-            static_cast<InetUnicastAgentRouteTable*>
+        static_cast<InetUnicastAgentRouteTable*>
             (agent_->vrf_table()->GetInet4UnicastRouteTable("vrf2"));
     InetUnicastAgentRouteTable *table3 =
-            static_cast<InetUnicastAgentRouteTable*>
+        static_cast<InetUnicastAgentRouteTable*>
             (agent_->vrf_table()->GetInet4UnicastRouteTable("vrf3"));
     InetUnicastAgentRouteTable *table4 =
-            static_cast<InetUnicastAgentRouteTable*>
+        static_cast<InetUnicastAgentRouteTable*>
             (agent_->vrf_table()->GetInet4UnicastRouteTable("vrf4"));
     table1->AddLocalVmRouteReq(
-            bgp_peer_, "vrf1", Ip4Address::from_string("2.2.2.20"), 32, intf2->GetUuid(),
-            vn_list2, intf2->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf2->name());
+        bgp_peer_, "vrf1", Ip4Address::from_string("2.2.2.20"), 32,
+        intf2->GetUuid(), vn_list2, intf2->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf2->name());
     table1->AddLocalVmRouteReq(
-            bgp_peer_, "vrf1", Ip4Address::from_string("3.3.3.30"), 32, intf3->GetUuid(),
-            vn_list3, intf3->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf3->name());
+        bgp_peer_, "vrf1", Ip4Address::from_string("3.3.3.30"), 32,
+        intf3->GetUuid(), vn_list3, intf3->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf3->name());
     table1->AddLocalVmRouteReq(
-            bgp_peer_, "vrf1", Ip4Address::from_string("4.4.4.40"), 32, intf4->GetUuid(),
-            vn_list4, intf4->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf4->name());
+        bgp_peer_, "vrf1", Ip4Address::from_string("4.4.4.40"), 32,
+        intf4->GetUuid(), vn_list4, intf4->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf4->name());
     table2->AddLocalVmRouteReq(
-            bgp_peer_, "vrf2", Ip4Address::from_string("1.1.1.10"), 32, intf1->GetUuid(),
-            vn_list1, intf1->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf1->name());
+        bgp_peer_, "vrf2", Ip4Address::from_string("1.1.1.10"), 32,
+        intf1->GetUuid(), vn_list1, intf1->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf1->name());
     table2->AddLocalVmRouteReq(
-            bgp_peer_, "vrf2", Ip4Address::from_string("3.3.3.30"), 32, intf3->GetUuid(),
-            vn_list3, intf3->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf3->name());
+        bgp_peer_, "vrf2", Ip4Address::from_string("3.3.3.30"), 32,
+        intf3->GetUuid(), vn_list3, intf3->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf3->name());
     table2->AddLocalVmRouteReq(
-            bgp_peer_, "vrf2", Ip4Address::from_string("4.4.4.40"), 32, intf4->GetUuid(),
-            vn_list4, intf4->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf4->name());
+        bgp_peer_, "vrf2", Ip4Address::from_string("4.4.4.40"), 32,
+        intf4->GetUuid(), vn_list4, intf4->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf4->name());
     table3->AddLocalVmRouteReq(
-            bgp_peer_, "vrf3", Ip4Address::from_string("1.1.1.10"), 32, intf1->GetUuid(),
-            vn_list1, intf1->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf1->name());
+        bgp_peer_, "vrf3", Ip4Address::from_string("1.1.1.10"), 32,
+        intf1->GetUuid(), vn_list1, intf1->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf1->name());
     table3->AddLocalVmRouteReq(
-            bgp_peer_, "vrf3", Ip4Address::from_string("2.2.2.20"), 32, intf2->GetUuid(),
-            vn_list2, intf2->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf2->name());
+        bgp_peer_, "vrf3", Ip4Address::from_string("2.2.2.20"), 32,
+        intf2->GetUuid(), vn_list2, intf2->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf2->name());
     table3->AddLocalVmRouteReq(
-            bgp_peer_, "vrf3", Ip4Address::from_string("4.4.4.40"), 32, intf4->GetUuid(),
-            vn_list4, intf4->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf4->name());
+        bgp_peer_, "vrf3", Ip4Address::from_string("4.4.4.40"), 32,
+        intf4->GetUuid(), vn_list4, intf4->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf4->name());
     table4->AddLocalVmRouteReq(
-            bgp_peer_, "vrf4", Ip4Address::from_string("1.1.1.10"), 32, intf1->GetUuid(),
-            vn_list1, intf1->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf1->name());
+        bgp_peer_, "vrf4", Ip4Address::from_string("1.1.1.10"), 32,
+        intf1->GetUuid(), vn_list1, intf1->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf1->name());
     table4->AddLocalVmRouteReq(
-            bgp_peer_, "vrf4", Ip4Address::from_string("2.2.2.20"), 32, intf2->GetUuid(),
-            vn_list2, intf2->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf2->name());
+        bgp_peer_, "vrf4", Ip4Address::from_string("2.2.2.20"), 32,
+        intf2->GetUuid(), vn_list2, intf2->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf2->name());
     table4->AddLocalVmRouteReq(
-            bgp_peer_, "vrf4", Ip4Address::from_string("3.3.3.30"), 32, intf3->GetUuid(),
-            vn_list3, intf3->label(), SecurityGroupList(),
-            TagList(), CommunityList(), true, path_preference,
-            Ip4Address(0), ecmp_load_balance, false, false, false,
-            intf3->name());
+        bgp_peer_, "vrf4", Ip4Address::from_string("3.3.3.30"), 32,
+        intf3->GetUuid(), vn_list3, intf3->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf3->name());
     client->WaitForIdle();
 
-    // Verify type5 route added to Lr evpn table is copied to bridge vrf, vrf3 inet table
-    InetUnicastRouteEntry *static_rt_vrf12 =
+    // Verify type5 route added to Lr evpn table is copied to bridge vrf
+    InetUnicastRouteEntry *rt_vrf12 =
         RouteGet("vrf1", Ip4Address::from_string("2.2.2.20"), 32);
-    EXPECT_TRUE(static_rt_vrf12 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf13 =
+    EXPECT_TRUE(rt_vrf12 != nullptr);
+    InetUnicastRouteEntry *rt_vrf13 =
         RouteGet("vrf1", Ip4Address::from_string("3.3.3.30"), 32);
-    EXPECT_TRUE(static_rt_vrf13 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf14 =
+    EXPECT_TRUE(rt_vrf13 != nullptr);
+    InetUnicastRouteEntry *rt_vrf14 =
         RouteGet("vrf1", Ip4Address::from_string("4.4.4.40"), 32);
-    EXPECT_TRUE(static_rt_vrf14 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf21 =
+    EXPECT_TRUE(rt_vrf14 != nullptr);
+    InetUnicastRouteEntry *rt_vrf21 =
         RouteGet("vrf2", Ip4Address::from_string("1.1.1.10"), 32);
-    EXPECT_TRUE(static_rt_vrf21 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf23 =
+    EXPECT_TRUE(rt_vrf21 != nullptr);
+    InetUnicastRouteEntry *rt_vrf23 =
         RouteGet("vrf2", Ip4Address::from_string("3.3.3.30"), 32);
-    EXPECT_TRUE(static_rt_vrf23 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf24 =
+    EXPECT_TRUE(rt_vrf23 != nullptr);
+    InetUnicastRouteEntry *rt_vrf24 =
         RouteGet("vrf2", Ip4Address::from_string("4.4.4.40"), 32);
-    EXPECT_TRUE(static_rt_vrf24 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf31 =
+    EXPECT_TRUE(rt_vrf24 != nullptr);
+    InetUnicastRouteEntry *rt_vrf31 =
         RouteGet("vrf3", Ip4Address::from_string("1.1.1.10"), 32);
-    EXPECT_TRUE(static_rt_vrf31 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf32 =
+    EXPECT_TRUE(rt_vrf31 != nullptr);
+    InetUnicastRouteEntry *rt_vrf32 =
         RouteGet("vrf3", Ip4Address::from_string("2.2.2.20"), 32);
-    EXPECT_TRUE(static_rt_vrf32 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf34 =
+    EXPECT_TRUE(rt_vrf32 != nullptr);
+    InetUnicastRouteEntry *rt_vrf34 =
         RouteGet("vrf3", Ip4Address::from_string("4.4.4.40"), 32);
-    EXPECT_TRUE(static_rt_vrf34 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf41 =
+    EXPECT_TRUE(rt_vrf34 != nullptr);
+    InetUnicastRouteEntry *rt_vrf41 =
         RouteGet("vrf4", Ip4Address::from_string("1.1.1.10"), 32);
-    EXPECT_TRUE(static_rt_vrf41 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf42 =
+    EXPECT_TRUE(rt_vrf41 != nullptr);
+    InetUnicastRouteEntry *rt_vrf42 =
         RouteGet("vrf4", Ip4Address::from_string("2.2.2.20"), 32);
-    EXPECT_TRUE(static_rt_vrf42 != NULL);
-    InetUnicastRouteEntry *static_rt_vrf43 =
+    EXPECT_TRUE(rt_vrf42 != nullptr);
+    InetUnicastRouteEntry *rt_vrf43 =
         RouteGet("vrf4", Ip4Address::from_string("3.3.3.30"), 32);
-    EXPECT_TRUE(static_rt_vrf43 != NULL);
+    EXPECT_TRUE(rt_vrf43 != nullptr);
     // Validate external rt gets installed in lr vrf with lr vn vxlan id
     ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
             "vnet1", true, "vn1");
@@ -3054,78 +3082,78 @@ TEST_F(VxlanRoutingTest, Add_del_network_policy_4_networks) {
     // Send rt delete in lr vrf and see route gets deleted in bridge vrf
     table1->DeleteReq(bgp_peer_, "vrf1",
         Ip4Address::from_string("2.2.2.20"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table1->DeleteReq(bgp_peer_, "vrf1",
         Ip4Address::from_string("3.3.3.30"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table1->DeleteReq(bgp_peer_, "vrf1",
         Ip4Address::from_string("4.4.4.40"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table2->DeleteReq(bgp_peer_, "vrf2",
         Ip4Address::from_string("1.1.1.10"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table2->DeleteReq(bgp_peer_, "vrf2",
         Ip4Address::from_string("3.3.3.30"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table2->DeleteReq(bgp_peer_, "vrf2",
         Ip4Address::from_string("4.4.4.40"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table3->DeleteReq(bgp_peer_, "vrf3",
         Ip4Address::from_string("1.1.1.10"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table3->DeleteReq(bgp_peer_, "vrf3",
         Ip4Address::from_string("2.2.2.20"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table3->DeleteReq(bgp_peer_, "vrf3",
         Ip4Address::from_string("4.4.4.40"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table4->DeleteReq(bgp_peer_, "vrf4",
         Ip4Address::from_string("1.1.1.10"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table4->DeleteReq(bgp_peer_, "vrf4",
         Ip4Address::from_string("2.2.2.20"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     table4->DeleteReq(bgp_peer_, "vrf4",
         Ip4Address::from_string("3.3.3.30"), 32,
-        new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
+        new ControllerVmRoute(bgp_peer_));
     client->WaitForIdle();
 
     InetUnicastRouteEntry *rt_del_vrf12 =
         RouteGet("vrf1", Ip4Address::from_string("2.2.2.20"), 32);
-    EXPECT_TRUE(rt_del_vrf12 == NULL);
+    EXPECT_TRUE(rt_del_vrf12 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf13 =
         RouteGet("vrf1", Ip4Address::from_string("3.3.3.30"), 32);
-    EXPECT_TRUE(rt_del_vrf13 == NULL);
+    EXPECT_TRUE(rt_del_vrf13 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf14 =
         RouteGet("vrf1", Ip4Address::from_string("4.4.4.40"), 32);
-    EXPECT_TRUE(rt_del_vrf14 == NULL);
+    EXPECT_TRUE(rt_del_vrf14 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf21 =
         RouteGet("vrf2", Ip4Address::from_string("1.1.1.10"), 32);
-    EXPECT_TRUE(rt_del_vrf21 == NULL);
+    EXPECT_TRUE(rt_del_vrf21 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf23 =
         RouteGet("vrf2", Ip4Address::from_string("3.3.3.30"), 32);
-    EXPECT_TRUE(rt_del_vrf23 == NULL);
+    EXPECT_TRUE(rt_del_vrf23 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf24 =
         RouteGet("vrf2", Ip4Address::from_string("4.4.4.40"), 32);
-    EXPECT_TRUE(rt_del_vrf24 == NULL);
+    EXPECT_TRUE(rt_del_vrf24 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf31 =
         RouteGet("vrf3", Ip4Address::from_string("1.1.1.10"), 32);
-    EXPECT_TRUE(rt_del_vrf31 == NULL);
+    EXPECT_TRUE(rt_del_vrf31 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf32 =
         RouteGet("vrf3", Ip4Address::from_string("2.2.2.20"), 32);
-    EXPECT_TRUE(rt_del_vrf32 == NULL);
+    EXPECT_TRUE(rt_del_vrf32 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf34 =
         RouteGet("vrf3", Ip4Address::from_string("4.4.4.40"), 32);
-    EXPECT_TRUE(rt_del_vrf34 == NULL);
+    EXPECT_TRUE(rt_del_vrf34 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf41 =
         RouteGet("vrf4", Ip4Address::from_string("1.1.1.10"), 32);
-    EXPECT_TRUE(rt_del_vrf41 == NULL);
+    EXPECT_TRUE(rt_del_vrf41 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf42 =
         RouteGet("vrf4", Ip4Address::from_string("2.2.2.20"), 32);
-    EXPECT_TRUE(rt_del_vrf42 == NULL);
+    EXPECT_TRUE(rt_del_vrf42 == nullptr);
     InetUnicastRouteEntry *rt_del_vrf43 =
         RouteGet("vrf4", Ip4Address::from_string("3.3.3.30"), 32);
-    EXPECT_TRUE(rt_del_vrf43 == NULL);
+    EXPECT_TRUE(rt_del_vrf43 == nullptr);
 
     ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
             "vnet1", true, "vn1");
@@ -3181,14 +3209,1010 @@ TEST_F(VxlanRoutingTest, Add_del_network_policy_4_networks) {
     client->WaitForIdle(5);
 
     // Checks
-    EXPECT_TRUE(VrfGet("vrf1") == NULL);
-    EXPECT_TRUE(VrfGet("vrf2") == NULL);
-    EXPECT_TRUE(VrfGet("vrf3") == NULL);
-    EXPECT_TRUE(VrfGet("vrf4") == NULL);
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf3") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf4") == nullptr);
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
-            IsEmpty());
+                IsEmpty());
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
-            IsEmpty());
+                IsEmpty());
+    client->WaitForIdle();
+}
+
+TEST_F(VxlanRoutingTest, Add_del_bgpaas_route_to_bridge_vrf) {
+     agent_ = Agent::GetInstance();
+    AgentParam *params = agent_->params();
+    params->set_bgpaas_max_shared_sessions(4);
+    AddBgpaasPortRange(50000, 50512);
+    bgp_peer_ = CreateBgpPeer("127.0.0.1", "remote");
+    using boost::uuids::nil_uuid;
+    struct PortInfo input1[] = {
+        {"vnet1", 1, "1.1.1.10", "00:00:01:01:01:10", 1, 1},
+    };
+    IpamInfo ipam_info_1[] = {
+        {"1.1.1.0", 24, "1.1.1.254", true},
+    };
+
+    struct PortInfo input2[] = {
+        {"vnet2", 2, "2.2.2.20", "00:00:02:02:02:20", 2, 2},
+    };
+    IpamInfo ipam_info_2[] = {
+        {"2.2.2.0", 24, "2.2.2.200", true},
+    };
+
+    // Bridge vrf
+    AddIPAM("vn1", ipam_info_1, 1);
+    AddIPAM("vn2", ipam_info_2, 1);
+
+    CreateVmportEnv(input1, 1);
+    CreateVmportEnv(input2, 1);
+
+    AddLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    AddLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+
+    const char *routing_vrf_name = "l3evpn_1";
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    AddLrBridgeVrf("vn2", 1);
+    client->WaitForIdle();
+
+    AddBgpRouterConfig("127.0.0.1", 0, 179,
+                       64512, "ip-fabric", "control-node");
+    std::string bgpaas = AddBgpServiceConfig("1.1.1.10", 50000, 179, 1,
+                                             "vnet1", "vrf1",
+                                             "bgpaas-client", true);
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmInterfaceGet(1)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(2)->logical_router_uuid() == nil_uuid());
+
+    EXPECT_TRUE(VmInterfaceGet(91)->logical_router_uuid() != nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(92)->logical_router_uuid() != nil_uuid());
+
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+
+    // checking routing vrf have valid VXLAN ID
+    VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
+    EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
+
+    // check to see if the subnet route for vn added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+
+    // AddLocalVmRouteReq
+    VmInterface *intf = static_cast<VmInterface *>(VmPortGet(1));
+    VnListType vn_list;
+    vn_list.insert("vn1");
+    PathPreference path_preference;
+    EcmpLoadBalance ecmp_load_balance;
+    intf->SetPathPreference(&path_preference, false, Ip4Address(0));
+    InetUnicastAgentRouteTable *table1 =
+        static_cast<InetUnicastAgentRouteTable*>
+            (agent_->vrf_table()->GetInet4UnicastRouteTable("vrf1"));
+    table1->AddLocalVmRouteReq(
+        bgp_peer_, "vrf1", Ip4Address::from_string("10.10.10.10"), 32,
+        intf->GetUuid(), vn_list, intf->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf->name());
+    client->WaitForIdle();
+
+    InetUnicastRouteEntry *bgpaas_rt_vrf1 =
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(bgpaas_rt_vrf1 != nullptr);
+
+    // Validate external rt gets installed in lr vrf with lr vn vxlan id
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("10.10.10.10"),
+                    32, "vnet1", false, "vn1");
+
+    // Send rt delete in lr vrf and see route gets deleted in bridge vrf
+    table1->DeleteReq(bgp_peer_, "vrf1",
+                      Ip4Address::from_string("10.10.10.10"), 32,
+                      new ControllerVmRoute(bgp_peer_));
+    client->WaitForIdle();
+
+    InetUnicastRouteEntry *rt_del =
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del == nullptr);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+
+    // Clean up
+    client->WaitForIdle();
+
+    // Bridge VN1 & VN2
+    DelLrBridgeVrf("vn1", 1);
+    DelLrBridgeVrf("vn2", 1);
+    DelLrRoutingVrf(1);
+    DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    DelLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+    DeleteVmportEnv(input1, 1, true);
+    DeleteVmportEnv(input2, 1, true);
+    WAIT_FOR(1000, 1000, (0 == Agent::GetInstance()->vm_table()->Size()));
+    DelBgpaasPortRange();
+    DeleteBgpRouterConfig("127.0.0.1", 0, "ip-fabric");
+    DeleteBgpServiceConfig("1.1.1.10", 50000, "vnet1", "vrf1");
+    DelIPAM("vn1");
+    DelIPAM("vn2");
+
+    // Project
+    DelNode("project", "admin");
+    client->WaitForIdle();
+
+    // Peer
+    DeleteBgpPeer(bgp_peer_);
+    client->WaitForIdle(5);
+
+    // Checks
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    client->WaitForIdle();
+}
+
+TEST_F(VxlanRoutingTest, Add_del_bgpaas_route_to_bridge_and_routing_vrf) {
+    agent_ = Agent::GetInstance();
+    AgentParam *params = agent_->params();
+    params->set_bgpaas_max_shared_sessions(4);
+    AddBgpaasPortRange(50000, 50512);
+    bgp_peer_ = CreateBgpPeer("127.0.0.1", "remote");
+    using boost::uuids::nil_uuid;
+    struct PortInfo input1[] = {
+        {"vnet1", 1, "1.1.1.10", "00:00:01:01:01:10", 1, 1},
+    };
+    IpamInfo ipam_info_1[] = {
+        {"1.1.1.0", 24, "1.1.1.254", true},
+    };
+
+    struct PortInfo input2[] = {
+        {"vnet2", 2, "2.2.2.20", "00:00:02:02:02:20", 2, 2},
+    };
+    IpamInfo ipam_info_2[] = {
+        {"2.2.2.0", 24, "2.2.2.200", true},
+    };
+
+    // Bridge vrf
+    AddIPAM("vn1", ipam_info_1, 1);
+    AddIPAM("vn2", ipam_info_2, 1);
+
+    CreateVmportEnv(input1, 1);
+    CreateVmportEnv(input2, 1);
+
+    AddLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    AddLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+
+    const char *routing_vrf_name = "l3evpn_1";
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    AddLrBridgeVrf("vn2", 1);
+    client->WaitForIdle();
+
+    AddBgpRouterConfig("127.0.0.1", 0, 179,
+                       64512, "ip-fabric", "control-node");
+    std::string bgpaas = AddBgpServiceConfig("1.1.1.10", 50000, 179, 1,
+                                             "vnet1", "vrf1",
+                                             "bgpaas-client", true);
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmInterfaceGet(1)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(2)->logical_router_uuid() == nil_uuid());
+
+    EXPECT_TRUE(VmInterfaceGet(91)->logical_router_uuid() != nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(92)->logical_router_uuid() != nil_uuid());
+
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+
+    // checking routing vrf have valid VXLAN ID
+    VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
+    EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
+
+    // check to see if the subnet route for vn added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+
+    // AddLocalVmRouteReq
+    VmInterface *intf = static_cast<VmInterface *>(VmPortGet(1));
+    VnListType vn_list;
+    vn_list.insert("vn1");
+    PathPreference path_preference;
+    EcmpLoadBalance ecmp_load_balance;
+    intf->SetPathPreference(&path_preference, false, Ip4Address(0));
+    InetUnicastAgentRouteTable *table1 =
+        static_cast<InetUnicastAgentRouteTable*>
+            (agent_->vrf_table()->GetInet4UnicastRouteTable("vrf1"));
+    table1->AddLocalVmRouteReq(
+        bgp_peer_, "vrf1", Ip4Address::from_string("10.10.10.10"), 32,
+        intf->GetUuid(), vn_list, intf->label(), SecurityGroupList(),
+        TagList(), CommunityList(), true, path_preference,
+        Ip4Address(0), ecmp_load_balance, false, false, false,
+        intf->name());
+    client->WaitForIdle();
+
+    InetUnicastRouteEntry *bgpaas_rt_vrf1 =
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(bgpaas_rt_vrf1 != nullptr);
+
+    // Validate external rt gets installed in lr vrf with lr vn vxlan id
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("10.10.10.10"),
+                    32, "vnet1", false, "vn1");
+
+    //Add bgpaas route to evpn routing
+    std::vector<std::string> peer_sources;
+    peer_sources.push_back("1.1.1.10");
+    MacAddress dummy_mac;
+
+    // Add Tunnel BGPaaS
+    BgpaasIntfRouteAdd(bgp_peer_, "l3evpn_1", TunnelType::VxlanType(),
+                       agent_->router_id(),
+                       routing_vrf->vxlan_id(), vn_list,
+                       Ip4Address::from_string("10.10.10.10"), 32,
+                       peer_sources);
+
+    client->WaitForIdle();
+
+    // Verify type5 route added to Lr evpn table is copied to bridge vrf
+    InetUnicastRouteEntry *rt_l3evpn_1 =
+        RouteGet("l3evpn_1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_l3evpn_1 != nullptr);
+
+    // Validate external rt gets installed in lr vrf with lr vn vxlan id
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("10.10.10.10"),
+                    32, "vnet1", true);
+
+    EvpnAgentRouteTable *rt_table =
+        static_cast<EvpnAgentRouteTable *>
+            (agent_->vrf_table()->GetEvpnRouteTable("l3evpn_1"));
+    rt_table->DeleteReq(bgp_peer_, "l3evpn_1", MacAddress(),
+                        Ip4Address::from_string("10.10.10.10"), 32, 0,
+                        new ControllerVmRoute(bgp_peer_));
+
+    // Send rt delete in lr vrf and see route gets deleted in bridge vrf
+    table1->DeleteReq(bgp_peer_, "vrf1",
+                      Ip4Address::from_string("10.10.10.10"), 32,
+                      new ControllerVmRoute(bgp_peer_));
+    client->WaitForIdle();
+
+    InetUnicastRouteEntry *rt_del =
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del == nullptr);
+    InetUnicastRouteEntry *rt_del_l3evpn_1 =
+        RouteGet("l3evpn_1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del_l3evpn_1 == nullptr);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+
+    // Clean up
+    client->WaitForIdle();
+
+    // Bridge VN1 & VN2
+    DelLrBridgeVrf("vn1", 1);
+    DelLrBridgeVrf("vn2", 1);
+    DelLrRoutingVrf(1);
+    DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    DelLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+    DeleteVmportEnv(input1, 1, true);
+    DeleteVmportEnv(input2, 1, true);
+    WAIT_FOR(1000, 1000, (0 == Agent::GetInstance()->vm_table()->Size()));
+    DelBgpaasPortRange();
+    DeleteBgpRouterConfig("127.0.0.1", 0, "ip-fabric");
+    DeleteBgpServiceConfig("1.1.1.10", 50000, "vnet1", "vrf1");
+    DelIPAM("vn1");
+    DelIPAM("vn2");
+
+    // Project
+    DelNode("project", "admin");
+    client->WaitForIdle();
+
+    // Peer
+    DeleteBgpPeer(bgp_peer_);
+    client->WaitForIdle(5);
+
+    // Checks
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    client->WaitForIdle();
+}
+
+TEST_F(VxlanRoutingTest, Add_del_bgpaas_composite_interfaces) {
+    agent_ = Agent::GetInstance();
+    AgentParam *params = agent_->params();
+    params->set_bgpaas_max_shared_sessions(4);
+    AddBgpaasPortRange(50000, 50512);
+    bgp_peer_ = CreateBgpPeer("127.0.0.1", "remote");
+    using boost::uuids::nil_uuid;
+    struct PortInfo input1[] = {
+        {"vnet1", 1, "1.1.1.10", "00:00:01:01:01:10", 1, 1},
+        {"vnet3", 3, "1.1.1.11", "00:00:01:01:01:11", 1, 3},
+    };
+    IpamInfo ipam_info_1[] = {
+        {"1.1.1.0", 24, "1.1.1.254", true},
+    };
+
+    struct PortInfo input2[] = {
+        {"vnet2", 2, "2.2.2.20", "00:00:02:02:02:20", 2, 2},
+    };
+    IpamInfo ipam_info_2[] = {
+        {"2.2.2.0", 24, "2.2.2.200", true},
+    };
+
+    // Bridge vrf
+    AddIPAM("vn1", ipam_info_1, 1);
+    AddIPAM("vn2", ipam_info_2, 1);
+
+    CreateVmportEnv(input1, 2);
+    CreateVmportEnv(input2, 1);
+
+    AddLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    AddLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+
+    const char *routing_vrf_name = "l3evpn_1";
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    AddLrBridgeVrf("vn2", 1);
+    client->WaitForIdle();
+
+    AddBgpRouterConfig("127.0.0.1", 0, 179,
+                       64512, "ip-fabric", "control-node");
+    std::string bgpaas1 = AddBgpServiceConfig("1.1.1.10", 50000, 179, 1,
+                                              "vnet1", "vrf1",
+                                              "bgpaas-client", true);
+    std::string bgpaas2 = AddBgpServiceConfig("1.1.1.11", 50000, 179, 1,
+                                              "vnet3", "vrf1",
+                                              "bgpaas-client", true);
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmInterfaceGet(1)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(2)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(3)->logical_router_uuid() == nil_uuid());
+
+    EXPECT_TRUE(VmInterfaceGet(91)->logical_router_uuid() != nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(92)->logical_router_uuid() != nil_uuid());
+
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.11"), 32,
+                    "vnet3", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.11"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+
+    // checking routing vrf have valid VXLAN ID
+    VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
+    EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
+
+    // check to see if the subnet route for vn added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+
+    ComponentNHKeyList comp_nh_list;
+    InetUnicastRouteEntry *rt_1 =
+        RouteGet("vrf1", Ip4Address::from_string("1.1.1.10"), 32);
+    EXPECT_TRUE(rt_1 != nullptr);
+    const NextHop *nh_1 = rt_1->GetActiveNextHop();
+    EXPECT_TRUE(nh_1->GetType() == NextHop::INTERFACE);
+
+    DBEntryBase::KeyPtr db_nh_key_1 = nh_1->GetDBRequestKey();
+    NextHopKey *nh_key_1 = static_cast<NextHopKey *>(db_nh_key_1.release());
+    std::unique_ptr<const NextHopKey> nh_key_ptr_1(nh_key_1);
+    ComponentNHKeyPtr nh_data1(new ComponentNHKey(rt_1->GetActiveLabel(),
+                                                  std::move(nh_key_ptr_1)));
+
+    InetUnicastRouteEntry *rt_2 =
+        RouteGet("vrf1", Ip4Address::from_string("1.1.1.11"), 32);
+    EXPECT_TRUE(rt_2 != nullptr);
+    const NextHop *nh_2 = rt_2->GetActiveNextHop();
+    EXPECT_TRUE(nh_2->GetType() == NextHop::INTERFACE);
+
+    DBEntryBase::KeyPtr db_nh_key_2 = nh_2->GetDBRequestKey();
+    NextHopKey *nh_key_2 = static_cast<NextHopKey *>(db_nh_key_2.release());
+    std::unique_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
+    ComponentNHKeyPtr nh_data2(new ComponentNHKey(rt_2->GetActiveLabel(),
+                                                  std::move(nh_key_ptr_2)));
+
+    comp_nh_list.push_back(nh_data1);
+    comp_nh_list.push_back(nh_data2);
+    DBRequest nh_req(DBRequest::DB_ENTRY_ADD_CHANGE);
+    nh_req.key.reset(new CompositeNHKey(Composite::ECMP, true,
+                                        comp_nh_list, "vrf1"));
+    nh_req.data.reset(new CompositeNHData());
+
+    VnListType vn_list;
+    vn_list.insert("vn1");
+    PathPreference path_preference;
+    EcmpLoadBalance ecmp_load_balance;
+    InetUnicastAgentRouteTable *table1 =
+        static_cast<InetUnicastAgentRouteTable*>
+            (agent_->vrf_table()->GetInet4UnicastRouteTable("vrf1"));
+
+    ControllerEcmpRoute *data = new ControllerEcmpRoute(
+        bgp_peer_, vn_list, ecmp_load_balance, TagList(), SecurityGroupList(),
+        path_preference, (1 << TunnelType::MPLS_GRE), nh_req,
+        "10.10.10.10/32");
+    ControllerEcmpRoute::ClonedLocalPathListIter iter =
+        data->cloned_local_path_list().begin();
+    while (iter != data->cloned_local_path_list().end()) {
+        table1->AddClonedLocalPathReq(bgp_peer_, "vrf1",
+                                      Ip4Address::from_string("10.10.10.10"),
+                                      32, (*iter));
+        iter++;
+    }
+    // ECMP create component NH
+    table1->AddRemoteVmRouteReq(bgp_peer_, "vrf1",
+                                Ip4Address::from_string("10.10.10.10"), 32,
+                                data);
+    client->WaitForIdle();
+
+    InetUnicastRouteEntry *bgpaas_rt_vrf1 =
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(bgpaas_rt_vrf1 != nullptr);
+
+    // Validate external rt gets installed in lr vrf with lr vn vxlan id
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.11"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.11"), 32,
+                    "vnet3", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("10.10.10.10"),
+                    32, "vnet1", false, "vn1");
+
+    //Add bgpaas route to evpn routing
+    std::vector<std::string> peer_sources;
+    peer_sources.push_back("1.1.1.10");
+    peer_sources.push_back("1.1.1.11");
+    MacAddress dummy_mac;
+
+    // Add Tunnel BGPaaS
+    BgpaasIntfRouteAdd(bgp_peer_, "l3evpn_1", TunnelType::VxlanType(),
+                       agent_->router_id(),
+                       routing_vrf->vxlan_id(), vn_list,
+                       Ip4Address::from_string("10.10.10.10"), 32,
+                       peer_sources);
+
+    client->WaitForIdle();
+
+    // Verify type5 route added to Lr evpn table is copied to bridge vrf
+    InetUnicastRouteEntry *rt_l3evpn_1 =
+        RouteGet("l3evpn_1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_l3evpn_1 != nullptr);
+
+    if (rt_l3evpn_1) {
+        const Route::PathList & path_list = rt_l3evpn_1->GetPathList();
+        for (const auto& path_it : path_list) {
+            const AgentPath* path =
+                dynamic_cast<const AgentPath*>(&path_it);
+            if (path != nullptr)
+                continue;
+            if ((path->nexthop()) &&
+                (path->nexthop()->GetType() == NextHop::COMPOSITE)) {
+               CompositeNH *comp_nh = dynamic_cast<CompositeNH *>
+                    (path->nexthop());
+                EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
+                EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
+                EXPECT_TRUE(comp_nh->PolicyEnabled()==true);
+                const InterfaceNH *nh_nh = dynamic_cast<const InterfaceNH *>
+                    (comp_nh->component_nh_list()[0]->nh());
+                EXPECT_TRUE(nh_nh != nullptr);
+                const InterfaceNH *nh_nh2 = dynamic_cast<const InterfaceNH *>
+                    (comp_nh->component_nh_list()[1]->nh());
+                EXPECT_TRUE(nh_nh2 != nullptr);
+            }
+        }
+    }
+
+    // Validate external rt gets installed in lr vrf with lr vn vxlan id
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.11"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.11"), 32,
+                    "vnet3", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("10.10.10.10"),
+                    32, "vnet1", true);
+
+    EvpnAgentRouteTable *rt_table =
+        static_cast<EvpnAgentRouteTable *>
+            (agent_->vrf_table()->GetEvpnRouteTable("l3evpn_1"));
+    rt_table->DeleteReq(bgp_peer_, "l3evpn_1", MacAddress(),
+                        Ip4Address::from_string("10.10.10.10"), 32, 0,
+                        new ControllerVmRoute(bgp_peer_));
+
+    // Send rt delete in lr vrf and see route gets deleted in bridge vrf
+    table1->DeleteReq(bgp_peer_, "vrf1",
+                      Ip4Address::from_string("10.10.10.10"), 32,
+                      new ControllerVmRoute(bgp_peer_));
+    client->WaitForIdle();
+
+    InetUnicastRouteEntry *rt_del =
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del == nullptr);
+    InetUnicastRouteEntry *rt_del_l3evpn_1 =
+        RouteGet("l3evpn_1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del_l3evpn_1 == nullptr);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.11"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.11"), 32,
+                    "vnet3", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+
+    // Clean up
+    client->WaitForIdle();
+
+    // Bridge VN1 & VN2
+    DelLrBridgeVrf("vn1", 1);
+    DelLrBridgeVrf("vn2", 1);
+    DelLrRoutingVrf(1);
+    DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    DelLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+    DeleteVmportEnv(input1, 2, true);
+    DeleteVmportEnv(input2, 1, true);
+    WAIT_FOR(1000, 1000, (0 == Agent::GetInstance()->vm_table()->Size()));
+    DelBgpaasPortRange();
+    DeleteBgpRouterConfig("127.0.0.1", 0, "ip-fabric");
+    DeleteBgpServiceConfig("1.1.1.10", 50000, "vnet1", "vrf1");
+    DeleteBgpServiceConfig("1.1.1.11", 50000, "vnet3", "vrf1");
+    DelIPAM("vn1");
+    DelIPAM("vn2");
+
+    // Project
+    DelNode("project", "admin");
+    client->WaitForIdle();
+
+    // Peer
+    DeleteBgpPeer(bgp_peer_);
+    client->WaitForIdle(5);
+
+    // Checks
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    client->WaitForIdle();
+}
+
+TEST_F(VxlanRoutingTest, Add_del_bgpaas_composite_interface_and_tunnel) {
+    agent_ = Agent::GetInstance();
+    AgentParam *params = agent_->params();
+    params->set_bgpaas_max_shared_sessions(4);
+    AddBgpaasPortRange(50000, 50512);
+    bgp_peer_ = CreateBgpPeer("127.0.0.1", "remote");
+    using boost::uuids::nil_uuid;
+    struct PortInfo input1[] = {
+        {"vnet1", 1, "1.1.1.10", "00:00:01:01:01:10", 1, 1},
+    };
+    IpamInfo ipam_info_1[] = {
+        {"1.1.1.0", 24, "1.1.1.254", true},
+    };
+
+    struct PortInfo input2[] = {
+        {"vnet2", 2, "2.2.2.20", "00:00:02:02:02:20", 2, 2},
+    };
+    IpamInfo ipam_info_2[] = {
+        {"2.2.2.0", 24, "2.2.2.200", true},
+    };
+
+    // Bridge vrf
+    AddIPAM("vn1", ipam_info_1, 1);
+    AddIPAM("vn2", ipam_info_2, 1);
+
+    CreateVmportEnv(input1, 1);
+    CreateVmportEnv(input2, 1);
+
+    AddLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    AddLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+
+    const char *routing_vrf_name = "l3evpn_1";
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    AddLrBridgeVrf("vn2", 1);
+    client->WaitForIdle();
+
+    AddBgpRouterConfig("127.0.0.1", 0, 179,
+                       64512, "ip-fabric", "control-node");
+    std::string bgpaas1 = AddBgpServiceConfig("1.1.1.10", 50000, 179, 1,
+                                              "vnet1", "vrf1",
+                                              "bgpaas-client", true);
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmInterfaceGet(1)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(2)->logical_router_uuid() == nil_uuid());
+
+    EXPECT_TRUE(VmInterfaceGet(91)->logical_router_uuid() != nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(92)->logical_router_uuid() != nil_uuid());
+
+    VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
+    EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
+
+    InetUnicastAgentRouteTable *table1 =
+        static_cast<InetUnicastAgentRouteTable*>
+            (agent_->vrf_table()->GetInet4UnicastRouteTable("vrf1"));
+
+    MacAddress dummy_mac;
+    VnListType vn_list;
+    vn_list.insert("vn1");
+    PathPreference path_preference;
+    EcmpLoadBalance ecmp_load_balance;
+
+    ControllerVmRoute *data_tun = ControllerVmRoute::MakeControllerVmRoute(
+        bgp_peer_, agent_->fabric_vrf_name(), agent_->router_id(), "vrf1",
+        Ip4Address::from_string("100.1.1.11"), TunnelType::MPLS_GRE, 1001,
+        dummy_mac, vn_list, SecurityGroupList(), TagList(), path_preference,
+        false, ecmp_load_balance, false);
+    table1->AddRemoteVmRouteReq(bgp_peer_, "vrf1",
+                                Ip4Address::from_string("1.1.1.11"),
+                                32, data_tun);
+
+    BridgeTunnelRouteAdd(bgp_peer_, "l3evpn_1", TunnelType::VxlanType(),
+                         Ip4Address::from_string("100.1.1.11"),
+                         routing_vrf->vxlan_id(), dummy_mac,
+                         Ip4Address::from_string("1.1.1.11"),
+                         32, "00:00:99:99:99:99");
+    client->WaitForIdle();
+
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.11"), 32,
+                    "100.1.1.11", true);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.11"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+
+    // check to see if the subnet route for vn added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+
+    ComponentNHKeyList comp_nh_list;
+    InetUnicastRouteEntry *rt_1 =
+        RouteGet("vrf1", Ip4Address::from_string("1.1.1.10"), 32);
+    EXPECT_TRUE(rt_1 != nullptr);
+    const NextHop *nh_1 = rt_1->GetActiveNextHop();
+    EXPECT_TRUE(nh_1->GetType() == NextHop::INTERFACE);
+
+    DBEntryBase::KeyPtr db_nh_key_1 = nh_1->GetDBRequestKey();
+    NextHopKey *nh_key_1 = static_cast<NextHopKey *>(db_nh_key_1.release());
+    std::unique_ptr<const NextHopKey> nh_key_ptr_1(nh_key_1);
+    ComponentNHKeyPtr nh_data1(new ComponentNHKey(rt_1->GetActiveLabel(),
+                                                  std::move(nh_key_ptr_1)));
+
+    TunnelNHKey *nh_key_2 = new TunnelNHKey(
+        agent_->fabric_vrf_name(), agent_->router_id(),
+        Ip4Address::from_string("100.1.1.11"), false, TunnelType::MPLS_GRE);
+    std::unique_ptr<const NextHopKey> nh_key_ptr_2(nh_key_2);
+    ComponentNHKeyPtr nh_data2(new ComponentNHKey(1001,
+                                                  std::move(nh_key_ptr_2)));
+
+    comp_nh_list.push_back(nh_data1);
+    comp_nh_list.push_back(nh_data2);
+    DBRequest nh_req(DBRequest::DB_ENTRY_ADD_CHANGE);
+    nh_req.key.reset(new CompositeNHKey(Composite::ECMP, true,
+                                        comp_nh_list, "vrf1"));
+    nh_req.data.reset(new CompositeNHData());
+
+    ControllerEcmpRoute *data = new ControllerEcmpRoute(
+        bgp_peer_, vn_list, ecmp_load_balance, TagList(), SecurityGroupList(),
+        path_preference, (1 << TunnelType::MPLS_GRE), nh_req,
+        "10.10.10.10/32");
+    ControllerEcmpRoute::ClonedLocalPathListIter iter =
+        data->cloned_local_path_list().begin();
+    while (iter != data->cloned_local_path_list().end()) {
+        table1->AddClonedLocalPathReq(bgp_peer_, "vrf1",
+                                      Ip4Address::from_string("10.10.10.10"),
+                                      32, (*iter));
+        iter++;
+    }
+    // ECMP create component NH
+    table1->AddRemoteVmRouteReq(bgp_peer_, "vrf1",
+                                Ip4Address::from_string("10.10.10.10"), 32,
+                                data);
+    client->WaitForIdle();
+
+    InetUnicastRouteEntry *bgpaas_rt_vrf1 =
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(bgpaas_rt_vrf1 != nullptr);
+
+    // Validate external rt gets installed in lr vrf with lr vn vxlan id
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.11"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.11"), 32,
+                    "100.1.1.11", true);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("10.10.10.10"),
+                    32, "vnet1", false, "vn1");
+
+    //Add bgpaas route to evpn routing
+    std::vector<std::string> peer_sources;
+    peer_sources.push_back("1.1.1.10");
+    peer_sources.push_back("1.1.1.11");
+
+    stringstream ss_node;
+    autogen::EnetItemType item;
+    SecurityGroupList sg;
+    item.entry.nlri.af = BgpAf::L2Vpn;
+    item.entry.nlri.safi = BgpAf::Enet;
+    item.entry.nlri.address = "10.10.10.10/32";
+    item.entry.nlri.ethernet_tag = 0;
+    autogen::EnetNextHopType nh, nh2;
+    nh.af = Address::INET;
+    nh.address = agent_->router_id().to_string();
+    nh.label = routing_vrf->vxlan_id();
+    nh.tunnel_encapsulation_list.tunnel_encapsulation.push_back("vxlan");
+    item.entry.next_hops.next_hop.push_back(nh);
+    nh2.af = Address::INET;
+    nh2.address = "100.1.1.11";
+    nh2.label = routing_vrf->vxlan_id();
+    nh2.tunnel_encapsulation_list.tunnel_encapsulation.push_back("vxlan");
+    item.entry.next_hops.next_hop.push_back(nh2);
+    item.entry.med = 0;
+    item.entry.peers.peer.push_back("1.1.1.10");
+    item.entry.peers.peer.push_back("1.1.1.11");
+
+    bgp_peer_->GetAgentXmppChannel()->AddEvpnEcmpRoute(
+        routing_vrf_name, MacAddress::FromString("00:00:00:00:00:00"),
+        Ip4Address::from_string("10.10.10.10"), 32, &item, vn_list);
+    client->WaitForIdle();
+
+    // Verify type5 route added to Lr evpn table is copied to inet table
+    InetUnicastRouteEntry *rt_l3evpn_1 =
+        RouteGet("l3evpn_1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_l3evpn_1 != nullptr);
+
+    if (rt_l3evpn_1) {
+        const Route::PathList & path_list = rt_l3evpn_1->GetPathList();
+        for (const auto& path_it : path_list) {
+            const AgentPath* path =
+                dynamic_cast<const AgentPath*>(&path_it);
+            if (path !=nullptr)
+                continue;
+            if ((path->nexthop()) &&
+                (path->nexthop()->GetType() == NextHop::COMPOSITE)) {
+                CompositeNH *comp_nh = dynamic_cast<CompositeNH *>
+                    (path->nexthop());
+                EXPECT_TRUE(comp_nh->GetType() == NextHop::COMPOSITE);
+                EXPECT_TRUE(comp_nh->ComponentNHCount() == 2);
+                EXPECT_TRUE(comp_nh->PolicyEnabled()==true);
+                if (comp_nh->component_nh_list()[0] != nullptr)
+                {
+                    const InterfaceNH *nh_nh =
+                        dynamic_cast<const InterfaceNH *>
+                            (comp_nh->component_nh_list()[0]->nh());
+                    EXPECT_TRUE(nh_nh != nullptr);
+                    EXPECT_TRUE(comp_nh->component_nh_list()[1] == nullptr);
+                }
+                else
+                {
+                    const InterfaceNH *nh_nh2 =
+                        dynamic_cast<const InterfaceNH *>
+                            (comp_nh->component_nh_list()[1]->nh());
+                    EXPECT_TRUE(nh_nh2 != nullptr);
+                }
+            }
+        }
+    }
+
+    // Validate external rt gets installed in lr vrf with lr vn vxlan id
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.11"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.11"), 32,
+                    "100.1.1.11", true);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("10.10.10.10"),
+                    32, "vnet1", true);
+
+    EvpnAgentRouteTable *rt_table =
+        static_cast<EvpnAgentRouteTable *>
+            (agent_->vrf_table()->GetEvpnRouteTable("l3evpn_1"));
+    rt_table->DeleteReq(bgp_peer_, "l3evpn_1", MacAddress(),
+                        Ip4Address::from_string("10.10.10.10"), 32, 0,
+                        new ControllerVmRoute(bgp_peer_));
+
+
+    // Send rt delete in lr vrf and see route gets deleted in bridge vrf
+    table1->DeleteReq(bgp_peer_, "vrf1",
+                      Ip4Address::from_string("10.10.10.10"), 32,
+                      new ControllerVmRoute(bgp_peer_));
+    client->WaitForIdle();
+
+    InetUnicastRouteEntry *rt_del =
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del == nullptr);
+    InetUnicastRouteEntry *rt_del_l3evpn_1 =
+        RouteGet("l3evpn_1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del_l3evpn_1 == nullptr);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.11"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.11"), 32,
+                    "100.1.1.11", true);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+
+    // Clean up
+    client->WaitForIdle();
+
+    // Bridge VN1 & VN2
+    DelLrBridgeVrf("vn1", 1);
+    DelLrBridgeVrf("vn2", 1);
+    DelLrRoutingVrf(1);
+    DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    DelLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+    DeleteVmportEnv(input1, 1, true);
+    DeleteVmportEnv(input2, 1, true);
+    WAIT_FOR(1000, 1000, (0 == Agent::GetInstance()->vm_table()->Size()));
+    DelBgpaasPortRange();
+    DeleteBgpRouterConfig("127.0.0.1", 0, "ip-fabric");
+    DeleteBgpServiceConfig("1.1.1.10", 50000, "vnet1", "vrf1");
+    DelIPAM("vn1");
+    DelIPAM("vn2");
+
+    // Project
+    DelNode("project", "admin");
+    client->WaitForIdle();
+
+    // Peer
+    DeleteBgpPeer(bgp_peer_);
+    client->WaitForIdle(5);
+
+    // Checks
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
     client->WaitForIdle();
 }
 

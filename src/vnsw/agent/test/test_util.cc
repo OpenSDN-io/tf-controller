@@ -1785,6 +1785,40 @@ public:
         }
     };
 
+    AgentXmppChannelVxlanInterface(const IpAddress &vm_addr,
+        uint8_t plen,
+        uint32_t label,
+        const string &vm_vrf,
+        const Ip4Address &server_ip,
+        const VnListType vn_list,
+        const BgpPeer *peer,
+        const std::vector<std::string> &peer_sources) {
+        messageWasTransmitted_ = false;
+        const Agent *agent = Agent::GetInstance();
+        if (VxlanRoutingManager::IsVxlanAvailable(agent) &&
+        VxlanRoutingManager::IsRoutingVrf(vm_vrf, agent)) {
+            MacAddress dummy_mac;
+            agent->oper_db()->vxlan_routing_manager()->
+            XmppAdvertiseEvpnRoute(vm_addr,
+                plen,
+                label,
+                vm_vrf,
+                RouteParameters(server_ip,
+                    dummy_mac,
+                    vn_list,
+                    SecurityGroupList(),
+                    CommunityList(),
+                    TagList(),
+                    PathPreference(),
+                    EcmpLoadBalance(),
+                    0),   // sequence number
+                peer,
+                peer_sources);
+            messageWasTransmitted_ = true;
+        }
+    };
+
+
     //
     bool messageWasTransmitted() const {
         return messageWasTransmitted_;
@@ -1865,6 +1899,36 @@ bool BridgeTunnelRouteAdd(const BgpPeer *peer, const string &vm_vrf,
     return BridgeTunnelRouteAdd(peer, vm_vrf, bmap,
                                 Ip4Address::from_string(server_ip, ec), label, remote_vm_mac,
                                 IpAddress::from_string(vm_addr, ec), plen, tag, leaf);
+}
+
+bool BgpaasIntfRouteAdd(const BgpPeer *peer, const string &vm_vrf,
+                          TunnelType::TypeBmap bmap,
+                          const Ip4Address &server_ip,
+                          uint32_t label, VnListType vn_list,
+                          const IpAddress &vm_addr, uint8_t plen,
+                          std::vector<std::string> peer_sources, uint32_t tag,
+                          bool leaf) {
+    if (bmap == TunnelType::VxlanType() &&
+        AgentXmppChannelVxlanInterface(vm_addr,
+            plen, label, vm_vrf, server_ip,
+            vn_list, peer, peer_sources).
+            messageWasTransmitted()) {
+        return true;
+    }
+    MacAddress remote_vm_mac;
+    ControllerVmRoute *data =
+        ControllerVmRoute::MakeControllerVmRoute(peer,
+                              Agent::GetInstance()->fabric_vrf_name(),
+                              Agent::GetInstance()->router_id(),
+                              vm_vrf, server_ip,
+                              bmap, label, MacAddress(),
+                              vn_list, SecurityGroupList(),
+                              TagList(),
+                              PathPreference(), false, EcmpLoadBalance(),
+                              leaf);
+    EvpnAgentRouteTable::AddRemoteVmRouteReq(peer, vm_vrf, remote_vm_mac,
+                                        vm_addr, 32, tag, data);
+    return true;
 }
 
 bool EcmpTunnelRouteAdd(const BgpPeer *peer, const string &vrf_name,
