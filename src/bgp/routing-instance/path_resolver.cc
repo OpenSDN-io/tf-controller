@@ -1214,7 +1214,7 @@ bool ResolverNexthop::Match(BgpServer *server, BgpTable *table,
 
     // Ignore if the route doesn't match the address.
     Address::Family family = table->family();
-    assert(family == Address::INET || family == Address::INET6 || Address::EVPN);
+    assert(family == Address::INET || family == Address::INET6 || family == Address::EVPN);
 
     // If longest match based lookup is not enabled, do an exact match between
     // the route and the address.
