@@ -247,7 +247,8 @@ public:
         return AgentRefCount<VnEntry>::GetRefCount();
     }
     bool DBEntrySandesh(Sandesh *sresp, std::string &name) const;
-    void SendObjectLog(AgentLogEvent::type event) const;
+    void SendObjectLog(SandeshTraceBufferPtr ptr,
+                       AgentLogEvent::type event) const;
     bool IdentifyBgpRoutersServiceIp(const IpAddress &ip_address, bool *is_dns,
                                      bool *is_gateway) const;
     void AllocWalker();

@@ -93,6 +93,9 @@ bool AgentVnSandesh::Filter(const DBEntryBase *entry) {
     const std::vector<VnIpam> VnIpams = vn->GetVnIpam();
     std::vector<VnIpam>::const_iterator pos;
     bool ipam_flag = true;
+    if (VnIpams.size() == 0) {
+        ipam_flag = false;
+    }
     for(pos=VnIpams.begin();pos < VnIpams.end();pos++) {
             if ((MatchSubString(pos->ipam_name , ipam_name_) == true)) {
                 ipam_flag = false;

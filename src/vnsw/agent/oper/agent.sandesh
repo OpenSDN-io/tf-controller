@@ -399,56 +399,61 @@ struct VnSandeshData {
     4: string mirror_acl_uuid (link="AclReq");
     /** Uuid of configured mirror acl associated with virtual network */
     5: string mirror_cfg_acl_uuid (link="AclReq");
+    /** Uuid of logical router associated with virtual network */
+    6: string logical_router_uuid;
     /** Name of vrf associated with virtual network */
-    6: string vrf_name (link="VrfListReq");
+    7: string vrf_name (link="VrfListReq");
     /** List of ipam data associated with virtual network */
-    7: list<VnIpamData> ipam_data;
+    8: list<VnIpamData> ipam_data;
     /** List of ipam host routes associated with virtual network */
-    8: list<VnIpamHostRoutes> ipam_host_routes;
+    9: list<VnIpamHostRoutes> ipam_host_routes;
     /** Boolean value which indicates if layer2 forwarding is enabled for
      * virtual network
      */
-    9: bool layer2_forwarding;
+    10: bool layer2_forwarding;
     /** Boolean value which indicates if ipv4 forwarding is enabled for
      * virtual network
      */
-    10: bool ipv4_forwarding;
+    11: bool ipv4_forwarding;
     /** Boolean value which indicates if virtual network is active and
      * operational
      */
-    11: bool admin_state;
+    12: bool admin_state;
     /** Vxlan id associated with virtual network */
-    12: i32 vxlan_id;
+    13: i32 vxlan_id;
     /** Configured vxlan id associated with virtual network */
-    13: i32 config_vxlan_id;
+    14: i32 config_vxlan_id;
     /** Vn id for virtual network */
-    14: i32 vn_id;
+    15: i32 vn_id;
     /** Boolean value which indicates if rpf checking is enabled on virtual
      * network
      */
-    15: bool enable_rpf;
+    16: bool enable_rpf;
     /** Boolean value which indicates if bridging is enabled on virtual
      * network
      */
-    16: bool bridging;
+    17: bool bridging;
     /** Boolean value which indicates if flooding of unknown unicast packets
      * is enabled on virtual network
      */
-    17: bool flood_unknown_unicast;
+    18: bool flood_unknown_unicast;
     /** Etree mode enabled or disabled for PBB Backbone VN */
-    18: bool pbb_etree_enabled;
+    19: bool pbb_etree_enabled;
     /** Layer-2 control word enabled */
-    19: bool layer2_control_word;
+    20: bool layer2_control_word;
     /** List of security-logging-objects associated with virtual network */
-    20: list<SecurityLoggingObjectLink> slo_list;
+    21: list<SecurityLoggingObjectLink> slo_list;
     /** Enable IGMP on the VMI */
-    21: bool cfg_igmp_enable;
+    22: bool cfg_igmp_enable;
     /** Max number of flows on each vmi in vn **/
-    22: i32 max_flows;
+    23: i32 max_flows;
     /** List of multicast-policy(s) associated with virtual network */
-    23: list<MulticastPolicyLink> mp_list;
-    24: bool mac_ip_learning_enable;
-    25: string health_check_uuid;
+    24: list<MulticastPolicyLink> mp_list;
+    25: bool mac_ip_learning_enable;
+    26: string health_check_uuid;
+    /** Boolean value which indicates if virtual network is vxlan routing
+     */
+    27: bool vxlan_routing_vn;
 }
 
 /**
@@ -2142,22 +2147,27 @@ struct VnObjectLogInfo {
     5: optional string mirror_acl_uuid;
     /** Uuid of configured mirror acl associated with virtual network */
     6: optional string mirror_cfg_acl_uuid;
+    /** Uuid of logical router associated with virtual network */
+    7: optional string logical_router_uuid;
     /** Name of vrf associated with virtual network */
-    7: optional string vrf;
+    8: optional string vrf;
     /** List of ipam data associated with virtual network */
-    8: optional list <VnObjectLogIpam> ipam_list;
+    9: optional list <VnObjectLogIpam> ipam_list;
     /** Boolean value which indicates if ipv4 forwarding is enabled for
      * virtual network
      */
-    9: optional bool ipv4_forwarding;
+    10: optional bool ipv4_forwarding;
     /** Boolean value which indicates if bridging is enabled on virtual
      * network
      */
-   10: optional bool bridging;
+    11: optional bool bridging;
     /** Boolean value which indicates if virtual network is active and
      * operational
      */
-   11: optional bool admin_state;
+    12: optional bool admin_state;
+    /** Boolean value which indicates if virtual network is vxlan routing
+     */
+    13: optional bool vxlan_routing_vn;
 }
 
 /**
@@ -2167,6 +2177,17 @@ struct VnObjectLogInfo {
  * @object: VnEntry
  */
 objectlog sandesh VnObjectLog {
+    /** Vn information for vn object log */
+    1: VnObjectLogInfo vn;
+}
+
+/**
+ * @description: Trace log for vn object in vrouter-agent oper DB
+ * @type: Trace
+ * @severity: DEBUG
+ * @object: VnEntry
+ */
+traceobject sandesh VnObjectTrace {
     /** Vn information for vn object log */
     1: VnObjectLogInfo vn;
 }

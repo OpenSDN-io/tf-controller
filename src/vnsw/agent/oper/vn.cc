@@ -775,7 +775,7 @@ DBEntry *VnTable::OperDBAdd(const DBRequest *req) {
     vn->AllocWalker();
 
     vn->ChangeHandler(agent(), req);
-    vn->SendObjectLog(AgentLogEvent::ADD);
+    vn->SendObjectLog(GetOperDBTraceBuf(), AgentLogEvent::ADD);
 
     if (vn->name_ == agent()->fabric_vn_name()) {
         //In case of distributes SNAT we want all
@@ -792,7 +792,7 @@ bool VnTable::OperDBDelete(DBEntry *entry, const DBRequest *req) {
     vn->ApplyAllIpam(agent(), vn->vrf_.get(), true);
     vn->UpdateVxlan(agent(), true);
     vn->ReleaseWalker();
-    vn->SendObjectLog(AgentLogEvent::DEL);
+    vn->SendObjectLog(GetOperDBTraceBuf(), AgentLogEvent::DEL);
 
     if (vn->name_ == agent()->fabric_vn_name()) {
         agent()->set_fabric_vn_uuid(boost::uuids::nil_uuid());
@@ -804,7 +804,7 @@ bool VnTable::OperDBDelete(DBEntry *entry, const DBRequest *req) {
 bool VnTable::OperDBOnChange(DBEntry *entry, const DBRequest *req) {
     VnEntry *vn = static_cast<VnEntry *>(entry);
     bool ret = vn->ChangeHandler(agent(), req);
-    vn->SendObjectLog(AgentLogEvent::CHANGE);
+    vn->SendObjectLog(GetOperDBTraceBuf(), AgentLogEvent::CHANGE);
     if (ret) {
         VnData *data = static_cast<VnData *>(req->data.get());
         if (data && data->ifmap_node()) {
@@ -1314,12 +1314,15 @@ bool VnEntry::DBEntrySandesh(Sandesh *sresp, std::string &name)  const {
     data.set_max_flows(vn_max_flows());
     data.set_mac_ip_learning_enable(mac_ip_learning_enable());
     data.set_health_check_uuid(to_string(health_check_uuid()));
+    data.set_logical_router_uuid(UuidToString(logical_router_uuid()));
+    data.set_vxlan_routing_vn(vxlan_routing_vn());
 
     list.push_back(data);
     return true;
 }
 
-void VnEntry::SendObjectLog(AgentLogEvent::type event) const {
+void VnEntry::SendObjectLog(SandeshTraceBufferPtr buf,
+                            AgentLogEvent::type event) const {
     VnObjectLogInfo info;
     string str;
     string vn_uuid = UuidToString(GetUuid());
@@ -1388,7 +1391,10 @@ void VnEntry::SendObjectLog(AgentLogEvent::type event) const {
     info.set_bridging(bridging());
     info.set_ipv4_forwarding(layer3_forwarding());
     info.set_admin_state(admin_state());
+    info.set_logical_router_uuid(UuidToString(logical_router_uuid()));
+    info.set_vxlan_routing_vn(vxlan_routing_vn());
     VN_OBJECT_LOG_LOG("AgentVn", SandeshLevel::SYS_INFO, info);
+    VN_OBJECT_TRACE_TRACE(buf, info);
 }
 
 void VnListReq::HandleRequest() const {
