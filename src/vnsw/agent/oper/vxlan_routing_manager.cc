@@ -540,14 +540,14 @@ void VxlanRoutingManager::BridgeVnNotify(const VnEntry *vn,
 }
 
 void VxlanRoutingManager::RoutingVrfDeleteAllRoutes(VrfEntry* rt_vrf) {
-    if (rt_vrf == NULL) {
+    if (rt_vrf == nullptr) {
         return;
     }
     // Loop over all EVPN routes and delete them
 
     EvpnAgentRouteTable *evpn_table = dynamic_cast<EvpnAgentRouteTable *>
         (rt_vrf->GetEvpnRouteTable());
-    if (evpn_table == NULL) {
+    if (evpn_table == nullptr) {
         return;
     }
     EvpnRouteEntry *c_entry = dynamic_cast<EvpnRouteEntry *>
@@ -556,40 +556,50 @@ void VxlanRoutingManager::RoutingVrfDeleteAllRoutes(VrfEntry* rt_vrf) {
     const std::string vrf_name = rt_vrf->GetName();
     const uint32_t ethernet_tag = 0;
     const MacAddress mac_addr;
-    while (c_entry) {
-        const IpAddress prefix_ip = c_entry->prefix_address();
-        const uint32_t plen = c_entry->prefix_length();
+    while (c_entry != nullptr) {
+        const IpAddress &prefix_ip = c_entry->prefix_address();
+        const uint8_t plen = c_entry->prefix_length();
+        const AgentPath *rt_active_path = c_entry->GetActivePath();
+        const Peer *rt_active_peer = rt_active_path->peer();
+        const auto &path_list = c_entry->GetPathList();
 
         // Compute next entry in advance
-        if (c_entry && c_entry->get_table_partition())
+        if (c_entry != nullptr && c_entry->get_table_partition()) {
             c_entry = dynamic_cast<EvpnRouteEntry *>
                 (c_entry->get_table_partition()->GetNext(c_entry));
-        else
+        } else {
             break;
-
-        // Delete routes originated from bridge networks
-        EvpnAgentRouteTable::DeleteReq(routing_vrf_interface_peer_,
-            vrf_name,
-            mac_addr,
-            prefix_ip,
-            plen,
-            ethernet_tag, // ethernet_tag = 0 for Type5
-            NULL);
+        }
 
         InetUnicastAgentRouteTable::DeleteReq(routing_vrf_interface_peer_,
-            vrf_name, prefix_ip, plen, NULL);
-
-        // Delete routes originated from BPG peers (EVPN Type5 table)
-        EvpnAgentRouteTable::DeleteReq(routing_vrf_vxlan_bgp_peer_,
-            vrf_name,
-            mac_addr,
-            prefix_ip,
-            plen,
-            ethernet_tag, // ethernet_tag = 0 for Type5
-            NULL);
-
+                                              vrf_name, prefix_ip, plen,
+                                              nullptr);
         InetUnicastAgentRouteTable::DeleteReq(routing_vrf_vxlan_bgp_peer_,
-            vrf_name, prefix_ip, plen, NULL);
+                                              vrf_name, prefix_ip, plen,
+                                              nullptr);
+
+            if (rt_active_peer->GetType() != Peer::BGP_PEER) {
+            // Delete routes originated from bridge networks
+            EvpnAgentRouteTable::DeleteReq(rt_active_peer,
+                                           vrf_name,
+                                           mac_addr,
+                                           prefix_ip,
+                                           plen,
+                                           ethernet_tag,  // ethernet_tag = 0 for Type5
+                                           nullptr);
+        } else {
+            for (auto &path_ref : path_list) {
+                EvpnAgentRouteTable::DeleteReq(
+                    static_cast<const AgentPath*>
+                        (&path_ref)->peer(),
+                    vrf_name,
+                    mac_addr,
+                    prefix_ip,
+                    plen,
+                    ethernet_tag,  // ethernet_tag = 0 for Type5
+                    nullptr);
+           }
+        }
     }
 }
 
@@ -623,11 +633,12 @@ void VxlanRoutingManager::RoutingVnNotify(const VnEntry *vn,
         // notification of same came before this VN.
         if (routing_info_it != vrf_mapper_.lr_vrf_info_map_.end()) {
             if (routing_info_it->second.routing_vn_ == vn) {
-                RoutingVrfDeleteAllRoutes(vn->GetVrf());
+                RoutingVrfDeleteAllRoutes(
+                    routing_info_it->second.routing_vrf_);
                 // Routing VN/VRF
                 // Reset parent vn and routing vrf
-                routing_info_it->second.routing_vn_ = NULL;
-                routing_info_it->second.routing_vrf_ = NULL;
+                routing_info_it->second.routing_vn_ = nullptr;
+                routing_info_it->second.routing_vrf_ = nullptr;
             }
             // Trigger delete of logical router
             vrf_mapper_.TryDeleteLogicalRouter(routing_info_it);
