@@ -715,9 +715,17 @@ void FlowTable::HandleKSyncError(FlowEntry *flow,
         dynamic_cast<const VmInterface*>(flow->data().intf_entry.get());
         KSyncFlowMemory *ksync_obj = agent()->ksync()->ksync_flow_memory();
         const vr_flow_entry *kflow = ksync_obj->GetKernelFlowEntry(flow_handle, false);
-        if (kflow && intf && (kflow->fe_action != VR_FLOW_ACTION_HOLD) &&
-            intf->allowed_address_pair_list().list_.size()) {
-            flow->MakeShortFlow(FlowEntry::SHORT_FAILED_VROUTER_INSTALL);
+        if (kflow != nullptr &&
+            intf != nullptr &&
+            (kflow->fe_action != VR_FLOW_ACTION_HOLD)) {
+            if (flow->flow_handle() == FlowEntry::kInvalidFlowHandle) {
+                KSyncFlowIndexManager *mgr =
+                   agent()->ksync()->ksync_flow_index_manager();
+                mgr->UpdateFlowHandle(ksync_entry,
+                                      flow_handle, //ksync_entry->ksync_response_info()->flow_handle_,
+                                      gen_id); //ksync_entry->ksync_response_info()->gen_id_);
+                }
+                flow->MakeShortFlow(FlowEntry::SHORT_FAILED_VROUTER_INSTALL);
         }
     }
     return;
