@@ -293,7 +293,7 @@ public:
 
         /// @brief A pointer to the routing VRF instance (L3 VRF)
         /// connected to a LR.
-        const VrfEntry *routing_vrf_;
+        VrfEntry *routing_vrf_;
 
         /// @brief The list of bridge virtual networks (VirtualNetwork)
         /// connected to a LR.
@@ -578,7 +578,7 @@ private:
     static const Peer *routing_vrf_interface_peer_;
 
     /// @brief A pointer to the Peer where all BGP routes are stored
-    static const Peer* routing_vrf_vxlan_bgp_peer_;
+    static const Peer *routing_vrf_vxlan_bgp_peer_;
 
     /// @brief A pointer to the Agent instance.
     Agent *agent_;
