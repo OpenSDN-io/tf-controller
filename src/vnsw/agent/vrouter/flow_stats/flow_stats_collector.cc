@@ -1135,29 +1135,48 @@ static void FlowExportInfoToSandesh(const FlowExportInfo &value,
 }
 
 void FlowStatsRecordsReq::HandleRequest() const {
-    FlowStatsCollector::FlowEntryTree::iterator it;
+    auto FillFlowStatsCollectorObject = [](
+        vector<FlowStatsRecord>& list,
+        const FlowStatsCollectorObject& collector_obj) {
+        for (size_t  i_col = 0;
+            i_col < FlowStatsCollectorObject::kMaxCollectors;
+            i_col++) {
+            FlowStatsCollector *collector =
+                collector_obj.GetCollector(i_col);
+
+            FlowExportInfoList::iterator it =
+                collector->flow_export_info_list_.begin();
+            while (it != collector->flow_export_info_list_.end()) {
+                const FlowExportInfo &value = *it;
+                ++it;
+
+                SandeshFlowKey skey;
+                KeyToSandeshFlowKey(value.flow()->key(), skey);
+
+                SandeshFlowExportInfo info;
+                FlowExportInfoToSandesh(value, info);
+
+                FlowStatsRecord rec;
+                rec.set_info(info);
+                list.push_back(rec);
+            }
+        }
+    };
+
     vector<FlowStatsRecord> list;
     FlowStatsRecordsResp *resp = new FlowStatsRecordsResp();
-    for (int i = 0; i < FlowStatsCollectorObject::kMaxCollectors; i++) {
-        FlowStatsCollector *col = Agent::GetInstance()->
-            flow_stats_manager()->default_flow_stats_collector_obj()->
-            GetCollector(i);
-        it = col->flow_tree_.begin();
-        while (it != col->flow_tree_.end()) {
-            const FlowExportInfo &value = it->second;
-            ++it;
 
-            SandeshFlowKey skey;
-            KeyToSandeshFlowKey(value.flow()->key(), skey);
+    FillFlowStatsCollectorObject(
+        list,
+        *(Agent::GetInstance()->flow_stats_manager()->
+            default_flow_stats_collector_obj()));
 
-            SandeshFlowExportInfo info;
-            FlowExportInfoToSandesh(value, info);
-
-            FlowStatsRecord rec;
-            rec.set_info(info);
-            list.push_back(rec);
-        }
+    FlowStatsManager::FlowAgingTableMap &flow_aging_map =
+        Agent::GetInstance()->flow_stats_manager()->flow_aging_table_map_;
+    for (auto &collector_obj : flow_aging_map) {
+        FillFlowStatsCollectorObject(list, *collector_obj.second.get());
     }
+
     resp->set_records_list(list);
 
     resp->set_context(context());
