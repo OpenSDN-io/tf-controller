@@ -182,7 +182,7 @@ void VxlanRoutingManager::XmppAdvertiseEvpnBgpaasComposite(
     DBRequest nh_req(DBRequest::DB_ENTRY_ADD_CHANGE);
     const bool comp_nh_policy = true;
     CompositeNHKey *new_comp_nh_key =
-        new CompositeNHKey(Composite::ECMP,
+        new CompositeNHKey(Composite::LOCAL_ECMP,
             comp_nh_policy, comp_nh_list, vrf_name);
 
     nh_req.key.reset(new_comp_nh_key);
