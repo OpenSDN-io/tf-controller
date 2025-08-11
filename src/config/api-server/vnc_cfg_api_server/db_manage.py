@@ -1629,7 +1629,7 @@ class DatabaseChecker(DatabaseManager):
                 s = server.split(':')
                 temp_cluster = cluster.Cluster(
                     contact_points=[s[0]],
-                    port=s[1],
+                    port=int(s[1]),
                     auth_provider=auth_provider)
             except Exception as error:
                 raise CassandraConnectionError("error, {}: {}".format(
