@@ -2561,6 +2561,10 @@ class DatabaseCleaner(DatabaseManager):
         extra_ua_subnets = set(ua_subnet_info.keys()) - set(
             vnc_subnet_info.keys())
         for subnet_uuid in extra_ua_subnets:
+            if (subnet_uuid == 'subnet_to_neutron_tags' or
+                subnet_uuid == 'neutron_tag_to_subnets'):
+                # We shall not remove these mappings
+                continue
             subnet_key = ua_subnet_info[subnet_uuid]
             if not self._args.execute:
                 logger.info("Would remove stale subnet uuid %s in useragent "
@@ -2946,6 +2950,13 @@ class DatabaseHealer(DatabaseManager):
             fq_name = cols.get('fq_name', 'null')
             created_at = json.loads(cols['prop:id_perms']).get(
                 'created', '"unknown"')
+            try:
+                # fq_name can be represented as list, we should try to parse it
+                fq_name = json.loads(fq_name)
+                fq_name = ':'.join(fq_name)
+                type = json.loads(type)
+            except (JSONDecodeError, ValueError, TypeError):
+                pass
             if not type:
                 logger.info("Unknown 'type' for object %s", uuid)
                 continue
