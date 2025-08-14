@@ -220,6 +220,9 @@ private:
     void UpdatePortConfig(autogen::GlobalVrouterConfig *cfg);
     void DeletePortConfig();
 
+    /// Reads configuration flow global flow limits
+    void ReadFlowsLimits(const autogen::GlobalVrouterConfig &cfg);
+
     LinkLocalServicesMap linklocal_services_map_;
     CryptTunnelsMap crypt_tunnels_map_;
     CryptMode crypt_mode_;

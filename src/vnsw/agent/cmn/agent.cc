@@ -801,7 +801,10 @@ Agent::Agent() :
     server_gateway_mode_(false), pbb_gateway_mode_(false),
     inet_labeled_enabled_(false),
     flow_table_size_(0), flow_thread_count_(0), flow_trace_enable_(true),
-    max_vm_flows_(0), ovsdb_client_(NULL), vrouter_server_ip_(0),
+    max_vm_flows_perc_(FLOWS_LIMIT_UNLIMITED),
+    max_vm_flows_(FLOWS_LIMIT_UNLIMITED),
+    global_max_vmi_flows_(FLOWS_LIMIT_UNLIMITED),
+    ovsdb_client_(NULL), vrouter_server_ip_(0),
     vrouter_server_port_(0), vrouter_max_labels_(0), vrouter_max_nexthops_(0),
     vrouter_max_interfaces_(0), vrouter_max_vrfs_(0),
     vrouter_max_mirror_entries_(0), vrouter_max_bridge_entries_(0),
@@ -1103,13 +1106,22 @@ Agent::ForwardingMode Agent::TranslateForwardingMode
     return Agent::NONE;
 }
 
+void Agent::update_max_vm_flows(uint32_t flow_table_size) {
+    if (flow_table_size == 0) {
+        return;
+    }
+    if (max_vm_flows_perc_ >= 100) {
+        max_vm_flows_ = flow_table_size;
+    } else if (max_vm_flows_perc_ == FLOWS_LIMIT_UNLIMITED) {
+        max_vm_flows_ = flow_table_size;
+    } else {
+        max_vm_flows_ = (flow_table_size / 100) * max_vm_flows_perc_;
+    }
+}
+
 void Agent::set_flow_table_size(uint32_t count) {
     flow_table_size_ = count;
-    if (params_->max_vm_flows() >= 100) {
-        max_vm_flows_ = 0;
-    } else {
-        max_vm_flows_ = (count * params_->max_vm_flows()) / 100;
-    }
+    update_max_vm_flows(flow_table_size_);
 }
 
 void Agent::set_controller_xmpp_channel(AgentXmppChannel *channel, uint8_t idx) {

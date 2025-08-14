@@ -303,6 +303,8 @@ extern void RouterIdDepInit(Agent *agent);
 #define IPV6_MULTICAST_BASE_ADDRESS "ff00::"
 #define MULTICAST_BASE_ADDRESS_PLEN 8
 
+#define FLOWS_LIMIT_UNLIMITED uint32_t(0)
+
 #define VROUTER_SERVER_PORT 20914
 
 #define kLogFilesCount 10
@@ -1203,7 +1205,13 @@ public:
     bool flow_trace_enable() const { return flow_trace_enable_; }
 
     uint32_t max_vm_flows() const { return max_vm_flows_; }
-    void set_max_vm_flows(uint32_t count) { max_vm_flows_ = count; }
+    void set_max_vm_flows_perc(uint32_t count) { max_vm_flows_perc_ = count; }
+    void update_max_vm_flows(uint32_t flow_table_size);
+
+    uint32_t global_max_vmi_flows() const { return global_max_vmi_flows_; }
+    void set_global_max_vmi_flows(uint32_t count) {
+        global_max_vmi_flows_ = count;
+    }
 
     uint32_t flow_add_tokens() const { return flow_add_tokens_; }
     uint32_t flow_ksync_tokens() const { return flow_ksync_tokens_; }
@@ -1590,7 +1598,9 @@ private:
     uint32_t flow_table_size_;
     uint16_t flow_thread_count_;
     bool flow_trace_enable_;
+    uint32_t max_vm_flows_perc_;
     uint32_t max_vm_flows_;
+    uint32_t global_max_vmi_flows_;
     uint32_t flow_add_tokens_;
     uint32_t flow_ksync_tokens_;
     uint32_t flow_del_tokens_;

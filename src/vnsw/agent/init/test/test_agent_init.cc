@@ -69,7 +69,6 @@ TEST_F(AgentParamTest, Agent_Conf_file_1) {
     EXPECT_EQ(param.metadata_proxy_port(), 8998);
     EXPECT_EQ(param.dns_client_port(), 8997);
     EXPECT_EQ(param.mirror_client_port(), 8999);
-    EXPECT_EQ(param.max_vm_flows(), 50.5);
     EXPECT_EQ(param.linklocal_system_flows(), 1024);
     EXPECT_EQ(param.linklocal_vm_flows(), 512);
     EXPECT_EQ(param.flow_cache_timeout(), 30);
@@ -132,7 +131,6 @@ TEST_F(AgentParamTest, Agent_Conf_file_2) {
 
     // QOS.priorty_tagging is configured as true in cfg1.ini.
     EXPECT_TRUE(param.qos_priority_tagging());
-    EXPECT_EQ(param.max_vm_flows(), 100);
     uint32_t total_required_fds = Agent::kDefaultMaxLinkLocalOpenFds +
                                   Agent::kMaxOtherOpenFds + 1;
     uint32_t total_actual_ll_fds = 0;
@@ -201,7 +199,6 @@ TEST_F(AgentParamTest, Agent_Flows_Option_1) {
     param.ParseArguments(argc, argv);
     param.Init("controller/src/vnsw/agent/init/test/flows.ini", "test-param");
     EXPECT_EQ(param.flow_thread_count(), 4);
-    EXPECT_EQ(param.max_vm_flows(), 50);
     EXPECT_EQ(param.linklocal_system_flows(), 1024);
     EXPECT_EQ(param.linklocal_vm_flows(), 512);
     EXPECT_FALSE(param.flow_trace_enable());
@@ -217,7 +214,6 @@ TEST_F(AgentParamTest, Agent_Flows_Option_Arguments) {
     char *argv[] = {
         (char *) "",
         (char *) "--FLOWS.thread_count",                   (char *)"8",
-        (char *) "--FLOWS.max_vm_flows",                   (char *)"100",
         (char *) "--FLOWS.max_system_linklocal_flows",     (char *)"24",
         (char *) "--FLOWS.max_vm_linklocal_flows",         (char *)"20",
         (char *) "--FLOWS.trace_enable",                   (char *)"true",
@@ -233,7 +229,6 @@ TEST_F(AgentParamTest, Agent_Flows_Option_Arguments) {
     param.Init("controller/src/vnsw/agent/init/test/flows.ini", "test-param");
 
     EXPECT_EQ(param.flow_thread_count(), 8);
-    EXPECT_EQ(param.max_vm_flows(), 100);
     EXPECT_EQ(param.linklocal_system_flows(), 24);
     EXPECT_EQ(param.linklocal_vm_flows(), 20);
     EXPECT_TRUE(param.flow_trace_enable());

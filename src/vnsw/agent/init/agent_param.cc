@@ -692,10 +692,6 @@ void AgentParam::ParseFlowArguments
     GetOptValue<uint16_t>(var_map, flow_latency_limit_,
                           "FLOWS.latency_limit");
     GetOptValue<bool>(var_map, flow_trace_enable_, "FLOWS.trace_enable");
-    float val = 0;
-    if (GetOptValue<float>(var_map, val, "FLOWS.max_vm_flows")) {
-        max_vm_flows_ = val;
-    }
     GetOptValue<uint16_t>(var_map, linklocal_system_flows_,
                           "FLOWS.max_system_linklocal_flows");
     GetOptValue<uint16_t>(var_map, linklocal_vm_flows_,
@@ -1280,20 +1276,7 @@ void AgentParam::ComputeVrWatermark() {
     }
 }
 
-// Update max_vm_flows_ if it is greater than 100.
-// Update linklocal max flows if they are greater than the max allowed for the
-// process. Also, ensure that the process is allowed to open upto
-// linklocal_system_flows + kMaxOtherOpenFds files
 void AgentParam::ComputeFlowAndFileLimits() {
-    if (max_vm_flows_ > 100) {
-        cout << "Updating flows configuration max-vm-flows to : 100%\n";
-        max_vm_flows_ = 100;
-    }
-    if (max_vm_flows_ < 0) {
-        cout << "Updating flows configuration max-vm-flows to : 0%\n";
-        max_vm_flows_ = 0;
-    }
-
     struct rlimit rl;
     int result = getrlimit(RLIMIT_NOFILE, &rl);
     if (result == 0) {
@@ -1618,7 +1601,6 @@ void AgentParam::LogConfig() const {
         LOG(DEBUG, "Metadata CA Certificate         : " << metadata_ca_cert_);
     }
 
-    LOG(DEBUG, "Max Vm Flows                : " << max_vm_flows_);
     LOG(DEBUG, "Linklocal Max System Flows  : " << linklocal_system_flows_);
     LOG(DEBUG, "Linklocal Max Vm Flows      : " << linklocal_vm_flows_);
     LOG(DEBUG, "Flow cache timeout          : " << flow_cache_timeout_);
@@ -1761,7 +1743,7 @@ AgentParam::AgentParam(bool enable_flow_options,
         xen_ll_(), tunnel_type_(), metadata_shared_secret_(),
         metadata_proxy_port_(0), metadata_use_ssl_(false),
         metadata_client_cert_(""), metadata_client_cert_type_("PEM"),
-        metadata_client_key_(""), metadata_ca_cert_(""), max_vm_flows_(),
+        metadata_client_key_(""), metadata_ca_cert_(""),
         linklocal_system_flows_(), linklocal_vm_flows_(),
         flow_cache_timeout_(), flow_index_sm_log_count_(),
         flow_add_tokens_(Agent::kFlowAddTokens),
@@ -2239,8 +2221,6 @@ AgentParam::AgentParam(bool enable_flow_options,
         flow.add_options()
             ("FLOWS.thread_count", opt::value<uint16_t>()->default_value(Agent::kDefaultFlowThreadCount),
              "Number of threads for flow setup")
-            ("FLOWS.max_vm_flows", opt::value<float>()->default_value(100),
-             "Maximum flows allowed per VM - given as % (in integer) of ")
             ("FLOWS.max_system_linklocal_flows", opt::value<uint16_t>()->default_value(Agent::kDefaultMaxLinkLocalOpenFds),
              "Maximum number of link-local flows allowed across all VMs")
             ("FLOWS.max_vm_linklocal_flows", opt::value<uint16_t>()->default_value(Agent::kDefaultMaxLinkLocalOpenFds),

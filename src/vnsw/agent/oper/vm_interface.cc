@@ -3452,10 +3452,19 @@ void VmInterface::CopyTagIdList(TagList *tag_id_list) const {
 }
 
 void VmInterface::update_flow_count(int val) const {
-    int max_flows = max_flows_;
+    int max_flows = FLOWS_LIMIT_UNLIMITED;
     int new_flow_count = flow_count_.fetch_and_add(val);
 
-    if (max_flows == 0) {
+    {
+        int maxv = std::max(max_flows_, agent()->global_max_vmi_flows());
+        int minv = std::min(max_flows_, agent()->global_max_vmi_flows());
+        max_flows = minv * (max_flows_ != FLOWS_LIMIT_UNLIMITED &&
+            agent()->global_max_vmi_flows() != FLOWS_LIMIT_UNLIMITED) +
+            maxv * ((max_flows_ != FLOWS_LIMIT_UNLIMITED) !=
+            (agent()->global_max_vmi_flows() != FLOWS_LIMIT_UNLIMITED));
+    }
+
+    if (max_flows == FLOWS_LIMIT_UNLIMITED) {
         // max_flows are not configured,
         // disable drop new flows and return
         SetInterfacesDropNewFlows(false);

@@ -251,7 +251,6 @@ public:
     }
     std::string metadata_client_key() const { return metadata_client_key_;}
     std::string metadata_ca_cert() const { return metadata_ca_cert_;}
-    float max_vm_flows() const { return max_vm_flows_; }
     uint32_t linklocal_system_flows() const { return linklocal_system_flows_; }
     uint32_t linklocal_vm_flows() const { return linklocal_vm_flows_; }
     uint32_t flow_cache_timeout() const {return flow_cache_timeout_;}
@@ -617,7 +616,12 @@ private:
     friend class AgentParamTest;
     void UpdateBgpAsaServicePortRange();
     void UpdateBgpAsaServicePortRangeValue();
+
+    /// Update linklocal max flows if they are greater than the max allowed for the
+    /// process. Also, ensure that the process is allowed to open upto
+    /// linklocal_system_flows + kMaxOtherOpenFds files
     void ComputeFlowAndFileLimits();
+
     void ComputeVrWatermark();
     static std::map<string, std::map<string, string> > ParseDerivedStats(
         const std::vector<std::string> &dsvec);
@@ -724,7 +728,6 @@ private:
     std::string metadata_client_cert_type_;
     std::string metadata_client_key_;
     std::string metadata_ca_cert_;
-    float max_vm_flows_;
     uint16_t linklocal_system_flows_;
     uint16_t linklocal_vm_flows_;
     uint16_t flow_cache_timeout_;

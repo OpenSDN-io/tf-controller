@@ -71,7 +71,7 @@ void VmEntry::update_flow_count(int val) const {
     int max_flows = vm_table->agent()->max_vm_flows();
     int tmp = flow_count_.fetch_and_add(val);
 
-    if (max_flows == 0) {
+    if (max_flows == FLOWS_LIMIT_UNLIMITED) {
         // max_flows are not configured,
         // disable drop new flows and return
         SetInterfacesDropNewFlows(false);

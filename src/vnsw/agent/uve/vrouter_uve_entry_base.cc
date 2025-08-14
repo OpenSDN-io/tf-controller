@@ -558,7 +558,6 @@ void VrouterUveEntryBase::BuildAgentConfig(VrouterAgent &vrouter_agent) {
 
     vrouter_agent.set_ll_max_system_flows_cfg(param->linklocal_system_flows());
     vrouter_agent.set_ll_max_vm_flows_cfg(param->linklocal_vm_flows());
-    vrouter_agent.set_max_vm_flows_cfg((uint32_t)param->max_vm_flows());
     vrouter_agent.set_control_ip(param->mgmt_ip().to_string());
 
     vhost_cfg.set_name(param->vhost_name());

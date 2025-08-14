@@ -65,6 +65,7 @@ public:
     FlowTest() : agent_(Agent::GetInstance()) {
         flow_proto_ = agent_->pkt()->get_flow_proto();
         vhost = agent_->vhost_interface();
+        agent_->set_max_vm_flows_perc(100);
     }
 
     bool FlowTableWait(size_t count) {
@@ -561,7 +562,7 @@ TEST_F(FlowTest, LinkLocalFlow_Fail2) {
 // Check that flow limit per VM works
 TEST_F(FlowTest, FlowLimit_1) {
     uint32_t vm_flows = agent_->max_vm_flows();
-    agent_->set_max_vm_flows(3);
+    agent_->update_max_vm_flows(3);
 
     /* Add Local VM route of vrf3 to vrf5 */
     CreateLocalRoute("vrf5", vm4_ip, vmi_3, 19);
@@ -628,13 +629,16 @@ TEST_F(FlowTest, FlowLimit_1) {
     // Validate interface is not dropping new flows after flows age-out
     EXPECT_FALSE(intf->drop_new_flows());
     client->WaitForIdle();
-    agent_->set_max_vm_flows(vm_flows);
+    agent_->update_max_vm_flows(vm_flows);
 }
 
 // Check that flow limit per VM includes short flows in the system
 TEST_F(FlowTest, FlowLimit_2) {
+    
     uint32_t vm_flows = agent_->max_vm_flows();
-    agent_->set_max_vm_flows(3);
+    
+    agent_->update_max_vm_flows(3);
+    
 
     TestFlow short_flow[] = {
         //Send an ICMP flow from remote VM in vn3 to local VM in vn5
@@ -723,7 +727,7 @@ TEST_F(FlowTest, FlowLimit_2) {
     DeleteRoute("vrf3", vm1_ip);
     client->WaitForIdle();
     client->WaitForIdle();
-    agent_->set_max_vm_flows(vm_flows);
+    agent_->update_max_vm_flows(vm_flows);
 }
 
 // Configure max-flows on vn level and expect vmi's to match it
@@ -1063,7 +1067,7 @@ TEST_F(FlowTest, MaxFlowsPreference) {
 
     // Set flow limit to 3 for each vm on compute
     uint32_t vm_flows = agent_->max_vm_flows();
-    agent_->set_max_vm_flows(3);
+    agent_->update_max_vm_flows(3);
 
     // Set max-flows=3 for vn3
     SetVnMaxFlows("vn3", 3, 5);
@@ -1154,7 +1158,7 @@ TEST_F(FlowTest, MaxFlowsPreference) {
     EXPECT_FALSE(intf->drop_new_flows());
     client->WaitForIdle();
 
-    agent_->set_max_vm_flows(vm_flows);
+    agent_->update_max_vm_flows(vm_flows);
 
     // Disable max-flow for vn3
     SetVnMaxFlows("vn3", 3, 0);

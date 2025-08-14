@@ -195,6 +195,25 @@ void GlobalVrouter::DeletePortConfig() {
     protocol_port_set_.clear();
 }
 
+void GlobalVrouter::ReadFlowsLimits(const autogen::GlobalVrouterConfig &cfg) {
+    uint32_t max_vm_flows_percent;
+    uint32_t global_max_vmi_flows;
+    if (cfg.IsPropertySet(autogen::GlobalVrouterConfig::MAX_VM_FLOWS_PERCENT)) {
+        max_vm_flows_percent = cfg.max_vm_flows_percent();
+    } else {
+        max_vm_flows_percent = FLOWS_LIMIT_UNLIMITED;
+    }
+    if (cfg.IsPropertySet(autogen::GlobalVrouterConfig::GLOBAL_MAX_VMI_FLOWS)) {
+        global_max_vmi_flows = cfg.global_max_vmi_flows();
+    } else {
+        global_max_vmi_flows = FLOWS_LIMIT_UNLIMITED;
+    }
+    Agent *agent = this->agent();
+    agent->set_max_vm_flows_perc(max_vm_flows_percent);
+    agent->set_global_max_vmi_flows(global_max_vmi_flows);
+    agent->update_max_vm_flows(agent->flow_table_size());
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Link local service
@@ -684,6 +703,7 @@ void GlobalVrouter::GlobalVrouterConfig(IFMapNode *node) {
             ecmp_load_balance_ = ecmp_load_balance;
             resync_vn = true;
         }
+        ReadFlowsLimits(*cfg);
     } else {
         DeleteLinkLocalServiceConfig();
         TunnelType::DeletePriorityList();
