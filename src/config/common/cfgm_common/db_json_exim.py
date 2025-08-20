@@ -280,7 +280,7 @@ class DatabaseExim(object):
                            'value, WRITETIME(value) FROM %s.%s'
                            ) % (full_ks_name, cf_name)
                     session.row_factory = lambda c, r: r
-                    range = session.execute(cql).current_rows
+                    range = session.execute(cql)
                     for rw in range:
                         key, row = rw[0], rw[1:]
                         if key in cassandra_contents[ks_name][cf_name]:
