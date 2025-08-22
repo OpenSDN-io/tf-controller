@@ -377,6 +377,21 @@ static bool NhDecode(const Agent *agent, const NextHop *nh, const PktInfo *pkt,
     case NextHop::VRF: {
         const VrfNH *vrf_nh = static_cast<const VrfNH *>(nh);
         out->vrf_ = vrf_nh->GetVrf();
+
+        // Bug solution: 1 hypervisor 2 of the network
+        // Does not block incoming icmp/udp traffic, as the acl on the out interface is not checked due to the absence of this interface
+        // Find this interface here
+        const InetUnicastRouteEntry* rt = out->vrf_->GetUcRoute(pkt->ip_daddr);
+        if (rt && rt->GetActiveNextHop()) {
+            const NextHop *rt_nh = rt->GetActiveNextHop();
+            if (rt_nh->GetType() == NextHop::INTERFACE) {
+                out->intf_ = static_cast<const InterfaceNH*>(rt_nh)->GetInterface();
+                if (out->intf_->type() == Interface::VM_INTERFACE) {
+                    out->nh_ = out->intf_->flow_key_nh()->id();
+                }
+            }
+        }
+
         break;
     }
 
