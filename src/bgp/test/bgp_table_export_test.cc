@@ -548,8 +548,9 @@ protected:
         if (my_local_as > 0xFFFF)
             my_local_as = 23456;
         EXPECT_TRUE(as_path->path().AsLeftMostMatch(my_local_as));
-        if (my_as != my_local_as)
+        if (my_as != my_local_as) {
             EXPECT_FALSE(as_path->path().AsLeftMostMatch(my_as));
+        }
     }
 
     void VerifyAttrAsValue(size_t index, as_t asn) {
@@ -583,8 +584,9 @@ protected:
         as_t my_as = server_.autonomous_system();
         as_t my_local_as = local_as ?: server_.local_autonomous_system();
         EXPECT_TRUE(as_path->path().AsLeftMostMatch(my_local_as));
-        if (my_as != my_local_as)
+        if (my_as != my_local_as) {
             EXPECT_FALSE(as_path->path().AsLeftMostMatch(my_as));
+        }
     }
 
     void VerifyAttrAs4BytePrepend(as_t local_as = 0) {
@@ -594,8 +596,9 @@ protected:
         as_t my_as = server_.autonomous_system();
         as_t my_local_as = local_as ?: server_.local_autonomous_system();
         EXPECT_TRUE(as_path->path().AsLeftMostMatch(my_local_as));
-        if (my_as != my_local_as)
+        if (my_as != my_local_as) {
             EXPECT_FALSE(as_path->path().AsLeftMostMatch(my_as));
+        }
     }
 
     void VerifyAttrNoAs4BytePrepend() {
@@ -635,8 +638,9 @@ protected:
         const BgpAttr *attr = uinfo.roattr.attr();
         const AsPath *as_path = attr->as_path();
         EXPECT_FALSE(as_path->path().AsPathLoop(as_number, count));
-        if (count)
+        if (count) {
             EXPECT_TRUE(as_path->path().AsPathLoop(as_number, count - 1));
+        }
     }
 
     void VerifyAttrAs4BytePathAsCount(as_t as_number, uint8_t count) {
@@ -644,8 +648,9 @@ protected:
         const BgpAttr *attr = uinfo.roattr.attr();
         const AsPath4Byte *as_path = attr->aspath_4byte();
         EXPECT_FALSE(as_path->path().AsPathLoop(as_number, count));
-        if (count)
+        if (count) {
             EXPECT_TRUE(as_path->path().AsPathLoop(as_number, count - 1));
+        }
     }
 
     void VerifyAttrNoClusterList() {

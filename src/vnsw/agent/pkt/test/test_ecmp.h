@@ -162,8 +162,9 @@ public:
     void GetInfo() {
         for (uint32_t i = 1; i <= 256; i++) {
             vmi_[i] = VmInterfaceGet(i);
-            if (vmi_[i])
+            if (vmi_[i]) {
                 EXPECT_TRUE(VmPortActive(i));
+            }
         }
     }
 

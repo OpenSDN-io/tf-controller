@@ -63,6 +63,8 @@ if gpp_version == "4.8.5" or gpp_version_major >= 8:
         common.Append(CCFLAGS = ['-Wno-error=deprecated-declarations', '-Wno-deprecated-declarations'])
         # nonull this is compared with NULL
         common.Append(CCFLAGS = ['-Wno-error=nonnull-compare', '-Wno-nonnull-compare'])
+        # errors in py39 env
+        common.Append(CCFLAGS = ['-Wno-error=maybe-uninitialized', '-Wno-error=class-memaccess', '-Wno-error=misleading-indentation', '-Wno-error=address-of-packed-member', '-Wno-error=format-overflow'])
 if gpp_version_major >= 11:
     common.Append(CCFLAGS =['-Wno-nonnull'])
 

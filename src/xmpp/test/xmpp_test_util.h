@@ -17,10 +17,12 @@
             if (val) break;                                                \
             usleep(Unit);                                                  \
         }                                                                  \
-        if (flag != 0 && (Cond) == false)                                  \
+        if (flag != 0 && (Cond) == false) {                                \
             LOG(DEBUG, "Test failed at " << __FILE__ << ": " << __LINE__); \
-        if (flag != 0)                                                     \
+        }                                                                  \
+        if (flag != 0){                                                    \
             EXPECT_TRUE(Cond);                                             \
+        }                                                                  \
     } while (0)
 
 #define WAIT_FOR(times, unit, cond) \

@@ -200,18 +200,18 @@ public:
     }
 
     bool IsCloseGraceful() const {
-        return gr_close_ ?: StateMachine::IsCloseGraceful();
+        return gr_close_ || StateMachine::IsCloseGraceful();
     }
     void SetCloseGraceful(bool gr_close) { gr_close_ = gr_close; }
 
     bool IsRouterTypeBGPaaS() const {
-        return bgpaas_client_ ?: StateMachine::IsRouterTypeBGPaaS();
+        return bgpaas_client_ || StateMachine::IsRouterTypeBGPaaS();
     }
     void SetRouterTypeBGPaaS(bool bgpaas_client) {
         bgpaas_client_ = bgpaas_client;
     }
     bool IsPeerCloseInProgress() const {
-        return gr_close_ ?: StateMachine::IsPeerCloseInProgress();
+        return gr_close_ || StateMachine::IsPeerCloseInProgress();
     }
 
 private:

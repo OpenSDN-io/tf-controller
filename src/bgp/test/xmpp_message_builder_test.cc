@@ -258,8 +258,9 @@ TEST_P(XmppMessageBuilderParamTest, Basic) {
             string temp;
             const uint8_t *msg = message_->GetData(&peer, &msgsize, &msg_str,
                                                    &temp);
-            if (idx == 0 && pidx == 0)
+            if (idx == 0 && pidx == 0) {
                 EXPECT_TRUE(VerifySG(msg, msgsize, 0x123));
+            }
             peer.SendUpdate(msg, msgsize, reuse_msg_str ? msg_str : NULL);
         }
     }

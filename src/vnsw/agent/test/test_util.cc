@@ -4282,7 +4282,7 @@ bool FlowFail(int vrf_id, const char *sip, const char *dip,
     key.family = key.src_addr.is_v4() ? Address::INET : Address::INET6;
     FlowProto *fp = Agent::GetInstance()->pkt()->get_flow_proto();
 
-    WAIT_FOR(1000, 1000, (fp->Find(key, 0) == false));
+    WAIT_FOR(1000, 1000, (fp->Find(key, 0) == nullptr));
     FlowEntry *fe = fp->Find(key, 0);
     if (fe == NULL) {
         return true;

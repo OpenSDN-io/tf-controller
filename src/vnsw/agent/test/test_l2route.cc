@@ -56,8 +56,9 @@ static void ValidateSandeshResponse(Sandesh *sandesh, vector<int> &result,
         return;
 
     const std::vector<RouteL2SandeshData> rt_list = resp->get_route_list();
-    if (check_error)
+    if (check_error) {
         EXPECT_EQ(rt_list.size(), 1);
+    }
 }
 
 class TestL2RouteState : public DBState {

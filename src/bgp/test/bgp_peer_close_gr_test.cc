@@ -470,8 +470,9 @@ TEST_P(BgpPeerCloseGrTestParam, TestSetGRCapabilities) {
         }
 
         EXPECT_EQ(expected, bgp_peer_close_test_->SetGRCapabilities(NULL));
-        if (expected)
+        if (expected) {
             EXPECT_EQ(0, mismatch);
+        }
     }
 }
 

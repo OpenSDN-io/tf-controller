@@ -211,8 +211,9 @@ protected:
         ASSERT_TRUE(start_idx <= end_idx);
         ASSERT_TRUE(end_idx < (int) peers_.size());
         for (int idx = start_idx; idx <= end_idx; idx++) {
-            if ((idx % 2 == 0) == even || (idx % 2 == 1) == odd)
+            if ((idx % 2 == 0) == even || (idx % 2 == 1) == odd) {
                 EXPECT_EQ(blocked, !spartition_->PeerIsSendReady(peers_[idx]));
+            }
         }
     }
 
@@ -238,8 +239,9 @@ protected:
         ASSERT_TRUE(start_idx <= end_idx);
         ASSERT_TRUE(end_idx < (int) peers_.size());
         for (int idx = start_idx; idx <= end_idx; idx++) {
-            if ((idx % 2 == 0) == even || (idx % 2 == 1) == odd)
+            if ((idx % 2 == 0) == even || (idx % 2 == 1) == odd) {
                 EXPECT_EQ(in_sync, spartition_->PeerInSync(peers_[idx]));
+            }
         }
     }
 

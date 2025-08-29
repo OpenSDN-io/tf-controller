@@ -404,8 +404,9 @@ public:
 
         DelPort("vnet1");
         DelVn("vn1");
-        if (delete_fip_vn)
+        if (delete_fip_vn) {
             DelVn("default-project:vn2");
+        }
         DelVrf("vrf1");
         DelVrf("default-project:vn2:vn2");
         DelVm("vm1");
@@ -414,8 +415,9 @@ public:
         EXPECT_FALSE(VrfFind("vrf1"));
         EXPECT_FALSE(VrfFind("default-project:vn2:vn2"));
         EXPECT_FALSE(VnFind(1));
-        if (delete_fip_vn)
+        if (delete_fip_vn) {
             EXPECT_FALSE(VnFind(2));
+        }
         EXPECT_FALSE(VmFind(1));
     }
 private:
@@ -922,7 +924,8 @@ TEST_F(DnsTest, VirtualDnsLinkLocalReqTest) {
 
     DnsProto::DnsStats stats;
     int count = 0;
-    DnsItem query_items[MAX_ITEMS] = a_items;
+    DnsItem query_items[MAX_ITEMS];
+    std::copy(std::begin(a_items), std::end(a_items), std::begin(query_items));
     query_items[0].name     = "test_service1";
     query_items[1].name     = "test_service2";
     query_items[2].name     = "test_service3";
@@ -934,7 +937,8 @@ TEST_F(DnsTest, VirtualDnsLinkLocalReqTest) {
     CHECK_STATS(stats, 1, 1, 0, 0, 0, 0);
     Agent::GetInstance()->GetDnsProto()->ClearStats();
 
-    DnsItem query_items_2[MAX_ITEMS] = a_items;
+    DnsItem query_items_2[MAX_ITEMS];
+    std::copy(std::begin(a_items), std::end(a_items), std::begin(query_items_2));
     // keep the 0th element as it is
     query_items_2[1].name     = "test_service1";
     query_items_2[2].name     = "test_service3";
@@ -949,7 +953,8 @@ TEST_F(DnsTest, VirtualDnsLinkLocalReqTest) {
     CHECK_STATS(stats, 1, 1, 0, 0, 0, 0);
     Agent::GetInstance()->GetDnsProto()->ClearStats();
 
-    DnsItem ptr_query_items[MAX_ITEMS] = ptr_items;
+    DnsItem ptr_query_items[MAX_ITEMS];
+    std::copy(std::begin(ptr_items), std::end(ptr_items), std::begin(ptr_query_items));
     // keep the 0th element as it is
     ptr_query_items[1].name     = "10.1.254.169.in-addr.arpa";
     ptr_query_items[2].name     = "20.1.254.169.in-addr.arpa";
@@ -1070,7 +1075,8 @@ TEST_F(DnsTest, DefaultDnsReqTest) {
     IntfCfgAdd(input, 0);
     WaitForItfUpdate(1);
 
-    DnsItem query_items[MAX_ITEMS] = a_items;
+    DnsItem query_items[MAX_ITEMS];
+    std::copy(std::begin(a_items), std::end(a_items), std::begin(query_items));
     query_items[0].name     = "www.google.com";
 
     int count = 0;
@@ -1146,7 +1152,8 @@ TEST_F(DnsTest, DefaultDnsLinklocalReqTest) {
     IntfCfgAdd(input, 0);
     WaitForItfUpdate(1);
 
-    DnsItem query_items[MAX_ITEMS] = a_items;
+    DnsItem query_items[MAX_ITEMS];
+    std::copy(std::begin(a_items), std::end(a_items), std::begin(query_items));
     query_items[0].name     = "test_service1";
     query_items[1].name     = "test_service2";
     query_items[2].name     = "test_service3";
@@ -1162,7 +1169,8 @@ TEST_F(DnsTest, DefaultDnsLinklocalReqTest) {
     CHECK_STATS(stats, 1, 1, 0, 0, 0, 0);
     Agent::GetInstance()->GetDnsProto()->ClearStats();
 
-    DnsItem query_items_2[MAX_ITEMS] = a_items;
+    DnsItem query_items_2[MAX_ITEMS];
+    std::copy(std::begin(a_items), std::end(a_items), std::begin(query_items_2));
     // keep the 0th element as it is
     query_items_2[1].name     = "test_service1";
     query_items_2[2].name     = "test_service3";
@@ -1179,7 +1187,8 @@ TEST_F(DnsTest, DefaultDnsLinklocalReqTest) {
     CHECK_STATS(stats, 1, 1, 0, 0, 0, 0);
     Agent::GetInstance()->GetDnsProto()->ClearStats();
 
-    DnsItem ptr_query_items[MAX_ITEMS] = ptr_items;
+    DnsItem ptr_query_items[MAX_ITEMS];
+    std::copy(std::begin(ptr_items), std::end(ptr_items), std::begin(ptr_query_items));
     ptr_query_items[0].name     = "10.1.254.169.in-addr.arpa";
     ptr_query_items[1].name     = "20.1.254.169.in-addr.arpa";
     ptr_query_items[2].name     = "30.1.254.169.in-addr.arpa";
@@ -1221,7 +1230,8 @@ TEST_F(DnsTest, DnsDropTest) {
     dns_flags flags = default_flags;
     DnsProto::DnsStats stats;
     int count = 0;
-    DnsItem query_items[MAX_ITEMS] = a_items;
+    DnsItem query_items[MAX_ITEMS];
+    std::copy(std::begin(a_items), std::end(a_items), std::begin(query_items));
     query_items[0].name     = "localhost";
     query_items[1].name     = "localhost";
 
@@ -1414,7 +1424,8 @@ TEST_F(DnsTest, IpmaDnsMethodNone) {
     WaitForItfUpdate(1);
 
     Agent::GetInstance()->GetDnsProto()->ClearStats();
-    DnsItem query_items[MAX_ITEMS] = a_items;
+    DnsItem query_items[MAX_ITEMS];
+    std::copy(std::begin(a_items), std::end(a_items), std::begin(query_items));
     query_items[0].name     = "www.google.com";
 
     int count = 0;

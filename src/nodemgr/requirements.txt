@@ -4,8 +4,8 @@ netaddr
 gevent
 greenlet
 psutil
-sandesh
-sandesh_common
+sandesh==0.1.dev0
+sandesh_common==0.1.dev0
 grpcio
 protobuf<=3.20.0
 urllib3<2

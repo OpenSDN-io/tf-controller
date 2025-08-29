@@ -5,5 +5,6 @@ contrail-api-server==0.1.dev0
 svc-monitor
 python-novaclient
 keystoneauth1<5.1.0
-kombu==4.0.2
+kombu
 junitxml==0.7
+extras

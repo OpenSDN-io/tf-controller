@@ -35,7 +35,7 @@ of the Contrail API server source code:
 
 To run only the unit tests:
 
-    tox -e py36
+    tox -e py39
 
 To run only pep8:
 
@@ -48,13 +48,13 @@ the dot-separated path you want as an argument to it.
 
 For example, the following would run only a single test or test case:
 
-      $ tox -e py36 vnc_cfg_api_server.tests.resources.test_virtual_network
-      $ tox -e py36 vnc_cfg_api_server.tests.resources.test_tag.TestTagType
-      $ tox -e py36 vnc_cfg_api_server.tests.test_perms2.TestPermissions.test_chown_api
+      $ tox -e py39 vnc_cfg_api_server.tests.resources.test_virtual_network
+      $ tox -e py39 vnc_cfg_api_server.tests.resources.test_tag.TestTagType
+      $ tox -e py39 vnc_cfg_api_server.tests.test_perms2.TestPermissions.test_chown_api
 
 If you want to pass other arguments to stestr, you can do the following:
 
-      $ tox -e py36 -- --regex vnc_cfg_api_server.tests.test_subnet --serial
+      $ tox -e py39 -- --regex vnc_cfg_api_server.tests.test_subnet --serial
 
 
 ### Debugging

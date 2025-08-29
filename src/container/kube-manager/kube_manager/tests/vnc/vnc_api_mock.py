@@ -153,7 +153,7 @@ class VncApiMock(object):
 
     @staticmethod
     def object_to_dict(obj):
-        return json.loads(json.dumps(obj, default=VncApiMock._obj_serializer_all), encoding="ascii")
+        return json.loads(json.dumps(obj, default=VncApiMock._obj_serializer_all))
 
     @staticmethod
     def _obj_serializer_all(obj):
