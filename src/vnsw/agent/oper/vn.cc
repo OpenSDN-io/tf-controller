@@ -170,13 +170,13 @@ bool VnEntry::ChangeHandler(Agent *agent, const DBRequest *req) {
     VrfEntry *vrf = static_cast<VrfEntry *>
         (agent->vrf_table()->FindActiveEntry(&vrf_key));
     VrfEntryRef old_vrf = vrf_;
-    bool rebake_vxlan = false;
+    bool update_vxlan_state = false;
     if (vrf != old_vrf.get()) {
         if (!vrf) {
             ApplyAllIpam(agent, old_vrf.get(), true);
         }
         vrf_ = vrf;
-        rebake_vxlan = true;
+        update_vxlan_state = true;
         ret = true;
     }
 
@@ -209,11 +209,17 @@ bool VnEntry::ChangeHandler(Agent *agent, const DBRequest *req) {
         ret = true;
     }
 
+    if (vxlan_routing_vn_ != data->vxlan_routing_vn_) {
+        vxlan_routing_vn_ = data->vxlan_routing_vn_;
+        update_vxlan_state = true;
+        ret = true;
+    }
+
     if (vxlan_id_ != data->vxlan_id_) {
         vxlan_id_ = data->vxlan_id_;
         ret = true;
         if ((agent->vxlan_network_identifier_mode() == Agent::CONFIGURED)  || vxlan_routing_vn_ ) {
-            rebake_vxlan = true;
+            update_vxlan_state = true;
         }
     }
 
@@ -221,23 +227,23 @@ bool VnEntry::ChangeHandler(Agent *agent, const DBRequest *req) {
         vnid_ = data->vnid_;
         ret = true;
         if (agent->vxlan_network_identifier_mode() == Agent::AUTOMATIC) {
-            rebake_vxlan = true;
+            update_vxlan_state = true;
         }
     }
 
     if (flood_unknown_unicast_ != data->flood_unknown_unicast_) {
         flood_unknown_unicast_ = data->flood_unknown_unicast_;
-        rebake_vxlan = true;
+        update_vxlan_state = true;
         ret = true;
     }
 
     if (mirror_destination_ != data->mirror_destination_) {
         mirror_destination_ = data->mirror_destination_;
-        rebake_vxlan = true;
+        update_vxlan_state = true;
         ret = true;
     }
 
-    if (rebake_vxlan) {
+    if (update_vxlan_state) {
         ret |= UpdateVxlan(agent, false);
     }
 
@@ -271,11 +277,6 @@ bool VnEntry::ChangeHandler(Agent *agent, const DBRequest *req) {
 
     if (slo_list_ != data->slo_list_) {
         slo_list_ = data->slo_list_;
-    }
-
-    if (vxlan_routing_vn_ != data->vxlan_routing_vn_) {
-        vxlan_routing_vn_ = data->vxlan_routing_vn_;
-        ret = true;
     }
 
     if (logical_router_uuid_ != data->logical_router_uuid_) {
@@ -732,6 +733,16 @@ int VnEntry::GetVxLanId() const {
         return vxlan_id_;
     }
     return vnid_;
+}
+
+int VnEntry::GetOperVxlanId() const {
+    if (agent_->vxlan_network_identifier_mode() == Agent::CONFIGURED) {
+        return vxlan_id_;
+    }
+    if (bool(vxlan_id_ref_)) {
+        return vxlan_id_ref_->vxlan_id();
+    }
+    return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1389,6 +1400,7 @@ void VnEntry::SendObjectLog(SandeshTraceBufferPtr buf,
         info.set_ipam_list(ipam_list);
     }
     info.set_bridging(bridging());
+    info.set_oper_vxlan_id(GetOperVxlanId());
     info.set_ipv4_forwarding(layer3_forwarding());
     info.set_admin_state(admin_state());
     info.set_logical_router_uuid(UuidToString(logical_router_uuid()));
