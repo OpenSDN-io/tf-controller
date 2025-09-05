@@ -405,6 +405,7 @@ void VxLanId::SendObjectLog(const AgentDBTable *table,
             str.assign("Unknown");
             break;
     }
+    info.set_event(str);
     const NextHop *nh = nexthop();
     if (nh != NULL) {
         //const VrfNH *vrf_nh;
