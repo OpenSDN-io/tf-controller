@@ -1,7 +1,9 @@
+stestr
+os-testr
 lxml>=2.3.3,<=4.5.0
 flexmock==0.10.4
 WebTest==2.0.34
-mock<=4.0.2
+mock
 kombu
 python-novaclient==16.0.0
 junitxml==0.7

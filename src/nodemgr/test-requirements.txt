@@ -1,5 +1,8 @@
+stestr
+os-testr
+junitxml
 testtools==2.4.0
-mock<=4.0.2
+mock
 flexmock==0.10.4
 python-subunit
 WebTest==2.0.34

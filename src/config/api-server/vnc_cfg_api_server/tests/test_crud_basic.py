@@ -2989,16 +2989,18 @@ class TestLocalAuth(test_case.ApiServerTestCase):
         with test_common.patch(
             bottle, 'static_file', fake_static_file):
             url = 'http://%s:%s/documentation/index.html' %(listen_ip, listen_port)
-            resp = requests.get(url)
+            resp = requests.get(url, stream=True)
             self.assertThat(resp.status_code, Equals(200))
+            resp.close()
 
         logger.info("Negative case without Documentation")
         url = 'http://%s:%s/virtual-networks' %(listen_ip, listen_port)
         orig_rbac_role = TestLocalAuth._rbac_role
         try:
             TestLocalAuth._rbac_role = 'foobar'
-            resp = requests.get(url)
+            resp = requests.get(url, stream=True)
             self.assertThat(resp.status_code, Equals(403))
+            resp.close()
         finally:
             TestLocalAuth._rbac_role = orig_rbac_role
 

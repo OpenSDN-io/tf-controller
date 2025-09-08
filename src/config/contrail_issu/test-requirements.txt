@@ -1,9 +1,12 @@
+stestr
+os-testr
+junitxml
 gevent
 greenlet
 keystoneauth1<5.1.0
 kombu
 testtools==2.4.0
-mock<=4.0.2
+mock
 contrail-api-server
 python-novaclient==16.0.0
 flexmock==0.10.4

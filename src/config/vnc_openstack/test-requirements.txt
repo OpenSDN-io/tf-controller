@@ -1,3 +1,6 @@
+stestr
+os-testr
+junitxml
 python-subunit==1.4.0
 testrepository==0.0.20
 flexmock==0.10.4
@@ -5,4 +8,4 @@ WebTest==2.0.34
 kombu
 testscenarios==0.5.0
 contrail-api-server
-mock<=4.0.2
+mock

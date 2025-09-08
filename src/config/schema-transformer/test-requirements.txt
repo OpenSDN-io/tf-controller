@@ -1,5 +1,7 @@
+stestr
+os-testr
 flexmock==0.10.4
-mock<=4.0.2
+mock
 WebTest==2.0.34
 contrail-api-server==0.1.dev0
 svc-monitor

@@ -1,8 +1,11 @@
+stestr
+os-testr
+junitxml
 psutil>=0.4.1
 kombu
 python-novaclient==16.0.0
 testtools==2.4.0
-mock<=4.0.2
+mock
 contrail-api-server
 flexmock==0.10.4
 python-subunit
