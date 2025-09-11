@@ -1471,7 +1471,7 @@ class AddrMgmt(object):
                 # new subnet_list
                 try:
                     (read_ok, read_result) = db_conn.dbe_read(
-                        'alias_ip', floating_ip['uuid'])
+                        'alias_ip', alias_ip['uuid'])
                 except cfgm_common.exceptions.NoIdError:
                     continue
                 if not read_ok:

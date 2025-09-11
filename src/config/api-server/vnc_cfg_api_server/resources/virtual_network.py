@@ -899,13 +899,21 @@ class VirtualNetworkServer(ResourceMixin, VirtualNetwork):
         try:
             instip_refs = read_result.get('instance_ip_back_refs') or []
             zk_entry_prefix = fq_name[:]
-            if ipam_refs:
-                cls._update_subnet_iip_refs(instip_refs=instip_refs,
-                                            zk_entry_prefix=zk_entry_prefix,
-                                            network_ipam_refs=ipam_refs,
-                                            db_conn=db_conn,
-                                            vn_uuid=obj_dict['uuid'])
             cls.addr_mgmt.net_update_req(fq_name, read_result, obj_dict, id)
+            if ipam_refs:
+                current_ipam_refs = read_result.get('network_ipam_refs')
+                cls.addr_mgmt.config_log("Checking ip address changes",
+                                         level=SandeshLevel.SYS_DEBUG)
+                if cls._check_subnet_changed(current_ipam_refs,
+                                             ipam_refs):
+                    cls.addr_mgmt.config_log("Subnets changed",
+                                             level=SandeshLevel.SYS_DEBUG)
+                    cls._update_subnet_iip_refs(
+                        instip_refs=instip_refs,
+                        zk_entry_prefix=zk_entry_prefix,
+                        network_ipam_refs=ipam_refs,
+                        db_conn=db_conn,
+                        vn_uuid=obj_dict['uuid'])
             for ipam in ipam_refs:
                 ipam_fq_name = ipam['to']
                 ipam_uuid = db_conn.fq_name_to_uuid('network_ipam',
@@ -935,6 +943,9 @@ class VirtualNetworkServer(ResourceMixin, VirtualNetwork):
                     fq_name, obj_dict, read_result, id)
             get_context().push_undo(undo)
         except Exception as e:
+            cls.addr_mgmt.config_log("Subnet update failed with",
+                                     level=SandeshLevel.SYS_ERR)
+            cls.addr_mgmt.config_log(str(e), level=SandeshLevel.SYS_ERR)
             return (False, (500, str(e)))
 
         return True, {
@@ -945,7 +956,7 @@ class VirtualNetworkServer(ResourceMixin, VirtualNetwork):
     @classmethod
     def _update_subnet_iip_refs(cls, instip_refs, zk_entry_prefix,
                                 network_ipam_refs, db_conn, vn_uuid):
-
+        zk_paths = []
         for ref in instip_refs:
             zk_prefix = zk_entry_prefix[:]
             try:
@@ -983,54 +994,105 @@ class VirtualNetworkServer(ResourceMixin, VirtualNetwork):
                         )
                         if not ok:
                             return (ok, (409, result))
-                        msg = "Creating zk path %s %s" % (zk_entry_full,
-                                                          inst_ip)
+                        zk_paths.append((zk_entry_full,
+                                         inst_ip, ref['uuid']))
+        zk = cls.vnc_zk_client._zk_client
+        vn_lock_prefix = 'vnc_api_server_locks/' \
+                         'virtual_network/%s' % \
+                         (vn_uuid)
+        if zk_paths:
+            zk_client = cls.vnc_zk_client._zk_client._zk_client
+            lock = zk.lock(vn_lock_prefix)
+            try:
+                lock.acquire(timeout=_DEFAULT_ZK_LOCK_TIMEOUT)
+                cls.addr_mgmt.config_log(
+                    "ZK Lock acquired"
+                    " for %s" % _DEFAULT_ZK_LOCK_TIMEOUT,
+                    level=SandeshLevel.SYS_DEBUG)
+                for zk_path in zk_paths:
+                    msg = "Creating zk path %s %s" % (zk_path[0],
+                                                      zk_path[1])
+                    cls.addr_mgmt.config_log(
+                        msg,
+                        level=SandeshLevel.SYS_INFO
+                    )
+                    try:
+                        zk_client.create(zk_path[0],
+                                         zk_path[2].encode(),
+                                         makepath=True
+                                         )
+                    except (NodeExistsError, ResourceExistsError):
+                        iip_uuid = zk_client.get(zk_path[0])[0]
+                        zk_path_exist = "Creating zk path" \
+                                        ": %s (%s)." \
+                                        " Addr lock already" \
+                                        " exists for IIP %s" %\
+                                        (zk_path[0], zk_path[1],
+                                         iip_uuid)
                         cls.addr_mgmt.config_log(
-                            msg,
+                            zk_path_exist,
                             level=SandeshLevel.SYS_ERR
                         )
-                        zk = cls.vnc_zk_client._zk_client
-                        vn_lock_prefix = '%s/vnc_api_server_locks/' \
-                                         'virtual_network/%s' % \
-                                         (zk.host_ip, vn_uuid)
-                        zk_client = cls.vnc_zk_client._zk_client._zk_client
-                        lock = zk.lock(vn_lock_prefix)
-                        try:
-                            lock.acquire(timeout=_DEFAULT_ZK_LOCK_TIMEOUT)
-                            cls.addr_mgmt.config_log(
-                                "ZK Lock acquired"
-                                " for %s" % _DEFAULT_ZK_LOCK_TIMEOUT,
-                                level=SandeshLevel.SYS_DEBUG)
-                            try:
-                                zk_client.create(zk_entry_full,
-                                                 ref['uuid'].encode(),
-                                                 makepath=True
-                                                 )
-                            except (NodeExistsError, ResourceExistsError):
-                                iip_uuid = zk_client.get(zk_entry_full)[0]
-                                zk_path_exist = "Creating zk path" \
-                                                ": %s (%s)." \
-                                                " Addr lock already" \
-                                                " exists for IIP %s" %\
-                                                (zk_entry_full, inst_ip,
-                                                 iip_uuid)
-                                cls.addr_mgmt.config_log(
-                                    zk_path_exist,
-                                    level=SandeshLevel.SYS_ERR
-                                )
-                                pass
-                        except LockTimeout:
-                            cls.addr_mgmt.config_log(
-                                "ZK Lock timeout raised",
-                                level=SandeshLevel.SYS_ERR
-                            )
-                        finally:
-                            lock.release()
-                            cls.addr_mgmt.config_log(
-                                "ZK Lock released",
-                                level=SandeshLevel.SYS_DEBUG
-                            )
+            except LockTimeout:
+                cls.addr_mgmt.config_log(
+                    "ZK Lock timeout raised",
+                    level=SandeshLevel.SYS_ERR
+                )
+            finally:
+                lock.release()
+                cls.addr_mgmt.config_log(
+                    "ZK Lock released",
+                    level=SandeshLevel.SYS_DEBUG
+                )
         return
+
+    @classmethod
+    def _check_subnet_changed(cls, old_ipam_refs, new_ipam_refs):
+        if not old_ipam_refs:
+            cls.addr_mgmt.config_log("No subnets to change",
+                                     level=SandeshLevel.SYS_DEBUG)
+            return False
+        if not new_ipam_refs:
+            cls.addr_mgmt.config_log("No new subnets",
+                                     level=SandeshLevel.SYS_DEBUG)
+            return False
+        current_subnets = dict()
+        cls.addr_mgmt.config_log("Current ipam refs",
+                                 level=SandeshLevel.SYS_DEBUG)
+        cls.addr_mgmt.config_log(str(old_ipam_refs),
+                                 level=SandeshLevel.SYS_DEBUG)
+        cls.addr_mgmt.config_log("New ipam refs",
+                                 level=SandeshLevel.SYS_DEBUG)
+        cls.addr_mgmt.config_log(str(new_ipam_refs),
+                                 level=SandeshLevel.SYS_DEBUG)
+        for domain in old_ipam_refs:
+            if not domain['attr']['ipam_subnets']:
+                continue
+            for subnet in domain['attr']['ipam_subnets']:
+                if "subnet" not in subnet:
+                    continue
+                prefix = subnet['subnet']['ip_prefix_len']
+                current_subnets[subnet['subnet']['ip_prefix']] = prefix
+        for domain in new_ipam_refs:
+            if not domain['attr']['ipam_subnets']:
+                continue
+            for subnet in domain['attr']['ipam_subnets']:
+                if "subnet" not in subnet:
+                    continue
+                new_pref = subnet['subnet']['ip_prefix_len']
+                if subnet['subnet']['ip_prefix'] not in current_subnets:
+                    msg = "Subnet %s not found" \
+                          " in new subnets" % subnet['subnet']['ip_prefix']
+                    cls.addr_mgmt.config_log(msg,
+                                             level=SandeshLevel.SYS_DEBUG)
+
+                    continue
+                curr_prefix = current_subnets[subnet['subnet']['ip_prefix']]
+                if new_pref != curr_prefix:
+                    return True
+        cls.addr_mgmt.config_log("No changes in subnets",
+                                 level=SandeshLevel.SYS_DEBUG)
+        return False
 
     @classmethod
     def post_dbe_update(cls, id, fq_name, obj_dict, db_conn, **kwargs):
