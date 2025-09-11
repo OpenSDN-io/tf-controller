@@ -166,7 +166,7 @@ TEST_F(MacAddressTest, CastTo_ether_addr) {
     struct ether_addr b = { { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 } };
     MacAddress mac(a);
     EXPECT_EQ("0a:0b:0c:0d:0e:0f", mac.ToString());
-    b = mac;
+    b = (const ether_addr&)mac;
     EXPECT_EQ(0, memcmp(&a, &b, sizeof(a)));
 }
 
