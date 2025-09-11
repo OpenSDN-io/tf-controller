@@ -22,7 +22,7 @@ public:
 
     explicit MacAddress(const struct ether_addr &a) {
         addr_ = a;
-     }
+    }
     explicit MacAddress(const struct ether_addr *a) {
         addr_ = *a;
     }
