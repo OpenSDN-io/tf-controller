@@ -104,10 +104,10 @@ public:
     bool EnqueueRetransmitTimerExpired();
     bool EnqueueReachableTimerExpired();
     bool EnqueueDelayTimerExpired();
-    bool EnqueueNaIn(nd_neighbor_advert *na, MacAddress mac);
-    bool EnqueueSolNaIn(nd_neighbor_advert *na, MacAddress mac);
-    bool EnqueueUnsolNaIn(nd_neighbor_advert *na, MacAddress mac);
-    bool EnqueueNsIn(nd_neighbor_solicit *ns, MacAddress mac);
+    bool EnqueueNaIn(nd_neighbor_advert na, MacAddress mac);
+    bool EnqueueSolNaIn(nd_neighbor_advert na, MacAddress mac);
+    bool EnqueueUnsolNaIn(nd_neighbor_advert na, MacAddress mac);
+    bool EnqueueNsIn(nd_neighbor_solicit ns, MacAddress mac);
 
     template <typename Ev> bool Enqueue(const Ev &event);
     bool DequeueEvent(EventContainer ec);
@@ -122,7 +122,7 @@ public:
     void Resync(bool policy, const VnListType &vnlist,
                 const SecurityGroupList &sg,
                 const TagList &tag);
-    void HandleNsRequest(nd_neighbor_solicit *ns, MacAddress mac);
+    void HandleNsRequest(nd_neighbor_solicit ns, MacAddress mac);
     void SendNeighborSolicit(bool send_unicast=false);
     void SendNeighborAdvert(bool solicited);
 private:

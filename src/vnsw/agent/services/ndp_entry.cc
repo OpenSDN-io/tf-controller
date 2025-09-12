@@ -94,7 +94,7 @@ struct EvReachableTimerExpired : sc::event<EvReachableTimerExpired> {
 };
 
 struct EvNsIn : sc::event<EvNsIn> {
-    explicit EvNsIn(nd_neighbor_solicit *ns, MacAddress mac) :
+    explicit EvNsIn(nd_neighbor_solicit ns, MacAddress mac) :
              mac_(mac), ns_(ns) {
     }
     static const char *Name() {
@@ -105,11 +105,11 @@ struct EvNsIn : sc::event<EvNsIn> {
     }
 
     MacAddress mac_;
-    nd_neighbor_solicit *ns_;
+    nd_neighbor_solicit ns_;
 };
 
 struct EvSolNaIn : sc::event<EvSolNaIn> {
-    explicit EvSolNaIn(nd_neighbor_advert *na, MacAddress mac) :
+    explicit EvSolNaIn(nd_neighbor_advert na, MacAddress mac) :
         mac_(mac), na_(na) {
     }
     static const char *Name() {
@@ -120,11 +120,11 @@ struct EvSolNaIn : sc::event<EvSolNaIn> {
     }
 
     MacAddress mac_;
-    nd_neighbor_advert *na_;
+    nd_neighbor_advert na_;
 };
 
 struct EvUnsolNaIn : sc::event<EvUnsolNaIn> {
-    explicit EvUnsolNaIn(nd_neighbor_advert *na, MacAddress mac) :
+    explicit EvUnsolNaIn(nd_neighbor_advert na, MacAddress mac) :
         mac_(mac), na_(na) {
     }
     static const char *Name() {
@@ -135,7 +135,7 @@ struct EvUnsolNaIn : sc::event<EvUnsolNaIn> {
     }
 
     MacAddress mac_;
-    nd_neighbor_advert *na_;
+    nd_neighbor_advert na_;
 };
 
 // States for the NDP state machine.
@@ -310,7 +310,7 @@ struct Reachable : sc::state<Reachable, NdpEntry> {
     // If different mac then move to stale else unchanged
     sc::result react(const EvUnsolNaIn &event) {
         NdpEntry *state_machine = &context<NdpEntry>();
-        if (event.na_->nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
+        if (event.na_.nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
             if (state_machine->mac() != event.mac_) {
                 state_machine->set_mac(event.mac_);
                 return transit<Stale>();
@@ -324,7 +324,7 @@ struct Reachable : sc::state<Reachable, NdpEntry> {
     // if override then update mac
     sc::result react(const EvSolNaIn &event) {
         NdpEntry *state_machine = &context<NdpEntry>();
-        if (!(event.na_->nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE)) {
+        if (!(event.na_.nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE)) {
             if (state_machine->mac() != event.mac_) {
                 return transit<Stale>();
             }
@@ -393,7 +393,7 @@ struct Stale : sc::state<Stale, NdpEntry> {
     // If different mac then move to stale else unchanged
     sc::result react(const EvUnsolNaIn &event) {
         NdpEntry *state_machine = &context<NdpEntry>();
-        if (event.na_->nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
+        if (event.na_.nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
             if (state_machine->mac() != event.mac_) {
                 state_machine->set_mac(event.mac_);
                 return transit<Stale>();
@@ -406,7 +406,7 @@ struct Stale : sc::state<Stale, NdpEntry> {
     // If same mac then move to reachable else unchanged
     sc::result react(const EvSolNaIn &event) {
         NdpEntry *state_machine = &context<NdpEntry>();
-        if (event.na_->nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
+        if (event.na_.nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
             if (state_machine->mac() != event.mac_) {
                 state_machine->set_mac(event.mac_);
             }
@@ -475,7 +475,7 @@ struct Delay : sc::state<Delay, NdpEntry> {
     // If different mac then move to stale else unchanged
     sc::result react(const EvUnsolNaIn &event) {
         NdpEntry *state_machine = &context<NdpEntry>();
-        if (event.na_->nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
+        if (event.na_.nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
             if (state_machine->mac() != event.mac_) {
                 state_machine->set_mac(event.mac_);
                 return transit<Stale>();
@@ -488,7 +488,7 @@ struct Delay : sc::state<Delay, NdpEntry> {
     // If same mac then move to reachable else unchanged
     sc::result react(const EvSolNaIn &event) {
         NdpEntry *state_machine = &context<NdpEntry>();
-        if (event.na_->nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
+        if (event.na_.nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
             if (state_machine->mac() != event.mac_) {
                 state_machine->set_mac(event.mac_);
             }
@@ -559,7 +559,7 @@ struct Probe : sc::state<Probe, NdpEntry> {
     // If different mac then move to stale else unchanged
     sc::result react(const EvUnsolNaIn &event) {
         NdpEntry *state_machine = &context<NdpEntry>();
-        if (event.na_->nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
+        if (event.na_.nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
             if (state_machine->mac() != event.mac_) {
                 state_machine->set_mac(event.mac_);
                 return transit<Stale>();
@@ -571,7 +571,7 @@ struct Probe : sc::state<Probe, NdpEntry> {
 
     // If same mac then move to reachable else unchanged
     sc::result react(const EvSolNaIn &event) {
-        if (event.na_->nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
+        if (event.na_.nd_na_flags_reserved & ND_NA_FLAG_OVERRIDE) {
             NdpEntry *state_machine = &context<NdpEntry>();
             if (state_machine->mac() != event.mac_) {
                 state_machine->set_mac(event.mac_);
@@ -713,12 +713,12 @@ bool NdpEntry::EnqueueDelayTimerExpired() {
     Enqueue(fsm::EvDelayTimerExpired());
     return false;
 }
-bool NdpEntry::EnqueueNsIn(nd_neighbor_solicit *ns, MacAddress mac) {
+bool NdpEntry::EnqueueNsIn(nd_neighbor_solicit ns, MacAddress mac) {
     Enqueue(fsm::EvNsIn(ns, mac));
     return false;
 }
-bool NdpEntry::EnqueueNaIn(nd_neighbor_advert *na, MacAddress mac) {
-    if (na->nd_na_flags_reserved & ND_NA_FLAG_SOLICITED) {
+bool NdpEntry::EnqueueNaIn(nd_neighbor_advert na, MacAddress mac) {
+    if (na.nd_na_flags_reserved & ND_NA_FLAG_SOLICITED) {
         Enqueue(fsm::EvSolNaIn(na, mac));
     } else {
         Enqueue(fsm::EvUnsolNaIn(na, mac));
@@ -726,12 +726,12 @@ bool NdpEntry::EnqueueNaIn(nd_neighbor_advert *na, MacAddress mac) {
     return false;
 }
 
-bool NdpEntry::EnqueueUnsolNaIn(nd_neighbor_advert *na, MacAddress mac) {
+bool NdpEntry::EnqueueUnsolNaIn(nd_neighbor_advert na, MacAddress mac) {
     Enqueue(fsm::EvUnsolNaIn(na, mac));
     return false;
 }
 
-bool NdpEntry::EnqueueSolNaIn(nd_neighbor_advert *na, MacAddress mac) {
+bool NdpEntry::EnqueueSolNaIn(nd_neighbor_advert na, MacAddress mac) {
     Enqueue(fsm::EvSolNaIn(na, mac));
     return false;
 }
@@ -931,7 +931,7 @@ void NdpEntry::SendNeighborAdvert(bool solicited) {
     }
 }
 
-void NdpEntry::HandleNsRequest(nd_neighbor_solicit *ns, MacAddress mac) {
+void NdpEntry::HandleNsRequest(nd_neighbor_solicit ns, MacAddress mac) {
     if (IsResolved())
         AddNdpRoute(true);
     else {

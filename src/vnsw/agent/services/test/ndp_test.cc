@@ -283,15 +283,16 @@ protected:
     void EvSolNaIn() {
         nd_neighbor_advert na;
         na.nd_na_flags_reserved = ND_NA_FLAG_SOLICITED;
-        sm_->EnqueueSolNaIn(&na, MacAddress("01:00:00:00:00:00"));
+        sm_->EnqueueSolNaIn(na, MacAddress("01:00:00:00:00:00"));
     }
     void EvSolNaOrIn() {
         nd_neighbor_advert na;
         na.nd_na_flags_reserved = ND_NA_FLAG_OVERRIDE | ND_NA_FLAG_SOLICITED;
-        sm_->EnqueueSolNaIn(&na, MacAddress("01:00:00:00:00:00"));
+        sm_->EnqueueSolNaIn(na, MacAddress("01:00:00:00:00:00"));
     }
     void EvNsIn() {
-        sm_->EnqueueNsIn(NULL, MacAddress("01:00:00:00:00:00"));
+        nd_neighbor_solicit ns;
+        sm_->EnqueueNsIn(ns, MacAddress("01:00:00:00:00:00"));
     }
     void EvPktOut() {
         sm_->EnqueuePktOut();
@@ -308,7 +309,7 @@ protected:
     void EvUnsolNaIn() {
         nd_neighbor_advert na;
         na.nd_na_flags_reserved = ND_NA_FLAG_OVERRIDE | ND_NA_FLAG_SOLICITED;
-        sm_->EnqueueUnsolNaIn(&na, MacAddress("01:00:00:00:00:00"));
+        sm_->EnqueueUnsolNaIn(na, MacAddress("01:00:00:00:00:00"));
     }
 
     NdpEntry *sm_;
@@ -383,13 +384,12 @@ TEST_F(NdpEntryTest, Matrix) {
         { nostate, incomplete, reachable, stale, delay, probe};
 
     for (int k = NdpEntry::NOSTATE; k <= NdpEntry::PROBE; k++) {
-        NdpEntry::State i = static_cast<NdpEntry::State> (k);
-        int count = 0;
-        for (Transitions::iterator j = matrix[i].begin(); j != matrix[i].end();
-                            j++) {
-            GetToState(i);
-            j->first();
-            RunToState(j->second);
+        NdpEntry::State kstate = static_cast<NdpEntry::State> (k);
+        for (const auto& transition : matrix[k]) {
+            GetToState(kstate);
+            client->WaitForIdle();
+            transition.first();
+            RunToState(transition.second);
         }
     }
 }

@@ -154,7 +154,7 @@ bool Icmpv6Handler::HandlePacket() {
                 NdpKey key(addr, itf->vrf());
                 NdpEntry *entry = icmpv6_proto->FindNdpEntry(key);
                 if (entry) {
-                    entry->EnqueueNaIn(icmp, mac);
+                    entry->EnqueueNaIn(*icmp, mac);
                 }
                 return true;
             }
@@ -196,10 +196,11 @@ bool Icmpv6Handler::HandlePacket() {
                     ret = false;
                 }
                 if (entry) {
-                    if (buf)
-                        entry->HandleNsRequest(ns, MacAddress(buf));
-                    else
-                        entry->HandleNsRequest(ns, MacAddress());
+                    if (buf) {
+                        entry->HandleNsRequest(*ns, MacAddress(buf));
+                    } else {
+                        entry->HandleNsRequest(*ns, MacAddress());
+                    }
                 }
                 return ret;
             }

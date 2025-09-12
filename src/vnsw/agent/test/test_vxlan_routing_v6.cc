@@ -66,6 +66,8 @@ IpamInfo ipam_2[] = {
 void RouterIdDepInit(Agent *agent) {
 }
 
+#define INPUT_SIZE(x) (sizeof(x) / sizeof(PortInfo))
+
 class VxlanRoutingV6Test : public ::testing::Test {
 protected:
     VxlanRoutingV6Test() {
@@ -85,8 +87,8 @@ protected:
         client->WaitForIdle();
         AddIPAM("vn1", ipam_1, 1);
         AddIPAM("vn2", ipam_2, 1);
-        CreateV6VmportEnv(input1, 2, 0, "vn1", "vrf1", true);
-        CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", true);
+        CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", true);
+        CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", true);
         AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                     "instance_ip_1", 1);
         AddLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
@@ -100,8 +102,8 @@ protected:
                     "instance_ip_1", 1);
         DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
                     "instance_ip_2", 2);
-        DeleteVmportEnv(input1, 2, true);
-        DeleteVmportEnv(input2, 1, true);
+        DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+        DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
         DelIPAM("vn1");
         DelIPAM("vn2");
         client->WaitForIdle();
@@ -663,8 +665,8 @@ TEST_F(VxlanRoutingV6Test, Lrvrf_Evpn_Type5_RouteAdd) {
     // Bridge vrf
     AddIPAM("vn1", ipam_info_1, 1);
     AddIPAM("vn2", ipam_info_2, 1);
-    CreateV6VmportEnv(input1, 1, 0, "vn1", "vrf1", true);
-    CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", true);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", true);
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
             "instance_ip_1", 1);
     AddLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
@@ -749,7 +751,7 @@ TEST_F(VxlanRoutingV6Test, Lrvrf_Evpn_Type5_RouteAdd) {
             Ip6Address::from_string("1:1:1:1:1:1:1:10"), 128, false);
 
     AddIPAM("vn3", ipam_info_3, 1);
-    CreateV6VmportEnv(input3, 1, 0, "vn3", "vrf3", true);
+    CreateV6VmportEnv(input3, INPUT_SIZE(input3), 0, "vn3", "vrf3", true);
     AddLrVmiPort("lr-vmi-vn3", 93, "3:3:3:3:3:3:3:99", "vrf3", "vn3",
             "instance_ip_3", 3);
     client->WaitForIdle();
@@ -792,7 +794,7 @@ TEST_F(VxlanRoutingV6Test, Lrvrf_Evpn_Type5_RouteAdd) {
     DelLrBridgeVrf("vn3", 1);
     DelLrVmiPort("lr-vmi-vn3", 93, "3:3:3:3:3:3:3:99", "vrf3", "vn3",
             "instance_ip_3", 3);
-    DeleteVmportEnv(input3, 1, true);
+    DeleteVmportEnv(input3, INPUT_SIZE(input3), true);
     DelIPAM("vn3");
 
     DelLrBridgeVrf("vn1", 1);
@@ -801,8 +803,8 @@ TEST_F(VxlanRoutingV6Test, Lrvrf_Evpn_Type5_RouteAdd) {
             "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
             "instance_ip_2", 2);
-    DeleteVmportEnv(input1, 2, true);
-    DeleteVmportEnv(input2, 1, true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
     DelIPAM("vn1");
     DelIPAM("vn2");
 
@@ -834,7 +836,7 @@ TEST_F(VxlanRoutingV6Test, LrRoutingVrfDeletion) {
 
     // Bridge vrf
     AddIPAM("vn1", ipam_info_1, 1);
-    CreateV6VmportEnv(input1, 1);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1));
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                  "instance_ip_1", 1);
     const char *routing_vrf_name = "l3evpn_1";
@@ -908,7 +910,7 @@ TEST_F(VxlanRoutingV6Test, LrRoutingVrfDeletion) {
     DelLrBridgeVrf("vn1", 1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                  "instance_ip_1", 1);
-    DeleteVmportEnv(input1, 1, true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
     DelIPAM("vn1");
 
     // Project
@@ -1011,7 +1013,7 @@ TEST_F(VxlanRoutingV6Test, Basic_IRT_128) {
 
     client->Reset();
     AddIPAM("vn1", ipam, 1);
-    CreateV6VmportEnv(input, 1, 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input, INPUT_SIZE(input), 0, "vn1", "vrf1", true);
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
     client->WaitForIdle();
@@ -1077,7 +1079,7 @@ TEST_F(VxlanRoutingV6Test, Basic_IRT_128) {
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91,  "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
     client->WaitForIdle();
     EXPECT_FALSE(VmPortFind(1));
@@ -1096,7 +1098,7 @@ TEST_F(VxlanRoutingV6Test, Basic_IRT_112) {
 
     client->Reset();
     AddIPAM("vn1", ipam, 1);
-    CreateV6VmportEnv(input, 1, 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input, INPUT_SIZE(input), 0, "vn1", "vrf1", true);
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
     client->WaitForIdle();
@@ -1163,7 +1165,7 @@ TEST_F(VxlanRoutingV6Test, Basic_IRT_112) {
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
     client->WaitForIdle();
     EXPECT_FALSE(VmPortFind(1));
@@ -1182,7 +1184,7 @@ TEST_F(VxlanRoutingV6Test, Basic_IRT_96) {
 
     client->Reset();
     AddIPAM("vn1", ipam, 1);
-    CreateV6VmportEnv(input, 1, 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input, INPUT_SIZE(input), 0, "vn1", "vrf1", true);
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
     client->WaitForIdle();
@@ -1247,7 +1249,7 @@ TEST_F(VxlanRoutingV6Test, Basic_IRT_96) {
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
     client->WaitForIdle();
     EXPECT_FALSE(VmPortFind(1));
@@ -1314,7 +1316,7 @@ TEST_F(VxlanRoutingV6Test, fip_test_initial_conf_with_lr1) {
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
 }
 
@@ -1379,7 +1381,7 @@ TEST_F(VxlanRoutingV6Test, fip_test_initial_conf_with_lr1_not_in_mask_vn) {
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
 }
 
@@ -1453,7 +1455,7 @@ TEST_F(VxlanRoutingV6Test, fip_test_initial_conf_with_lr2) {
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
     client->WaitForIdle();
 }
@@ -1521,7 +1523,7 @@ TEST_F(VxlanRoutingV6Test, fip_test_initial_conf_with_lr3) {
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
     client->WaitForIdle();
 }
@@ -1609,7 +1611,7 @@ TEST_F(VxlanRoutingV6Test, fip_test_2vrf_conf_with_lr1) {
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
     client->WaitForIdle();
 }
@@ -1628,7 +1630,7 @@ TEST_F(VxlanRoutingV6Test, Aap_l3) {
     client->WaitForIdle();
 
     AddIPAM("vn1", ipam_info, 1);
-    CreateV6VmportEnv(input, 2, 0, "vn1", "vrf1", true);;
+    CreateV6VmportEnv(input, INPUT_SIZE(input), 0, "vn1", "vrf1", true);;
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
     client->WaitForIdle();
@@ -1665,7 +1667,7 @@ TEST_F(VxlanRoutingV6Test, Aap_l3) {
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
-    DeleteVmportEnv(input, 2, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     client->WaitForIdle();
     EXPECT_FALSE(VmPortFindRetDel(1));
     EXPECT_FALSE(VrfFind("vrf1", true));
@@ -1690,7 +1692,7 @@ TEST_F(VxlanRoutingV6Test, Aap_l3l2) {
     client->WaitForIdle();
 
     AddIPAM("vn1", ipam_info, 2);
-    CreateV6VmportEnv(input, 2, 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input, INPUT_SIZE(input), 0, "vn1", "vrf1", true);
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
     client->WaitForIdle();
@@ -1738,7 +1740,7 @@ TEST_F(VxlanRoutingV6Test, Aap_l3l2) {
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
-    DeleteVmportEnv(input, 2, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     client->WaitForIdle();
     EXPECT_FALSE(VmPortFindRetDel(1));
     EXPECT_FALSE(VrfFind("vrf1", true));
@@ -1799,7 +1801,7 @@ TEST_F(VxlanRoutingV6Test, Composite_two_interfaces) {
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
-    DeleteVmportEnv(input, 2, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
     client->WaitForIdle();
     EXPECT_TRUE (VrfGet("l3evpn_1") == nullptr);
@@ -1820,7 +1822,7 @@ TEST_F(VxlanRoutingV6Test, Composite_two_tunnels) {
 
     // Bridge vrf
     AddIPAM("vn1", ipam, 1);
-    CreateV6VmportEnv(input, 1, 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input, INPUT_SIZE(input), 0, "vn1", "vrf1", true);
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
 
@@ -1917,7 +1919,7 @@ TEST_F(VxlanRoutingV6Test, Composite_two_tunnels) {
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
             "instance_ip_1", 1);
 
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
 
     // Project
@@ -1949,7 +1951,7 @@ TEST_F(VxlanRoutingV6Test, Composite_tunnels_and_interfaces) {
 
     // Bridge vrf
     AddIPAM("vn1", ipam, 1);
-    CreateV6VmportEnv(input, 1, 0, "vn1", "vrf1", false);
+    CreateV6VmportEnv(input, INPUT_SIZE(input), 0, "vn1", "vrf1", false);
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
 
@@ -2061,7 +2063,7 @@ TEST_F(VxlanRoutingV6Test, Composite_tunnels_and_interfaces) {
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
             "instance_ip_1", 1);
 
-    DeleteVmportEnv(input, 1, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
 
     // Project
@@ -2146,7 +2148,7 @@ TEST_F(VxlanRoutingV6Test, Composite_two_interfaces_aap_l3l2) {
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
-   DeleteVmportEnv(input, 2, true);
+   DeleteVmportEnv(input, INPUT_SIZE(input), true);
    DelIPAM("vn1");
    client->WaitForIdle();
    EXPECT_TRUE (VrfGet("l3evpn_1") == nullptr);
@@ -2218,7 +2220,7 @@ TEST_F(VxlanRoutingV6Test, Composite_two_interfaces_aap_l3) {
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
-    DeleteVmportEnv(input, 2, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
     client->WaitForIdle();
     EXPECT_TRUE (VrfGet("l3evpn_1") == nullptr);
@@ -2308,7 +2310,7 @@ TEST_F(VxlanRoutingV6Test, Composite_two_interfaces_irt) {
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                 "instance_ip_1", 1);
-    DeleteVmportEnv(input, 2, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
     client->WaitForIdle();
     EXPECT_TRUE (VrfGet("l3evpn_1") == nullptr);
@@ -2411,7 +2413,7 @@ TEST_F(VxlanRoutingV6Test, Composite_two_interfaces_fip) {
     EXPECT_EQ(fip_list1.size(), 0);
     EXPECT_EQ(fip_list2.size(), 0);
 
-    DeleteVmportEnv(input, 2, true);
+    DeleteVmportEnv(input, INPUT_SIZE(input), true);
     DelIPAM("vn1");
 }
 
@@ -2451,9 +2453,9 @@ TEST_F(VxlanRoutingV6Test, Add_del_network) {
     AddIPAM("vn2", ipam_info_2, 1);
     AddIPAM("vn3", ipam_info_3, 1);
 
-    CreateV6VmportEnv(input1, 1, 0, "vn1", "vrf1", false);
-    CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", false);
-    CreateV6VmportEnv(input3, 1, 0, "vn3", "vrf3", false);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", false);
+    CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", false);
+    CreateV6VmportEnv(input3, INPUT_SIZE(input3), 0, "vn3", "vrf3", false);
 
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
             "instance_ip_1", 1);
@@ -2551,7 +2553,7 @@ TEST_F(VxlanRoutingV6Test, Add_del_network) {
             Ip6Address::from_string("2:2:2:2:2:2:2:0"), 112, false);
 
     AddIPAM("vn4", ipam_info_4, 1);
-    CreateV6VmportEnv(input4, 1, 0, "vn4", "vrf4", false);
+    CreateV6VmportEnv(input4, INPUT_SIZE(input4), 0, "vn4", "vrf4", false);
     AddLrVmiPort("lr-vmi-vn4", 94, "4:4:4:4:4:4:4:99", "vrf4", "vn4",
             "instance_ip_4", 4);
     AddLrBridgeVrf("vn4", 1);
@@ -2615,13 +2617,13 @@ TEST_F(VxlanRoutingV6Test, Add_del_network) {
     DelLrBridgeVrf("vn3", 1);
     DelLrVmiPort("lr-vmi-vn3", 93, "3:3:3:3:3:3:3:99", "vrf3", "vn3",
             "instance_ip_3", 3);
-    DeleteVmportEnv(input3, 1, true);
+    DeleteVmportEnv(input3, INPUT_SIZE(input3), true);
     DelIPAM("vn3");
 
     DelLrBridgeVrf("vn4", 1);
     DelLrVmiPort("lr-vmi-vn4", 94, "4:4:4:4:4:4:4:99", "vrf4", "vn4",
             "instance_ip_4", 4);
-    DeleteVmportEnv(input4, 1, true);
+    DeleteVmportEnv(input4, INPUT_SIZE(input4), true);
     DelIPAM("vn4");
 
     // Bridge VN1 & VN2
@@ -2631,8 +2633,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_network) {
             "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
             "instance_ip_2", 2);
-    DeleteVmportEnv(input1, 2, true);
-    DeleteVmportEnv(input2, 1, true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
     DelIPAM("vn1");
     DelIPAM("vn2");
 
@@ -2683,9 +2685,9 @@ TEST_F(VxlanRoutingV6Test, AddDelIPAM) {
     AddIPAM("vn2", ipam_info_2, 1);
     AddIPAM("vn3", ipam_info_3, 1);
 
-    CreateV6VmportEnv(input1, 1, 0, "vn1", "vrf1", true);
-    CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", true);
-    CreateV6VmportEnv(input3, 1, 0, "vn3", "vrf3", true);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", true);
+    CreateV6VmportEnv(input3, INPUT_SIZE(input3), 0, "vn3", "vrf3", true);
 
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
             "instance_ip_1", 1);
@@ -2806,9 +2808,9 @@ TEST_F(VxlanRoutingV6Test, AddDelIPAM) {
             "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
             "instance_ip_2", 2);
-    DeleteVmportEnv(input3, 1, true);
-    DeleteVmportEnv(input1, 2, true);
-    DeleteVmportEnv(input2, 1, true);
+    DeleteVmportEnv(input3, INPUT_SIZE(input3), true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
     DelIPAM("vn1");
     DelIPAM("vn2");
     DelIPAM("vn3");
@@ -2836,8 +2838,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_network_policy_2_networks) {
     AddIPAM("vn1", ipam_info_1, 1);
     AddIPAM("vn2", ipam_info_2, 1);
 
-    CreateV6VmportEnv(input1, 1, 0, "vn1", "vrf1", false);
-    CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", false);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", false);
+    CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", false);
 
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
             "instance_ip_1", 1);
@@ -2945,8 +2947,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_network_policy_2_networks) {
             "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
             "instance_ip_2", 2);
-    DeleteVmportEnv(input1, 1, true);
-    DeleteVmportEnv(input2, 1, true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
     DelIPAM("vn1");
     DelIPAM("vn2");
 
@@ -3005,10 +3007,10 @@ TEST_F(VxlanRoutingV6Test, Add_del_network_policy_4_networks) {
     AddIPAM("vn3", ipam_info_3, 1);
     AddIPAM("vn4", ipam_info_4, 1);
 
-    CreateV6VmportEnv(input1, 1, 0, "vn1", "vrf1", false);
-    CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", false);
-    CreateV6VmportEnv(input3, 1, 0, "vn3", "vrf3", false);
-    CreateV6VmportEnv(input4, 1, 0, "vn4", "vrf4", false);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", false);
+    CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", false);
+    CreateV6VmportEnv(input3, INPUT_SIZE(input3), 0, "vn3", "vrf3", false);
+    CreateV6VmportEnv(input4, INPUT_SIZE(input4), 0, "vn4", "vrf4", false);
 
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
             "instance_ip_1", 1);
@@ -3360,10 +3362,10 @@ TEST_F(VxlanRoutingV6Test, Add_del_network_policy_4_networks) {
             "instance_ip_3", 3);
     DelLrVmiPort("lr-vmi-vn4", 94, "4:4:4:4:4:4:4:99", "vrf4", "vn4",
             "instance_ip_4", 4);
-    DeleteVmportEnv(input1, 1, true);
-    DeleteVmportEnv(input2, 1, true);
-    DeleteVmportEnv(input3, 1, true);
-    DeleteVmportEnv(input4, 1, true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
+    DeleteVmportEnv(input3, INPUT_SIZE(input3), true);
+    DeleteVmportEnv(input4, INPUT_SIZE(input4), true);
     DelIPAM("vn1");
     DelIPAM("vn2");
     DelIPAM("vn3");
@@ -3415,8 +3417,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_bgpaas_route_to_bridge_vrf) {
     AddIPAM("vn1", ipam_info_1, 1);
     AddIPAM("vn2", ipam_info_2, 1);
 
-    CreateV6VmportEnv(input1, 1, 0, "vn1", "vrf1", true);
-    CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", true);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", true);
 
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                  "instance_ip_1", 1);
@@ -3534,8 +3536,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_bgpaas_route_to_bridge_vrf) {
                  "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
                  "instance_ip_2", 2);
-    DeleteVmportEnv(input1, 1, true);
-    DeleteVmportEnv(input2, 1, true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
     WAIT_FOR(1000, 1000, (0 == Agent::GetInstance()->vm_table()->Size()));
     DelBgpaasPortRange();
     DeleteBgpRouterConfig("127.0.0.1", 0, "ip-fabric");
@@ -3586,8 +3588,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_bgpaas_route_to_bridge_and_routing_vrf) {
     AddIPAM("vn1", ipam_info_1, 1);
     AddIPAM("vn2", ipam_info_2, 1);
 
-    CreateV6VmportEnv(input1, 1, 0, "vn1", "vrf1", true);
-    CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", true);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", true);
 
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                  "instance_ip_1", 1);
@@ -3750,8 +3752,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_bgpaas_route_to_bridge_and_routing_vrf) {
                  "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
                  "instance_ip_2", 2);
-    DeleteVmportEnv(input1, 1, true);
-    DeleteVmportEnv(input2, 1, true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
     WAIT_FOR(1000, 1000, (0 == Agent::GetInstance()->vm_table()->Size()));
     DelBgpaasPortRange();
     DeleteBgpRouterConfig("127.0.0.1", 0, "ip-fabric");
@@ -3803,8 +3805,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_bgpaas_composite_interfaces) {
     AddIPAM("vn1", ipam_info_1, 1);
     AddIPAM("vn2", ipam_info_2, 1);
 
-    CreateV6VmportEnv(input1, 2, 0, "vn1", "vrf1", true);
-    CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", true);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", true);
 
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                  "instance_ip_1", 1);
@@ -4061,8 +4063,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_bgpaas_composite_interfaces) {
                  "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
                  "instance_ip_2", 2);
-    DeleteVmportEnv(input1, 2, true);
-    DeleteVmportEnv(input2, 1, true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
     WAIT_FOR(1000, 1000, (0 == Agent::GetInstance()->vm_table()->Size()));
     DelBgpaasPortRange();
     DeleteBgpRouterConfig("127.0.0.1", 0, "ip-fabric");
@@ -4114,8 +4116,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_bgpaas_composite_interface_and_tunnel) {
     AddIPAM("vn1", ipam_info_1, 1);
     AddIPAM("vn2", ipam_info_2, 1);
 
-    CreateV6VmportEnv(input1, 1, 0, "vn1", "vrf1", true);
-    CreateV6VmportEnv(input2, 1, 0, "vn2", "vrf2", true);
+    CreateV6VmportEnv(input1, INPUT_SIZE(input1), 0, "vn1", "vrf1", true);
+    CreateV6VmportEnv(input2, INPUT_SIZE(input2), 0, "vn2", "vrf2", true);
 
     AddLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
                  "instance_ip_1", 1);
@@ -4406,8 +4408,8 @@ TEST_F(VxlanRoutingV6Test, Add_del_bgpaas_composite_interface_and_tunnel) {
                  "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
                  "instance_ip_2", 2);
-    DeleteVmportEnv(input1, 1, true);
-    DeleteVmportEnv(input2, 1, true);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
     WAIT_FOR(1000, 1000, (0 == Agent::GetInstance()->vm_table()->Size()));
     DelBgpaasPortRange();
     DeleteBgpRouterConfig("127.0.0.1", 0, "ip-fabric");
