@@ -81,15 +81,14 @@ DnsEnv.Append(CCFLAGS = ['-fexceptions'])
 Export('DnsEnv')
 
 subdirs = [
-           'agent',
-           'bind',
-           'cfg',
-           'cmn',
-           'mgr',
-           'uve',
-           'test',
-           'scripts',
-          ]
+    'agent',
+    'bind',
+    'cfg',
+    'cmn',
+    'mgr',
+    'uve',
+    'test',
+]
 
 for dir in subdirs:
     env.SConscript(dir + '/SConscript', exports='DnsEnv', duplicate=0)
