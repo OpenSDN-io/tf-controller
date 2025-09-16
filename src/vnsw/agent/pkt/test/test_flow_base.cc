@@ -278,6 +278,103 @@ public:
         }
     }
 
+    std::string AddAclXmlString1(
+        const char *name, int id, 
+        int proto1, const char *action1, const char* uuid1, 
+        int proto2, const char *action2, const char* uuid2) {
+        char buff[10240];
+        sprintf(buff,
+                "<?xml version=\"1.0\"?>\n"
+                "<config>\n"
+                "   <update>\n"
+                "       <node type=\"access-control-list\">\n"
+                "           <name>%s</name>\n"
+                "           <id-perms>\n"
+                "               <permissions>\n"
+                "                   <owner></owner>\n"
+                "                   <owner_access>0</owner_access>\n"
+                "                   <group></group>\n"
+                "                   <group_access>0</group_access>\n"
+                "                   <other_access>0</other_access>\n"
+                "               </permissions>\n"
+                "               <uuid>\n"
+                "                   <uuid-mslong>0</uuid-mslong>\n"
+                "                   <uuid-lslong>%d</uuid-lslong>\n"
+                "               </uuid>\n"
+                "           </id-perms>\n"
+                "           <access-control-list-entries>\n"
+                "                <dynamic>false</dynamic>\n"
+                "                <acl-rule>\n"
+                "                    <match-condition>\n"
+                "                        <src-address>\n"
+                "                            <virtual-network>vn3</virtual-network>\n"
+                "                        </src-address>\n"
+                "                        <protocol>%d</protocol>\n"
+                "                        <src-port>\n"
+                "                            <start-port>0</start-port>\n"
+                "                            <end-port>10000</end-port>\n"
+                "                        </src-port>\n"
+                "                        <dst-address>\n"
+                "                            <virtual-network>vn5</virtual-network>\n"
+                "                        </dst-address>\n"
+                "                        <dst-port>\n"
+                "                            <start-port>0</start-port>\n"
+                "                            <end-port>10000</end-port>\n"
+                "                        </dst-port>\n"
+                "                    </match-condition>\n"
+                "                    <action-list>\n"
+                "                        <simple-action>%s</simple-action>\n"
+                "                    </action-list>\n"
+                "                    <rule-uuid>%s</rule-uuid>\n"
+                "                    <direction>></direction>\n"
+                "                </acl-rule>\n"
+                "                <acl-rule>\n"
+                "                    <match-condition>\n"
+                "                        <src-address>\n"
+                "                            <virtual-network>vn5</virtual-network>\n"
+                "                        </src-address>\n"
+                "                        <protocol>%d</protocol>\n"
+                "                        <src-port>\n"
+                "                            <start-port>0</start-port>\n"
+                "                            <end-port>10000</end-port>\n"
+                "                        </src-port>\n"
+                "                        <dst-address>\n"
+                "                            <virtual-network>vn3</virtual-network>\n"
+                "                        </dst-address>\n"
+                "                        <dst-port>\n"
+                "                            <start-port>0</start-port>\n"
+                "                            <end-port>10000</end-port>\n"
+                "                        </dst-port>\n"
+                "                    </match-condition>\n"
+                "                    <action-list>\n"
+                "                        <simple-action>%s</simple-action>\n"
+                "                    </action-list>\n"
+                "                    <rule-uuid>%s</rule-uuid>\n"
+                "                    <direction>></direction>\n"
+                "                </acl-rule>\n"
+                "           </access-control-list-entries>\n"
+                "       </node>\n"
+                "   </update>\n"
+                "</config>\n", name, id, proto1, action1, uuid1, proto2, action2, uuid2);
+        string s(buff);
+        return s;
+    }
+
+    void AddAclEntry1(
+        const char *name, int id, 
+        int proto1, const char *action1, const char *uuid_str_1, 
+        int proto2, const char *action2, const char *uuid_str_2) {
+        std::string s = AddAclXmlString1(
+                            name, id, 
+                            proto1, action1, uuid_str_1, 
+                            proto2, action2, uuid_str_2);
+        pugi::xml_document xdoc_;
+        pugi::xml_parse_result result = xdoc_.load(s.c_str());
+        EXPECT_TRUE(result);
+        Agent::GetInstance()->ifmap_parser()->ConfigParse(xdoc_.first_child(), 0);
+        client->WaitForIdle();
+    }
+
     std::string AddAclXmlString(const char *name, int id, int proto,
                                 const char *action, const char* uuid) {
         char buff[10240];

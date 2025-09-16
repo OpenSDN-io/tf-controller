@@ -1252,6 +1252,106 @@ TEST_F(FlowTest, FlowPolicyUuid_20) {
     client->WaitForIdle(5);
 }
 
+TEST_F(FlowTest, FlowPolicyUuid_21) {
+    AddAclEntry1(
+        "acl4", 4,
+        1, "deny", "fe6a4dcb-dde4-48e6-8957-856a7aacb2e6", // vn3 to vn5
+        1, "pass", "fe6a4dcb-dde4-48e6-8957-856a7aacb2e2"); // vn5 to vn3
+
+    // Attach ACL to both VN5 and VN3 since we're testing traffic between them
+    AddLink("virtual-network", "vn5", "access-control-list", "acl4");
+    AddLink("virtual-network", "vn3", "access-control-list", "acl4");
+    client->WaitForIdle();
+
+    /* Add Local VM route of vrf3 to vrf5 */
+    CreateLocalRoute("vrf5", vm4_ip, flow3, 19);
+    /* Add Local VM route of vrf5 to vrf3 */
+    CreateLocalRoute("vrf3", vm1_ip, flow0, 16);
+
+    TestFlow flow[] = {
+        {
+            TestFlowPkt(Address::INET, vm1_ip, vm4_ip, 1, 0, 0, "vrf5", flow0->id()),
+            {}
+        }
+    };
+
+    CreateFlow(flow, 1);
+    client->WaitForIdle();
+
+    FlowEntry *fe = flow[0].pkt_.FlowFetch();
+    ASSERT_TRUE(fe != nullptr);
+
+    // Like FlowHandler::Run()
+    Agent *agent = Agent::GetInstance();
+    boost::shared_ptr<PktInfo> pkt_info(new PktInfo(agent, 100, PktHandler::FLOW, 0));
+
+    pkt_info->type = PktType::MESSAGE;
+    pkt_info->agent_hdr.cmd = AGENT_TRAP_FLOW_MISS;
+    pkt_info->agent_hdr.cmd_param = fe->flow_handle();
+    pkt_info->agent_hdr.ifindex = fe->data().if_index_info;
+    pkt_info->tunnel = fe->data().tunnel_info;
+    pkt_info->agent_hdr.nh = fe->key().nh;
+    pkt_info->agent_hdr.vrf = fe->data().vrf;
+    pkt_info->family = fe->key().src_addr.is_v4() ? Address::INET : Address::INET6;
+    pkt_info->smac = fe->data().smac;
+    pkt_info->dmac = fe->data().dmac;
+    pkt_info->ip_saddr = fe->key().src_addr;
+    pkt_info->ip_daddr = fe->key().dst_addr;
+    pkt_info->ip_proto = fe->key().protocol;
+    pkt_info->sport = fe->key().src_port;
+    pkt_info->dport = fe->key().dst_port;
+    pkt_info->tcp_ack = fe->is_flags_set(FlowEntry::TcpAckFlow);
+    pkt_info->vrf = fe->data().vrf;
+    pkt_info->ttl = fe->data().ttl;
+
+    PktControlInfo in;
+    PktControlInfo out;
+    FlowTable *flow_table = agent->pkt()->get_flow_proto()->GetTable(0);
+    PktFlowInfo info(agent, pkt_info, flow_table);
+
+    info.flow_entry = fe;
+    info.l3_flow = fe->l3_flow();
+    info.out_component_nh_idx = fe->data().component_nh_idx;
+
+    if (info.Process(pkt_info.get(), &in, &out) == false) {
+        info.short_flow = true;
+    }
+
+    if (in.intf_ && ((in.intf_->type() != Interface::VM_INTERFACE) &&
+                     (in.intf_->type() != Interface::INET))) {
+        in.intf_ = nullptr;
+    }
+
+    if (in.intf_ && out.intf_) {
+        info.local_flow = true;
+    }
+
+    if (in.intf_) {
+        in.vm_ = static_cast<const VmInterface *>(in.intf_)->vm();
+    }
+
+    if (out.intf_) {
+        out.vm_ = static_cast<const VmInterface *>(out.intf_)->vm();
+    }
+
+    info.Add(pkt_info.get(), &in, &out);
+    client->WaitForIdle();
+
+    EXPECT_EQ(32U, fe->match_p().action_info.action);
+    EXPECT_EQ(32U, fe->reverse_flow_entry()->match_p().action_info.action);
+
+    FlushFlowTable();
+    client->WaitForIdle();
+    EXPECT_EQ(0U, get_flow_proto()->FlowCount());
+
+    DeleteRoute("vrf5", vm4_ip);
+    DeleteRoute("vrf3", vm1_ip);
+    DelLink("virtual-network", "vn5", "access-control-list", "acl4");
+    DelLink("virtual-network", "vn3", "access-control-list", "acl4");
+    DelNode("access-control-list", "acl4");
+    client->WaitForIdle(5);
+}
+
 //Create a l2 flow and verify l3 route
 //priority gets increased
 TEST_F(FlowTest, TrafficPriority) {
