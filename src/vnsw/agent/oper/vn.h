@@ -185,6 +185,9 @@ public:
                    uint8_t *plen) const;
     std::string GetProject() const;
     int GetVxLanId() const;
+    
+    /// Returns a value of the VxLAN ID stored in the Oper DB
+    int GetOperVxlanId() const;
 
     const VxLanId *vxlan_id_ref() const {return vxlan_id_ref_.get();}
     void set_bridging(bool bridging) {bridging_ = bridging;}

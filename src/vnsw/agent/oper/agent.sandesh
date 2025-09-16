@@ -2168,6 +2168,8 @@ struct VnObjectLogInfo {
     /** Boolean value which indicates if virtual network is vxlan routing
      */
     13: optional bool vxlan_routing_vn;
+    /** Stores the VxLAN ID of the requested virtual network from the Oper DB */
+    14: u32 oper_vxlan_id;
 }
 
 /**

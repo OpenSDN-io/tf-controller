@@ -5,6 +5,7 @@
 
 #include "base/os.h"
 #include "testing/gunit.h"
+#include "sandesh/library/cpp/sandesh_trace.h"
 
 #include <base/logging.h>
 #include <io/event_manager.h>
@@ -244,9 +245,51 @@ protected:
         }
     }
 
+    static void ProcessBufferItem(SandeshTrace *buffer_item, bool not_last) {
+        std::string msg_str = buffer_item->ToString();
+        std::string::size_type vn_name_pos = msg_str.find("name = l3evpn_1");
+        if (vn_name_pos != std::string::npos) {
+            std::string::size_type vxlan_id_pos = msg_str.find(
+                "vxlan_id = 201");
+            std::cout << "Oper db.vxlan.0 item buffer_item->ToString() = "
+                    << buffer_item->ToString() << std::endl;
+            if (vxlan_id_pos == std::string::npos) {
+                vxlan_id_was_not_found_ = true;
+            }
+        }
+    }
+
+    ///
     BgpPeer *bgp_peer_;
+
+    ///
     Agent *agent_;
+
+    /// Stores the result of Oper DB trace scanning for a proper VxLAN ID value
+    /// of a routing VN
+    static bool vxlan_id_was_not_found_;
 };
+
+bool VxlanRoutingTest::vxlan_id_was_not_found_;
+
+TEST_F(VxlanRoutingTest, CheckVnVxlanId) {
+    SandeshTraceBufferPtr oper_db_trace_buff_ptr =
+        SandeshTraceBufferGet("Oper db.vxlan.0");
+    const std::string context = "oper_db_vxlan_context";
+    SetupEnvironment();
+    AddLrRoutingVrf(1);
+
+    client->WaitForIdle();
+    vxlan_id_was_not_found_ = false;
+    SandeshTraceBufferRead(oper_db_trace_buff_ptr,
+                           context,
+                           0,
+                           VxlanRoutingTest::ProcessBufferItem);
+    client->WaitForIdle();
+    EXPECT_FALSE(vxlan_id_was_not_found_);
+    DelLrRoutingVrf(1);
+    DeleteEnvironment(true);
+}
 
 TEST_F(VxlanRoutingTest, Basic) {
     using boost::uuids::nil_uuid;
