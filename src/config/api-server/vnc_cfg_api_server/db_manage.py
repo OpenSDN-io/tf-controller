@@ -67,6 +67,8 @@ NOTE: As that script is not self contained in a python package and as it
 supports multiple Contrail releases, it brings its own version that needs to be
 manually updated each time it is modified. We also maintain a change log list
 in that header:
+* 1.42:
+  - Add checker and healer for ipam_subnet_method.
 * 1.41:
   - Refactor whole script to use cassandra drivers instead of pycassa lib.
 * 1.40:
@@ -270,6 +272,9 @@ exceptions = [
     'ZkSubnetPathInvalid',
     'FqNameDuplicateError',
     'AEIDZookeeperError',
+    'IpamSubnetMethodMissingError',
+    'IpamSubnetMethodIncorrectError',
+    'IpamSubnetMethodConflictError',
     'NotSupportedError',
 ]
 for exception_class in exceptions:
@@ -2101,6 +2106,66 @@ class DatabaseChecker(DatabaseManager):
                 ret_errors.append(AEIDZookeeperError(errmsg))
         return ret_errors
 
+    @checker
+    def check_ipam_subnet_method(self):
+        """Displays missing or incorrect 'ipam_subnet_method' in network IPAMs."""
+        ret_errors = []
+
+        network_ipam_entries = [entry for entry, _ in
+                                self._cassandra_driver.xget('obj_fq_name_table', 'network_ipam')]
+        network_ipam_entries = [entry.rsplit(':',1) for entry in network_ipam_entries]
+        network_ipam_entries = [(fq_name.split(':'), uuid) for (fq_name, uuid) in network_ipam_entries]
+
+        for sfq_name, uuid in network_ipam_entries:
+            rows = self._cassandra_driver.get('obj_uuid_table', uuid)
+
+            must_be_flat = False
+            must_be_udef = False
+
+            for prop, value in rows.items():
+                if prop.startswith('propl:ipam_subnets:'):
+                    must_be_flat = True
+
+            for prop, value in rows.items():
+                if prop.startswith('backref:virtual_network:'):
+                    try:
+                        back_ref = json.loads(value)
+                    except Exception:
+                        back_ref = value
+                    attr = back_ref.get('attr', {})
+                    ipam_subnets = attr.get('ipam_subnets', [])
+                    for ipam_subnet in ipam_subnets:
+                        if 'subnet' in ipam_subnet:
+                            must_be_udef = True
+
+            if must_be_flat and must_be_udef:
+                errmsg = "Network IPAM (%s | %s) has conflicting data for" \
+                         "'ipam_subnet_method'" % (sfq_name, uuid)
+                ret_errors.append(IpamSubnetMethodConflictError(errmsg))
+                continue
+
+            expected = 'flat-subnet' if must_be_flat else 'user-defined-subnet'
+
+            if 'prop:ipam_subnet_method' not in rows:
+                errmsg = "Network IPAM (%s | %s) missing 'ipam_subnet_method', " \
+                         "but can be set to '%s'" % (sfq_name, uuid, expected)
+                ret_errors.append(IpamSubnetMethodMissingError(errmsg))
+                continue
+
+            ipam_subnet_method = rows.get('prop:ipam_subnet_method')
+            try:
+                ipam_subnet_method = json.loads(ipam_subnet_method)
+            except Exception:
+                pass
+
+            if ipam_subnet_method != expected:
+                errmsg = "Network IPAM (%s | %s) has incorrect 'ipam_subnet_method' " \
+                         "'%s' but should be '%s'" % (sfq_name, uuid, ipam_subnet_method, expected)
+                ret_errors.append(IpamSubnetMethodIncorrectError(errmsg))
+                continue
+
+        return ret_errors
+
 
 class DatabaseCleaner(DatabaseManager):
     def cleaner(func):
@@ -3347,7 +3412,79 @@ class DatabaseHealer(DatabaseManager):
                         pass
 
         return ret_errors
-# end class DatabaseCleaner
+
+    @healer
+    def heal_ipam_subnet_method(self):
+        """Assigning missing 'ipam_subnet_method' in network IPAMs."""
+        logger = self._logger
+        ret_errors = []
+
+        network_ipam_entries = [entry for entry, _ in
+                                self._cassandra_driver.xget('obj_fq_name_table', 'network_ipam')]
+        network_ipam_entries = [entry.rsplit(':',1) for entry in network_ipam_entries]
+        network_ipam_entries = [(fq_name.split(':'), uuid) for (fq_name, uuid) in network_ipam_entries]
+
+        for fq_name, uuid in network_ipam_entries:
+            rows = self._cassandra_driver.get('obj_uuid_table', uuid)
+
+            must_be_flat = False
+            must_be_udef = False
+
+            for prop, value in rows.items():
+                if prop.startswith('propl:ipam_subnets:'):
+                    must_be_flat = True
+
+            for prop, value in rows.items():
+                if prop.startswith('backref:virtual_network:'):
+                    try:
+                        back_ref = json.loads(value)
+                    except Exception:
+                        back_ref = value
+                    attr = back_ref.get('attr', {})
+                    ipam_subnets = attr.get('ipam_subnets', [])
+                    for ipam_subnet in ipam_subnets:
+                        if 'subnet' in ipam_subnet:
+                            must_be_udef = True
+
+            if must_be_flat and must_be_udef:
+                errmsg = "Network IPAM %s(%s) has conflicting data for" \
+                         "'ipam_subnet_method'" % (fq_name, uuid)
+                ret_errors.append(IpamSubnetMethodConflictError(errmsg))
+                continue
+
+            expected = 'flat-subnet' if must_be_flat else 'user-defined-subnet'
+            try:
+                ipam_subnet_method = json.loads(ipam_subnet_method)
+            except Exception:
+                pass
+
+            if 'prop:ipam_subnet_method' not in rows:
+                prop = 'prop:ipam_subnet_method'
+                value = json.dumps(expected)
+
+                if self._args.execute:
+                    msg = "Network IPAM %s(%s) is missing 'ipam_subnet_method', " \
+                          "assigning '%s'" % (fq_name, uuid, expected)
+                    self._cassandra_driver.insert('obj_uuid_table', uuid, {prop: value})
+                else:
+                    msg = "Network IPAM %s(%s) is missing 'ipam_subnet_method', " \
+                          "would assign '%s'" % (fq_name, uuid, expected)
+                logger.info(msg)
+                continue
+
+            ipam_subnet_method = rows.get('prop:ipam_subnet_method')
+            try:
+                ipam_subnet_method = json.loads(ipam_subnet_method)
+            except Exception:
+                pass
+
+            if ipam_subnet_method != expected:
+                errmsg = "Network IPAM %s(%s) has incorrect 'ipam_subnet_method' " \
+                         "'%s' but should be '%s'" % (fq_name, uuid, ipam_subnet_method, expected)
+                ret_errors.append(IpamSubnetMethodIncorrectError(errmsg))
+                continue
+
+        return ret_errors
 
 
 def db_check(args, api_args):
@@ -3371,6 +3508,7 @@ def db_check(args, api_args):
     db_checker.check_route_targets_id()
     db_checker.check_virtual_networks_id()
     db_checker.check_security_groups_id()
+    db_checker.check_ipam_subnet_method()
     if AE_MAX_ID:
         db_checker.check_aggregated_ethernet_id()
     # db_checker.check_schema_db_mismatch()
@@ -3425,6 +3563,7 @@ def db_heal(args, api_args):
     db_healer.heal_virtual_networks_id()
     db_healer.heal_security_groups_id()
     db_healer.heal_subnet_addr_alloc()
+    db_healer.heal_ipam_subnet_method()
 
 
 # end db_heal
