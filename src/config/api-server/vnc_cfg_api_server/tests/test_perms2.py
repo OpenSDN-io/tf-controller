@@ -1380,6 +1380,7 @@ class TestPermissions(test_case.ApiServerTestCase):
         ipam_fq_name = ['default-domain', 'default-project', 'default-network-ipam']
         ipam = vnc_read_obj(self.alice.vnc_lib, 'network-ipam', name = ipam_fq_name)
         self.assertEquals(ipam.get_perms2().global_access, PERMS_RX)
+        self.assertEquals(ipam.get_ipam_subnet_method(), 'user-defined-subnet')
 
     def test_global_read_only_role(self):
         vn = VirtualNetwork('alice-%s' % self.id(), self.alice.project_obj)

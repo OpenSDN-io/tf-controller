@@ -265,8 +265,7 @@ class VirtualNetworkServer(ResourceMixin, VirtualNetwork):
             if not ok:
                 return False, ipam_lists[0], ipam_lists[1]
             for ipam in ipam_lists:
-                if 'ipam_subnet_method' in ipam:
-                    subnet_method = ipam['ipam_subnet_method']
+                if ipam.get('ipam_subnet_method') == 'flat-subnet':
                     ipam_with_flat_subnet = True
                     break
 

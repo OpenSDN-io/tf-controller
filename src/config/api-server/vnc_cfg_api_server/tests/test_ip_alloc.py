@@ -564,18 +564,17 @@ class TestIpAlloc(test_case.ApiServerTestCase):
         ipam = NetworkIpam('default-network-ipam', project, IpamType("dhcp"))
         self._vnc_lib.network_ipam_create(ipam)
         ipam = self._vnc_lib.network_ipam_read(id=ipam.uuid)
-        self.assertEqual(ipam.get_ipam_subnet_method(), None)
+        self.assertEqual(ipam.get_ipam_subnet_method(), 'user-defined-subnet')
 
-        # try changing subnet-method from None to flat-subnet, vnc_lib should reject
+        # trying to change subnet-method should be rejected
         ipam.set_ipam_subnet_method('flat-subnet')
         with ExpectedException(cfgm_common.exceptions.BadRequest,
                                'ipam_subnet_method can not be changed') as e:
             self._vnc_lib.network_ipam_update(ipam)
 
+        # setting subnet-method to current value should succeed
         ipam.set_ipam_subnet_method('user-defined-subnet')
-        with ExpectedException(cfgm_common.exceptions.BadRequest,
-                               'ipam_subnet_method can not be changed') as e:
-            self._vnc_lib.network_ipam_update(ipam)
+        self._vnc_lib.network_ipam_update(ipam)
 
         ipam1_sn_v4 = IpamSubnetType(subnet=SubnetType('11.1.1.0', 28),
                                      alloc_unit=4)
