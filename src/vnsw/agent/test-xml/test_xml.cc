@@ -227,7 +227,7 @@ bool AgentUtXmlTest::Load() {
         return false;
     }
 
-    xml_parse_result result = doc_.load(data.data());
+    xml_parse_result result = doc_.load_string(data.data());
     if (result) {
         cout << "Loaded data file successfully" << endl;
     } else {

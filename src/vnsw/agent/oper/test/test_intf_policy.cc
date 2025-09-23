@@ -138,7 +138,7 @@ static void AddAclEntry(const char *name, int id, int proto,
     std::string s = AddAclXmlString("access-control-list", acl_name, id, proto,
                                     action);
     pugi::xml_document xdoc_;
-    pugi::xml_parse_result result = xdoc_.load(s.c_str());
+    pugi::xml_parse_result result = xdoc_.load_string(s.c_str());
     EXPECT_TRUE(result);
     Agent::GetInstance()->ifmap_parser()->ConfigParse(xdoc_.first_child(), 0);
     client->WaitForIdle();

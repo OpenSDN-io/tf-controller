@@ -2,7 +2,7 @@
 
 env = DefaultEnvironment().Clone()
 
-vpath = '#/third_party/pugixml/src'
+vpath = '#/third_party/pugixml-1.15/src'
 
 env.VariantDir('#/' + Dir('.').path + '/src', vpath)
 pugixml_buildpath = Dir('.').abspath + '/src'

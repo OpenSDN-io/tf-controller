@@ -304,7 +304,7 @@ TEST_F(CfgTest, LinkAttrTest) {
     ASSERT_TRUE(ABtable!=NULL);
 
     pugi::xml_document xdoc_;
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
 
     parser_->ConfigParse(xdoc_, 0);
@@ -384,7 +384,7 @@ TEST_F(CfgTest, NodeReaddTest) {
             Register(boost::bind(&CfgTest_NodeReaddTest_Test::EmptyListener, this, _1, _2));
 
     pugi::xml_document xdoc_;
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
 
     parser_->ConfigParse(xdoc_, 0);
@@ -448,7 +448,7 @@ TEST_F(CfgTest, NodeReaddTest) {
         "   </link>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -522,7 +522,7 @@ TEST_F(CfgTest, LinkReorderTest) {
             db_.FindTable(IFMAP_AGENT_LINK_DB_NAME));
     ASSERT_TRUE(ltable!=NULL);
 
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -602,7 +602,7 @@ TEST_F(CfgTest, LinkReorderTest) {
         "   </link>\n"
         "</update>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -629,7 +629,7 @@ TEST_F(CfgTest, LinkReorderTest) {
         "   </node>\n"
         "</update>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -685,7 +685,7 @@ TEST_F(CfgTest, LinkReorderTest) {
         "   </node>\n"
         "</delete>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -703,7 +703,7 @@ TEST_F(CfgTest, LinkReorderTest) {
         "   </link>\n"
         "</update>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -727,7 +727,7 @@ TEST_F(CfgTest, LinkReorderTest) {
         "   </node>\n"
         "</update>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -765,7 +765,7 @@ TEST_F(CfgTest, LinkReorderTest) {
         "   </node>\n"
         "</delete>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -820,7 +820,7 @@ TEST_F(CfgTest, LinkReorderTest) {
         "   </node>\n"
         "</update>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -866,7 +866,7 @@ TEST_F(CfgTest, LinkReorderTest) {
         "       </node>\n"
         "   </link>\n"
         "</update>\n");
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -919,7 +919,7 @@ TEST_F(CfgTest, NodeDeleteLinkPendingTest) {
             db_.FindTable(IFMAP_AGENT_LINK_DB_NAME));
     ASSERT_TRUE(ltable!=NULL);
 
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -967,7 +967,7 @@ TEST_F(CfgTest, NodeDeleteLinkPendingTest) {
         "   </node>\n"
         "</delete>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1007,7 +1007,7 @@ TEST_F(CfgTest, NodeDeleteLinkPendingTest) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1054,7 +1054,7 @@ TEST_F(CfgTest, NodeDeleteLinkPendingTest) {
         "   </node>\n"
         "</delete>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1085,7 +1085,7 @@ TEST_F(CfgTest, NodeDeleteLinkPendingTest) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1142,7 +1142,7 @@ TEST_F(CfgTest, NodeDeleteLinkPendingTest) {
         "   </node>\n"
         "</delete>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1199,7 +1199,7 @@ TEST_F(CfgTest, NodeDeleteLinkPendingTest) {
         "   </node>\n"
         "</delete>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1246,7 +1246,7 @@ TEST_F(CfgTest, NodeDelLinkAddDeferTest) {
             Register(boost::bind(&CfgTest_NodeDelLinkAddDeferTest_Test::EmptyListener, this, _1, _2));
 
     pugi::xml_document xdoc_;
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
 
     parser_->ConfigParse(xdoc_, 0);
@@ -1310,7 +1310,7 @@ TEST_F(CfgTest, NodeDelLinkAddDeferTest) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1382,7 +1382,7 @@ TEST_F(CfgTest, LinkJumbleTest) {
             db_.FindTable(IFMAP_AGENT_LINK_DB_NAME));
     ASSERT_TRUE(ltable!=NULL);
 
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1417,7 +1417,7 @@ TEST_F(CfgTest, LinkJumbleTest) {
         "    </node>\n"
         "</update>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1434,7 +1434,7 @@ TEST_F(CfgTest, LinkJumbleTest) {
         "    </node>\n"
         "</update>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1473,7 +1473,7 @@ TEST_F(CfgTest, LinkSeqTest) {
     IFMapTable *ttable = IFMapTable::FindTable(&db_, "test");
     ASSERT_TRUE(ttable!=NULL);
 
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1501,7 +1501,7 @@ TEST_F(CfgTest, LinkSeqTest) {
         "   </link>\n"
         "</update>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -1533,7 +1533,7 @@ TEST_F(CfgTest, LinkSeqTest) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -1594,7 +1594,7 @@ TEST_F(CfgTest, StaleTimeout) {
             db_.FindTable(IFMAP_AGENT_LINK_DB_NAME));
     ASSERT_TRUE(ltable!=NULL);
 
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1654,7 +1654,7 @@ TEST_F(CfgTest, StaleTimeout) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -1735,7 +1735,7 @@ TEST_F(CfgTest, StaleTimeoutDeferList) {
             db_.FindTable(IFMAP_AGENT_LINK_DB_NAME));
     ASSERT_TRUE(ltable!=NULL);
 
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -1795,7 +1795,7 @@ TEST_F(CfgTest, StaleTimeoutDeferList) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -1840,7 +1840,7 @@ TEST_F(CfgTest, StaleTimeoutDeferList) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -1872,7 +1872,7 @@ TEST_F(CfgTest, StaleTimeoutDeferList) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 2);
     WaitForIdle();
@@ -1925,7 +1925,7 @@ TEST_F(CfgTest, StaleTimeoutDeferList) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 2);
     WaitForIdle();
@@ -1948,7 +1948,7 @@ TEST_F(CfgTest, StaleTimeoutDeferList) {
         "   </link>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 3);
     WaitForIdle();
@@ -2017,7 +2017,7 @@ TEST_F(CfgTest, LinkMetadata) {
             db_.FindTable(IFMAP_AGENT_LINK_DB_NAME));
     ASSERT_TRUE(ltable!=NULL);
 
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -2061,7 +2061,7 @@ TEST_F(CfgTest, DefLinkMetadata) {
             db_.FindTable(IFMAP_AGENT_LINK_DB_NAME));
     ASSERT_TRUE(ltable!=NULL);
 
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -2076,7 +2076,7 @@ TEST_F(CfgTest, DefLinkMetadata) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -2120,7 +2120,7 @@ TEST_F(CfgTest, NodeDelLinkMetadata) {
             db_.FindTable(IFMAP_AGENT_LINK_DB_NAME));
     ASSERT_TRUE(ltable!=NULL);
 
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -2135,7 +2135,7 @@ TEST_F(CfgTest, NodeDelLinkMetadata) {
         "   </node>\n"
         "</update>");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -2160,7 +2160,7 @@ TEST_F(CfgTest, NodeDelLinkMetadata) {
         "   </node>\n"
         "</delete>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -2181,7 +2181,7 @@ TEST_F(CfgTest, NodeDelLinkMetadata) {
         "   </node>\n"
         "</update>\n");
 
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 0);
     WaitForIdle();
@@ -2226,7 +2226,7 @@ TEST_F(CfgTest, AssymetricLinkSeqTest) {
     ASSERT_TRUE(ltable!=NULL);
 
     //Add foo, bar and link between them with seq of 1
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 1);
     WaitForIdle();
@@ -2253,7 +2253,7 @@ TEST_F(CfgTest, AssymetricLinkSeqTest) {
         "       <name>testbar</name>\n"
         "   </node>\n"
         "</update>\n");
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 2);
     WaitForIdle();
@@ -2281,7 +2281,7 @@ TEST_F(CfgTest, AssymetricLinkSeqTest) {
         "       <name>testfoo</name>\n"
         "   </node>\n"
         "</delete>\n");
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 2);
     WaitForIdle();
@@ -2310,7 +2310,7 @@ TEST_F(CfgTest, AssymetricLinkSeqTest) {
         "       <name>testfoo</name>\n"
         "   </node>\n"
         "</update>\n");
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 2);
     WaitForIdle();
@@ -2339,7 +2339,7 @@ TEST_F(CfgTest, AssymetricLinkSeqTest) {
         "       </node>\n"
         "   </link>\n"
         "</update>");
-    result = xdoc_.load(buff);
+    result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     parser_->ConfigParse(xdoc_, 2);
     WaitForIdle();

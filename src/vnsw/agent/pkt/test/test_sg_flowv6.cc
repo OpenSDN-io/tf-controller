@@ -113,7 +113,7 @@ static void AddAclEntry(const char *name, int id, int proto,
                                     action, sip, dip);
     pugi::xml_document xdoc_;
     cout << s << endl;
-    pugi::xml_parse_result result = xdoc_.load(s.c_str());
+    pugi::xml_parse_result result = xdoc_.load_string(s.c_str());
     EXPECT_TRUE(result);
     Agent::GetInstance()->ifmap_parser()->ConfigParse(xdoc_.first_child(), 0);
     client->WaitForIdle();
@@ -215,7 +215,7 @@ static void AddSgIdAcl(const char *name, int id, int proto,
         boost::replace_all(s, "IPv6", "IPv4");
     }
     pugi::xml_document xdoc_;
-    pugi::xml_parse_result result = xdoc_.load(s.c_str());
+    pugi::xml_parse_result result = xdoc_.load_string(s.c_str());
     EXPECT_TRUE(result);
     Agent::GetInstance()->ifmap_parser()->ConfigParse(xdoc_.first_child(), 0);
     client->WaitForIdle();

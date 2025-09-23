@@ -878,29 +878,34 @@ bool BgpConfigParser::Parse(const string &content)  {
     istringstream sstream(content);
     xml_document xdoc;
     xml_parse_result result = xdoc.load(sstream);
-    assert(result);
-
-    RequestList requests;
-    for (xml_node node = xdoc.first_child(); node; node = node.next_sibling()) {
-        const char *oper = node.name();
-        assert((strcmp(oper, "config") == 0) || (strcmp(oper, "delete") == 0));
-        bool add_change = (strcmp(oper, "config") == 0);
-        assert(ParseConfig(node, add_change, &requests));
+    if (result.status == pugi::status_no_document_element) {
+        return true;
     }
 
-    while (!requests.empty()) {
-        unique_ptr<DBRequest> req(requests.front());
-        requests.pop_front();
+    if (result.status == pugi::status_ok) {
+        RequestList requests;
+        for (xml_node node = xdoc.first_child(); node; node = node.next_sibling()) {
+            const char *oper = node.name();
+            assert((strcmp(oper, "config") == 0) || (strcmp(oper, "delete") == 0));
+            bool add_change = (strcmp(oper, "config") == 0);
+            assert(ParseConfig(node, add_change, &requests));
+        }
 
-        IFMapTable::RequestKey *key =
-                static_cast<IFMapTable::RequestKey *>(req->key.get());
+        while (!requests.empty()) {
+            unique_ptr<DBRequest> req(requests.front());
+            requests.pop_front();
 
-        IFMapTable *table = IFMapTable::FindTable(db_, key->id_type);
-        assert(table);
-        table->Enqueue(req.get());
+            IFMapTable::RequestKey *key =
+                    static_cast<IFMapTable::RequestKey *>(req->key.get());
+
+            IFMapTable *table = IFMapTable::FindTable(db_, key->id_type);
+            assert(table);
+            table->Enqueue(req.get());
+        }
+
+        return true;
     }
-
-    return true;
+    return false;
 }
 
 string BgpConfigParser::session_uuid(const string &left, const string &right,

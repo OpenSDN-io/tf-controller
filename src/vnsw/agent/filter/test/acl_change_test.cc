@@ -51,7 +51,7 @@ public:
                 "</config>\n", name.c_str(), id, acl_rule);
 
         pugi::xml_document xdoc_;
-        pugi::xml_parse_result result = xdoc_.load(buff);
+        pugi::xml_parse_result result = xdoc_.load_string(buff);
         EXPECT_TRUE(result);
         Agent::GetInstance()->ifmap_parser()->
             ConfigParse(xdoc_.first_child(), 0);
