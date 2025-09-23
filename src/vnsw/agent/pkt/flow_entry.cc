@@ -1752,7 +1752,8 @@ void FlowEntry::GetPolicy(const VnEntry *vn, const FlowEntry *rflow) {
     if (is_flags_set(FlowEntry::LinkLocalFlow) ||
         is_flags_set(FlowEntry::Multicast) ||
         is_flags_set(FlowEntry::BgpRouterService) ||
-        is_flags_set(FlowEntry::FabricControlFlow)) {
+        is_flags_set(FlowEntry::FabricControlFlow) ||
+        is_flags_set(FlowEntry::ReverseFlow)) {
         return;
     }
 
@@ -1805,7 +1806,8 @@ void FlowEntry::GetVrfAssignAcl() {
     if (is_flags_set(FlowEntry::LinkLocalFlow) ||
         is_flags_set(FlowEntry::Multicast) ||
         is_flags_set(FlowEntry::BgpRouterService) ||
-        is_flags_set(FlowEntry::FabricControlFlow)) {
+        is_flags_set(FlowEntry::FabricControlFlow) ||
+        is_flags_set(FlowEntry::ReverseFlow)) {
         return;
     }
 
@@ -2569,8 +2571,16 @@ bool FlowEntry::DoPolicy() {
 
     //Calculate VRF assign entry, and ignore acl is set
     //skip network and SG acl action is set
-    data_.match_p.vrf_assign_acl_action =
-        MatchAcl(hdr, data_.match_p.m_vrf_assign_acl_l, false, true, NULL);
+    if (!is_flags_set(FlowEntry::ReverseFlow))
+    {
+        data_.match_p.vrf_assign_acl_action = MatchAcl(hdr, data_.match_p.m_vrf_assign_acl_l, false, true, NULL);
+    }
+    else
+    {
+        data_.match_p.vrf_assign_acl_action = rflow->data_.match_p.vrf_assign_acl_action;
+        data_.match_p.action_info.vrf_translate_action_ =
+            rflow->data_.match_p.action_info.vrf_translate_action_;
+    }
 
     // Mirror is valid even if packet is to be dropped. So, apply it first
     data_.match_p.mirror_action = MatchAcl(hdr, data_.match_p.m_mirror_acl_l,
@@ -2581,17 +2591,34 @@ bool FlowEntry::DoPolicy() {
                            data_.match_p.m_out_mirror_acl_l, false, true, NULL);
 
     // Apply network policy
-    data_.match_p.policy_action = MatchAcl(hdr, data_.match_p.m_acl_l, true,
-                                           true, &nw_acl_info);
-    if (ShouldDrop(data_.match_p.policy_action)) {
-        goto done;
-    }
-    data_.match_p.out_policy_action = MatchAcl(hdr, data_.match_p.m_out_acl_l,
-                                               true, true, &nw_acl_info);
-    if (ShouldDrop(data_.match_p.out_policy_action)) {
-        goto done;
+    if (!is_flags_set(FlowEntry::ReverseFlow)) {
+        data_.match_p.policy_action = MatchAcl(hdr, data_.match_p.m_acl_l, true,
+                                                true, &nw_acl_info);
+        if (ShouldDrop(data_.match_p.policy_action))
+            goto done;
+        data_.match_p.out_policy_action = MatchAcl(hdr, data_.match_p.m_out_acl_l, 
+                                                    true, true, &nw_acl_info);
+        if (ShouldDrop(data_.match_p.out_policy_action))
+            goto done;
+    } 
+    else {
+        if (rflow) {
+            uint32_t r_policy_action = MatchAcl(hdr, 
+                                                rflow->data_.match_p.m_acl_l, true, true, &nw_acl_info);
+            if (ShouldDrop(r_policy_action)) {
+                data_.match_p.policy_action = rflow->data_.match_p.policy_action;
+                goto done;
+            }
+            uint32_t r_out_policy_action = MatchAcl(hdr, 
+                                                    rflow->data_.match_p.m_out_acl_l, true, true, &nw_acl_info);
+            if (ShouldDrop(r_out_policy_action)) {
+                data_.match_p.out_policy_action = rflow->data_.match_p.out_policy_action;
+                goto done;
+            }
+        }
     }
 
+    // Apply sg policy
     if (!is_flags_set(FlowEntry::ReverseFlow)) {
         SessionPolicy *r_sg_policy = NULL;
         SessionPolicy *r_aps_policy = NULL;
@@ -2675,16 +2702,42 @@ bool FlowEntry::SetQosConfigIndex() {
     uint32_t i = AgentQosConfigTable::kInvalidIndex;
     MatchAclParamsList::const_iterator it;
 
-    //Priority of QOS config
+    // For reverse flows, first check if we have our own QoS config
+    // (from interface), and only fall back to forward flow if not
+    if (is_flags_set(FlowEntry::ReverseFlow)) {
+        // First, check if reverse flow has its own QoS config from interface
+        const VmInterface *intf =
+            dynamic_cast<const VmInterface*>(data_.intf_entry.get());
+        if (intf && intf->qos_config()) {
+            i = intf->qos_config()->id();
+        }
+
+        // If still no QoS config, copy from forward flow
+        if (i == AgentQosConfigTable::kInvalidIndex) {
+            FlowEntry *fwd_flow = reverse_flow_entry();
+            if (fwd_flow) {
+                i = fwd_flow->data().qos_config_idx;
+            }
+        }
+
+        // If we got a valid QoS config, use it and return early
+        if (i != AgentQosConfigTable::kInvalidIndex) {
+            if (i != data_.qos_config_idx) {
+                data_.qos_config_idx = i;
+                return true;
+            }
+            return false;
+        }
+        // If no QoS config found yet, continue with normal processing
+    }
+
+    // Priority of QOS config for forward flows (and reverse flows that didn't find config above)
     // 1> SG
     // 2> Interface
     // 3> ACL
-    // 4> VN
-    if (is_flags_set(FlowEntry::ReverseFlow) &&
-        data_.match_p.sg_policy.action_summary & 1 << TrafficAction::APPLY_QOS) {
-        i = reverse_flow_entry()->data().qos_config_idx;
-    } else if (data_.match_p.sg_policy.action & 1 << TrafficAction::APPLY_QOS) {
-        for(it = data_.match_p.sg_policy.m_acl_l.begin();
+    // 4> VN (handled through ACLs)
+    if (data_.match_p.sg_policy.action & 1 << TrafficAction::APPLY_QOS) {
+        for (it = data_.match_p.sg_policy.m_acl_l.begin();
                 it != data_.match_p.sg_policy.m_acl_l.end(); it++) {
             if (it->action_info.action & 1 << TrafficAction::APPLY_QOS &&
                     it->action_info.qos_config_action_.id()
@@ -2694,7 +2747,7 @@ bool FlowEntry::SetQosConfigIndex() {
             }
         }
     } else if (data_.match_p.sg_policy.out_action & 1 << TrafficAction::APPLY_QOS) {
-        for(it = data_.match_p.sg_policy.m_out_acl_l.begin();
+        for (it = data_.match_p.sg_policy.m_out_acl_l.begin();
                 it != data_.match_p.sg_policy.m_out_acl_l.end(); it++) {
             if (it->action_info.action & 1 << TrafficAction::APPLY_QOS &&
                     it->action_info.qos_config_action_.id() !=
@@ -2704,7 +2757,7 @@ bool FlowEntry::SetQosConfigIndex() {
             }
         }
     } else if (data_.match_p.policy_action & 1 << TrafficAction::APPLY_QOS) {
-        for(it = data_.match_p.m_acl_l.begin();
+        for (it = data_.match_p.m_acl_l.begin();
                 it != data_.match_p.m_acl_l.end(); it++) {
             if (it->action_info.action & 1 << TrafficAction::APPLY_QOS &&
                     it->action_info.qos_config_action_.id() !=
@@ -2714,7 +2767,7 @@ bool FlowEntry::SetQosConfigIndex() {
             }
         }
     } else if (data_.match_p.out_policy_action & 1 << TrafficAction::APPLY_QOS) {
-        for(it = data_.match_p.m_out_acl_l.begin();
+        for (it = data_.match_p.m_out_acl_l.begin();
                 it != data_.match_p.m_out_acl_l.end(); it++) {
             if (it->action_info.action & 1 << TrafficAction::APPLY_QOS &&
                     it->action_info.qos_config_action_.id() !=
