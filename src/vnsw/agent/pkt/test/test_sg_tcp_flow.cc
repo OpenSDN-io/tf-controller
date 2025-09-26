@@ -120,7 +120,7 @@ static void AddSgIdAcl(const char *name, int id, int proto,
                                         AclName(name, direction), id, proto,
                                         src_sg_id, dest_sg_id, action);
     pugi::xml_document xdoc_;
-    pugi::xml_parse_result result = xdoc_.load(s.c_str());
+    pugi::xml_parse_result result = xdoc_.load_string(s.c_str());
     EXPECT_TRUE(result);
     Agent::GetInstance()->ifmap_parser()->ConfigParse(xdoc_.first_child(), 0);
     client->WaitForIdle();

@@ -479,7 +479,7 @@ void DelNodeString(char *buff, int &len, const char *node_name,
 
 void ApplyXmlString(const char *buff) {
     pugi::xml_document xdoc_;
-    pugi::xml_parse_result result = xdoc_.load(buff);
+    pugi::xml_parse_result result = xdoc_.load_string(buff);
     EXPECT_TRUE(result);
     Agent::GetInstance()->ifmap_parser()->ConfigParse(xdoc_.first_child(), 0);
     return;

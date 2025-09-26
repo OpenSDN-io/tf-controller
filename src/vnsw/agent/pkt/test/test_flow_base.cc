@@ -457,7 +457,7 @@ public:
                      const char *action, const char *uuid_str) {
         std::string s = AddAclXmlString(name, id, proto, action, uuid_str);
         pugi::xml_document xdoc_;
-        pugi::xml_parse_result result = xdoc_.load(s.c_str());
+        pugi::xml_parse_result result = xdoc_.load_string(s.c_str());
         EXPECT_TRUE(result);
         Agent::GetInstance()->ifmap_parser()->ConfigParse(xdoc_.first_child(), 0);
         client->WaitForIdle();
@@ -546,7 +546,7 @@ public:
         std::string s = AddAclSubnetXML(name, id, proto, action, uuid_str,
                                         src_subnet, dst_subnet);
         pugi::xml_document xdoc_;
-        pugi::xml_parse_result result = xdoc_.load(s.c_str());
+        pugi::xml_parse_result result = xdoc_.load_string(s.c_str());
         EXPECT_TRUE(result);
         Agent::GetInstance()->ifmap_parser()->ConfigParse(xdoc_.first_child(), 0);
         client->WaitForIdle();
@@ -639,7 +639,7 @@ public:
         std::string s = AddAclXmlString(name, id, proto, simple_action,
                                         log_action, uuid_str);
         pugi::xml_document xdoc_;
-        pugi::xml_parse_result result = xdoc_.load(s.c_str());
+        pugi::xml_parse_result result = xdoc_.load_string(s.c_str());
         EXPECT_TRUE(result);
         Agent::GetInstance()->ifmap_parser()->ConfigParse(xdoc_.first_child(),
                                                           0);

@@ -197,7 +197,7 @@ std::string LibvirtInstanceAdapter::DomainStartTask::XmlConf() {
     // make a pugixml config document out of si's instance data
     xml_document domain_xml_conf;
     xml_parse_result parse_result =
-        domain_xml_conf.load(si_properties_.instance_data.c_str());
+        domain_xml_conf.load_string(si_properties_.instance_data.c_str());
     if (!parse_result || !domain_xml_conf.child("domain")) {
         LOG(ERROR, "Error parsing XML data or domain is missing");
         return "";
