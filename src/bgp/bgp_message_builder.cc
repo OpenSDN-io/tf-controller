@@ -137,6 +137,20 @@ bool BgpMessage::StartReach(const RibOut *ribout, const RibOutAttr *roattr,
         update.path_attributes.push_back(ext_comm);
     }
 
+    if (attr->large_community() && attr->large_community()->communities().size()) {
+        LargeCommunitySpec *large_comm = new LargeCommunitySpec;
+        const LargeCommunity::LargeCommunityList &v =
+                attr->large_community()->communities();
+        for (LargeCommunity::LargeCommunityList::const_iterator it = v.begin();
+                it != v.end(); ++it) {
+                for (int i = 0; i < 3; i++) {
+                    uint32_t value = get_value(it->data() + 4*i, 4);
+                    large_comm->communities.push_back(value);
+            }
+        }
+        update.path_attributes.push_back(large_comm);
+    }
+
     if (attr->origin_vn_path() && attr->origin_vn_path()->origin_vns().size()) {
         OriginVnPathSpec *ovnpath_spec = new OriginVnPathSpec;
         const OriginVnPath::OriginVnList &v =

@@ -941,6 +941,7 @@ BgpAttr::BgpAttr(const BgpAttr &rhs)
       cluster_list_(rhs.cluster_list_),
       community_(rhs.community_),
       ext_community_(rhs.ext_community_),
+      large_community_(rhs.large_community_),
       origin_vn_path_(rhs.origin_vn_path_),
       pmsi_tunnel_(rhs.pmsi_tunnel_),
       edge_discovery_(rhs.edge_discovery_),
@@ -1017,6 +1018,19 @@ void BgpAttr::set_ext_community(const ExtCommunitySpec *extcomm) {
         ext_community_ = attr_db_->server()->extcomm_db()->Locate(*extcomm);
     } else {
         ext_community_ = NULL;
+    }
+}
+
+void BgpAttr::set_large_community(LargeCommunityPtr largecomm) {
+    large_community_ = largecomm;
+}
+
+void BgpAttr::set_large_community(const LargeCommunitySpec *largecomm) {
+    if (largecomm) {
+        large_community_ =
+            attr_db_->server()->largecomm_db()->Locate(*largecomm);
+    } else {
+        large_community_ = NULL;
     }
 }
 
@@ -1331,6 +1345,14 @@ BgpAttrPtr BgpAttrDB::ReplaceExtCommunityAndLocate(const BgpAttr *attr,
                                                    ExtCommunityPtr extcomm) {
     BgpAttr *clone = new BgpAttr(*attr);
     clone->set_ext_community(extcomm);
+    return Locate(clone);
+}
+
+// Return a clone of attribute with updated large community.
+BgpAttrPtr BgpAttrDB::ReplaceLargeCommunityAndLocate(
+    const BgpAttr *attr, LargeCommunityPtr largecomm) {
+    BgpAttr *clone = new BgpAttr(*attr);
+    clone->set_large_community(largecomm);
     return Locate(clone);
 }
 

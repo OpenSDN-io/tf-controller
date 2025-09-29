@@ -1239,6 +1239,30 @@ public:
                       BgpPathAttributeExtendedCommunityList> Sequence;
 };
 
+class BgpPathAttributeLargeCommunityList :
+    public ProtoElement<BgpPathAttributeLargeCommunityList> {
+public:
+    static const int kSize = -1;
+    static bool Verifier(const LargeCommunitySpec *obj, const uint8_t *data,
+                         size_t size, ParseContext *context) {
+        return BgpAttributeVerifier<LargeCommunitySpec>::Verifier(obj, data,
+                                                                  size,
+                                                                  context);
+    }
+
+    typedef VectorAccessor<LargeCommunitySpec, uint32_t,
+                           &LargeCommunitySpec::communities> Setter;
+};
+
+class BgpPathAttributeLargeCommunities :
+    public ProtoSequence<BgpPathAttributeLargeCommunities> {
+public:
+    typedef LargeCommunitySpec ContextType;
+    typedef BgpContextSwap<LargeCommunitySpec> ContextSwap;
+    typedef mpl::list<BgpPathAttrLength,
+                      BgpPathAttributeLargeCommunityList> Sequence;
+};
+
 class BgpPathAttributeClusterListData :
     public ProtoElement<BgpPathAttributeClusterListData> {
 public:
@@ -1912,6 +1936,8 @@ public:
                     BgpPathAttributeMpUnreachNlriSequence>,
           mpl::pair<mpl::int_<BgpAttribute::ExtendedCommunities>,
                     BgpPathAttributeExtendedCommunities>,
+          mpl::pair<mpl::int_<BgpAttribute::LargeCommunities>,
+                    BgpPathAttributeLargeCommunities>,
           mpl::pair<mpl::int_<BgpAttribute::PmsiTunnel>,
                     BgpPathAttributePmsiTunnel>,
           mpl::pair<mpl::int_<BgpAttribute::McastEdgeDiscovery>,
@@ -1964,6 +1990,8 @@ public:
                     BgpPathAttributeMpUnreachNlriSequence>,
           mpl::pair<mpl::int_<BgpAttribute::ExtendedCommunities>,
                     BgpPathAttributeExtendedCommunities>,
+          mpl::pair<mpl::int_<BgpAttribute::LargeCommunities>,
+                    BgpPathAttributeLargeCommunities>,
           mpl::pair<mpl::int_<BgpAttribute::PmsiTunnel>,
                     BgpPathAttributePmsiTunnel>,
           mpl::pair<mpl::int_<BgpAttribute::McastEdgeDiscovery>,

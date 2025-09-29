@@ -954,3 +954,209 @@ ExtCommunityPtr ExtCommunityDB::SetAndLocate(const ExtCommunity *src,
     return Locate(clone);
 }
 
+string LargeCommunitySpec::ToString() const {
+    char repr[80];
+    snprintf(repr, sizeof(repr), "LargeCommunity <code: %d, flags: %02x>:%d",
+             code, flags, (uint32_t)communities.size() / 3);
+    return string(repr);
+}
+
+size_t LargeCommunitySpec::EncodeLength() const {
+    return communities.size() * sizeof(uint32_t);
+}
+
+int LargeCommunitySpec::CompareTo(const BgpAttribute &rhs_attr) const {
+    int ret = BgpAttribute::CompareTo(rhs_attr);
+    if (ret != 0) return ret;
+    KEY_COMPARE(communities,
+        static_cast<const LargeCommunitySpec &>(rhs_attr).communities);
+    return 0;
+}
+
+void LargeCommunitySpec::ToCanonical(BgpAttr *attr) {
+    // add LarceComm to attr
+    attr->set_large_community(this);
+}
+
+int LargeCommunity::CompareTo(const LargeCommunity &rhs) const {
+    KEY_COMPARE(communities_.size(), rhs.communities_.size());
+
+    LargeCommunityList::const_iterator i, j;
+    for (i = communities_.begin(), j = rhs.communities_.begin();
+         i < communities_.end(); ++i, ++j) {
+        if (*i < *j) {
+            return -1;
+        }
+        if (*i > *j) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void LargeCommunity::Remove(const LargeCommunityList &list) {
+    for (LargeCommunityList::const_iterator it = list.begin();
+         it != list.end(); ++it) {
+        communities_.erase(std::remove(communities_.begin(),
+                    communities_.end(), *it), communities_.end());
+    }
+}
+void LargeCommunity::Remove() {
+    largecomm_db_->Delete(this);
+}
+
+void LargeCommunity::Set(const LargeCommunityList &list) {
+    communities_.clear();
+    for (LargeCommunityList::const_iterator it = list.begin();
+         it != list.end(); ++it) {
+        communities_.push_back(*it);
+    }
+}
+
+void LargeCommunity::Append(const LargeCommunityList &list) {
+    communities_.insert(communities_.end(), list.begin(), list.end());
+    sort(communities_.begin(), communities_.end());
+    LargeCommunityList::iterator it =
+        unique(communities_.begin(), communities_.end());
+    communities_.erase(it, communities_.end());
+}
+
+void LargeCommunity::Append(const LargeCommunityValue &value) {
+    communities_.push_back(value);
+    sort(communities_.begin(), communities_.end());
+    LargeCommunityList::iterator it =
+        unique(communities_.begin(), communities_.end());
+    communities_.erase(it, communities_.end());
+}
+
+LargeCommunity::LargeCommunityValue LargeCommunity::FromHexString(
+        const string &comm, boost::system::error_code *errorp) {
+    LargeCommunityValue data;
+    put_value(&data[0], 12, 0);
+    char *end;
+    uint64_t value = strtoull(comm.c_str(), &end, 24);
+    if (value == 0 || *end) {
+        // e.g. 0 or 12x34ff (invalid hex)
+        if (errorp != NULL) {
+            *errorp = make_error_code(
+                    boost::system::errc::invalid_argument);
+            return data;
+        }
+    }
+    if (comm[0] == '0' && (comm[1] == 'x' || comm[1] == 'X')) {
+        if (comm.length() > 26 && errorp != NULL) {
+            // e.g. 0xabcdef0123456789abcdef012 is an invalid 8byte hex value
+            *errorp = make_error_code(
+                    boost::system::errc::invalid_argument);
+            return data;
+        }
+    } else {
+        if (comm.length() > 24 && errorp != NULL) {
+            // e.g. abcdef0123456789abcdef012 is an invalid 8byte hex value
+            *errorp = make_error_code(
+                    boost::system::errc::invalid_argument);
+            return data;
+        }
+    }
+    put_value(&data[0], 12, value);
+    return data;
+}
+
+LargeCommunity::LargeCommunityList LargeCommunity::LargeCommunityFromString(
+        const string &comm) {
+    LargeCommunityList commList;
+    LargeCommunityValue value;
+    size_t pos = comm.find(':');
+    string first(comm.substr(0, pos));
+    boost::system::error_code error;
+    value = FromHexString(comm, &error);
+    if (error) {
+        return commList;
+    }
+    commList.push_back(value);
+    return commList;
+}
+
+string LargeCommunity::ToHexString(const LargeCommunityValue &comm) {
+    char temp[50];
+    int len = 0;
+    for (size_t i = 0; i < comm.size(); i++) {
+        len += snprintf(temp+len, sizeof(temp) - len, "%02x", (comm)[i]);
+    }
+    return(string(temp));
+}
+
+string LargeCommunity::ToString(const LargeCommunityValue &comm) {
+    return ToHexString(comm);
+}
+
+LargeCommunity::LargeCommunity(LargeCommunityDB *largecomm_db,
+        const LargeCommunitySpec spec) : largecomm_db_(largecomm_db) {
+    refcount_ = 0;
+    std::vector<uint32_t>::const_iterator lcit = spec.communities.begin();
+    while (lcit < spec.communities.end()) {
+        LargeCommunityValue comm;
+        put_value(comm.data(), 4, *lcit);
+        lcit++;
+        put_value(comm.data()+4, 4, *lcit);
+        lcit++;
+        put_value(comm.data()+8, 4, *lcit);
+        lcit++;
+        communities_.push_back(comm);
+    }
+    sort(communities_.begin(), communities_.end());
+    LargeCommunityList::iterator it =
+        unique(communities_.begin(), communities_.end());
+    communities_.erase(it, communities_.end());
+}
+
+LargeCommunityDB::LargeCommunityDB(BgpServer *server) {
+}
+
+LargeCommunityPtr LargeCommunityDB::AppendAndLocate(const LargeCommunity *src,
+        const LargeCommunity::LargeCommunityList &list) {
+    LargeCommunity *clone;
+    if (src) {
+        clone = new LargeCommunity(*src);
+    } else {
+        clone = new LargeCommunity(this);
+    }
+
+    clone->Append(list);
+    return Locate(clone);
+}
+
+LargeCommunityPtr LargeCommunityDB::AppendAndLocate(const LargeCommunity *src,
+        const LargeCommunity::LargeCommunityValue &value) {
+    LargeCommunity::LargeCommunityList list;
+    list.push_back(value);
+    return AppendAndLocate(src, list);
+}
+
+LargeCommunityPtr LargeCommunityDB::RemoveAndLocate(const LargeCommunity *src,
+        const LargeCommunity::LargeCommunityList &list) {
+    LargeCommunity *clone;
+    if (src) {
+        clone = new LargeCommunity(*src);
+    } else {
+        clone = new LargeCommunity(this);
+    }
+
+    clone->Remove(list);
+    return Locate(clone);
+}
+
+
+LargeCommunityPtr LargeCommunityDB::SetAndLocate(const LargeCommunity *src,
+        const LargeCommunity::LargeCommunityList &list) {
+    LargeCommunity *clone;
+    if (src) {
+        clone = new LargeCommunity(*src);
+    } else {
+        clone = new LargeCommunity(this);
+    }
+
+    clone->Set(list);
+    return Locate(clone);
+}
+

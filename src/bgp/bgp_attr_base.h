@@ -45,6 +45,7 @@ public:
         As4Path = 17,
         As4Aggregator = 18,
         PmsiTunnel = 22,
+        LargeCommunities = 32,
         McastEdgeDiscovery = 241,
         McastEdgeForwarding = 242,
         OriginVnPath = 243,
