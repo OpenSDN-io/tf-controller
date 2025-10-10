@@ -69,11 +69,8 @@ binproducts = [ str(File('#/build/sbin/contrail-named')),
                 str(File('#/build/sbin/contrail-rndc')),
                 str(File('#/build/sbin/contrail-rndc-confgen')) ]
 
-confs = [ 'contrail-rndc.conf', 'contrail-named.conf', 'COPYRIGHT' ]
-
 bind_cfg = env.Command([products + binproducts + include_products], str(Dir(vpath)), cmd)
 
 env.Alias('lib/bind:bind', bind_cfg)
 env.Alias('install', env.Install(env['INSTALL_BIN'], binproducts))
-env.Alias('install', env.Install(env['INSTALL_CONF'] + '/dns', confs))
 

@@ -26,7 +26,7 @@ port_ipc_sources = [
 
 libport_ipc = env.Library('port_ipc', sandesh_objs + port_ipc_sources)
 
-install_files = [ 'vrouter-port-control' ]
+install_files = ['vrouter-port-control']
 
 env.Alias('install', env.Install(env['INSTALL_BIN'], install_files))
 env.Alias('vrouter-port-control', env.Install(env['INSTALL_BIN'], install_files))

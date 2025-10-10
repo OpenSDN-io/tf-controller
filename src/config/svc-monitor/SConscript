@@ -96,7 +96,6 @@ if 'install' in BUILD_TARGETS:
         cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
     env.Alias('install', install_whl_cmd)
 
-env.Alias('install', env.Install(env['INSTALL_CONF'], 'contrail-svc-monitor.conf'))
 env.Alias('install', env.Install(
     env['INSTALL_MESSAGE_DOC'] + '/contrail-svc-monitor/', doc_files))
 

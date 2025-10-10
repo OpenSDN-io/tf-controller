@@ -93,7 +93,7 @@ sdist_gen = env.Command(
 env.Depends(sdist_gen, sdist_depends)
 env.Default(sdist_gen)
 
-install_cmd = env.Install(env['INSTALL_BIN'],
+install_cmd = env.Install(env['INSTALL_ROOT'] + '/opt',
    "#controller/../build/" + env['OPT'] + \
    "/config/fabric-ansible/ansible-playbooks/dist/fabric_ansible_playbooks-%s.tar.gz" % pyver)
 

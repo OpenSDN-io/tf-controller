@@ -125,9 +125,9 @@ env.Alias('install', env.Install(env['INSTALL_BIN'], contrail_vrouter_agent))
 env.Alias('install', env.Install(env['INSTALL_BIN'], 'contrail-vrouter-agent-health-check.py'))
 env.Alias('install', env.Install(env['INSTALL_BIN'], 'contrail_crypt_tunnel_client.py'))
 for utils in utils_scripts:
-  env.Alias('install', env.Install(env['INSTALL_EXAMPLE'], utils))
-env.Alias('install', env.Install(env['INSTALL_CONF'],
-          '../contrail-vrouter-agent.conf'))
+    env.Alias(
+        'install',
+        env.Install(env['INSTALL_ROOT']+'/usr/local/lib64/wireshark/plugins', utils))
 env.Alias('install', env.Install(
     env['INSTALL_MESSAGE_DOC'] + '/contrail-vrouter-agent/',
     doc_files))

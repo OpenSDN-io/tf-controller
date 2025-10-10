@@ -143,8 +143,6 @@ if 'install' in BUILD_TARGETS:
     env.Depends(install_whl_cmd, sdist_depends)
     env.Alias('install', install_whl_cmd)
 
-env.Alias('install', env.Install(env['INSTALL_CONF'],
-          'contrail-device-manager.conf'))
 env.Alias('install', env.Install(
     env['INSTALL_MESSAGE_DOC'] + '/contrail-device-manager/', doc_files))
 
