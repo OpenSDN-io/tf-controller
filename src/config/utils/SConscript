@@ -7,99 +7,18 @@
 Import('CfgmEnv')
 env = CfgmEnv.Clone()
 
-utils_scripts = [
-    'add_route_target.py',
-    'chmod.py',
-    'chmod2.py',
-    'chownproj.py',
-    'cmd_wrapper.py',
-    'contrail_alarm.py',
-    'contrail-config.py',
-    'contrail-diff-docs.py',
-    'contrail.py',
-    'create_floating_pool.py',
-    'del_projects.py',
-    'del_route_target.py',
-    'encap.py',
-    'fabric_vpg_validator.py',
-    'ist.py',
-    'multi_tenancy.py',
-    'net_policy_join.py',
-    'provision_alarm.py',
-    'provision_analytics_alarm_node.py',
-    'provision_analytics_node.py',
-    'provision_analytics_snmp_node.py',
-    'provision_bgp.py',
-    'provision_config_database_node.py',
-    'provision_config_node.py',
-    'provision_control.py',
-    'provision_database_node.py',
-    'provision_encap.py',
-    'provision_forwarding_mode.py',
-    'provision_global_vrouter_config.py',
-    'provision_issu.py',
-    'provision_linklocal.py',
-    'provision_mx.py',
-    'provision_physical_device.py',
-    'provision_physical_router.py',
-    'provision_pnf_servicechain.py',
-    'provision_pre_issu.py',
-    'provision_static_route.py',
-    'provision_sub_cluster.py',
-    'provision_user_defined_log_statistics.py',
-    'provision_vrouter.py',
-    'provision_webui_node.py',
-    'provision.py',
-    'qosmap.py',
-    'rbacutil.py',
-    'service_appliance_set.py',
-    'service_appliance.py',
-    'service_instance.py',
-    'service_policy.py',
-    'service_template.py',
-    'service-instance.py',
-    'service-policy.py',
-    'service-template.py',
-    'slo_rules.py',
-    'slo.py',
-    'update_default_global_qos_config.py',
-    'use_floating_pool.py',
-    'vnc_admin_api.py',
-    'vncop.py',
-    'vncop2.py',
-    'vrouter_agent_debug_tool.py',
-    'vrouter_ipam.py',
+base_path = '#controller/src/config/utils/'
+
+sdist_gen = env.Command(
+    '/pip/contrail_config_utils-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
+env.Alias('install', sdist_gen)
+
+deps = [
+    '/pip/sandesh-0.1.dev0-py3-none-any.whl',
+    '/pip/sandesh_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_client-0.1.dev0-py3-none-any.whl',
+    '/pip/cfgm_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_server-0.1.dev0-py3-none-any.whl',
 ]
-
-sdist_depends = []
-for util in utils_scripts:
-    sdist_depends.append(
-        env.Install("contrail_config_utils", "#controller/src/config/utils/contrail_config_utils/" + util))
-
-setup_test_sources = [
-    'setup.py',
-    'requirements.txt',
-    'test-requirements.txt',
-    '.stestr.conf',
-    'tox.ini',
-    'tests',
-    'MANIFEST.in',
-]
-
-for file in setup_test_sources:
-    sdist_depends.append(
-        env.Install(Dir('.'), "#controller/src/config/utils/" + file))
-
-cd_cmd = 'cd ' + Dir('.').path + ' && '
-
-if 'install' in BUILD_TARGETS:
-    install_whl_cmd = env.Command(
-        None, 'setup.py',
-        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
-    env.Depends(install_whl_cmd, sdist_depends)
-    env.Alias('install', install_whl_cmd)
-
-test_target = env.SetupPyTestSuite(
-    sdist_depends,
-    use_tox=True)
-env.Alias('controller/src/config/utils:test', test_target)
+env.SetupPyTestSuiteWithDeps(sdist_gen, sdist_depends=deps, top_dir=Dir(base_path).abspath)

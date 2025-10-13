@@ -5,8 +5,8 @@ import unittest
 import mock
 from cfgm_common.exceptions import TimeOutError
 from attrdict import AttrDict
-from device_manager.job_handler import JobStatus
-from device_manager.job_handler import JobHandler
+from device_manager.plugins.ansible.job_handler import JobStatus
+from device_manager.plugins.ansible.job_handler import JobHandler
 
 
 class TestJobHandler(unittest.TestCase):

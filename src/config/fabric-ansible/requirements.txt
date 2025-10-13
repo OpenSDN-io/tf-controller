@@ -1,6 +1,4 @@
 contrail-config-common==0.1.dev0
-contrail-api-client==0.1.dev0
-sandesh_common==0.1.dev0
 xmltodict==0.12.0
 gevent
 kombu
@@ -11,7 +9,6 @@ inflection
 pyroute2
 pysnmp
 pycrypto
-sandesh==0.1.dev0
 jinja2
 jsnapy
 junos-eznc

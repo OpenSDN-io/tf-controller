@@ -5,79 +5,42 @@ import sys
 Import('BuildEnv')
 OpEnv = BuildEnv.Clone()
 
-setup_sources = [
-    'setup.py',
-    'requirements.txt',
-    'test-requirements.txt',
-    '.stestr.conf',
-    'tox.ini',
-    'MANIFEST.in',
-]
-
-setup_sources_rules = []
-for file in setup_sources:
-    setup_sources_rules.append(
-        OpEnv.Install(Dir("."), '#controller/src/nodemgr/' + file))
-
-local_sources = [
-    '__init__.py',
-    'main.py',
-    'analytics_nodemgr',
-    'analytics_alarm_nodemgr',
-    'analytics_snmp_nodemgr',
-    'control_nodemgr',
-    'config_nodemgr',
-    'vrouter_nodemgr',
-    'analytics_database_nodemgr',
-    'config_database_nodemgr',
-    'common',
-    'tests',
-]
-
-local_sources_rules = []
-for file in local_sources:
-    local_sources_rules.append(OpEnv.Install(Dir("nodemgr"), '#controller/src/nodemgr/' + file))
+base_path = '#controller/src/nodemgr/'
 
 sandesh_sources = []
 sandesh_sources += OpEnv.SandeshGenPy(
-    '#controller/src/nodemgr/sandesh/database.sandesh', 'nodemgr/common/sandesh/', False)
+    '#controller/src/nodemgr/sandesh/database.sandesh', base_path + 'nodemgr/common/sandesh/', False)
 sandesh_sources += OpEnv.SandeshGenPy(
-    '#src/contrail-common/base/sandesh/nodeinfo.sandesh', 'nodemgr/common/sandesh/', False)
+    '#src/contrail-common/base/sandesh/nodeinfo.sandesh', base_path + 'nodemgr/common/sandesh/', False)
 sandesh_sources += OpEnv.SandeshGenPy(
-    '#src/contrail-common/base/sandesh/cpuinfo.sandesh', 'nodemgr/common/sandesh/nodeinfo/', False)
+    '#src/contrail-common/base/sandesh/cpuinfo.sandesh', base_path + 'nodemgr/common/sandesh/nodeinfo/', False)
 sandesh_sources += OpEnv.SandeshGenPy(
-    '#src/contrail-common/base/sandesh/process_info.sandesh', 'nodemgr/common/sandesh/nodeinfo/', False)
+    '#src/contrail-common/base/sandesh/process_info.sandesh', base_path + 'nodemgr/common/sandesh/nodeinfo/', False)
 sandesh_sources += OpEnv.SandeshGenPy(
-    '#controller/src/vnsw/agent/uve/loadbalancer.sandesh', 'nodemgr/common/sandesh/', False)
+    '#controller/src/vnsw/agent/uve/loadbalancer.sandesh', base_path + 'nodemgr/common/sandesh/', False)
 
-rel_path = Dir('nodemgr/common').path
+rel_path = Dir(base_path + 'nodemgr/common').path
 def BuildInfoAction(target, source, env):
     env.GenerateBuildInfoPyCode(path=rel_path)
 build_info_rules = [OpEnv.Command(target='nodemgr/common/buildinfo.py', source = None, action=BuildInfoAction)]
 
-sdist_depends = [
-    setup_sources_rules, local_sources_rules, sandesh_sources, build_info_rules
-]
+# Documentation
+if 'install' in BUILD_TARGETS:
+    doc_files = OpEnv.SandeshGenDoc('sandesh/database.sandesh')
+    OpEnv.Alias('install', OpEnv.Install(
+        OpEnv['INSTALL_MESSAGE_DOC'] + '/contrail-database/',
+        doc_files))
 
-cd_cmd = 'cd ' + Dir('.').path + ' && '
+sdist_depends = [sandesh_sources, build_info_rules]
+
 sdist_gen = OpEnv.Command(
-    'dist/nodemgr-%s.tar.gz' % OpEnv.GetPyVersion(),
-    'setup.py',
-    cd_cmd + 'python3 setup.py sdist')
-
+    '/pip/nodemgr-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
 OpEnv.Depends(sdist_gen, sdist_depends)
-OpEnv.Default(sdist_gen)
+OpEnv.Alias('install', sdist_gen)
 
-test_target = OpEnv.SetupPyTestSuite(sdist_gen, use_tox=True)
-OpEnv.Alias('controller/src/nodemgr:test', test_target)
-
-doc_files = OpEnv.SandeshGenDoc('sandesh/database.sandesh')
-OpEnv.Alias('install', OpEnv.Install(
-    OpEnv['INSTALL_MESSAGE_DOC'] + '/contrail-database/',
-    doc_files))
-
-install_whl_cmd = OpEnv.Command(
-    None, 'setup.py',
-    cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
-OpEnv.Depends(install_whl_cmd, sdist_depends)
-OpEnv.Alias('install', install_whl_cmd)
+deps = [
+    '/pip/sandesh-0.1.dev0-py3-none-any.whl',
+    '/pip/sandesh_common-0.1.dev0-py3-none-any.whl',
+]
+OpEnv.SetupPyTestSuiteWithDeps(sdist_gen, sdist_depends=deps, top_dir=Dir(base_path).abspath)

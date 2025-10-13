@@ -1,11 +1,11 @@
+sandesh==0.1.dev0
+sandesh_common==0.1.dev0
 bottle<0.13
 PyYAML
 netaddr
 gevent
 greenlet
 psutil
-sandesh==0.1.dev0
-sandesh_common==0.1.dev0
 grpcio
 protobuf<=3.20.0
 urllib3<2

@@ -16,9 +16,9 @@ from abstract_device_api.abstract_device_xsd import (
     PhysicalInterface, SflowProfile, Subnet, Telemetry
 )
 
-from .db import FlowNodeDM, GrpcProfileDM, PhysicalInterfaceDM, \
+from device_manager.db import FlowNodeDM, GrpcProfileDM, PhysicalInterfaceDM, \
     SflowProfileDM, TelemetryProfileDM
-from .feature_base import FeatureBase
+from device_manager.plugins.feature.feature_base import FeatureBase
 
 
 class TelemetryFeature(FeatureBase):

@@ -16,9 +16,9 @@ from abstract_device_api.abstract_device_xsd import (
     StormControl
 )
 
-from .db import PhysicalInterfaceDM, PortProfileDM, StormControlProfileDM, \
+from device_manager.db import PhysicalInterfaceDM, PortProfileDM, StormControlProfileDM, \
     VirtualPortGroupDM
-from .feature_base import FeatureBase
+from device_manager.plugins.feature.feature_base import FeatureBase
 
 import gevent # noqa
 

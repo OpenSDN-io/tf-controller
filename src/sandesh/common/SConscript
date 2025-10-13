@@ -33,41 +33,14 @@ libsandeshvns = env.Library(target = 'sandeshvns', source = SandeshGenSrcs)
 env.Install(env['TOP_LIB'], libsandeshvns)
 env.Install(env['TOP_INCLUDE'] + '/sandesh/common', SandeshGenHdrs)
 
+base_path = '#controller/src/sandesh/common/'
+
 # Generate the Python source files
-flow_pkg = env.SandeshGenPy('flow.sandesh', 'sandesh_common/', False)
-vns_pkg = env.SandeshGenPy('vns.sandesh', 'sandesh_common/', False)
+flow_pkg = env.SandeshGenPy('flow.sandesh', base_path + 'sandesh_common/', False)
+vns_pkg = env.SandeshGenPy('vns.sandesh', base_path + 'sandesh_common/', False)
 
-local_sources = [ 'setup.py' ]
-local_sources_rules = []
-for file in local_sources:
-    local_sources_rules.append(env.Install(Dir('.'), '#controller/src/sandesh/common/' + file))
-
-init_sources = [ '__init__.py' ]
-init_sources_rules = []
-for file in init_sources:
-    init_sources_rules.append(env.Install(Dir('sandesh_common'), '#controller/src/sandesh/common/' + file))
-
-sdist_depends = [local_sources_rules, init_sources_rules,
-                 flow_pkg, vns_pkg]
-
-cd_cmd = 'cd ' + Dir('.').path + ' && '
 sdist_gen = env.Command(
-    'dist/sandesh-common-%s.tar.gz' % env.GetPyVersion(),
-    'setup.py',
-    cd_cmd + 'python3 setup.py sdist')
-
-# install everything before building distribution
-env.Depends(sdist_gen, sdist_depends)
-env.Alias('nodemgr-full', sdist_gen)
-env.Alias('controller/sandesh/common:sdist', sdist_gen)
-env.Default(sdist_gen)
-
-def SymLink(target, source, env):
-    os.symlink(os.path.abspath(str(source[0])), os.path.abspath(str(target[0])))
-
-if 'install' in BUILD_TARGETS:
-    install_whl_cmd = env.Command(
-        None, 'setup.py',
-        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
-    env.Depends(install_whl_cmd, sdist_depends)
-    env.Alias('install', install_whl_cmd)
+    '/pip/sandesh_common-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir(base_path).abspath + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
+env.Depends(sdist_gen, [flow_pkg, vns_pkg])
+env.Alias('install', sdist_gen)

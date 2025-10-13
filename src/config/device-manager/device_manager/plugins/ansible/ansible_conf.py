@@ -12,13 +12,12 @@ import time
 
 from abstract_device_api.abstract_device_xsd import *
 
-from .ansible_base import AnsibleBase
-from .db import BgpRouterDM, GlobalVRouterConfigDM, NodeProfileDM, \
-    RoleConfigDM
-from .device_manager import DeviceManager
-from .dm_utils import DMUtils
-from .dm_utils import PushConfigState
-from .job_handler import JobHandler
+from device_manager.ansible_base import AnsibleBase
+from device_manager.db import BgpRouterDM, GlobalVRouterConfigDM, NodeProfileDM, RoleConfigDM
+from device_manager.device_manager import DeviceManager
+from device_manager.dm_utils import DMUtils
+from device_manager.dm_utils import PushConfigState
+from device_manager.plugins.ansible.job_handler import JobHandler
 
 
 class AnsibleConf(AnsibleBase):

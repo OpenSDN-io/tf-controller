@@ -10,86 +10,34 @@ import os
 Import('CfgmEnv')
 env = CfgmEnv.Clone()
 
-#
-# Deprecated
-# Builds into build/<optimization>
-#
+base_path = "#controller/src/config/fabric-ansible/"
+
 subdirs=[
     'ansible-playbooks',
 ]
+CfgmEnv.SConscript(dirs=subdirs, exports='CfgmEnv', duplicate = 0)
 
-setup_sources = [
-           '.stestr.conf',
-           'setup.py',
-           'MANIFEST.in',
-           'run_tests.sh',
-           'requirements.txt',
-           'test-requirements.txt',
-           '.testr.conf',
-           'tox.ini',
-           'test',
-           'ansible-playbooks'
-]
-
-setup_sources_rules = []
-for file in setup_sources:
-    setup_sources_rules.append(
-        env.Install(Dir('.'), "#controller/src/config/fabric-ansible/" + file))
-
-local_sources = [
-    'job_manager/__init__.py',
-    'job_manager/job_mgr.py',
-    'job_manager/job_handler.py',
-    'job_manager/job_result_handler.py',
-    'job_manager/job_exception.py',
-    'job_manager/job_utils.py',
-    'job_manager/logger.py',
-    'job_manager/job_log_utils.py',
-    'job_manager/playbook_helper.py',
-    'job_manager/sandesh_utils.py',
-    'job_manager/job_messages.py',
-    'job_manager/fabric_logger.py',
-    'job_manager/job_manager_logger.py',
-]
-
-local_sources_rules = []
-for file in local_sources:
-    local_sources_rules.append(
-        env.Install("job_manager",
-                    "#controller/src/config/fabric-ansible/" + file))
-
-job_pkg = env.SandeshGenPy('job.sandesh', 'job_manager/sandesh/', False)
-
-cd_cmd = 'cd ' + Dir('.').path + ' && '
-sdist_depends = []
-sdist_depends.extend(setup_sources_rules)
-sdist_depends.extend(local_sources_rules)
-sdist_depends.extend(job_pkg)
-pyver = env.GetPyVersion()
-sdist_gen = env.Command('dist/fabric_ansible-%s.tar.gz' % pyver,
-                        'setup.py', cd_cmd + 'python3 setup.py sdist')
-
-env.Depends(sdist_gen, sdist_depends)
-env.Default(sdist_gen)
+job_pkg = env.SandeshGenPy('job.sandesh', base_path + 'job_manager/sandesh/', False)
 
 # Documentation
-doc_files = []
-doc_files += env.SandeshGenDoc('job.sandesh')
-doc_files += env['CFGM_DOC_FILES']
-
 if 'install' in BUILD_TARGETS:
-    install_whl_cmd = env.Command(
-        None, 'setup.py',
-        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
-    env.Depends(install_whl_cmd, sdist_depends)
-    env.Alias('install', install_whl_cmd)
+    doc_files = []
+    doc_files += env.SandeshGenDoc('job.sandesh')
+    doc_files += env['CFGM_DOC_FILES']
+    env.Alias('install', env.Install(
+        env['INSTALL_MESSAGE_DOC'] + '/contrail-fabric-ansible/', doc_files))
 
-env.Alias('install', env.Install(
-    env['INSTALL_MESSAGE_DOC'] + '/contrail-fabric-ansible/', doc_files))
+sdist_gen = env.Command(
+    '/pip/fabric_ansible-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
+env.Depends(sdist_gen, job_pkg)
+env.Alias('install', sdist_gen)
 
-test_target = env.SetupPyTestSuite(
-    sdist_gen,
-    '/config/api-server/dist/contrail-api-server-%s.tar.gz' % pyver,
-    use_tox=True)
-
-CfgmEnv.SConscript(dirs=subdirs, exports='CfgmEnv', duplicate = 0)
+deps = [
+    '/pip/sandesh-0.1.dev0-py3-none-any.whl',
+    '/pip/sandesh_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_client-0.1.dev0-py3-none-any.whl',
+    '/pip/cfgm_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_server-0.1.dev0-py3-none-any.whl',
+]
+env.SetupPyTestSuiteWithDeps(sdist_gen, sdist_depends=deps, top_dir=Dir(base_path).abspath)

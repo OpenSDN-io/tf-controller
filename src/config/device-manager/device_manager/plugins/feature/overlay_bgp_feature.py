@@ -10,10 +10,10 @@ from abstract_device_api.abstract_device_xsd import (
     Bgp, Feature, Subnet
 )
 
-from .db import BgpRouterDM, DataCenterInterconnectDM, \
+from device_manager.db import BgpRouterDM, DataCenterInterconnectDM, \
     GlobalSystemConfigDM, PhysicalRouterDM
-from .dm_utils import DMUtils
-from .feature_base import FeatureBase
+from device_manager.dm_utils import DMUtils
+from device_manager.plugins.feature.feature_base import FeatureBase
 
 
 class OverlayBgpFeature(FeatureBase):

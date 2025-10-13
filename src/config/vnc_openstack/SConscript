@@ -8,64 +8,18 @@ import glob
 Import('CfgmEnv')
 env = CfgmEnv.Clone()
 
-source_files = [
-                'requirements.txt',
-                'setup.py',
-                '__init__.py',
-                'vnc_openstack/__init__.py',
-                'vnc_openstack/context.py',
-                'vnc_openstack/neutron_plugin_db.py',
-                'vnc_openstack/neutron_plugin_interface.py',
-                'vnc_openstack/utils.py'
+base_path = '#controller/src/config/vnc_openstack/'
+
+sdist_gen = env.Command(
+    '/pip/vnc_openstack-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
+env.Alias('install', sdist_gen)
+
+deps = [
+    '/pip/sandesh-0.1.dev0-py3-none-any.whl',
+    '/pip/sandesh_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_client-0.1.dev0-py3-none-any.whl',
+    '/pip/cfgm_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_server-0.1.dev0-py3-none-any.whl',
 ]
-
-source_rules = []
-for file in source_files:
-    if len(file.split('/')) > 1:
-        idir = '/'.join(file.split('/')[:-1])
-    else:
-        idir = ''
-    source_rules.append(
-        env.Install(idir, "#/controller/src/config/vnc_openstack/" + file))
-
-test_sources = [
-           'requirements.txt',
-           'test-requirements.txt',
-           '.stestr.conf',
-           'tox.ini',
-           'vnc_openstack/tests',
-           'MANIFEST.in',
-]
-
-test_sources_rules = []
-for file in test_sources:
-    test_sources_rules.append(
-       env.Install(Dir('.'), "#controller/src/config/vnc_openstack/" + file))
-
-cd_cmd = 'cd ' + Dir('.').path + ' && '
-sdist_depends = []
-sdist_depends.extend(source_rules)
-sdist_depends.extend(test_sources_rules)
-sdist_gen = env.Command('dist', 'setup.py', cd_cmd + 'python3 setup.py sdist')
-
-env.Depends(sdist_gen, sdist_depends)
-env.Default(sdist_gen)
-
-if 'install' in BUILD_TARGETS:
-    install_whl_cmd = env.Command(
-        None, 'setup.py',
-        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
-    env.Depends(install_whl_cmd, sdist_depends)
-    env.Alias('install', install_whl_cmd)
-
-test_target = env.SetupPyTestSuite(
-    sdist_gen,
-    '/config/api-server/dist/contrail-api-server-%s.tar.gz' % env.GetPyVersion(),
-    use_tox=True)
-
-# This add'l alias is to allow retry of UT in CI
-env.Alias('controller/src/config/vnc_openstack/vnc_openstack:test', test_target)
-
-# Local Variables:
-# mode: python
-# End:
+env.SetupPyTestSuiteWithDeps(sdist_gen, sdist_depends=deps, top_dir=Dir(base_path).abspath)

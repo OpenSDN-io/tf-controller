@@ -13,15 +13,15 @@ from ncclient.transport.errors import TransportError
 import time
 import datetime
 from io import StringIO
-from .dm_utils import DMUtils
-from .device_conf import DeviceConf
-from .dm_utils import PushConfigState
-from .db import PhysicalInterfaceDM
-from .db import LogicalInterfaceDM
-from .db import BgpRouterDM
-from .db import VirtualNetworkDM
-from .db import GlobalSystemConfigDM
-from .db import VirtualMachineInterfaceDM
+from device_manager.dm_utils import DMUtils
+from device_manager.device_conf import DeviceConf
+from device_manager.dm_utils import PushConfigState
+from device_manager.db import PhysicalInterfaceDM
+from device_manager.db import LogicalInterfaceDM
+from device_manager.db import BgpRouterDM
+from device_manager.db import VirtualNetworkDM
+from device_manager.db import GlobalSystemConfigDM
+from device_manager.db import VirtualMachineInterfaceDM
 from device_api.juniper_common_xsd import *
 
 class JuniperConf(DeviceConf):

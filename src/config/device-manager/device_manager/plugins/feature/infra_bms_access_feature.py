@@ -10,9 +10,9 @@ from abstract_device_api.abstract_device_xsd import (
     DhcpRelay, Feature, ForwardingOptions, IpAddress, Vlan
 )
 
-from .db import NetworkIpamDM, PhysicalInterfaceDM, PortDM, TagDM, \
+from device_manager.db import NetworkIpamDM, PhysicalInterfaceDM, PortDM, TagDM, \
     VirtualNetworkDM
-from .feature_base import FeatureBase
+from device_manager.plugins.feature.feature_base import FeatureBase
 
 
 class InfraBMSAccessFeature(FeatureBase):

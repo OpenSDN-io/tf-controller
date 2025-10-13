@@ -22,11 +22,9 @@ setuptools.setup(
     author_email="dev@lists.opencontrail.org",
     license="Apache Software License",
     url="http://www.opencontrail.org/",
-
     long_description="VNC Service Monitor",
 
     test_suite='svc_monitor.tests',
-
 
     entry_points = {
         # Please update sandesh/common/vns.sandesh on process name change

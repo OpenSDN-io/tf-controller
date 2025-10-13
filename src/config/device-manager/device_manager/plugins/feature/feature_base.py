@@ -13,10 +13,10 @@ from abstract_device_api.abstract_device_xsd import (
 )
 from attrdict import AttrDict
 
-from .db import BgpRouterDM, GlobalVRouterConfigDM, LogicalRouterDM, \
+from device_manager.db import BgpRouterDM, GlobalVRouterConfigDM, LogicalRouterDM, \
     PhysicalInterfaceDM, RoutingInstanceDM, VirtualMachineInterfaceDM, \
     VirtualNetworkDM, VirtualPortGroupDM
-from .imports import import_feature_plugins
+from device_manager.plugins.imports import import_feature_plugins
 
 
 class abstractclassmethod(classmethod):

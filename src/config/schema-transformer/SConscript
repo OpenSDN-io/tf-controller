@@ -3,61 +3,34 @@
 #
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
-import os
 
 Import('CfgmEnv')
 env = CfgmEnv.Clone()
 
-setup_sources = [
-           'requirements.txt',
-           'setup.py',
-           'MANIFEST.in',
-           'test-requirements.txt',
-           '.stestr.conf',
-           'tox.ini',
-           'schema_transformer',
-]
+base_path = '#controller/src/config/schema-transformer/'
 
-setup_sources_rules = []
-for file in setup_sources:
-    setup_sources_rules.append(
-        env.Install(Dir('.'), "#controller/src/config/schema-transformer/" + file))
-
-st_introspect_pkg = env.SandeshGenPy('st_introspect.sandesh', 'schema_transformer/sandesh/', False)
-
-cd_cmd = 'cd ' + Dir('.').path + ' && '
-sdist_depends = []
-sdist_depends.extend(setup_sources_rules)
-sdist_depends.extend(st_introspect_pkg)
-pyver = env.GetPyVersion()
-sdist_gen = env.Command('dist/schema_transformer-%s.tar.gz' % pyver,
-                        'setup.py',
-                        cd_cmd + 'python3 setup.py sdist')
-
-env.Depends(sdist_gen, sdist_depends)
-env.Default(sdist_gen)
-
-# Documentation
-doc_files = []
-doc_files += env.SandeshGenDoc('st_introspect.sandesh')
-doc_files += env['CFGM_DOC_FILES']
+sandesh_sources = env.SandeshGenPy('st_introspect.sandesh', base_path + 'schema_transformer/sandesh/', False)
 
 if 'install' in BUILD_TARGETS:
-    install_whl_cmd = env.Command(
-        None, 'setup.py',
-        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
-    env.Depends(install_whl_cmd, sdist_depends)
-    env.Alias('install', install_whl_cmd)
+    # Documentation
+    doc_files = []
+    doc_files += env.SandeshGenDoc('st_introspect.sandesh')
+    doc_files += env['CFGM_DOC_FILES']
+    env.Alias('install', env.Install(
+        env['INSTALL_MESSAGE_DOC'] + '/contrail-schema/', doc_files))
 
-env.Alias('install', env.Install(
-    env['INSTALL_MESSAGE_DOC'] + '/contrail-schema/', doc_files))
+sdist_gen = env.Command(
+    '/pip/schema_transformer-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
+env.Depends(sdist_gen, sandesh_sources)
+env.Alias('install', sdist_gen)
 
-env.SetupPyTestSuite(
-    sdist_gen,
-    '/config/api-server/dist/contrail-api-server-%s.tar.gz' % pyver,
-    '/../noarch/config/svc-monitor/dist/svc_monitor-%s.tar.gz' % pyver,
-    use_tox=True)
-
-# Local Variables:
-# mode: python
-# End:
+deps = [
+    '/pip/sandesh-0.1.dev0-py3-none-any.whl',
+    '/pip/sandesh_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_client-0.1.dev0-py3-none-any.whl',
+    '/pip/cfgm_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_server-0.1.dev0-py3-none-any.whl',
+    '/pip/svc_monitor-0.1.dev0-py3-none-any.whl',
+]
+env.SetupPyTestSuiteWithDeps(sdist_gen, sdist_depends=deps, top_dir=Dir(base_path).abspath)

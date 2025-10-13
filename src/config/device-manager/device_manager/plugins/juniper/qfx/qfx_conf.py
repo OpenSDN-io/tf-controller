@@ -12,12 +12,12 @@ import copy
 import abc
 from device_api.juniper_common_xsd import *
 
-from .db import AccessControlListDM, LogicalInterfaceDM, LogicalRouterDM, \
+from device_manager.db import AccessControlListDM, LogicalInterfaceDM, LogicalRouterDM, \
     PhysicalInterfaceDM, RoutingInstanceDM, VirtualMachineInterfaceDM, \
     VirtualNetworkDM
-from .dm_utils import DMUtils
-from .juniper_conf import JuniperConf
-from .juniper_conf import JunosInterface
+from device_manager.dm_utils import DMUtils
+from device_manager.plugins.juniper.juniper_conf import JuniperConf
+from device_manager.plugins.juniper.juniper_conf import JunosInterface
 
 class QfxConf(JuniperConf):
 

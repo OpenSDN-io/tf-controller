@@ -2,7 +2,7 @@
  * Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
  */
 
-// NO_HEAPCHECK=1 BUILD_ONLY=1 scons -uj32 --optimization=production src/bgp:bgp_ifmap_xmpp_integration_test && LOG_DISABLE=1 CAT_CONTROL_NODE_TEST_PAUSE=1 CAT_CONTROL_NODE_TEST_INTROSPECT=5910 CAT_CONTROL_NODE_INTEGRATION_TEST_SELF_NAME=overcloud-contrailcontroller-1 CAT_CONTROL_NODE_TEST_DATA_FILE=/cs-shared/db_dumps/orange.json build/production/bgp/test/bgp_cat_control_node_test
+// NO_HEAPCHECK=1 scons -uj32 --optimization=production src/bgp:bgp_ifmap_xmpp_integration_test && LOG_DISABLE=1 CAT_CONTROL_NODE_TEST_PAUSE=1 CAT_CONTROL_NODE_TEST_INTROSPECT=5910 CAT_CONTROL_NODE_INTEGRATION_TEST_SELF_NAME=overcloud-contrailcontroller-1 CAT_CONTROL_NODE_TEST_DATA_FILE=/cs-shared/db_dumps/orange.json build/production/bgp/test/bgp_cat_control_node_test
 // Visit <server>:5910 to access introspect.
 
 #include "base/address_util.h"

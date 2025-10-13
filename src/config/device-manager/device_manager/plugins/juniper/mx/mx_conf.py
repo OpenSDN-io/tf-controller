@@ -11,12 +11,12 @@ import copy
 
 from device_api.juniper_common_xsd import *
 
-from .db import GlobalVRouterConfigDM, PhysicalInterfaceDM, \
+from device_manager.db import GlobalVRouterConfigDM, PhysicalInterfaceDM, \
     RoutingInstanceDM, ServiceInstanceDM, VirtualMachineInterfaceDM, \
     VirtualNetworkDM
-from .dm_utils import DMUtils
-from .juniper_conf import JuniperConf
-from .juniper_conf import JunosInterface
+from device_manager.dm_utils import DMUtils
+from device_manager.plugins.juniper.juniper_conf import JuniperConf
+from device_manager.plugins.juniper.juniper_conf import JunosInterface
 
 
 class MxConf(JuniperConf):

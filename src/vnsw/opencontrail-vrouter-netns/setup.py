@@ -11,6 +11,7 @@ def requirements(filename):
     c = re.compile(r'\s*#.*')
     return list(filter(bool, map(lambda y: c.sub('', y).strip(), lines)))
 
+
 setuptools.setup(
     name='opencontrail-vrouter-netns',
     version='0.1.dev0',

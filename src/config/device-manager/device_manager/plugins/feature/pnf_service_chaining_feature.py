@@ -10,12 +10,12 @@ from abstract_device_api.abstract_device_xsd import (
     RoutingInstanceProtocols, SecurityPolicy, SecurityZone, Vlan
 )
 
-from .db import BgpRouterDM, InstanceIpDM, LogicalInterfaceDM, \
+from device_manager.db import BgpRouterDM, InstanceIpDM, LogicalInterfaceDM, \
     LogicalRouterDM, PhysicalInterfaceDM, PhysicalRouterDM, PortTupleDM, \
     ServiceApplianceDM, ServiceApplianceSetDM, ServiceInstanceDM, \
     ServiceTemplateDM, VirtualNetworkDM
-from .dm_utils import DMUtils
-from .feature_base import FeatureBase
+from device_manager.dm_utils import DMUtils
+from device_manager.plugins.feature.feature_base import FeatureBase
 
 
 class PNFSrvcChainingFeature(FeatureBase):
