@@ -23,6 +23,7 @@
 class BgpAttr;
 class CommunityDB;
 class ExtCommunityDB;
+class LargeCommunityDB;
 class BgpServer;
 
 struct CommunitySpec : public BgpAttribute {
@@ -496,6 +497,215 @@ public:
             const ExtCommunity::ExtCommunityValue &sc);
     ExtCommunityPtr SetAndLocate(const ExtCommunity *src,
             const ExtCommunity::ExtCommunityList &list);
+
+private:
+};
+
+/// @brief This class encapsulates the wire-format representation of a BGP
+/// Large Community attribute and provides encoding, comparison, and
+/// canonicalization functions for Large Community attributes.
+class LargeCommunitySpec : public BgpAttribute {
+public:
+    /// Indicates variable size of BGP attribute in encoded form (used
+    /// internally by encoding functions). -1 means the total size depends on
+    /// how many communities are present.
+    static const int kSize = -1;
+
+    /// Flags indicating whether the attribute is Optional and Transitive per BGP
+    /// standards.
+    static const uint8_t kFlags = Optional | Transitive;
+
+    /// @brief Constructs a new instance using the attribute type and
+    /// flags.
+    LargeCommunitySpec() : BgpAttribute(LargeCommunities, kFlags) { }
+
+    /// @brief Construct from an existing BgpAttribute.
+    explicit LargeCommunitySpec(const BgpAttribute &rhs) :
+        BgpAttribute(rhs) { }
+
+    /// @brief Compute the encoded length of the attribute.
+    virtual size_t EncodeLength() const;
+
+    /// @brief Vector of community values. Each Large Community value consists
+    /// of three 4-byte fields (12 bytes total).
+    std::vector<uint32_t> communities;
+
+    /// @brief Compare the attribute with another BgpAttribute.
+    virtual int CompareTo(const BgpAttribute &rhs_attr) const;
+
+    /// @brief Convert the attribute to its canonical form.
+    virtual void ToCanonical(BgpAttr *attr);
+
+    /// @brief Generate a human-readable string representation.
+    virtual std::string ToString() const;
+};
+
+/// @brief This class represents an array of BGP Large Community values.
+/// A LargeCommunity consists of one or more 12-byte tuples. This class
+/// provides manipulation (append, remove, set), comparison, hashing, and
+/// conversion to/from human-readable formats.
+class LargeCommunity {
+public:
+    /// A single Large Community value.
+    typedef boost::array<uint8_t, 12> LargeCommunityValue;
+
+    /// A list (vector) of LargeCommunityValue items.
+    typedef std::vector<LargeCommunityValue> LargeCommunityList;
+
+    /// @brief Constructs an instance of the class and links to the
+    /// given LargeCommunityDB instance.
+    explicit LargeCommunity(LargeCommunityDB *largecomm_db)
+        : largecomm_db_(largecomm_db) {
+        refcount_ = 0;
+    }
+
+    /// @brief Copy constructor.
+    explicit LargeCommunity(const LargeCommunity &rhs)
+        : largecomm_db_(rhs.largecomm_db_),
+          communities_(rhs.communities_) {
+        refcount_ = 0;
+    }
+
+    /// @brief Constructs an instance of the class using the given
+    /// LargeCommunitySpec and links to the given LargeCommunityDB
+    /// instance.
+    explicit LargeCommunity(LargeCommunityDB *largecomm_db,
+                          const LargeCommunitySpec spec);
+
+    /// @brief Destroys an instance.
+    virtual ~LargeCommunity() { }
+
+    /// @brief Remove this community.
+    virtual void Remove();
+
+    /// @brief Compare this LargeCommunity to another.
+    int CompareTo(const LargeCommunity &rhs) const;
+
+    /// @brief Get the list of Large Community values.
+    const LargeCommunityList &communities() const {
+        return communities_;
+    }
+
+    /// @brief Parse a string into a list of LargeCommunity values.
+    static LargeCommunityList LargeCommunityFromString(
+        const std::string &comm);
+
+    /// @brief Convert a hexadecimal string to a LargeCommunityValue.
+    static LargeCommunityValue FromHexString(const std::string &comm,
+            boost::system::error_code *errorp);
+
+    /// @brief Compute the hash value for a LargeCommunity object.
+    friend std::size_t hash_value(LargeCommunity const &comm) {
+        size_t hash = 0;
+        for (LargeCommunityList::const_iterator iter =
+                comm.communities_.begin();
+                iter != comm.communities_.end(); iter++) {
+            boost::hash_range(hash, iter->begin(), iter->end());
+        }
+        return hash;
+    }
+
+    /// @brief Convert a LargeCommunityValue to a human-readable string.
+    static std::string ToString(const LargeCommunityValue &val);
+
+    /// @brief Convert a LargeCommunityValue to a hexadecimal string.
+    static std::string ToHexString(const LargeCommunityValue &val);
+
+private:
+    /// @brief Increment reference count atomically.
+    friend int intrusive_ptr_add_ref(const LargeCommunity *clargecomm);
+    /// @brief Decrement reference count of an clargecomm.
+    friend int intrusive_ptr_del_ref(const LargeCommunity *clargecomm);
+    /// @brief Release a LargeCommunity instance when the reference count
+    /// reaches zero.
+    friend void intrusive_ptr_release(const LargeCommunity *clargecomm);
+    /// @brief Enables the access to private members for LargeCommunityDB.
+    friend class LargeCommunityDB;
+    /// @brief Enables the access to private members for BgpAttrTest.
+    friend class BgpAttrTest;
+
+    /// Append a single LargeCommunity value.
+    void Append(const LargeCommunityValue &value);
+    /// Append a list of LargeCommunity values.
+    void Append(const LargeCommunityList &list);
+    /// Remove specific LargeCommunity values.
+    void Remove(const LargeCommunityList &list);
+    /// Replace all existing values with the provided list.
+    void Set(const LargeCommunityList &list);
+
+    /// @brief A reference counter, needed for memory management.
+    mutable tbb::atomic<int> refcount_;
+    /// @brief A pointer to the managing LargeCommunityDB.
+    LargeCommunityDB *largecomm_db_;
+    /// @brief A list of LargeCommunity storing BGP Large Community values.
+    LargeCommunityList communities_;
+};
+
+/// @brief Increment reference count atomically.
+inline int intrusive_ptr_add_ref(const LargeCommunity *clargecomm) {
+    return clargecomm->refcount_.fetch_and_increment();
+}
+
+/// @brief Decrement reference count of given large community.
+inline int intrusive_ptr_del_ref(const LargeCommunity *clargecomm) {
+    return clargecomm->refcount_.fetch_and_decrement();
+}
+
+/// @brief Release a LargeCommunity instance when the reference count reaches
+/// zero.
+inline void intrusive_ptr_release(const LargeCommunity *clargecomm) {
+    int prev = clargecomm->refcount_.fetch_and_decrement();
+    if (prev == 1) {
+        LargeCommunity *largecomm = const_cast<LargeCommunity *>(clargecomm);
+        largecomm->Remove();
+        assert(largecomm->refcount_ == 0);
+        delete largecomm;
+    }
+}
+
+/// @brief Defines a type for automatic storage of a LargeCommunity instance.
+typedef boost::intrusive_ptr<const LargeCommunity> LargeCommunityPtr;
+
+/// @brief A structure to compare order LargeCommunity objects.
+struct LargeCommunityCompare {
+    bool operator()(const LargeCommunity *lhs, const LargeCommunity *rhs) {
+        return lhs->CompareTo(*rhs) < 0;
+    }
+};
+
+/// @brief This class represents a database for managing LargeCommunity
+/// objects. It is used to store, deduplicate, and retrieve canonical
+/// instances of LargeCommunity.
+class LargeCommunityDB : public BgpPathAttributeDB<LargeCommunity,
+                                                   LargeCommunityPtr,
+                                                   LargeCommunitySpec,
+                                                   LargeCommunityCompare,
+                                                   LargeCommunityDB> {
+public:
+    /// @brief Constructs an instance of the class and links to the
+    /// given BgpServer instance.
+    explicit LargeCommunityDB(BgpServer *server);
+
+    /// @brief Append a list of LargeCommunity values to an existing attribute.
+    LargeCommunityPtr AppendAndLocate(
+        const LargeCommunity *src,
+        const LargeCommunity::LargeCommunityList &list);
+
+    /// @brief Append a single LargeCommunity value to an existing attribute.
+    LargeCommunityPtr AppendAndLocate(
+        const LargeCommunity *src,
+        const LargeCommunity::LargeCommunityValue &value);
+
+    /// @brief Remove a list of LargeCommunity values from an existing
+    /// attribute.
+    LargeCommunityPtr RemoveAndLocate(
+        const LargeCommunity *src,
+        const LargeCommunity::LargeCommunityList &list);
+
+    /// @brief Replace all values in a LargeCommunity with a new list.
+    LargeCommunityPtr SetAndLocate(
+        const LargeCommunity *src,
+        const LargeCommunity::LargeCommunityList &list);
 
 private:
 };

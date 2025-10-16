@@ -43,6 +43,7 @@ class CommunityDB;
 class EdgeDiscoveryDB;
 class EdgeForwardingDB;
 class ExtCommunityDB;
+class LargeCommunityDB;
 class IServiceChainMgr;
 class IStaticRouteMgr;
 class LifetimeActor;
@@ -187,6 +188,7 @@ public:
     EdgeDiscoveryDB *edge_discovery_db() { return edge_discovery_db_.get(); }
     EdgeForwardingDB *edge_forwarding_db() { return edge_forwarding_db_.get(); }
     ExtCommunityDB *extcomm_db() { return extcomm_db_.get(); }
+    LargeCommunityDB *largecomm_db() { return largecomm_db_.get(); }
     OriginVnPathDB *ovnpath_db() { return ovnpath_db_.get(); }
     PmsiTunnelDB *pmsi_tunnel_db() { return pmsi_tunnel_db_.get(); }
 
@@ -373,6 +375,7 @@ private:
     boost::scoped_ptr<EdgeDiscoveryDB> edge_discovery_db_;
     boost::scoped_ptr<EdgeForwardingDB> edge_forwarding_db_;
     boost::scoped_ptr<ExtCommunityDB> extcomm_db_;
+    boost::scoped_ptr<LargeCommunityDB> largecomm_db_;
     boost::scoped_ptr<OriginVnPathDB> ovnpath_db_;
     boost::scoped_ptr<PmsiTunnelDB> pmsi_tunnel_db_;
     boost::scoped_ptr<BgpAttrDB> attr_db_;

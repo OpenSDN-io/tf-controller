@@ -865,6 +865,8 @@ public:
     void set_community(const CommunitySpec *comm);
     void set_ext_community(ExtCommunityPtr extcomm);
     void set_ext_community(const ExtCommunitySpec *extcomm);
+    void set_large_community(LargeCommunityPtr largecomm);
+    void set_large_community(const LargeCommunitySpec *largecomm);
     void set_origin_vn_path(OriginVnPathPtr ovnpath);
     void set_origin_vn_path(const OriginVnPathSpec *spec);
     void set_pmsi_tunnel(const PmsiTunnelSpec *pmsi_spec);
@@ -913,6 +915,9 @@ public:
      bool IsAsPathEmpty() const;
     const Community *community() const { return community_.get(); }
     const ExtCommunity *ext_community() const { return ext_community_.get(); }
+    const LargeCommunity *large_community() const {
+        return large_community_.get();
+    }
     const OriginVnPath *origin_vn_path() const { return origin_vn_path_.get(); }
     const PmsiTunnel *pmsi_tunnel() const { return pmsi_tunnel_.get(); }
     const EdgeDiscovery *edge_discovery() const {
@@ -960,6 +965,7 @@ private:
     ClusterListPtr cluster_list_;
     CommunityPtr community_;
     ExtCommunityPtr ext_community_;
+    LargeCommunityPtr large_community_;
     OriginVnPathPtr origin_vn_path_;
     PmsiTunnelPtr pmsi_tunnel_;
     EdgeDiscoveryPtr edge_discovery_;
@@ -1008,6 +1014,8 @@ public:
                                       BgpAttrOrigin::OriginType origin);
     BgpAttrPtr ReplaceExtCommunityAndLocate(const BgpAttr *attr,
                                             ExtCommunityPtr extcomm);
+    BgpAttrPtr ReplaceLargeCommunityAndLocate(const BgpAttr *attr,
+                                            LargeCommunityPtr largecomm);
     BgpAttrPtr ReplaceOriginVnPathAndLocate(const BgpAttr *attr,
                                             OriginVnPathPtr ovnpath);
     BgpAttrPtr ReplaceLocalPreferenceAndLocate(const BgpAttr *attr,

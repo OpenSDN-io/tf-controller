@@ -507,6 +507,7 @@ BgpServer::BgpServer(EventManager *evm)
       edge_discovery_db_(new EdgeDiscoveryDB(this)),
       edge_forwarding_db_(new EdgeForwardingDB(this)),
       extcomm_db_(new ExtCommunityDB(this)),
+      largecomm_db_(new LargeCommunityDB(this)),
       ovnpath_db_(new OriginVnPathDB(this)),
       pmsi_tunnel_db_(new PmsiTunnelDB(this)),
       attr_db_(new BgpAttrDB(this)),

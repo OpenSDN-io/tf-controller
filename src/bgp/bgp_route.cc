@@ -562,6 +562,22 @@ static void FillRoutePathExtCommunityInfo(const BgpTable *table,
     show_path->set_tunnel_encap(tunnel_encap);
 }
 
+static void FillRoutePathLargeCommunityInfo(const LargeCommunity *largecomm,
+    ShowRoutePath *show_path, vector<string> *communities) {
+
+    const LargeCommunity::LargeCommunityList &v = largecomm->communities();
+    for (LargeCommunity::LargeCommunityList::const_iterator it = v.begin();
+         it != v.end(); ++it) {
+            char temp[50];
+            int len = snprintf(temp, sizeof(temp), "large community: ");
+            for (size_t i = 0; i < it->size(); i++) {
+                len += snprintf(temp + len, sizeof(temp) - len, "%02x",
+                                (*it)[i]);
+            }
+            communities->push_back(string(temp));
+        }
+}
+
 static void FillEdgeForwardingInfo(const EdgeForwarding *edge_forwarding,
     ShowRoutePath *show_path) {
     vector<ShowEdgeForwarding> show_ef_list;
@@ -717,6 +733,10 @@ void BgpRoute::FillRouteInfo(const BgpTable *table,
         }
         if (attr->ext_community()) {
             FillRoutePathExtCommunityInfo(table, attr->ext_community(), &srp,
+                    &communities);
+        }
+        if (attr->large_community()) {
+            FillRoutePathLargeCommunityInfo(attr->large_community(), &srp,
                     &communities);
         }
         if (!communities.empty()){
