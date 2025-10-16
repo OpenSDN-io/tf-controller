@@ -4066,6 +4066,11 @@ class DBInterface(object):
         ret_subnets = []
 
         all_net_objs = []
+
+        proj_id = None
+        if not context['is_admin']:
+            proj_id = context['tenant']
+
         if filters and 'id' in filters:
             # required subnets are specified,
             # just read in corresponding net_ids
@@ -4079,8 +4084,7 @@ class DBInterface(object):
                 self._virtual_network_list(
                     obj_uuids=list(net_ids),
                     detail=True))
-        elif (filters and 'shared' in filters and filters['shared'] is True or
-              'router:external' in filters):
+        elif filters and ('shared' in filters or 'router:external' in filters):
             shared = None
             router_external = None
             if 'router:external' in filters:
@@ -4088,14 +4092,11 @@ class DBInterface(object):
             if 'shared' in filters:
                 shared = filters['shared'][0]
             net_objs = self._network_list_filter(
+                project_id=proj_id,
                 shared=shared,
                 router_external=router_external)
             all_net_objs.extend(net_objs)
         else:
-            if not context['is_admin']:
-                proj_id = context['tenant']
-            else:
-                proj_id = None
             net_objs = self._network_list_project(proj_id)
             all_net_objs.extend(net_objs)
             net_objs = self._network_list_filter(shared=True)
