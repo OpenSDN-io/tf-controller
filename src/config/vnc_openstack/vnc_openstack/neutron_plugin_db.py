@@ -383,6 +383,15 @@ class DBInterface(object):
         return self._vnc_lib.obj_to_dict(obj)
     # end _obj_to_dict
 
+    def _load_kv_json(self, key):
+        """Safely fetch a JSON value from KV; return {} if missing."""
+        try:
+            raw = self._vnc_lib.kv_retrieve(key)
+            return json.loads(raw)
+        except vnc_exc.NoIdError:
+            return {}
+    # end _load_kv_json
+
     def _get_plugin_property(self, property_in):
         fq_name = ['default-global-system-config']
         gsc_obj = self._vnc_lib.global_system_config_read(fq_name)
@@ -799,25 +808,22 @@ class DBInterface(object):
             self._vnc_lib.kv_store(tag_to_sub_key,
                                    json.dumps(subnet_to_neutron_tags))
 
-    def _tag_get_for_subnet(self, subnet_id):
+    def _tag_get_for_subnet(self, subnet_id, memo_req=None):
         """Tag get for subnet method is a part of OpenStack TAG support.
 
         In case of fetching all tags for given subnet we need to fetch all
         kv tags, and pick that with subnet_id in it.
 
-        Make sure to run performance test before and after any change in
-        this function. Any change that slows down execution of filtering by
-        tags has to be accepted by a reviewer.
-
         :param subnet_id: String with subnet UUID
+        :param memo_req: Dict for memoization of kv retrievals
         :return: List of  class str` with tag names (NOT FQNAmes).
         """
         sub_to_tag_key = _SUBNET_TO_NEUTRON_TAGS
-        try:
-            subnet_to_neutron_tags = self._vnc_lib.kv_retrieve(sub_to_tag_key)
-            subnet_to_neutron_tags = json.loads(subnet_to_neutron_tags)
-        except vnc_exc.NoIdError:
-            subnet_to_neutron_tags = {}
+        _memo = memo_req or {}
+        subnet_to_neutron_tags = _memo.get(sub_to_tag_key)
+
+        if subnet_to_neutron_tags is None:
+            subnet_to_neutron_tags = self._load_kv_json(sub_to_tag_key)
 
         if subnet_id not in subnet_to_neutron_tags:
             return []
@@ -1930,7 +1936,8 @@ class DBInterface(object):
         return False
 
     @catch_convert_exception
-    def _network_vnc_to_neutron(self, net_obj, oper=READ, context=None):
+    def _network_vnc_to_neutron(self, net_obj, oper=READ,
+                                context=None, memo_req=None):
         net_q_dict = {}
         extra_dict = {}
 
@@ -1998,8 +2005,10 @@ class DBInterface(object):
             for ipam_ref in ipam_refs:
                 subnets = ipam_ref['attr'].get_ipam_subnets()
                 for subnet in subnets:
-                    sn_dict = self._subnet_vnc_to_neutron(subnet, net_obj,
-                                                          ipam_ref['to'])
+                    sn_dict = self._subnet_vnc_to_neutron(
+                        subnet, net_obj, ipam_ref['to'],
+                        memo_req=memo_req
+                    )
                     if sn_dict is None:
                         continue
                     net_q_dict['subnets'].append(sn_dict['id'])
@@ -2102,12 +2111,8 @@ class DBInterface(object):
     # end _subnet_neutron_to_vnc
 
     @catch_convert_exception
-    def _subnet_vnc_to_neutron(
-            self,
-            subnet_vnc,
-            net_obj,
-            ipam_fq_name,
-            oper=READ):
+    def _subnet_vnc_to_neutron(self, subnet_vnc, net_obj, ipam_fq_name,
+                               oper=READ, memo_req=None):
         sn_q_dict = {}
         extra_dict = {}
         sn_name = subnet_vnc.get_subnet_name()
@@ -2197,7 +2202,7 @@ class DBInterface(object):
         else:
             sn_q_dict['shared'] = False
 
-        sn_q_dict['tags'] = self._tag_get_for_subnet(sn_id)
+        sn_q_dict['tags'] = self._tag_get_for_subnet(sn_id, memo_req=memo_req)
         sn_q_dict['created_at'] = subnet_vnc.get_created()
         sn_q_dict['updated_at'] = subnet_vnc.get_last_modified()
 
@@ -3643,24 +3648,32 @@ class DBInterface(object):
     def network_list(self, context=None, filters=None):
         ret_dict = {}
 
-        def _collect_without_prune(net_ids):
+        def _collect_without_prune(net_ids, memo_req=None):
             for net_id in net_ids:
                 try:
                     net_obj = self._network_read(net_id)
                 except NoIdError:
                     continue
                 net_info = self._network_vnc_to_neutron(
-                    net_obj, oper=LIST, context=context)
+                    net_obj, oper=LIST, context=context,
+                    memo_req=memo_req
+                )
                 if net_info is None:
                     continue
                 ret_dict[net_id] = net_info
         # end _collect_without_prune
 
         # collect phase
+        memo_req = {
+            _SUBNET_TO_NEUTRON_TAGS: self._load_kv_json(
+                _SUBNET_TO_NEUTRON_TAGS
+            ),
+        }
+
         all_net_objs = []  # all n/ws in all projects
         if context and not context['is_admin']:
             if filters and 'id' in filters:
-                _collect_without_prune(filters['id'])
+                _collect_without_prune(filters['id'], memo_req)
             elif filters and 'name' in filters:
                 net_objs = self._network_list_project(context['tenant'])
                 all_net_objs.extend(net_objs)
@@ -3698,7 +3711,7 @@ class DBInterface(object):
                 # required networks are also specified,
                 # just read and populate ret_dict
                 # prune is skipped because all_net_objs is empty
-                _collect_without_prune(filters['id'])
+                _collect_without_prune(filters['id'], memo_req)
             else:
                 # read all networks in project, and prune below
                 for p_id in self._validate_project_ids(context, filters) or []:
@@ -3709,7 +3722,7 @@ class DBInterface(object):
         elif filters and 'id' in filters:
             # required networks are specified, just read and populate ret_dict
             # prune is skipped because all_net_objs is empty
-            _collect_without_prune(filters['id'])
+            _collect_without_prune(filters['id'], memo_req)
         elif filters and 'name' in filters:
             net_objs = self._network_list_project(None)
             all_net_objs.extend(net_objs)
@@ -3725,7 +3738,9 @@ class DBInterface(object):
                 router_external=router_external)
             for net in nets:
                 net_info = self._network_vnc_to_neutron(
-                    net, oper=LIST, context=context)
+                    net, oper=LIST, context=context,
+                    memo_req=memo_req
+                )
                 if net_info is None:
                     continue
                 ret_dict[net.uuid] = net_info
@@ -3758,7 +3773,9 @@ class DBInterface(object):
                                             is_shared):
                 continue
             net_info = self._network_vnc_to_neutron(
-                net_obj, oper=LIST, context=context)
+                net_obj, oper=LIST, context=context,
+                memo_req=memo_req
+            )
             if net_info is None:
                 continue
             ret_dict[net_obj.uuid] = net_info
