@@ -28,6 +28,7 @@
 #include "bgp/extended-community/local_sequence_number.h"
 #include "bgp/extended-community/router_mac.h"
 #include "bgp/extended-community/tag.h"
+#include "bgp/large-community/tag.h"
 #include "bgp/ermvpn/ermvpn_table.h"
 #include "bgp/evpn/evpn_route.h"
 #include "bgp/evpn/evpn_table.h"
@@ -1205,6 +1206,7 @@ bool BgpXmppChannel::ProcessItem(string vrf_name,
     uint32_t label = 0;
     uint32_t flags = 0;
     ExtCommunitySpec ext;
+    LargeCommunitySpec largecomm;
     CommunitySpec comm;
 
     if (add_change) {
@@ -1298,11 +1300,19 @@ bool BgpXmppChannel::ProcessItem(string vrf_name,
             if (bgp_server_->autonomous_system() <= 0xFFFF) {
                 Tag tag(bgp_server_->autonomous_system(), *tit);
                 ext.communities.push_back(tag.GetExtCommunityValue());
+                TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
+                for (auto value_data : tag_lc.GetLargeCommunityValue()) {
+                    largecomm.communities.push_back(value_data);
+                }
             } else {
                 Tag tag(tag_index, *tit);
                 Tag4ByteAs tag4(bgp_server_->autonomous_system(), tag_index++);
                 ext.communities.push_back(tag4.GetExtCommunityValue());
                 ext.communities.push_back(tag.GetExtCommunityValue());
+                TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
+                for (auto value_data : tag_lc.GetLargeCommunityValue()) {
+                    largecomm.communities.push_back(value_data);
+                }
             }
         }
 
@@ -1391,6 +1401,8 @@ bool BgpXmppChannel::ProcessItem(string vrf_name,
             attrs.push_back(&comm);
         if (!master && !ext.communities.empty())
             attrs.push_back(&ext);
+        if (!master && !largecomm.communities.empty())
+            attrs.push_back(&largecomm);
 
         // Process sub-protocol(route types)
         BgpAttrSubProtocol sbp(item.entry.sub_protocol);
@@ -1508,6 +1520,7 @@ bool BgpXmppChannel::ProcessInet6Item(string vrf_name,
         uint32_t label = 0;
         uint32_t flags = 0;
         ExtCommunitySpec ext;
+        LargeCommunitySpec largecomm;
         CommunitySpec comm;
 
         if (add_change) {
@@ -1622,12 +1635,20 @@ bool BgpXmppChannel::ProcessInet6Item(string vrf_name,
                 if (bgp_server_->autonomous_system() <= 0xFFFF) {
                     Tag tag(bgp_server_->autonomous_system(), *tit);
                     ext.communities.push_back(tag.GetExtCommunityValue());
+                    TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
+                    for (auto value_data : tag_lc.GetLargeCommunityValue()) {
+                        largecomm.communities.push_back(value_data);
+                    }
                 } else {
                     Tag tag(tag_index, *tit);
                     Tag4ByteAs tag4(bgp_server_->autonomous_system(),
                                     tag_index++);
                     ext.communities.push_back(tag.GetExtCommunityValue());
                     ext.communities.push_back(tag4.GetExtCommunityValue());
+                    TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
+                    for (auto value_data : tag_lc.GetLargeCommunityValue()) {
+                        largecomm.communities.push_back(value_data);
+                    }
                 }
             }
 
@@ -1721,6 +1742,8 @@ bool BgpXmppChannel::ProcessInet6Item(string vrf_name,
                 attrs.push_back(&comm);
             if (!master && !ext.communities.empty())
                 attrs.push_back(&ext);
+            if (!master && !largecomm.communities.empty())
+                attrs.push_back(&largecomm);
 
             BgpAttrPtr attr = bgp_server_->attr_db()->Locate(attrs);
             req.data.reset(new BgpTable::RequestData(
@@ -1900,6 +1923,7 @@ bool BgpXmppChannel::ProcessEnetItem(string vrf_name,
 
     DBRequest req;
     ExtCommunitySpec ext;
+    LargeCommunitySpec largecomm;
     req.key.reset(new EvpnTable::RequestKey(evpn_prefix, peer_.get()));
 
     IpAddress nh_address(Ip4Address(0));
@@ -1987,11 +2011,19 @@ bool BgpXmppChannel::ProcessEnetItem(string vrf_name,
             if (bgp_server_->autonomous_system() <= 0xFFFF) {
                 Tag tag(bgp_server_->autonomous_system(), *tit);
                 ext.communities.push_back(tag.GetExtCommunityValue());
+                TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
+                for (auto value_data : tag_lc.GetLargeCommunityValue()) {
+                    largecomm.communities.push_back(value_data);
+                }
             } else {
                 Tag tag(tag_index, *tit);
                 Tag4ByteAs tag4(bgp_server_->autonomous_system(), tag_index++);
                 ext.communities.push_back(tag.GetExtCommunityValue());
                 ext.communities.push_back(tag4.GetExtCommunityValue());
+                TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
+                for (auto value_data : tag_lc.GetLargeCommunityValue()) {
+                    largecomm.communities.push_back(value_data);
+                }
             }
         }
 
@@ -2071,6 +2103,8 @@ bool BgpXmppChannel::ProcessEnetItem(string vrf_name,
 
         if (!ext.communities.empty())
             attrs.push_back(&ext);
+        if (!largecomm.communities.empty())
+            attrs.push_back(&largecomm);
 
         PmsiTunnelSpec pmsi_spec;
         if (mac_addr.IsBroadcast()) {

@@ -27,6 +27,7 @@
 #include "bgp/routing-instance/routing_instance.h"
 #include "bgp/security_group/security_group.h"
 #include "bgp/tunnel_encap/tunnel_encap.h"
+#include "bgp/large-community/tag.h"
 
 using std::string;
 using std::vector;
@@ -566,16 +567,20 @@ static void FillRoutePathLargeCommunityInfo(const LargeCommunity *largecomm,
     ShowRoutePath *show_path, vector<string> *communities) {
 
     const LargeCommunity::LargeCommunityList &v = largecomm->communities();
-    for (LargeCommunity::LargeCommunityList::const_iterator it = v.begin();
-         it != v.end(); ++it) {
+    for (const auto &lc : v) {
+        if (LargeCommunity::is_tag(lc)) {
+            TagLC tag(lc);
+            communities->push_back(tag.ToString());
+        } else {
             char temp[50];
             int len = snprintf(temp, sizeof(temp), "large community: ");
-            for (size_t i = 0; i < it->size(); i++) {
+            for (size_t i = 0; i < lc.size(); i++) {
                 len += snprintf(temp + len, sizeof(temp) - len, "%02x",
-                                (*it)[i]);
+                                lc[i]);
             }
             communities->push_back(string(temp));
         }
+    }
 }
 
 static void FillEdgeForwardingInfo(const EdgeForwarding *edge_forwarding,

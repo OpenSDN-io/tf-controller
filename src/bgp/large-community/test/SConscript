@@ -1,0 +1,31 @@
+#
+# Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
+#
+
+# -*- mode: python; -*-
+
+Import('BuildEnv')
+env = BuildEnv.Clone()
+
+env.Append(CPPPATH = [ env['TOP'] ])
+env.Append(CPPPATH = [ env['TOP'] + '/db' ])
+env.Append(CPPPATH = [ env['TOP'] + '/io' ])
+env.Append(CPPPATH = [env['TOP'] + '/tools/sandesh/library/common'])
+
+env.Append(LIBPATH = env['TOP'] + '/bgp/large-community')
+env.Append(LIBPATH = env['TOP'] + '/net')
+env.Append(LIBPATH = env['TOP'] + '/schema')
+env.Append(LIBPATH = env['TOP'] + '/bgp')
+
+env.Prepend(LIBS = ['gunit', 'large_community', 'boost_regex', 'net',
+                    'xmpp_unicast', 'bgp_xmpp', 'xmpp_mvpn'])
+
+tag_test = env.UnitTest('tag_test', ['tag_test.cc'])
+env.Alias('src/bgp/large-community:tag_test', tag_test)
+
+test_suite = [
+    tag_test,
+]
+
+test = env.TestSuite('bgp-test', test_suite)
+env.Alias('controller/src/bgp/large-community:test', test)

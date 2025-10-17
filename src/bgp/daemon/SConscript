@@ -11,6 +11,7 @@ libs = [
     'routing_instance',
     'routing_policy',
     'extended_community',
+    'large_community',
     'security_group',
     'tunnel_encap',
     'origin_vn',
@@ -42,6 +43,7 @@ feature_libs = [
     'bgp_l3vpn',
     'bgp_mvpn',
     'extended_community',
+    'large_community',
     'rtarget',
 ]
 
@@ -61,6 +63,7 @@ libpath = [
     '../ermvpn',
     '../evpn',
     '../extended-community',
+    '../large-community',
     '../l3vpn',
     '../mvpn',
     '../origin-vn',
