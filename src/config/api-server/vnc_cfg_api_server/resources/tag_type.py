@@ -28,6 +28,7 @@ class TagTypeServer(ResourceMixin, TagType):
                     32768-65535"
             return False, (400, msg)
         # Allocate ID for tag-type
+
         try:
             type_id = cls.vnc_zk_client.alloc_tag_type_id(type_str,
                                                           tag_type_id)
@@ -51,10 +52,40 @@ class TagTypeServer(ResourceMixin, TagType):
     @classmethod
     def pre_dbe_update(cls, id, fq_name, obj_dict, db_conn, **kwargs):
         # User can't update type or value once created
-        if obj_dict.get('display_name') or obj_dict.get('tag_type_id'):
-            msg = "Tag Type value or ID cannot be updated"
+        if obj_dict.get('display_name'):
+            msg = "Tag Type value cannot be updated"
             return False, (400, msg)
-
+        # Free old value
+        ok, read_result = cls.dbe_read(cls.db_conn, 'tag_type', id)
+        if not ok:
+            return False, (400, f"Tag type {id} not found")
+        cls.vnc_zk_client.free_tag_type_id(
+            int(read_result['tag_type_id'], 0),
+            read_result['fq_name'][-1],
+        )
+        cls.vnc_zk_client.free_tag_type_id(
+            int(read_result['tag_type_id'], 0),
+            read_result['fq_name'][-1],
+            notify=True
+        )
+        # alloc new one
+        cls.vnc_zk_client.alloc_tag_type_id(
+            read_result['fq_name'][-1],
+            int(obj_dict['tag_type_id'], 0),
+        )
+        if 'tag_back_refs' in read_result:
+            for tag in read_result['tag_back_refs']:
+                ok, tag_db = cls.db_conn.dbe_read("tag", tag['uuid'])
+                if not ok:
+                    return False, (400, f"Tag {tag['uuid']} not found")
+                old_tag_id = int(tag_db['tag_id'], 16)
+                old_tag_value_id = old_tag_id & 0xFFFF
+                new_tag_type_id = int(obj_dict['tag_type_id'], 16)
+                new_tag_id = (new_tag_type_id << 16) | old_tag_value_id
+                new_tag_id_str = f"0x{new_tag_id:04X}"
+                tag_dict = {"tag_id": new_tag_id_str, 'force': 'yes'}
+                cls.server.internal_request_update("tag", tag_db['uuid'],
+                                                   tag_dict)
         return True, ""
 
     @classmethod

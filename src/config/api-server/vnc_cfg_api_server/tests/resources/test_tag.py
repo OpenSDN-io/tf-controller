@@ -100,7 +100,6 @@ class TestTag(TestTagBase):
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
         tag_uuid = self.api.tag_create(tag)
         tag = self.api.tag_read(id=tag_uuid)
-
         tag.tag_type_name = 'new_fake_type-%s' % self.id()
         self.assertRaises(BadRequest, self.api.tag_update, tag)
 
@@ -116,7 +115,6 @@ class TestTag(TestTagBase):
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
         tag_uuid = self.api.tag_create(tag)
         tag = self.api.tag_read(id=tag_uuid)
-
         tag.tag_value = 'new_fake_type-%s' % self.id()
         self.assertRaises(BadRequest, self.api.tag_update, tag)
 
@@ -217,15 +215,19 @@ class TestTag(TestTagBase):
         ud_tag_obj = self.api.tag_read(id=ud_tag_uuid)
         self.assertEqual(ud_tag_id, ud_tag_obj.tag_id.lower())
 
-    def test_tag_id_cannot_be_updated(self):
+    def test_tag_id_updated(self):
         tag_type = 'fake_type-%s' % self.id()
         tag_value = 'fake_value-%s' % self.id()
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
+        tag.tag_id = '0xdeacbeef'
         tag_uuid = self.api.tag_create(tag)
         tag = self.api.tag_read(id=tag_uuid)
-
-        tag.tag_id = '0x0ead0eef'
-        self.assertRaises(BadRequest, self.api.tag_update, tag)
+        tag.tag_id = '0xdeacbeea'
+        self.api.tag_update(tag)
+        tag_update = self.api.tag_read(id=tag_uuid)
+        self.assertEqual(tag.tag_id,
+                         tag_update.tag_id.lower())
+        self.api.tag_delete(id=tag_uuid)
 
     def test_tag_type_reference_cannot_be_set(self):
         tag_value = 'fake_value-%s' % self.id()
@@ -940,3 +942,22 @@ class TestTag(TestTagBase):
                                   OP_POST, url, json.dumps(tags_dict))
             else:
                 self.api._request_server(OP_POST, url, json.dumps(tags_dict))
+
+    def test_tag_type_name_cannot_be_updated(self):
+        pass
+        tag_type = 'fake_type-%s' % self.id()
+        tag_value = 'fake_value-%s' % self.id()
+        tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
+        tag_uuid = self.api.tag_create(tag)
+        tag = self.api.tag_read(id=tag_uuid)
+        tag.tag_type_name = 'hello'
+        self.assertRaises(BadRequest, self.api.tag_update, tag)
+
+    def test_tag_id_second_16_bit_cannot_be_updated(self):
+        tag_type = 'fake_type-%s' % self.id()
+        tag_value = 'fake_value-%s' % self.id()
+        tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
+        tag_uuid = self.api.tag_create(tag)
+        tag = self.api.tag_read(id=tag_uuid)
+        tag.tag_id = '0x0ead0eec'
+        self.assertRaises(BadRequest, self.api.tag_update, tag)

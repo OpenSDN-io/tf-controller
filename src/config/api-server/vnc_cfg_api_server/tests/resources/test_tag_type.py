@@ -63,21 +63,26 @@ class TestTagType(TestTagBase):
         self.assertEqual(tag_type.tag_type_id, "0xbeef")
         self.api.tag_type_delete(id=tag_type_uuid)
 
-    def test_tag_type_id_cannot_be_updated(self):
+    def test_tag_type_id_updated(self):
         tag_type = TagType(name='tag-type-%s' % self.id())
         tag_type_uuid = self.api.tag_type_create(tag_type)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         tag_type.tag_type_id = '0x0eef'
-        self.assertRaises(BadRequest, self.api.tag_type_update, tag_type)
+        self.api.tag_type_update(tag_type)
+        tag_type_update = self.api.tag_type_read(id=tag_type_uuid)
+        self.assertEqual(tag_type.tag_type_id,
+                         tag_type_update.tag_type_id.lower())
 
-    def test_ud_tag_type_id_cannot_be_updated(self):
+    def test_ud_tag_type_updated(self):
         tag_type = TagType(name='tag-type-%s' % self.id(),
                            tag_type_id="0x8eef")
         tag_type_uuid = self.api.tag_type_create(tag_type)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         tag_type.tag_type_id = '0xbeef'
-        self.assertRaises(BadRequest, self.api.tag_type_update, tag_type)
-        self.api.tag_type_delete(id=tag_type_uuid)
+        self.api.tag_type_update(tag_type)
+        tag_type_update = self.api.tag_type_read(id=tag_type_uuid)
+        self.assertEqual(tag_type.tag_type_id,
+                         tag_type_update.tag_type_id.lower())
 
     def test_ud_tag_type_id_cannot_be_assigned_to_multiple_tag_types(self):
         tag_type = TagType(name='tag-type-%s' % self.id(),
