@@ -1,7 +1,4 @@
 contrail-config-common==0.1.dev0
-contrail-api-client==0.1.dev0
-sandesh==0.1.dev0
-sandesh_common==0.1.dev0
 keystonemiddleware
 keystoneauth1
 gevent

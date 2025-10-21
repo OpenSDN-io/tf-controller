@@ -45,11 +45,11 @@ from netaddr import IPAddress
 from sandesh_common.vns.constants import DEVICE_MANAGER_KEYSPACE_NAME
 from vnc_api.vnc_api import VirtualNetwork
 
-from .ansible_base import AnsibleBase
-from .device_conf import DeviceConf
-from .dm_utils import DMIndexer
-from .dm_utils import DMUtils
-from .dm_utils import PushConfigState
+from device_manager.ansible_base import AnsibleBase
+from device_manager.device_conf import DeviceConf
+from device_manager.dm_utils import DMIndexer
+from device_manager.dm_utils import DMUtils
+from device_manager.dm_utils import PushConfigState
 
 
 class DBBaseDM(DBBase):
@@ -577,7 +577,7 @@ class PhysicalRouterDM(DBBaseDM):
     # end use_ansible_plugin
 
     def reinit_device_plugin(self):
-        from .feature_base import FeatureBase
+        from device_manager.plugins.feature.feature_base import FeatureBase
         plugin_params = {
             "physical_router": self
         }

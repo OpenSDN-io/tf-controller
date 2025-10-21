@@ -9,11 +9,11 @@ from cfgm_common.vnc_logger import ConfigServiceLogger
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from sandesh_common.vns.ttypes import Module
 
-from .db import BgpRouterDM, FeatureFlagDM, FloatingIpDM, InstanceIpDM, \
-    LogicalInterfaceDM, \
+from device_manager.db import BgpRouterDM, FeatureFlagDM, FloatingIpDM, \
+    InstanceIpDM, LogicalInterfaceDM, \
     LogicalRouterDM, PhysicalInterfaceDM, PhysicalRouterDM, PortTupleDM, \
     RoutingInstanceDM, VirtualMachineInterfaceDM, VirtualNetworkDM
-from .sandesh.dm_introspect import ttypes as sandesh
+from device_manager.sandesh.dm_introspect import ttypes as sandesh
 
 
 class DeviceManagerLogger(ConfigServiceLogger):

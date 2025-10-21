@@ -1,9 +1,5 @@
 import gevent
-import sys
 from cfgm_common.tests import test_common
-sys.path.insert(0, '../../../../build/production/config/device-manager/')
-sys.path.insert(0, '../../../../build/debug/config/device-manager/device_manager')
-sys.path.insert(0, '../../../../build/debug/config/device-manager/device_api')
 
 from vnc_api.vnc_api import *
 from random import randint
@@ -15,7 +11,11 @@ from .test_dm_utils import FakeNetconfManager
 from .test_dm_utils import fake_netconf_connect
 from .test_dm_utils import fake_send_netconf
 from .test_dm_utils import fake_job_handler_push
-from device_manager import mx_conf, qfx_5k, qfx_10k, overlay_conf
+from device_manager.plugins.juniper.mx import mx_conf
+from device_manager.plugins.juniper.qfx.series5K import qfx_5k
+from device_manager.plugins.juniper.qfx.series10K import qfx_10k
+from device_manager.plugins.ansible.overlay import overlay_conf
+
 
 class DMTestCase(test_common.TestCase):
     GSC = 'default-global-system-config'

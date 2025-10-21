@@ -10,11 +10,11 @@ from abstract_device_api.abstract_device_xsd import Feature, Firewall, \
     FirewallFilter, From, NatRule, NatRules, RoutingInstance, Term, Then
 import gevent
 
-from .db import GlobalVRouterConfigDM, LogicalRouterDM, PhysicalInterfaceDM, \
+from device_manager.db import GlobalVRouterConfigDM, LogicalRouterDM, PhysicalInterfaceDM, \
     RoutingInstanceDM, VirtualMachineInterfaceDM, VirtualNetworkDM, \
     VirtualPortGroupDM
-from .dm_utils import DMUtils
-from .feature_base import FeatureBase
+from device_manager.dm_utils import DMUtils
+from device_manager.plugins.feature.feature_base import FeatureBase
 
 
 class JunosInterface(object):

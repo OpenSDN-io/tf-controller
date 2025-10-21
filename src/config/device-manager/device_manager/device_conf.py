@@ -8,7 +8,7 @@ This file contains implementation plugin base class for device config module
 
 import abc
 import sys
-from .imports import import_plugins
+from device_manager.plugins.imports import import_plugins
 #
 # Base Class for all plugins. pluigns must implement all abstract methods
 #

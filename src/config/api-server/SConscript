@@ -6,49 +6,29 @@ import os
 Import('CfgmEnv')
 env = CfgmEnv.Clone()
 
-setup_sources = [
-    '.stestr.conf',
-    'MANIFEST.in',
-    'README.md',
-    'requirements.txt',
-    'setup.py',
-    'setup.cfg',
-    'test-requirements.txt',
-    'tox.ini',
-    'vnc_cfg_api_server',
-]
-
-setup_sources_rules = []
-for file in setup_sources:
-    setup_sources_rules.append(
-        env.Install(Dir('.'), "#controller/src/config/api-server/" + file))
+base_path = '#controller/src/config/api-server/'
 
 sandesh_trace_pkg = env.SandeshGenPy(
-    'traces.sandesh', 'vnc_cfg_api_server/sandesh/', False)
-
-sdist_depends = setup_sources_rules + sandesh_trace_pkg
-cd_cmd = 'cd ' + Dir('.').path + ' && '
-sdist_gen = env.Command(
-    'dist/contrail-api-server-%s.tar.gz' % env.GetPyVersion(),
-    'setup.py',
-    cd_cmd + 'python3 setup.py sdist')
-
-env.Depends(sdist_gen, sdist_depends)
-env.Default(sdist_gen)
+    'traces.sandesh', base_path + 'vnc_cfg_api_server/sandesh/', False)
 
 # Documentation
-doc_files = []
-doc_files += env.SandeshGenDoc('traces.sandesh')
-doc_files += env['CFGM_DOC_FILES']
-
 if 'install' in BUILD_TARGETS:
-    install_whl_cmd = env.Command(
-        None, 'setup.py',
-        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
-    env.Depends(install_whl_cmd, sdist_gen)
-    env.Alias('install', install_whl_cmd)
+    doc_files = []
+    doc_files += env.SandeshGenDoc('traces.sandesh')
+    doc_files += env['CFGM_DOC_FILES']
+    env.Alias('install', env.Install(
+        env['INSTALL_MESSAGE_DOC'] + '/contrail-api/', doc_files))
 
-env.Alias('install', env.Install(
-    env['INSTALL_MESSAGE_DOC'] + '/contrail-api/', doc_files))
+sdist_gen = env.Command(
+    '/pip/contrail_api_server-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
+env.Depends(sdist_gen, sandesh_trace_pkg)
+env.Alias('install', sdist_gen)
 
-env.SetupPyTestSuite(sdist_gen, use_tox=True)
+deps = [
+    '/pip/sandesh-0.1.dev0-py3-none-any.whl',
+    '/pip/sandesh_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_client-0.1.dev0-py3-none-any.whl',
+    '/pip/cfgm_common-0.1.dev0-py3-none-any.whl',
+]
+env.SetupPyTestSuiteWithDeps(sdist_gen, sdist_depends=deps, top_dir=Dir(base_path).abspath)

@@ -10,10 +10,10 @@ from abstract_device_api.abstract_device_xsd import (
 )
 import netaddr
 
-from .db import AccessControlListDM, LogicalInterfaceDM, SecurityGroupDM, \
+from device_manager.db import AccessControlListDM, LogicalInterfaceDM, SecurityGroupDM, \
     VirtualNetworkDM
-from .dm_utils import DMUtils
-from .feature_base import FeatureBase
+from device_manager.dm_utils import DMUtils
+from device_manager.plugins.feature.feature_base import FeatureBase
 
 
 class SecurityGroupFeature(FeatureBase):

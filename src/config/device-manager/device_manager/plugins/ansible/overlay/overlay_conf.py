@@ -6,7 +6,7 @@
 
 from abstract_device_api.abstract_device_xsd import *
 
-from .ansible_conf import AnsibleConf
+from device_manager.plugins.ansible.ansible_conf import AnsibleConf
 
 
 class OverlayConf(AnsibleConf):

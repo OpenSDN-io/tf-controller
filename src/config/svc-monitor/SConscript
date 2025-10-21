@@ -6,111 +6,43 @@ import os
 Import('CfgmEnv')
 env = CfgmEnv.Clone()
 
-sources = [
-    'setup.py',
-    'requirements.txt',
-    'test-requirements.txt',
-    '.stestr.conf',
-    'tox.ini',
-    'MANIFEST.in',
-    'svc_monitor/__init__.py',
-    'svc_monitor/agent.py',
-    'svc_monitor/agent_manager.py',
-    'svc_monitor/svc_monitor.py',
-    'svc_monitor/instance_manager.py',
-    'svc_monitor/virtual_machine_manager.py',
-    'svc_monitor/vrouter_instance_manager.py',
-    'svc_monitor/physical_service_manager.py',
-    'svc_monitor/config_db.py',
-    'svc_monitor/db.py',
-    'svc_monitor/loadbalancer_agent.py',
-    'svc_monitor/logger.py',
-    'svc_monitor/nova_client.py',
-    'svc_monitor/port_tuple.py',
-    'svc_monitor/reaction_map.py',
-    'svc_monitor/module_logger.py',
-    'svc_monitor/scheduler/__init__.py',
-    'svc_monitor/scheduler/vrouter_scheduler.py',
-    'svc_monitor/services/__init__.py',
-    'svc_monitor/services/loadbalancer/__init__.py',
-    'svc_monitor/services/loadbalancer/drivers/__init__.py',
-    'svc_monitor/services/loadbalancer/drivers/abstract_driver.py',
-    'svc_monitor/services/loadbalancer/drivers/f5/__init__.py',
-    'svc_monitor/services/loadbalancer/drivers/f5/f5_driver.py',
-    'svc_monitor/services/loadbalancer/drivers/f5/f5_driver_v2.py',
-    'svc_monitor/services/loadbalancer/drivers/native/__init__.py',
-    'svc_monitor/services/loadbalancer/drivers/native/driver.py',
-    'svc_monitor/services/loadbalancer/drivers/ha_proxy/__init__.py',
-    'svc_monitor/services/loadbalancer/drivers/ha_proxy/driver.py',
-    'svc_monitor/services/loadbalancer/drivers/ha_proxy/haproxy_config.py',
-    'svc_monitor/services/loadbalancer/drivers/ha_proxy/custom_attributes/custom_attributes.yml',
-    'svc_monitor/services/loadbalancer/drivers/ha_proxy/custom_attributes/__init__.py',
-    'svc_monitor/services/loadbalancer/drivers/ha_proxy/custom_attributes/haproxy_validator.py',
-    'svc_monitor/snat_agent.py',
-    'svc_monitor/tests/__init__.py',
-    'svc_monitor/tests/test_common_utils.py',
-    'svc_monitor/tests/test_svc_monitor.py',
-    'svc_monitor/tests/test_vrouter_instance_manager.py',
-    'svc_monitor/tests/test_virtual_machine_manager.py',
-    'svc_monitor/tests/test_ha_proxy.py',
-    'svc_monitor/tests/test_snat.py',
-    'svc_monitor/tests/test_snat_agent.py',
-    'svc_monitor/tests/test_loadbalancer_agent.py',
-    'svc_monitor/tests/test_config_db.py',
-    'svc_monitor/tests/test_f5_lb.py',
-    'svc_monitor/tests/test_port_tuple.py',
-    'svc_monitor/tests/fake_lb_driver.py',
-    'svc_monitor/tests/scheduler/__init__.py',
-    'svc_monitor/tests/scheduler/test_vrouter_schedulers.py',
-    'svc_monitor/tests/test_lbaas_custom_attributes.py',
-]
+base_path = '#controller/src/config/svc-monitor/'
 
+sources = []
 sources += env.SandeshGenPy('svc_mon_introspect.sandesh',
-                            'svc_monitor/sandesh/', False)
+                            base_path + 'svc_monitor/sandesh/', False)
 sources += env.SandeshGenPy('#controller/src/vnsw/agent/uve/loadbalancer.sandesh',
-                            'svc_monitor/sandesh/', False)
+                            base_path + 'svc_monitor/sandesh/', False)
 sources += env.SandeshGenPy('port_tuple.sandesh',
-                            'svc_monitor/sandesh/', False)
+                            base_path + 'svc_monitor/sandesh/', False)
 sources += env.SandeshGenPy('snat_agent.sandesh',
-                            'svc_monitor/sandesh/', False)
-
-cd_cmd = 'cd ' + Dir('.').path + ' && '
-pyver = env.GetPyVersion()
-sdist_gen = env.Command('dist/svc_monitor-%s.tar.gz' % pyver,
-                        sources,
-                        cd_cmd + 'python3 setup.py sdist')
-env.Alias(Dir('.').srcnode().path + ':sdist', sdist_gen)
-
-# Documentation
-doc_files = []
-doc_files += env.SandeshGenDoc('svc_mon_introspect.sandesh')
-doc_files += env['CFGM_DOC_FILES']
-doc_files += env.SandeshGenDoc('#controller/src/vnsw/agent/uve/loadbalancer.sandesh')
-doc_files += env['CFGM_DOC_FILES']
-doc_files += env.SandeshGenDoc('port_tuple.sandesh')
-doc_files += env.SandeshGenDoc('snat_agent.sandesh')
+                            base_path + 'svc_monitor/sandesh/', False)
 
 if 'install' in BUILD_TARGETS:
-    install_whl_cmd = env.Command(
-        None, sources,
-        cd_cmd + 'python3 setup.py bdist_wheel --dist-dir /pip')
-    env.Alias('install', install_whl_cmd)
+    # Documentation
+    doc_files = []
+    doc_files += env.SandeshGenDoc('svc_mon_introspect.sandesh')
+    doc_files += env['CFGM_DOC_FILES']
+    doc_files += env.SandeshGenDoc('#controller/src/vnsw/agent/uve/loadbalancer.sandesh')
+    doc_files += env['CFGM_DOC_FILES']
+    doc_files += env.SandeshGenDoc('port_tuple.sandesh')
+    doc_files += env.SandeshGenDoc('snat_agent.sandesh')
+    env.Alias('install', env.Install(
+        env['INSTALL_MESSAGE_DOC'] + '/contrail-svc-monitor/', doc_files))
 
-env.Alias('install', env.Install(
-    env['INSTALL_MESSAGE_DOC'] + '/contrail-svc-monitor/', doc_files))
+sdist_gen = env.Command(
+    '/pip/svc_monitor-0.1.dev0-py3-none-any.whl', 'setup.py',
+    'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
+env.Depends(sdist_gen, sources)
+env.Alias('install', sdist_gen)
 
-test_target = env.SetupPyTestSuite(
-    sdist_gen,
-    '/config/api-server/dist/contrail-api-server-%s.tar.gz' % pyver,
-    use_tox=True)
-
-# SetupPyTestSuite* methods don't return any targets (see review 40381)
-# so until it's merged we add the broken target here directly, by referencing
-# a target created by SetupPyTestSuite.
-test_target = Dir('.').srcnode().path + ':test'
-env.Alias('controller/src/config/svc-monitor/svc_monitor:test', test_target)
-env.Alias('controller/src/config/svc_monitor:test', test_target)
-
-# Local Variables:
-# mode: python
-# End:
+deps = [
+    '/pip/sandesh-0.1.dev0-py3-none-any.whl',
+    '/pip/sandesh_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_client-0.1.dev0-py3-none-any.whl',
+    '/pip/cfgm_common-0.1.dev0-py3-none-any.whl',
+    '/pip/contrail_api_server-0.1.dev0-py3-none-any.whl',
+]
+test = env.SetupPyTestSuiteWithDeps(sdist_gen, sdist_depends=deps, top_dir=Dir(base_path).abspath)
+# add alias with underscore - it's hard-coded with it instead of dash
+env.Alias('controller/src/config/svc_monitor:test', test)

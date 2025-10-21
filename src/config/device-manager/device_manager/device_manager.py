@@ -26,8 +26,9 @@ from pysandesh.gen_py.process_info.ttypes import ConnectionType as ConnType
 import requests
 from vnc_api.vnc_api import VncApi
 
-from .ansible_base import AnsibleBase
-from .db import AccessControlListDM, BgpRouterDM, DataCenterInterconnectDM, \
+from device_manager.ansible_base import AnsibleBase
+from device_manager.db import AccessControlListDM, BgpRouterDM, \
+    DataCenterInterconnectDM, \
     DBBaseDM, DMCassandraDB, E2ServiceProviderDM, FabricDM, \
     FabricNamespaceDM, FeatureConfigDM, FeatureDM, \
     FeatureFlagDM, FloatingIpDM, \
@@ -43,12 +44,12 @@ from .db import AccessControlListDM, BgpRouterDM, DataCenterInterconnectDM, \
     ServiceEndpointDM, ServiceInstanceDM, ServiceObjectDM, ServiceTemplateDM, \
     SflowProfileDM, StormControlProfileDM, TagDM, TelemetryProfileDM, \
     VirtualMachineInterfaceDM, VirtualNetworkDM, VirtualPortGroupDM
-from .device_conf import DeviceConf
-from .dm_amqp import DMAmqpHandle
-from .dm_utils import PushConfigState
-from .fabric_manager import FabricManager
-from .feature_base import FeatureBase
-from .logger import DeviceManagerLogger
+from device_manager.device_conf import DeviceConf
+from device_manager.dm_amqp import DMAmqpHandle
+from device_manager.dm_utils import PushConfigState
+from device_manager.fabric_manager import FabricManager
+from device_manager.logger import DeviceManagerLogger
+from device_manager.plugins.feature.feature_base import FeatureBase
 monkey.patch_all() # noqa
 
 

@@ -17,13 +17,13 @@ import gevent
 from gevent import monkey
 import psutil
 
-from .device_job_manager import DeviceJobManager
-from .device_ztp_manager import DeviceZtpManager
-from .dm_amqp import DMAmqpHandle
-from .dm_server_args import parse_args
-from .logger import DeviceManagerLogger
+from device_manager.device_job_manager import DeviceJobManager
+from device_manager.device_ztp_manager import DeviceZtpManager
+from device_manager.dm_amqp import DMAmqpHandle
+from device_manager.dm_server_args import parse_args
+from device_manager.logger import DeviceManagerLogger
 
-from .device_manager import DeviceManager # noqa
+from device_manager.device_manager import DeviceManager # noqa
 monkey.patch_all() # noqa
 
 

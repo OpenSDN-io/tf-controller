@@ -1,1 +1,5 @@
 mock
+stestr
+os-testr
+junitxml
+docker-py

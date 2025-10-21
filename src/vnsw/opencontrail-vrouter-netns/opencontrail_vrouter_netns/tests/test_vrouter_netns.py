@@ -71,19 +71,19 @@ class NetnsManagerTest(unittest.TestCase):
 
         self.mock_post.assert_called_with(
             'http://localhost:9091/port',
-            headers={'content-type': 'application/json'},
-            data=('{"tx-vlan-id": -1, '
-                  '"ip-address": "172.16.0.12", '
-                  '"display-name": null, '
-                  '"id": "%s", '
-                  '"instance-id": "fake_vm_uuid", '
-                  '"ip6-address": "", '
-                  '"rx-vlan-id": -1, '
-                  '"vn-id": "", '
-                  '"vm-project-id": "", '
-                  '"type": 1, '
-                  '"mac-address": "00-11-22-33-44-55", '
-                  '"system-name": "tap1234"}') % NIC1_UUID)
+            data='{"ip-address": "172.16.0.12", '
+                '"tx-vlan-id": -1, '
+                '"display-name": null, '
+                '"id": "%s", '
+                '"instance-id": "fake_vm_uuid", '
+                '"ip6-address": "", '
+                '"rx-vlan-id": -1, '
+                '"system-name": "tap1234", '
+                '"vn-id": "", '
+                '"vm-project-id": "", '
+                '"type": 1, '
+                '"mac-address": "00-11-22-33-44-55"}' % NIC1_UUID,
+            headers={'content-type': 'application/json'})
 
     def test_add_port_to_agent_fails(self):
         self.assertRaises(ValueError,

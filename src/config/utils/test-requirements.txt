@@ -1,3 +1,4 @@
+contrail-api-server==0.1.dev0
 stestr
 os-testr
 junitxml
@@ -9,5 +10,4 @@ greenlet
 flexmock==0.10.4
 mock
 WebTest==2.0.34
-contrail-api-server==0.1.dev0
 extras

@@ -10,10 +10,10 @@ from abstract_device_api.abstract_device_xsd import (
     Bgp, Feature, PortParameters
 )
 
-from .db import InstanceIpDM, LogicalInterfaceDM, PhysicalInterfaceDM, \
+from device_manager.db import InstanceIpDM, LogicalInterfaceDM, PhysicalInterfaceDM, \
     PhysicalRouterDM
-from .dm_utils import DMUtils
-from .feature_base import FeatureBase
+from device_manager.dm_utils import DMUtils
+from device_manager.plugins.feature.feature_base import FeatureBase
 
 
 class UnderlayIpClosFeature(FeatureBase):

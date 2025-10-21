@@ -19,3 +19,4 @@ src/cat/test/*.json
 .tox
 .stestr
 testr.subunit
+src/sandesh/common/sandesh_common/*

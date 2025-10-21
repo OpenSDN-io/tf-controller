@@ -365,6 +365,13 @@ class KMTestCase(test_common.TestCase):
         if vm_instance is None:
             vm_instance = self._vnc_lib.virtual_machine_read(id=vm_id)
 
+        # don't know how to remove just for one vm
+        # so remove for all - in this UT it's ok
+        fip_dict = self._vnc_lib.floating_ips_list(
+            fields=['virtual_machine_interface_refs'], detail=False)
+        for fip_obj in fip_dict.get('floating-ips'):
+            self._vnc_lib.floating_ip_delete(id=fip_obj['uuid'])
+
         self.vmi_clean(vm_instance)
         self._vnc_lib.virtual_machine_delete(id=vm_instance.uuid)
 

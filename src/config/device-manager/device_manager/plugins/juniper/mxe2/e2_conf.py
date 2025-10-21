@@ -14,12 +14,12 @@ from lxml import etree
 
 from netaddr import IPNetwork
 
-from .db import BgpRouterDM, E2ServiceProviderDM, LogicalInterfaceDM, \
+from device_manager.db import BgpRouterDM, E2ServiceProviderDM, LogicalInterfaceDM, \
     PhysicalRouterDM, ServiceConnectionModuleDM, ServiceEndpointDM, \
     VirtualMachineInterfaceDM, VirtualNetworkDM
-from .dm_utils import PushConfigState
-from .juniper_conf import JuniperConf
-from .e2_services_info import L2cktErrors, L2vpnErrors
+from device_manager.dm_utils import PushConfigState
+from device_manager.plugins.juniper.juniper_conf import JuniperConf
+from device_manager.plugins.juniper.mxe2.e2_services_info import L2cktErrors, L2vpnErrors
 
 class MxE2Conf(JuniperConf):
     _products = ['mx', 'vmx', 'vrr']

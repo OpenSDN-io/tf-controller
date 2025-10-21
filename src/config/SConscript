@@ -36,6 +36,7 @@ subdirs=[
     'common',
     'device-manager',
     'schema-transformer',
+    'svc-monitor',
     'utils',
     'uve',
     'vnc_openstack',
@@ -44,14 +45,3 @@ subdirs=[
 ]
 
 CfgmEnv.SConscript(dirs=subdirs, exports='CfgmEnv', duplicate = 0)
-
-#
-# Build into build/noarch
-#
-noarch_subdirs = [
-    'svc-monitor',
-]
-for sdir in noarch_subdirs:
-    CfgmEnv.SConscript('%s/SConscript' % sdir, exports='CfgmEnv',
-                       variant_dir='#build/noarch/config/%s' % sdir,
-                       duplicate = 1)

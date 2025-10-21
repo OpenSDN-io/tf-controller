@@ -8,7 +8,7 @@ import socket
 
 from cfgm_common.vnc_amqp import VncAmqpHandle
 
-from .db import DBBaseDM, PhysicalRouterDM, VirtualNetworkDM
+from device_manager.db import DBBaseDM, PhysicalRouterDM, VirtualNetworkDM
 
 
 class DMAmqpHandle(VncAmqpHandle):

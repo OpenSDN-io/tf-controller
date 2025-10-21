@@ -10,7 +10,7 @@ The specific plugins should inherit from this class.
 
 import abc
 
-from .imports import import_ansible_plugins
+from device_manager.plugins.imports import import_ansible_plugins
 
 
 #

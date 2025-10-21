@@ -12,8 +12,8 @@ from abstract_device_api.abstract_device_xsd import (
 import gevent
 from netaddr import IPAddress, IPNetwork
 
-from .db import DataCenterInterconnectDM, LogicalRouterDM, VirtualNetworkDM
-from .feature_base import FeatureBase
+from device_manager.db import DataCenterInterconnectDM, LogicalRouterDM, VirtualNetworkDM
+from device_manager.plugins.feature.feature_base import FeatureBase
 
 
 class VnInterconnectFeature(FeatureBase):

@@ -1,3 +1,6 @@
+contrail-api-server==0.1.dev0
+schema-transformer==0.1.dev0
+svc-monitor==0.1.dev0
 stestr
 os-testr
 junitxml
@@ -7,11 +10,8 @@ keystoneauth1<5.1.0
 kombu
 testtools==2.4.0
 mock
-contrail-api-server
 python-novaclient==16.0.0
 flexmock==0.10.4
 python-subunit
 WebTest==2.0.34
 pyOpenSSL
-schema-transformer==0.1.dev0
-svc-monitor==0.1.dev0
