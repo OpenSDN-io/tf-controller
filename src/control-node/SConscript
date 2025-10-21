@@ -4,7 +4,6 @@
 #
 
 Import('BuildEnv')
-import platform
 import os
 
 def MapBuildDir(dirs):
@@ -24,46 +23,8 @@ ControlNodeSandeshGenFiles = env.SandeshGenCpp('sandesh/control_node.sandesh')
 ControlNodeSandeshGenFiles.append("control_node_uve.cc")
 ControlNodeSandeshGenSrcs = env.ExtractCpp(ControlNodeSandeshGenFiles)
 
-setup_sources = [
-           'setup.py',
-           'MANIFEST.in',
-          ]
-
-setup_sources_rules = []
-for file in setup_sources:
-    setup_sources_rules.append(env.Install(Dir("."), "#controller/src/control-node/sandesh/" + file))
-
-# Generate the sandesh UVE source files
-control_node_pkg  = env.SandeshGenPy('sandesh/control_node.sandesh', 'control_node/', False)
-cpuinfo_pkg = env.SandeshGenPy('#src/contrail-common/base/sandesh/cpuinfo.sandesh', 'control_node/control_node/', False)
-process_info_pkg = env.SandeshGenPy('#src/contrail-common/base/sandesh/process_info.sandesh', 'control_node/control_node/', False)
-ifmap_pkg = env.SandeshGenPy('#controller/src/ifmap/ifmap_server_show.sandesh', 'control_node/control_node/', False)
-env.Depends(ifmap_pkg, control_node_pkg)
-env.Depends(cpuinfo_pkg, control_node_pkg)
-env.Depends(process_info_pkg, control_node_pkg)
-
-rel_path = Dir('control_node').path
-def BuildInfoAction(target, source, env):
-    env.GenerateBuildInfoPyCode(path=rel_path)
-    
-build_info_rules = [env.Command(target='control_node/buildinfo.py', source = None, action=BuildInfoAction)]
-
-cd_cmd = 'cd ' + Dir('.').path + ' && '
-sdist_depends = []
-sdist_depends.extend(setup_sources_rules)
-sdist_depends.extend(control_node_pkg)
-sdist_depends.extend(ifmap_pkg)
-sdist_depends.extend(cpuinfo_pkg)
-sdist_depends.extend(process_info_pkg)
-sdist_depends.extend(build_info_rules)
-sdist_gen = env.Command('dist', File('setup.py'), cd_cmd + 'python3 setup.py sdist')
-
-env.Depends(sdist_gen, sdist_depends)
-env.Default(sdist_gen)
-env.Alias("control-node:node_mgr", sdist_gen)
-
-libcontrail_control_uve = env.Library('control_node_uve',
-                                      ControlNodeSandeshGenSrcs);
+libcontrail_control_uve = env.Library(
+    'control_node_uve', ControlNodeSandeshGenSrcs);
 
 etcd_incl = os.environ.get('CONTRAIL_ETCD_INCL');
 
