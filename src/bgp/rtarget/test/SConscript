@@ -31,11 +31,6 @@ env.Append(LIBPATH = [env['TOP'] + '/base', env['TOP'] + '/base/test',
            env['TOP'] + '/io', env['TOP'] + '/net', env['TOP'] + '/route',
            env['TOP'] + '/schema', env['TOP'] + '/xmpp', env['TOP'] + '/xml'])
 
-etcd_incl = os.environ.get('CONTRAIL_ETCD_INCL');
-
-if etcd_incl:
-    env.Prepend(LIBS = ['etcdql','protobuf', 'grpc++', 'grpc', 'z'])
-
 env.Prepend(LIBS = ['control_test', 'bgptest', 'bgp', 'peer_sandesh',
                     'control_node', 'dbtest', 'bgp_schema', 'ifmap_vnc',
                     'task_test', 'ifmap_test_util', 'ifmap_test_util_server',

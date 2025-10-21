@@ -19,10 +19,6 @@ subdirs = [
     'ipfix'
 ]
 
-etcd_incl = os.environ.get('CONTRAIL_ETCD_INCL')
-if etcd_incl:
-   subdirs += ['grpc',]
-
 if hasattr(platform, 'dist'):
    (distname, version, _) = platform.dist()
 else:

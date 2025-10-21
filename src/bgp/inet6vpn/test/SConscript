@@ -43,17 +43,6 @@ env.Append(LIBPATH = env['TOP'] + '/xml')
 env.Append(LIBPATH = env['TOP'] + '/schema')
 env.Append(LIBPATH = env['TOP'] + '/bgp/extended-community')
 
-etcd_incl = os.environ.get('CONTRAIL_ETCD_INCL');
-
-if etcd_incl:
-    env.Prepend(LIBS = [
-                    'etcdql',
-                    'protobuf',
-                    'grpc++',
-                    'grpc',
-                    'z'
-                    ])
-
 env.Prepend(LIBS = [
                     'task_test',
                     'bgptest',

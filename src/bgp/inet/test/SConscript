@@ -44,17 +44,6 @@ env.Append(LIBPATH = env['TOP'] + '/xmpp')
 env.Append(LIBPATH = env['TOP'] + '/xml')
 env.Append(LIBPATH = env['TOP'] + '/schema')
 
-etcd_incl = os.environ.get('CONTRAIL_ETCD_INCL');
-
-if etcd_incl:
-    env.Prepend(LIBS = [
-                    'etcdql',
-                    'protobuf',
-                    'grpc++',
-                    'grpc',
-                    'z'
-                    ])
-
 env.Prepend(LIBS = [
                     'task_test',
                     'bgptest',
