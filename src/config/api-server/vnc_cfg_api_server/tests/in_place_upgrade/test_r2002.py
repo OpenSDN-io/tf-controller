@@ -1303,6 +1303,7 @@ class TestInPlaceUpgradeR2002(test_case.InPlaceUpgradeTestCase):
             'virtual_router_sriov_physical_networks': KeyValuePairs(
                 [KeyValuePair(key='physnet1', value='eth0')]),
             'annotations': {},
+            'virtual_router_tracebuffer_length': {},
             'display_name': 'some string',
         }
         obj = self.set_properties(VirtualRouter, prop_map)
@@ -1320,6 +1321,7 @@ class TestInPlaceUpgradeR2002(test_case.InPlaceUpgradeTestCase):
                 bpdu_loop_protection=False,
                 port_cos_untrust=False),
             'annotations': {},
+            'virtual_router_tracebuffer_length': {},
             'display_name': 'some string',
         }
         obj = self.set_properties(PortProfile, prop_map)
