@@ -1,39 +1,17 @@
-import os
-import platform
-from distutils.version import LooseVersion
-
-try:
-    import distro
-except ImportError:
-    pass
-
 subdirs = [
-    'gunit',
-    'http_parser',
-    'pugixml',
-    'rapidjson',
     'bind',
+    'gperftools',
+    'gunit',
     'hiredis',
+    'http_parser',
+    'ipfix',
+    'log4cplus',
+    'openvswitch',
+    'pugixml',
     'rabbitmq-c',
+    'rapidjson',
     'SimpleAmqpClient',
-    'ipfix'
 ]
-
-if hasattr(platform, 'dist'):
-   (distname, version, _) = platform.dist()
-else:
-   distname = distro.id()
-   version = distro.version(best=True)
-if distname in ['centos', 'redhat', 'rocky'] and LooseVersion(version) >= LooseVersion('7.0'):
-   subdirs += [
-      'gperftools',
-      'log4cplus',
-   ]
-
-if distname != 'rocky':
-   subdirs += [
-      'openvswitch',
-   ]
 
 for dir in subdirs:
     SConscript(dirs = dir, variant_dir = '#/build/third_party/' + dir)
