@@ -15,6 +15,7 @@ import itertools
 import logging
 import os
 import re
+import ssl
 from cassandra import cluster, auth
 try:
     from simplejson import JSONDecodeError
@@ -1620,6 +1621,14 @@ class DatabaseChecker(DatabaseManager):
         ret_errors = []
         logger = self._logger
         auth_provider = None
+        ssl_options = None
+        if self._api_args.cassandra_use_ssl:
+            ssl_options = {
+                    "ssl_version": ssl.PROTOCOL_TLS,
+                    "ca_certs": self._api_args.cassandra_ca_certs,
+                    "check_hostname": False,
+                    "cert_reqs": ssl.CERT_REQUIRED,
+                }
         if self.credentials:
             auth_provider = auth.PlainTextAuthProvider(
                 username=self.credentials.get('username'),
@@ -1630,6 +1639,7 @@ class DatabaseChecker(DatabaseManager):
                 temp_cluster = cluster.Cluster(
                     contact_points=[s[0]],
                     port=int(s[1]),
+                    ssl_options=ssl_options,
                     auth_provider=auth_provider)
             except Exception as error:
                 raise CassandraConnectionError("error, {}: {}".format(
