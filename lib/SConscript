@@ -1,6 +1,5 @@
 subdirs = [
     'bind',
-    'gperftools',
     'gunit',
     'hiredis',
     'http_parser',
@@ -9,7 +8,6 @@ subdirs = [
     'openvswitch',
     'pugixml',
     'rabbitmq-c',
-    'rapidjson',
     'SimpleAmqpClient',
 ]
 

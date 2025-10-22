@@ -18,12 +18,15 @@ openvswitch = env.Command('config.status', str(Dir(vpath)), cmd)
 env.SideEffect(libs, openvswitch)
 
 def Symlink(target, source):
-    parent = os.path.dirname(target[0].abspath)
+    parent = os.path.dirname(target.abspath)
     if not os.path.exists(parent):
         os.makedirs(parent)
 
-    if not os.path.exists(target[0].abspath):
-        os.symlink(source[0].abspath, target[0].abspath)
+    try:
+        if not os.path.exists(target.abspath):
+            os.symlink(source.abspath, target.abspath)
+    except:
+        os.listdir(parent)
 
-Symlink([Dir('#/build/include/openvswitch/include')], [Dir(vpath + '/include')])
-Symlink([Dir('#/build/include/openvswitch/lib')], [Dir(vpath + '/lib')])
+Symlink(Dir('#/build/include/openvswitch/include'), Dir(vpath + '/include'))
+Symlink(Dir('#/build/include/openvswitch/lib'), Dir(vpath + '/lib'))
