@@ -19,6 +19,7 @@
 #include <io/event_manager.h>
 #include <tbb/task.h>
 #include <base/task.h>
+#include <sandesh/sandesh_trace.h>
 
 #include <cmn/agent_cmn.h>
 
@@ -68,6 +69,9 @@ public:
 
     virtual void SetUp() {
         bgp_peer = CreateBgpPeer(Ip4Address(1), "BGP Peer1");
+        // Initialize temporary trace buffers
+        tr_buf1_ = SandeshTraceBufferCreate("Trace1", 5);
+        tr_buf2_ = SandeshTraceBufferCreate("Trace2", 5);
     }
 
     virtual void TearDown() {
@@ -76,7 +80,11 @@ public:
 
 
     void AddVrouter(const char *name, int id) {
-        AddNode("virtual-router", name, id, "");
+        AddNode("virtual-router", name, id,
+                "<virtual-router-tracebuffer-length>"
+                "    <key-value-pair><key>Trace1</key><value>10</value></key-value-pair>"
+                "    <key-value-pair><key>Trace2</key><value>20</value></key-value-pair>"
+                "</virtual-router-tracebuffer-length>");
     }
 
     void AddIpam(const char *name, int id, const char *subnet, int plen) {
@@ -173,6 +181,8 @@ public:
 
     Agent *agent;
     BgpPeer *bgp_peer;
+    SandeshTraceBufferPtr tr_buf1_;
+    SandeshTraceBufferPtr tr_buf2_;
 };
 
 /* Verify that VRouter oper object is updated with subnet information configured
@@ -244,6 +254,18 @@ TEST_F(VrouterTest, vrouter_pool2) {
     DelNode("network-ipam", "ipam1");
     DelNode("virtual-router", "vr1");
     client->WaitForIdle();
+}
+
+TEST_F(VrouterTest, vrouter_sandesh_trace) {
+    AddVrouter("vr1", 1);
+    client->WaitForIdle();
+    SandeshTraceBufferPtr tr_buf1 = SandeshTraceBufferGet("Trace1");
+    SandeshTraceBufferPtr tr_buf2 = SandeshTraceBufferGet("Trace2");
+    ASSERT_NE(tr_buf1.get(), nullptr);
+    ASSERT_NE(tr_buf2.get(), nullptr);
+    EXPECT_EQ(SandeshTraceBufferSizeGet(tr_buf1), 10);
+    EXPECT_EQ(SandeshTraceBufferSizeGet(tr_buf2), 20);
+    DelNode("virtual-router", "vr1");
 }
 
 int main(int argc, char **argv) {

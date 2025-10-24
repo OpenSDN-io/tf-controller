@@ -11,6 +11,7 @@
 #include <oper/vrouter.h>
 #include <oper/vrf.h>
 #include <oper/config_manager.h>
+#include <sandesh/sandesh_trace.h>
 
 VRouterSubnet::VRouterSubnet(const std::string& ip, uint8_t prefix_len) {
     boost::system::error_code ec;
@@ -85,7 +86,21 @@ void VRouter::ConfigAddChange(IFMapNode *node) {
         (node->GetObject());
     VRouterSubnetSet new_subnet_list;
     if (node->IsDeleted() == false) {
-        name_ = node->name();
+        const std::vector<autogen::KeyValuePair> &tblengths =
+		cfg->tracebuffer_length();
+    	int new_buf_size;
+        for (const auto& kv_pair : tblengths) {
+	    try {
+		new_buf_size = boost::lexical_cast<int>(kv_pair.value);
+	    } catch (const boost::bad_lexical_cast& e) {
+		continue;
+	    }
+	    if (new_buf_size <= 0) {
+	        continue;
+	    }
+	    SandeshTraceBufferResetSize(kv_pair.key, new_buf_size);
+	}
+    	name_ = node->name();
         display_name_ = cfg->display_name();
         IFMapNode *vr_ipam_link = agent()->config_manager()->
             FindAdjacentIFMapNode(node, "virtual-router-network-ipam");
