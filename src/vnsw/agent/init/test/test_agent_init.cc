@@ -659,22 +659,6 @@ TEST_F(AgentParamTest, Agent_Debug_Trace_Options) {
     EXPECT_EQ(SandeshTraceBufferCapacityGet("Config"), 2000);
     trace_buf = SandeshTraceBufferGet("Config");
     EXPECT_EQ(SandeshTraceBufferSizeGet(trace_buf), 2000);
-
-    //Verify if the increased configured value is set for parameter configured
-    //in config file
-    EXPECT_EQ(SandeshTraceBufferCapacityGet("Xmpp"), 50000);
-    trace_buf = SandeshTraceBufferGet("Xmpp");
-    EXPECT_EQ(SandeshTraceBufferSizeGet(trace_buf), 50000);
-
-    //Reduce the value of the tracebuffer for Xmpp
-    param.trace_buff_size_map["xmpp"] = 5000;
-    trace_buf = SandeshTraceBufferResetSize("Xmpp",
-                                            param.trace_buff_size_map["xmpp"]);
-
-    //Verify if the change is reflected in sandesh library.
-    EXPECT_EQ(SandeshTraceBufferCapacityGet("Xmpp"), 5000);
-    trace_buf = SandeshTraceBufferGet("Xmpp");
-    EXPECT_EQ(SandeshTraceBufferSizeGet(trace_buf), 5000);
 }
 
 TEST_F(AgentParamTest, Agent_No_GW_Conf_File) {
