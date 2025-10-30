@@ -39,6 +39,7 @@ env.Append(LIBPATH = env['TOP'] + '/io')
 env.Append(LIBPATH = env['TOP'] + '/ifmap')
 env.Append(LIBPATH = env['TOP'] + '/net')
 env.Append(LIBPATH = env['TOP'] + '/bgp/extended-community')
+env.Append(LIBPATH = env['TOP'] + '/bgp/large-community')
 env.Append(LIBPATH = env['TOP'] + '/route')
 env.Append(LIBPATH = env['TOP'] + '/xmpp')
 env.Append(LIBPATH = env['TOP'] + '/xml')
@@ -101,7 +102,7 @@ env.Prepend(LIBS = [
                     'gendb',
                     'boost_chrono'])
 
-env.Append(LIBS=['rt', 'extended_community'])
+env.Append(LIBS=['rt', 'extended_community', 'large_community'])
 env.Prepend(LINKFLAGS = [
     '-Wl,--whole-archive',
     '-lbgp_ermvpn',

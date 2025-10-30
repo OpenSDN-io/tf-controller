@@ -25,6 +25,7 @@
 #include "bgp/extended-community/sub_cluster.h"
 #include "bgp/extended-community/tag.h"
 #include "bgp/extended-community/vrf_route_import.h"
+#include "bgp/large-community/tag.h"
 #include "bgp/tunnel_encap/tunnel_encap.h"
 #include "bgp/origin-vn/origin_vn.h"
 #include "bgp/rtarget/rtarget_address.h"
@@ -1087,8 +1088,42 @@ string LargeCommunity::ToHexString(const LargeCommunityValue &comm) {
 }
 
 string LargeCommunity::ToString(const LargeCommunityValue &comm) {
+    if (is_tag(comm)) {
+        TagLC tag(comm);
+        return(tag.ToString());
+    }
     return ToHexString(comm);
 }
+
+void LargeCommunity::RemoveTag() {
+    for (LargeCommunityList::iterator it = communities_.begin();
+         it != communities_.end(); ) {
+        if (LargeCommunity::is_tag(*it)) {
+            it = communities_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+vector<uint64_t> LargeCommunity::GetTagList(as_t asn) const {
+    vector<uint64_t> tag_list;
+    for (const auto &lc : communities_) {
+        if (!LargeCommunity::is_tag(lc))
+            continue;
+        TagLC tag_comm(lc);
+        if (asn && tag_comm.as_number() != asn && !tag_comm.IsGlobal())
+            continue;
+        tag_list.push_back(tag_comm.tag());
+    }
+
+    sort(tag_list.begin(), tag_list.end());
+    vector<uint64_t>::iterator tag_iter = unique(tag_list.begin(),
+                                                 tag_list.end());
+    tag_list.erase(tag_iter, tag_list.end());
+    return tag_list;
+}
+
 
 LargeCommunity::LargeCommunity(LargeCommunityDB *largecomm_db,
         const LargeCommunitySpec spec) : largecomm_db_(largecomm_db) {
@@ -1131,6 +1166,21 @@ LargeCommunityPtr LargeCommunityDB::AppendAndLocate(const LargeCommunity *src,
     LargeCommunity::LargeCommunityList list;
     list.push_back(value);
     return AppendAndLocate(src, list);
+}
+
+LargeCommunityPtr LargeCommunityDB::ReplaceTagListAndLocate(
+    const LargeCommunity *src,
+    const LargeCommunity::LargeCommunityList &tag_list) {
+    LargeCommunity *clone;
+    if (src) {
+        clone = new LargeCommunity(*src);
+    } else {
+        clone = new LargeCommunity(this);
+    }
+
+    clone->RemoveTag();
+    clone->Append(tag_list);
+    return Locate(clone);
 }
 
 LargeCommunityPtr LargeCommunityDB::RemoveAndLocate(const LargeCommunity *src,

@@ -19,6 +19,7 @@
 #include "bgp/bgp_attr_base.h"
 #include "bgp/bgp_common.h"
 #include "bgp/extended-community/types.h"
+#include "bgp/large-community/types.h"
 
 class BgpAttr;
 class CommunityDB;
@@ -586,6 +587,9 @@ public:
         return communities_;
     }
 
+    /// @brief Get the list of tags with the specified ASN.
+    std::vector<uint64_t> GetTagList(as_t asn = 0) const;
+
     /// @brief Parse a string into a list of LargeCommunity values.
     static LargeCommunityList LargeCommunityFromString(
         const std::string &comm);
@@ -603,6 +607,11 @@ public:
             boost::hash_range(hash, iter->begin(), iter->end());
         }
         return hash;
+    }
+
+    /// @brief Check if the LargeCommunity value is tag.
+    static bool is_tag(const LargeCommunityValue &val) {
+        return (val[4] == BgpLargeCommunityType::TagLC);
     }
 
     /// @brief Convert a LargeCommunityValue to a human-readable string.
@@ -630,6 +639,8 @@ private:
     void Append(const LargeCommunityList &list);
     /// Remove specific LargeCommunity values.
     void Remove(const LargeCommunityList &list);
+    /// Remove all the tags.
+    void RemoveTag();
     /// Replace all existing values with the provided list.
     void Set(const LargeCommunityList &list);
 
@@ -701,6 +712,11 @@ public:
     LargeCommunityPtr RemoveAndLocate(
         const LargeCommunity *src,
         const LargeCommunity::LargeCommunityList &list);
+
+    /// @brief Replace all tags in a LargeCommunity with a new tag list.
+    LargeCommunityPtr ReplaceTagListAndLocate(
+        const LargeCommunity *src,
+        const LargeCommunity::LargeCommunityList &tag_list);
 
     /// @brief Replace all values in a LargeCommunity with a new list.
     LargeCommunityPtr SetAndLocate(

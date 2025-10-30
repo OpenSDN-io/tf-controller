@@ -132,6 +132,7 @@ env.SConscript('rtarget/SConscript', exports='BuildEnv', duplicate = 0)
 env.SConscript('security_group/SConscript', exports='BuildEnv', duplicate = 0)
 env.SConscript('tunnel_encap/SConscript', exports='BuildEnv', duplicate = 0)
 env.SConscript('extended-community/SConscript', exports='BuildEnv', duplicate = 0)
+env.SConscript('large-community/SConscript', exports='BuildEnv', duplicate = 0)
 
 env.SConscript('test/SConscript', exports='BuildEnv', duplicate = 0)
 

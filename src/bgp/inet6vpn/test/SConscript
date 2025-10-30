@@ -42,6 +42,7 @@ env.Append(LIBPATH = env['TOP'] + '/xmpp')
 env.Append(LIBPATH = env['TOP'] + '/xml')
 env.Append(LIBPATH = env['TOP'] + '/schema')
 env.Append(LIBPATH = env['TOP'] + '/bgp/extended-community')
+env.Append(LIBPATH = env['TOP'] + '/bgp/large-community')
 
 env.Prepend(LIBS = [
                     'task_test',
@@ -94,6 +95,7 @@ env.Prepend(LIBS = [
                     'boost_regex',
                     'process_info',
                     'extended_community',
+                    'large_community',
                     'io',
                     'ifmapio',
                     'cassandra_cql',

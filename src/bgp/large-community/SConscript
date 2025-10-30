@@ -1,0 +1,19 @@
+#
+# Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
+#
+
+# -*- mode: python; -*-
+
+Import('BuildEnv')
+
+env = BuildEnv.Clone()
+env.Append(CPPPATH = [ env['TOP'] ])
+env.Append(CPPPATH = [ env['TOP'] + '/db'])
+env.Append(CPPPATH = [ env['TOP'] + '/io'])
+env.Append(CPPPATH = [env['TOP'] + '/tools/sandesh/library/common'])
+
+liblarge_community = env.Library('large_community',
+                                    ['tag.cc'])
+
+large_community_test_cases = env.SConscript('test/SConscript', exports='BuildEnv',
+                                     duplicate = 0)
