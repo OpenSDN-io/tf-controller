@@ -10,8 +10,11 @@ env = CfgmEnv.Clone()
 
 base_path = '#controller/src/config/vnc_openstack/'
 
+sources = ['setup.py', 'requirements.txt']
+sources += env.AddPythonSources('vnc_openstack')
+
 sdist_gen = env.Command(
-    '/pip/vnc_openstack-0.1.dev0-py3-none-any.whl', 'setup.py',
+    '/pip/vnc_openstack-0.1.dev0-py3-none-any.whl', sources,
     'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
 env.Alias('install', sdist_gen)
 

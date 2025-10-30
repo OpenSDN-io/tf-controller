@@ -7,8 +7,11 @@ env = BuildEnv.Clone()
 
 base_path = '#controller/src/vnsw/opencontrail-vrouter-netns/'
 
+sources = ['setup.py', 'requirements.txt']
+sources += env.AddPythonSources('opencontrail_vrouter_netns')
+
 sdist_gen = env.Command(
-    '/pip/opencontrail_vrouter_netns-0.1.dev0-py3-none-any.whl', 'setup.py',
+    '/pip/opencontrail_vrouter_netns-0.1.dev0-py3-none-any.whl', sources,
     'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
 env.Alias('install', sdist_gen)
 env.Alias('controller/src/vnsw/opencontrail_vrouter_netns:sdist', sdist_gen)

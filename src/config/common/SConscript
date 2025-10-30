@@ -47,8 +47,11 @@ sdist_depends.extend(cpuinfo_pkg)
 sdist_depends.extend(process_info_pkg)
 sdist_depends.extend(build_info_rules)
 
+sources = ['setup.py', 'requirements.txt']
+sources += env.AddPythonSources('cfgm_common', excludes=['uve'])
+
 sdist_gen = env.Command(
-    '/pip/cfgm_common-0.1.dev0-py3-none-any.whl', 'setup.py',
+    '/pip/cfgm_common-0.1.dev0-py3-none-any.whl', sources,
     'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
 env.Depends(sdist_gen, sdist_depends)
 env.Alias('install', sdist_gen)
