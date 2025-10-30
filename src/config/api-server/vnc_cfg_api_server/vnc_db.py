@@ -1957,7 +1957,8 @@ class VncDbClient(object):
 
                             int_vn_uuid = None
                             for vn_ref in lr.get('virtual_network_refs') or []:
-                                if (vn_ref.get('attr', {}).get(
+                                attrs = vn_ref.get('attr')
+                                if (attrs and attrs.get(
                                       'logical_router_virtual_network_type') ==
                                       'InternalVirtualNetwork'):
                                     int_vn_uuid = vn_ref.get('uuid')
