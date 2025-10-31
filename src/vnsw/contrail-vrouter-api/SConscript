@@ -9,8 +9,11 @@ env = BuildEnv.Clone()
 
 base_path = '#controller/src/vnsw/contrail-vrouter-api/'
 
+sources = ['setup.py']
+sources += env.AddPythonSources('contrail_vrouter_api')
+
 sdist_gen = env.Command(
-    '/pip/contrail_vrouter_api-0.1.dev0-py3-none-any.whl', 'setup.py',
+    '/pip/contrail_vrouter_api-0.1.dev0-py3-none-any.whl', sources,
     'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
 env.Alias('install', sdist_gen)
 env.Alias('controller/src/vnsw/contrail_vrouter_api:sdist', sdist_gen)

@@ -8,15 +8,11 @@ env = CfgmEnv.Clone()
 
 base_path = '#controller/src/config/svc-monitor/'
 
-sources = []
-sources += env.SandeshGenPy('svc_mon_introspect.sandesh',
-                            base_path + 'svc_monitor/sandesh/', False)
-sources += env.SandeshGenPy('#controller/src/vnsw/agent/uve/loadbalancer.sandesh',
-                            base_path + 'svc_monitor/sandesh/', False)
-sources += env.SandeshGenPy('port_tuple.sandesh',
-                            base_path + 'svc_monitor/sandesh/', False)
-sources += env.SandeshGenPy('snat_agent.sandesh',
-                            base_path + 'svc_monitor/sandesh/', False)
+sources_gen = []
+sources_gen += env.SandeshGenPy('svc_mon_introspect.sandesh', base_path + 'svc_monitor/sandesh/', False)
+sources_gen += env.SandeshGenPy('#controller/src/vnsw/agent/uve/loadbalancer.sandesh', base_path + 'svc_monitor/sandesh/', False)
+sources_gen += env.SandeshGenPy('port_tuple.sandesh', base_path + 'svc_monitor/sandesh/', False)
+sources_gen += env.SandeshGenPy('snat_agent.sandesh', base_path + 'svc_monitor/sandesh/', False)
 
 if 'install' in BUILD_TARGETS:
     # Documentation
@@ -30,10 +26,13 @@ if 'install' in BUILD_TARGETS:
     env.Alias('install', env.Install(
         env['INSTALL_MESSAGE_DOC'] + '/contrail-svc-monitor/', doc_files))
 
+sources = ['setup.py', 'requirements.txt']
+sources += env.AddPythonSources('svc_monitor', excludes=['sandesh'])
+
 sdist_gen = env.Command(
-    '/pip/svc_monitor-0.1.dev0-py3-none-any.whl', 'setup.py',
+    '/pip/svc_monitor-0.1.dev0-py3-none-any.whl', sources,
     'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
-env.Depends(sdist_gen, sources)
+env.Depends(sdist_gen, sources_gen)
 env.Alias('install', sdist_gen)
 
 deps = [

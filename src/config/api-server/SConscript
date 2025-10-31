@@ -19,8 +19,11 @@ if 'install' in BUILD_TARGETS:
     env.Alias('install', env.Install(
         env['INSTALL_MESSAGE_DOC'] + '/contrail-api/', doc_files))
 
+sources = ['setup.py', 'requirements.txt']
+sources += env.AddPythonSources('vnc_cfg_api_server', excludes=['sandesh'])
+
 sdist_gen = env.Command(
-    '/pip/contrail_api_server-0.1.dev0-py3-none-any.whl', 'setup.py',
+    '/pip/contrail_api_server-0.1.dev0-py3-none-any.whl', sources,
     'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
 env.Depends(sdist_gen, sandesh_trace_pkg)
 env.Alias('install', sdist_gen)

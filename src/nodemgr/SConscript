@@ -33,8 +33,11 @@ if 'install' in BUILD_TARGETS:
 
 sdist_depends = [sandesh_sources, build_info_rules]
 
+sources = ['setup.py', 'requirements.txt']
+sources += OpEnv.AddPythonSources('nodemgr', excludes=['sandesh'])
+
 sdist_gen = OpEnv.Command(
-    '/pip/nodemgr-0.1.dev0-py3-none-any.whl', 'setup.py',
+    '/pip/nodemgr-0.1.dev0-py3-none-any.whl', sources,
     'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
 OpEnv.Depends(sdist_gen, sdist_depends)
 OpEnv.Alias('install', sdist_gen)

@@ -19,8 +19,11 @@ if 'install' in BUILD_TARGETS:
     env.Alias('install', env.Install(
         env['INSTALL_MESSAGE_DOC'] + '/contrail-schema/', doc_files))
 
+sources = ['setup.py', 'requirements.txt']
+sources += env.AddPythonSources('schema_transformer', excludes=['sandesh'])
+
 sdist_gen = env.Command(
-    '/pip/schema_transformer-0.1.dev0-py3-none-any.whl', 'setup.py',
+    '/pip/schema_transformer-0.1.dev0-py3-none-any.whl', sources,
     'cd ' + Dir(base_path).path + ' && ' + 'python3 setup.py bdist_wheel --dist-dir /pip')
 env.Depends(sdist_gen, sandesh_sources)
 env.Alias('install', sdist_gen)
