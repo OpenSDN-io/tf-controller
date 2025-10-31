@@ -15,8 +15,8 @@ class NetworkIpamServer(ResourceMixin, NetworkIpam):
     @classmethod
     def pre_dbe_create(cls, tenant_name, obj_dict, db_conn):
 
-        subnet_method = obj_dict.get('ipam_subnet_method',
-                                     'user-defined-subnet')
+        subnet_method = obj_dict.setdefault('ipam_subnet_method',
+                                            'user-defined-subnet')
         ipam_subnets = obj_dict.get('ipam_subnets')
         if ipam_subnets is not None and subnet_method != 'flat-subnet':
             msg = "ipam-subnets are allowed only with flat-subnet"

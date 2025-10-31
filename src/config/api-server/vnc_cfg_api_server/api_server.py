@@ -1921,6 +1921,9 @@ class VncApiServer(object):
             child_dict = child_obj.__dict__
             child_dict['id_perms'] = self._get_default_id_perms()
             child_dict['perms2'] = self._get_default_perms2()
+            if child_obj_type == 'network_ipam':
+                child_dict.setdefault('ipam_subnet_method',
+                                      'user-defined-subnet')
             (ok, result) = self._db_conn.dbe_alloc(child_obj_type, child_dict)
             if not ok:
                 return (ok, result)
