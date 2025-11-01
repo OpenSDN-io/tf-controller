@@ -1900,7 +1900,6 @@ void FlowEntry::GetApplicationPolicySet(const Interface *intf,
         return;
     }
 
-    MatchAclParams acl;
     const VmInterface *vm_port = NULL;
     if (intf != NULL) {
         if (intf->type() == Interface::VM_INTERFACE) {
