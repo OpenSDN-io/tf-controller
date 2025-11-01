@@ -993,8 +993,7 @@ class VncCassandraClient(object):
                 if self._filter_optimization_enabled and filters:
                     # Only works correctly if filters as OrderedDict
                     # The first filters should screen out most of the elements
-                    filter = filters.items()
-                    filter_key, filter_values = next(filter)
+                    filter_key, filter_values = filters.popitem(last=False)
 
                     rows = {'prop:%s' % filter_key: [u'%s' % json.dumps(value) for value in filter_values]}
 
@@ -1006,7 +1005,7 @@ class VncCassandraClient(object):
                         if info['type'] == obj_type:
                             coll_infos[uuid] = (info['fq_name'], uuid)
 
-                    filtered_rows = filter_rows(coll_infos=coll_infos, filters=dict(filter))
+                    filtered_rows = filter_rows(coll_infos=coll_infos, filters=dict(filters))
                     filtered_rows, ret_marker = list(filtered_rows.values()), None
                 else:
                     cols = self._cassandra_driver.xget(
