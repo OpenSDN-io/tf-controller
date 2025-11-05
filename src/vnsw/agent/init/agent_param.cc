@@ -911,203 +911,6 @@ void AgentParam::ParseCryptArguments
                         "CRYPT.crypt_interface");
 }
 
-void AgentParam::ParseTraceArguments
-(const boost::program_options::variables_map &var_map) {
-    trace_buff_size_map.clear();
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["BgpAsAService"],
-                          "TRACEBUFFSIZE.BgpAsAService");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["AgentDBwalkTrace"],
-                          "TRACEBUFFSIZE.AgentDBwalkTrace");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["BgpAsAService"],
-                          "TRACEBUFFSIZE.BgpAsAService");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["CryptTunnel"],
-                          "TRACEBUFFSIZE.CryptTunnel");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["HealthCheck"],
-                          "TRACEBUFFSIZE.HealthCheck");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["MplsTrace"],
-                          "TRACEBUFFSIZE.MplsTrace");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Multicast"],
-                          "TRACEBUFFSIZE.Multicast");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["InstanceManager"],
-                          "TRACEBUFFSIZE.InstanceManager");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["OperIfmap"],
-                          "TRACEBUFFSIZE.OperIfmap");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["PathPreference"],
-                          "TRACEBUFFSIZE.PathPreference");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["MulticastPolicy"],
-                          "TRACEBUFFSIZE.MulticastPolicy");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["TaskTrace"],
-                          "TRACEBUFFSIZE.TaskTrace");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["InterfaceMplsData"],
-                          "TRACEBUFFSIZE.InterfaceMplsData");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["VrfMplsData"],
-                          "TRACEBUFFSIZE.VrfMplsData");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["VlanMplsData"],
-                          "TRACEBUFFSIZE.VlanMplsData");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["RouteMplsData"],
-                          "TRACEBUFFSIZE.RouteMplsData");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["VersionTrace"],
-                          "TRACEBUFFSIZE.VersionTrace");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["DnsBind"],
-                          "TRACEBUFFSIZE.DnsBind");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["IFMapAgentTrace"],
-                          "TRACEBUFFSIZE.IFMapAgentTrace");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["IOTraceBuf"],
-                          "TRACEBUFFSIZE.IOTraceBuf");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["XmppMessageTrace"],
-                          "TRACEBUFFSIZE.XmppMessageTrace");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["XmppTrace"],
-                          "TRACEBUFFSIZE.XmppTrace");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Config"],
-                          "TRACEBUFFSIZE.Config");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["ControllerConnections"],
-                          "TRACEBUFFSIZE.ControllerConnections");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["ControllerInfo"],
-                          "TRACEBUFFSIZE.ControllerInfo");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["ControllerTxConfig_1"],
-                          "TRACEBUFFSIZE.ControllerTxConfig_1");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["ControllerTxConfig_2"],
-                          "TRACEBUFFSIZE.ControllerTxConfig_2");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["ControllerRouteWalker"],
-                          "TRACEBUFFSIZE.ControllerRouteWalker");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Controller"],
-                          "TRACEBUFFSIZE.Controller");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["ControllerRxRouteXmppMessage1"],
-                          "TRACEBUFFSIZE.ControllerRxRouteXmppMessage1");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["ControllerRxConfigXmppMessage1"],
-                          "TRACEBUFFSIZE.ControllerRxConfigXmppMessage1");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["ControllerRxRouteXmppMessage2"],
-                          "TRACEBUFFSIZE.ControllerRxRouteXmppMessage2");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["ControllerRxConfigXmppMessage2"],
-                          "TRACEBUFFSIZE.ControllerRxConfigXmppMessage2");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["ControllerTxXmppMessage_1"],
-                          "TRACEBUFFSIZE.ControllerTxXmppMessage_1");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["ControllerTxXmppMessage_2"],
-                          "TRACEBUFFSIZE.ControllerTxXmppMessage_2");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Acl"],
-                          "TRACEBUFFSIZE.Acl");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["VnswIfTrace"],
-                          "TRACEBUFFSIZE.VnswIfTrace");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Flow"],
-                          "TRACEBUFFSIZE.Flow");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Packet"],
-                          "TRACEBUFFSIZE.Packet");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["FlowHandler"],
-                          "TRACEBUFFSIZE.FlowHandler");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["ProuterUve"],
-                          "TRACEBUFFSIZE.ProuterUve");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["SessionStats"],
-                          "TRACEBUFFSIZE.SessionStats");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["FlowExportStats"],
-                          "TRACEBUFFSIZE.FlowExportStats");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Dhcp"],
-                          "TRACEBUFFSIZE.Dhcp");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Dhcpv6"],
-                          "TRACEBUFFSIZE.Dhcpv6");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Icmpv6"],
-                          "TRACEBUFFSIZE.Icmpv6");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Arp"],
-                          "TRACEBUFFSIZE.Arp");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Metadata"],
-                          "TRACEBUFFSIZE.Metadata");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Bfd"],
-                          "TRACEBUFFSIZE.Bfd");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Igmp"],
-                          "TRACEBUFFSIZE.Igmp");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync Error"],
-                          "TRACEBUFFSIZE.KSync Error");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["MacLearning"],
-                          "TRACEBUFFSIZE.MacLearning");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Xmpp"],
-                          "TRACEBUFFSIZE.Xmpp");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync Interface"],
-                          "TRACEBUFFSIZE.KSync Interface");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync Mpls"],
-                          "TRACEBUFFSIZE.KSync Mpls");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync Nexthop"],
-                          "TRACEBUFFSIZE.KSync Nexthop");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync Mirror"],
-                          "TRACEBUFFSIZE.KSync Mirror");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync VxLan"],
-                          "TRACEBUFFSIZE.KSync VxLan");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync VrfAssign"],
-                          "TRACEBUFFSIZE.KSync VrfAssign");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync Qos Queue Object"],
-                          "TRACEBUFFSIZE.KSync Qos Queue Object");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["KSync Forwarding class object"],
-                          "TRACEBUFFSIZE.KSync Forwarding class object");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["KSync Qos Config class object"],
-                          "TRACEBUFFSIZE.KSync Qos Config class object");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync BridgeRouteTable"],
-                          "TRACEBUFFSIZE.KSync BridgeRouteTable");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync FlowTable"],
-                          "TRACEBUFFSIZE.KSync FlowTable");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.interface.0"],
-                          "TRACEBUFFSIZE.Oper db.interface.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.healthcheck.0"],
-                          "TRACEBUFFSIZE.Oper db.healthcheck.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.crypttunnel.0"],
-                          "TRACEBUFFSIZE.Oper db.crypttunnel.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.nexthop.0"],
-                          "TRACEBUFFSIZE.Oper db.nexthop.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.vrf.0"],
-                          "TRACEBUFFSIZE.Oper db.vrf.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.vm.0"],
-                          "TRACEBUFFSIZE.Oper db.vm.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.sg.0"],
-                          "TRACEBUFFSIZE.Oper db.sg.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.tag.0"],
-                          "TRACEBUFFSIZE.Oper db.tag.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.vn.0"],
-                          "TRACEBUFFSIZE.Oper db.vn.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.mpls.0"],
-                          "TRACEBUFFSIZE.Oper db.mpls.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.acl.0"],
-                          "TRACEBUFFSIZE.Oper db.acl.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.mirror_table.0"],
-                          "TRACEBUFFSIZE.Oper db.mirror_table.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.vrf_assign.0"],
-                          "TRACEBUFFSIZE.Oper db.vrf_assign.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.policy_set.0"],
-                          "TRACEBUFFSIZE.Oper db.policy_set.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.vxlan.0"],
-                          "TRACEBUFFSIZE.Oper db.vxlan.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.qos_queue.0"],
-                          "TRACEBUFFSIZE.Oper db.qos_queue.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.forwardingclass.0"],
-                          "TRACEBUFFSIZE.Oper db.forwardingclass.0");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["Oper db.security_logging_object.0"],
-                          "TRACEBUFFSIZE.Oper db.security_logging_object.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.qos_config.0"],
-                          "TRACEBUFFSIZE.Oper db.qos_config.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.bridge_domain.0"],
-                          "TRACEBUFFSIZE.Oper db.bridge_domain.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.multicast_policy.0"],
-                          "TRACEBUFFSIZE.Oper db.multicast_policy.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.service-instance.0"],
-                          "TRACEBUFFSIZE.Oper db.service-instance.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["Oper db.physical_devices.0"],
-                          "TRACEBUFFSIZE.Oper db.physical_devices.0");
-    GetOptValue<uint32_t>(var_map,
-                          trace_buff_size_map["Oper db.physical_device_vn.0"],
-                          "TRACEBUFFSIZE.Oper db.physical_device_vn.0");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["httpbuf"],
-                          "TRACEBUFFSIZE.httpbuf");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["OperRoute"],
-                          "TRACEBUFFSIZE.OperRoute");
-    GetOptValue<uint32_t>(var_map, trace_buff_size_map["KSync Route"],
-                          "TRACEBUFFSIZE.KSync Route");
-}
-
 // Initialize hypervisor mode based on system information
 // If "/proc/xen" exists it means we are running in Xen dom0
 void AgentParam::InitFromSystem() {
@@ -1175,7 +978,6 @@ void AgentParam::ProcessArguments() {
     ParseTsnServersArguments(var_map_);
     ParseCryptArguments(var_map_);
     ParseSessionDestinationArguments(var_map_);
-    ParseTraceArguments(var_map_);
 }
 
 void AgentParam::DebugInitFromConfig() {
@@ -1187,8 +989,6 @@ void AgentParam::DebugInitFromConfig() {
         opt::basic_parsed_options<char> ParsedOptions =
             opt::parse_config_file(config_file_in, config_file_options_, true);
         boost::program_options::store(ParsedOptions, var_map);
-
-        ParseTraceArguments(var_map);
     }
     config_file_in.close();
     LOG(INFO, "Config file parsing for debug params completed. \n");
@@ -1450,7 +1250,6 @@ void AgentParam::Init(const string &config_file, const string &program_name) {
     InitFromSystem();
     InitFromConfig();
     ProcessArguments();
-    ProcessTraceArguments();
     InitVhostAndXenLLPrefix();
     UpdateBgpAsaServicePortRangeValue();
     ComputeFlowAndFileLimits();
@@ -1462,35 +1261,8 @@ void AgentParam::ReInit() {
     ReInitFromConfig();
 }
 
-void SetTraceBufferSize(const string &tracebuff, size_t size) {
-    SandeshTraceBufferPtr tb = SandeshTraceBufferGet(tracebuff);
-    if (tb && size && SandeshTraceBufferCapacityGet(tracebuff) != size) {
-        //Disable the trace before changing the buffer size
-        SandeshTraceBufferDisable(tb);
-        SandeshTraceBufferPtr trace_buf = SandeshTraceBufferResetSize(tracebuff,
-                                                                      size);
-        //Allow 30ms before enabling the trace back
-        boost::this_thread::sleep( boost::posix_time::milliseconds(30));
-        //Enable the trace
-        SandeshTraceBufferEnable(trace_buf);
-
-        LOG(INFO, "Trace Buffer size for " << tracebuff << " set to " << size);
-    }
-}
-
-void AgentParam::ProcessTraceArguments() {
-    LOG(INFO, "Processing Trace Buffer size settings");
-    for (trace_buff_size_iter = trace_buff_size_map.begin();
-         trace_buff_size_iter != trace_buff_size_map.end();
-         trace_buff_size_iter++) {
-        SetTraceBufferSize(trace_buff_size_iter->first,
-                           trace_buff_size_iter->second);
-    }
-}
-
 void AgentParam::DebugInit() {
     DebugInitFromConfig();
-    ProcessTraceArguments();
 }
 
 void AgentParam::LogFilteredConfig() const {
