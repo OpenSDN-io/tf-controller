@@ -5,16 +5,6 @@
 import os
 
 
-def get_package_version(pkg):
-
-    # retrieve current installed version of pkg
-    try:
-        cmd = 'rpm -q --qf "%%{VERSION}-%%{RELEASE}" %s' % pkg
-        return os.popen(cmd).read()
-    except Exception:
-        return None
-
-
 def is_running_in_docker():
     return os.path.exists('/.dockerenv')
 

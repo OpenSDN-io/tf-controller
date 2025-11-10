@@ -2225,30 +2225,12 @@ class VncApiServer(object):
         if self.is_auth_needed():
             self._generate_obj_view_links()
 
-        if os.path.exists('/opt/contrail/utils/contrail-version'):
-            cfgm_cpu_uve = ModuleCpuState()
-            cfgm_cpu_uve.name = socket.getfqdn(self._args.listen_ip_addr)
-            cfgm_cpu_uve.config_node_ip = self.get_server_ip()
-
-            command = "/opt/contrail/utils/contrail-version contrail-config | grep 'contrail-config'"
-            version = os.popen(command).read()
-            if version:
-                version = version.split()
-            if not version or len(version) != 3:
-                # In case of setup from source there is no RPM and version is available in env
-                version_str = os.environ.get('CONTRAIL_VERSION', 'tf-master-latest')
-                version = re.split('\.|-', version_str)[-3:]
-                if len(version) != 3:
-                    # in CI version is like changedid-changeset
-                    version = ['tf', version_str, version_str]
-            _, build_id, build_num = version[:3]
-
-            cfgm_cpu_uve.build_info = build_info + '"build-id" : "' + \
-                                      build_id + '", "build-number" : "' + \
-                                      build_num + '"}]}'
-
-            cpu_info_trace = ModuleCpuStateTrace(data=cfgm_cpu_uve, sandesh=self._sandesh)
-            cpu_info_trace.send(sandesh=self._sandesh)
+        cfgm_cpu_uve = ModuleCpuState()
+        cfgm_cpu_uve.name = socket.getfqdn(self._args.listen_ip_addr)
+        cfgm_cpu_uve.config_node_ip = self.get_server_ip()
+        cfgm_cpu_uve.build_info = build_info
+        cpu_info_trace = ModuleCpuStateTrace(data=cfgm_cpu_uve, sandesh=self._sandesh)
+        cpu_info_trace.send(sandesh=self._sandesh)
 
         self.re_uuid = re.compile('^[0-9A-F]{8}-?[0-9A-F]{4}-?4[0-9A-F]{3}-?[89AB][0-9A-F]{3}-?[0-9A-F]{12}$',
                                   re.IGNORECASE)

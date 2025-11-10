@@ -12,7 +12,7 @@ import socket
 import sys
 import time
 import logging
-from .buildinfo import build_info
+from nodemgr.common.buildinfo import build_info
 from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from pysandesh.sandesh_base import SandeshConfig, sandesh_global
@@ -79,8 +79,6 @@ class EventManager(object):
         self.prev_fail_status_bits = 1
         self.instance_id = INSTANCE_ID_DEFAULT
         self.sandesh_instance = sandesh_global
-        self.curr_build_info = None
-        self.new_build_info = None
         self.hostip = self.config.hostip
         self.hostname = socket.getfqdn(self.hostip) if self.config.hostname is None \
             else self.config.hostname
@@ -235,22 +233,6 @@ class EventManager(object):
         state, description = self._get_process_state(self.fail_status_bits)
         return state, description
 
-    def _get_build_info(self):
-        # Retrieve build_info from package/rpm and cache it
-        if self.curr_build_info is not None:
-            return self.curr_build_info
-
-        pkg_version = self._get_package_version()
-        pkg_version_parts = pkg_version.split('-')
-        build_id = pkg_version_parts[0]
-        build_number = pkg_version_parts[1] if len(pkg_version_parts) > 1 else "unknown"
-        self.new_build_info = build_info + '"build-id" : "' + \
-            build_id + '", "build-number" : "' + \
-            build_number + '"}]}'
-        if (self.new_build_info != self.curr_build_info):
-            self.curr_build_info = self.new_build_info
-        return self.curr_build_info
-
     def _update_process_core_file_list(self):
         ret_value = False
         corenames = self.system_data.get_corefiles()
@@ -321,7 +303,7 @@ class EventManager(object):
             node_status.name = name
             node_status.deleted = delete_status
             node_status.process_info = process_infos
-            node_status.build_info = self._get_build_info()
+            node_status.build_info = build_info
             node_status_uve = NodeStatusUVE(table=self.type_info._object_table,
                                             data=node_status)
             msg = ('send_process_state_db: Sending UVE: {}'.format(node_status_uve))
@@ -407,14 +389,6 @@ class EventManager(object):
         self.msg_log(msg, SandeshLevel.SYS_INFO)
         node_status_uve.send()
 
-    def _get_package_version(self):
-        pkg_version = utils.get_package_version('contrail-lib')
-        if pkg_version is None:
-            self.msg_log('Error getting %s package version' % (
-                'contrail-lib'), SandeshLevel.SYS_ERR)
-            pkg_version = "unknown"
-        return pkg_version
-
     def _send_init_info(self, group_name):
         key = next(key for key in self.process_state_db[group_name])
         # system_cpu_info
@@ -427,12 +401,7 @@ class EventManager(object):
         node_status = NodeStatus(
             name=self.process_state_db[group_name][key].name,
             system_cpu_info=sys_cpu,
-            build_info=self._get_build_info())
-
-        # installed/running package version
-        pkg_version = self._get_package_version()
-        node_status.installed_package_version = pkg_version
-        node_status.running_package_version = pkg_version
+            build_info=build_info)
 
         node_status_uve = NodeStatusUVE(table=self.type_info._object_table,
                                         data=node_status)
