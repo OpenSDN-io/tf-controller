@@ -85,7 +85,6 @@ static inline void CloseTaskFds(void) {
 }
 
 extern SandeshTraceBufferPtr OperConfigTraceBuf;
-extern bool GetBuildInfo(std::string &build_info_str);
 
 #define OPER_IFMAP_TRACE(obj, ...)\
 do {\

@@ -170,19 +170,12 @@ class Debug(object):
 
     def copy_contrail_status(self):
         print('\nTASK : copy contrail status')
-        file_path = '%s/logs/contrail_version.txt' %(self._parent_dir)
-        try:
-            f = open(file_path, 'a')
-        except Exception as e:
-            print('\nError opening file %s: %s' %(file_path, e))
-            print('\nCopying contrail-version logs : Failed')
-            return
         # run 'contrail-status' on agent node and collect the logs
         cmd = 'contrail-status'
         cmd_op = self.get_ssh_cmd_output(cmd)
         f.write(cmd_op)
         f.close()
-        print('\nCopying contrail-version logs : Success')
+        print('\nCopying contrail status logs : Success')
     # end copy_contrail_status
 
     def generate_gcore(self):

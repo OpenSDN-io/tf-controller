@@ -13,10 +13,6 @@ using std::cout;
 using std::endl;
 using std::string;
 
-bool GetBuildInfo(std::string &build_info_str) {
-    return MiscUtils::GetBuildInfo(MiscUtils::Agent, BuildInfo, build_info_str);
-}
-
 int main(int argc, char *argv[]) {
     TorAgentParam params;
 
@@ -37,9 +33,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (var_map.count("version")) {
-        string build_info;
-        MiscUtils::GetBuildInfo(MiscUtils::Agent, BuildInfo, build_info);
-        cout <<  build_info << endl;
+        cout << BuildInfo << endl;
         exit(0);
     }
 
@@ -67,9 +61,7 @@ int main(int argc, char *argv[]) {
     init.set_agent_param(&params);
     agent->set_agent_init(&init);
 
-    string build_info;
-    GetBuildInfo(build_info);
-    MiscUtils::LogVersionInfo(build_info, Category::VROUTER);
+    MiscUtils::LogVersionInfo(BuildInfo, Category::VROUTER);
 
     // kick start initialization
     int ret = 0;

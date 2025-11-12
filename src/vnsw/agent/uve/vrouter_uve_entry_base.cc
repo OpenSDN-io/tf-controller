@@ -24,6 +24,8 @@
 
 using namespace std;
 
+extern const std::string BuildInfo;
+
 VrouterUveEntryBase::VrouterUveEntryBase(Agent *agent)
     : agent_(agent), phy_intf_set_(), prev_stats_(), prev_vrouter_(),
       cpu_stats_count_(0), do_vn_walk_(false), do_vm_walk_(false),
@@ -626,7 +628,7 @@ void VrouterUveEntryBase::BuildAgentConfig(VrouterAgent &vrouter_agent) {
 bool VrouterUveEntryBase::SendVrouterMsg() {
     VrouterAgent vrouter_agent;
     bool changed = false, bgp_aas, port_mirror;
-    static bool first = true, build_info = false;
+    static bool first = true;
     vrouter_agent.set_name(agent_->agent_name());
     Ip4Address rid = agent_->router_id();
     vector<string> ip_list;
@@ -692,15 +694,10 @@ bool VrouterUveEntryBase::SendVrouterMsg() {
         changed = true;
     }
 
-    if (!build_info) {
-        string build_info_str;
-        build_info = GetBuildInfo(build_info_str);
-        if (prev_vrouter_.get_build_info() != build_info_str) {
-            vrouter_agent.set_build_info(build_info_str);
-            prev_vrouter_.set_build_info(build_info_str);
-            changed = true;
-        }
-
+    if (prev_vrouter_.get_build_info() != BuildInfo) {
+        vrouter_agent.set_build_info(BuildInfo);
+        prev_vrouter_.set_build_info(BuildInfo);
+        changed = true;
     }
 
     bgp_aas = agent_->oper_db()->bgp_as_a_service()->IsConfigured();
@@ -780,7 +777,6 @@ bool VrouterUveEntryBase::SendVrouterMsg() {
             changed = true;
         }
     }
-
 
     for (int idx = 0; idx < MAX_XMPP_SERVERS; idx++) {
         if (!agent_->dns_server(idx).empty()) {

@@ -69,10 +69,6 @@ bool is_vhost_interface_up() {
     return true;
 }
 
-bool GetBuildInfo(std::string &build_info_str) {
-    return MiscUtils::GetBuildInfo(MiscUtils::Agent, BuildInfo, build_info_str);
-}
-
 int main(int argc, char *argv[]) {
     AgentParam params;
     srand(unsigned(time(NULL)));
@@ -91,9 +87,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (var_map.count("version")) {
-        string build_info;
-        MiscUtils::GetBuildInfo(MiscUtils::Agent, BuildInfo, build_info);
-        std::cout << params.options() << std::endl;
+        std::cout << BuildInfo << std::endl;
         exit(0);
     }
 
@@ -149,9 +143,7 @@ int main(int argc, char *argv[]) {
         return ret;
     }
 
-    string build_info;
-    GetBuildInfo(build_info);
-    MiscUtils::LogVersionInfo(build_info, Category::VROUTER);
+    MiscUtils::LogVersionInfo(BuildInfo, Category::VROUTER);
 
     Agent *agent = init.agent();
     TaskScheduler::GetInstance()->set_event_manager(agent->event_manager());

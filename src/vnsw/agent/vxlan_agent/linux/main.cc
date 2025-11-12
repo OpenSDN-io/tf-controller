@@ -17,10 +17,6 @@ void RouterIdDepInit(Agent *agent) {
     LOG(DEBUG, "Router ID Dependent modules (Nova and BGP) INITIALIZED");
 }
 
-bool GetBuildInfo(std::string &build_info_str) {
-    return MiscUtils::GetBuildInfo(MiscUtils::Agent, BuildInfo, build_info_str);
-}
-
 int main(int argc, char *argv[]) {
     AgentParam params(false, false, false, false);
 
@@ -39,9 +35,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (var_map.count("version")) {
-        string build_info;
-        MiscUtils::GetBuildInfo(MiscUtils::Agent, BuildInfo, build_info);
-        cout <<  build_info << endl;
+        cout << BuildInfo << endl;
         exit(0);
     }
 
@@ -66,10 +60,8 @@ int main(int argc, char *argv[]) {
     // Initialize the agent-init control class
     LinuxVxlanAgentInit init;
     Agent *agent = init.agent();
-    string build_info;
 
-    GetBuildInfo(build_info);
-    MiscUtils::LogVersionInfo(build_info, Category::VROUTER);
+    MiscUtils::LogVersionInfo(BuildInfo, Category::VROUTER);
 
     init.set_agent_param(&params);
 

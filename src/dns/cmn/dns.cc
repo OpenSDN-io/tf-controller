@@ -30,7 +30,8 @@ uint32_t Dns::http_port_;
 uint32_t Dns::dns_port_ = ContrailPorts::DnsServerPort();
 
 bool Dns::GetVersion(string &build_info_str) {
-    return MiscUtils::GetBuildInfo(MiscUtils::Dns, BuildInfo, build_info_str);
+    build_info_str = BuildInfo;
+    return true;
 }
 
 void Dns::SetTaskSchedulingPolicy() {

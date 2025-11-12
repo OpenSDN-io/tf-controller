@@ -16,18 +16,11 @@ AgentEnv.MakeTestEnv(env)
 targets = env.IFMapAutogen('test_cfg.xsd')
 lib_srcs = [x for x in targets if re.match(r'(.*)\.cc$', x.abspath)]
 env.Library('ifmap_test', lib_srcs)
-env.Library('control_node_mock', 'control_node_mock.cc');
+env.Library('control_node_mock', 'control_node_mock.cc')
 env.Library('agent_test_buildinfo', 'test_buildinfo.cc')
 
-env.Append(LIBPATH = [
-        '../../../db/test',
-])
-
-env.Append(LIBS = [
-        'dbtest',
-        'task_test',
-        ])
-
+env.Append(LIBPATH = ['../../../db/test'])
+env.Append(LIBS = ['dbtest', 'task_test'])
 
 if platform.system() == 'Linux':
     platform_dependent = 'linux/test_util_tap.cc'

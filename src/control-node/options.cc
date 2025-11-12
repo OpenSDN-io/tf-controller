@@ -265,9 +265,7 @@ bool Options::Process(int argc, char *argv[],
     }
 
     if (var_map.count("version")) {
-        string build_info;
-        cout << MiscUtils::GetBuildInfo(MiscUtils::ControlNode, BuildInfo,
-                                        build_info) << endl;
+        cout << BuildInfo << endl;
         return false;
     }
 

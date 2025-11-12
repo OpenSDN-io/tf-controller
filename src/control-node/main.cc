@@ -400,12 +400,10 @@ int main(int argc, char *argv[]) {
     }
 
     // Set BuildInfo.
-    string build_info;
-    MiscUtils::GetBuildInfo(MiscUtils::ControlNode, BuildInfo, build_info);
     ControlNode::StartControlNodeInfoLogger(evm, 60 * 1000,
                                             bgp_server.get(),
                                             bgp_peer_manager.get(),
-                                            &ifmap_server, build_info);
+                                            &ifmap_server, BuildInfo);
 
     options.set_config_client_manager(config_client_manager);
     config_client_manager->Initialize();

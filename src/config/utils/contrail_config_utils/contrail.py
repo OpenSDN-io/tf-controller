@@ -56,7 +56,6 @@ COMMAND_LIST = {
     'list-service-template': cmd_wrapper.CmdServiceTemplateList,
     'add-service-template': cmd_wrapper.CmdServiceTemplateAdd,
     'delete-service-template': cmd_wrapper.CmdServiceTemplateDel,
-    'check-contrail-version': cmd_wrapper.CmdContrailVersion,
     'create-floating-ip-pool': cmd_wrapper.CmdCreateFloatingIPPool,
     'add-bgp-router': cmd_wrapper.CmdAddBgpRouter,
     'delete-bgp-router': cmd_wrapper.CmdDeleteBgpRouter,

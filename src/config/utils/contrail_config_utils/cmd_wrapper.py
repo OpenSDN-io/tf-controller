@@ -305,15 +305,6 @@ class CmdServiceTemplateDel(Command):
         sp.delete_st()
 
 
-class CmdContrailVersion(Command):
-
-    "Option to check contrail version"
-
-    def take_action(self, parsed_args):
-        self.app.stdout.write('Option to check contrail version\n')
-        os.system("/opt/contrail/utils/contrail-version")
-
-
 class CmdCreateFloatingIPPool(Command):
 
     "Option to create floating IP pool"
