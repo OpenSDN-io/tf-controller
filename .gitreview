@@ -2,4 +2,4 @@
 host=gerrit.opensdn.io
 port=29418
 project=opensdn-io/tf-controller.git
-defaultbranch=master
+defaultbranch=R25.1
