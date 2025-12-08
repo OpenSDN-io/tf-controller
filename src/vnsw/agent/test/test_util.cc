@@ -3724,6 +3724,21 @@ void DelLrVmiPort(const char *vmi, int intf_id, const char *ip,
     client->WaitForIdle();
 }
 
+void DelVnConnectionToLr(const char *vmi, int intf_id, const char *ip,
+                         const char *vrf, const char *vn,
+                         const char *instance_ip, int instance_uuid) {
+    DelLink("virtual-machine-interface", vmi, "virtual-network", vn);
+    DelLink("virtual-machine-interface-routing-instance", vmi,
+            "routing-instance", vrf);
+    DelLink("virtual-machine-interface-routing-instance", vmi,
+            "virtual-machine-interface", vmi);
+    DelLink("virtual-machine-interface", vmi, "instance-ip", instance_ip);
+    DelNode("virtual-machine-interface", vmi);
+    DelVmPortVrf(vmi);
+    DelInstanceIp(instance_ip);
+    client->WaitForIdle();
+}
+
 void AddVmPort(const char *vmi, int intf_id, const char *ip, const char *mac,
                const char *vrf, const char *vn, int vn_uuid, const char *vm,
                int vm_uuid, const char *instance_ip, int instance_uuid) {

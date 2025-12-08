@@ -838,6 +838,11 @@ void AddLrVmiPort(const char *vmi, int intf_id, const char *ip,
 void DelLrVmiPort(const char *vmi, int intf_id, const char *ip,
                const char *vrf, const char *vn,
                const char *instance_ip, int instance_uuid);
+/// Function to imitate deleting link between virtual network and logical
+/// router.
+void DelVnConnectionToLr(const char *vmi, int intf_id, const char *ip,
+                         const char *vrf, const char *vn,
+                         const char *instance_ip, int instance_uuid);
 void SetIgmpConfig(bool enable);
 void ClearIgmpConfig(void);
 void SetIgmpVnConfig(std::string vn_name, int vn_id, bool enable);

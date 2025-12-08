@@ -1307,17 +1307,20 @@ TEST_F(VxlanRoutingV6Test, fip_test_initial_conf_with_lr1) {
     DelLink("floating-ip", "fip1", "instance-ip", "instance61");
     DelLink("virtual-machine-interface", input[0].name, "floating-ip", "fip1");
     DelFloatingIp("fip1");
+    client->WaitForIdle();
 
     DelLrBridgeVrf("vn1", 1);
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 101, "1:1:1:1:1:1:1:101", "vrf1", "vn1",
-        "instance_ip_1", 1);
+                 "instance_ip_1", 1);
+    client->WaitForIdle();
 
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, INPUT_SIZE(input), true);
+    DeleteVmportFIpEnv(input, INPUT_SIZE(input), true, 0, "vn1", "vrf1");
     DelIPAM("vn1");
+    client->WaitForIdle();
 }
 
 TEST_F(VxlanRoutingV6Test, fip_test_initial_conf_with_lr1_not_in_mask_vn) {
@@ -1372,17 +1375,20 @@ TEST_F(VxlanRoutingV6Test, fip_test_initial_conf_with_lr1_not_in_mask_vn) {
     DelLink("floating-ip", "fip1", "instance-ip", "instance61");
     DelLink("virtual-machine-interface", input[0].name, "floating-ip", "fip1");
     DelFloatingIp("fip1");
+    client->WaitForIdle();
 
     DelLrBridgeVrf("vn1", 1);
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 101, "1:1:1:1:1:1:1:101", "vrf1", "vn1",
-        "instance_ip_1", 1);
+                 "instance_ip_1", 1);
+    client->WaitForIdle();
 
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, INPUT_SIZE(input), true);
+    DeleteVmportFIpEnv(input, INPUT_SIZE(input), true, 0, "vn1", "vrf1");
     DelIPAM("vn1");
+    client->WaitForIdle();
 }
 
 //test with "INGRESS" direction
@@ -1446,16 +1452,18 @@ TEST_F(VxlanRoutingV6Test, fip_test_initial_conf_with_lr2) {
     DelLink("floating-ip", "fip1", "instance-ip", "instance61");
     DelLink("virtual-machine-interface", input[0].name, "floating-ip", "fip1");
     DelFloatingIp("fip1");
+    client->WaitForIdle();
 
     DelLrBridgeVrf("vn1", 1);
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 101, "1:1:1:1:1:1:1:101", "vrf1", "vn1",
-        "instance_ip_1", 1);
+                 "instance_ip_1", 1);
+    client->WaitForIdle();
 
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, INPUT_SIZE(input), true);
+    DeleteVmportFIpEnv(input, INPUT_SIZE(input), true, 0, "vn1", "vrf1");
     DelIPAM("vn1");
     client->WaitForIdle();
 }
@@ -1514,16 +1522,18 @@ TEST_F(VxlanRoutingV6Test, fip_test_initial_conf_with_lr3) {
     DelLink("floating-ip", "fip1", "instance-ip", "instance61");
     DelLink("virtual-machine-interface", input[0].name, "floating-ip", "fip1");
     DelFloatingIp("fip1");
+    client->WaitForIdle();
 
     DelLrBridgeVrf("vn1", 1);
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 101, "1:1:1:1:1:1:1:101", "vrf1", "vn1",
-        "instance_ip_1", 1);
+                 "instance_ip_1", 1);
+    client->WaitForIdle();
 
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, INPUT_SIZE(input), true);
+    DeleteVmportFIpEnv(input, INPUT_SIZE(input), true, 0, "vn1", "vrf1");
     DelIPAM("vn1");
     client->WaitForIdle();
 }
@@ -1594,24 +1604,28 @@ TEST_F(VxlanRoutingV6Test, fip_test_2vrf_conf_with_lr1) {
     DelLink("floating-ip", "fip1", "instance-ip", "instance62");
     DelLink("virtual-machine-interface", input[0].name, "floating-ip", "fip1");
     DelFloatingIp("fip1");
+    client->WaitForIdle();
 
     DelLrBridgeVrf("vn2", 1);
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn2", 101, "2:2:2:2:2:2:2:101", "vrf2", "vn2",
-                    "instance_ip_2", 2);
+                 "instance_ip_2", 2);
+    client->WaitForIdle();
 
     DelLink("virtual-network", "vn2", "routing-instance", "vrf2");
     DelLink("virtual-network", "vn2", "instance-ip", "instance62");
+    client->WaitForIdle();
 
     DelInstanceIp("instance62");
     DelIPAM("vn2");
     DelVn("vn2");
     DelVrf("vrf2");
+    client->WaitForIdle();
 
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
 
-    DeleteVmportEnv(input, INPUT_SIZE(input), true);
+    DeleteVmportFIpEnv(input, INPUT_SIZE(input), true, 0, "vn1", "vrf1");
     DelIPAM("vn1");
     client->WaitForIdle();
 }
@@ -2306,6 +2320,11 @@ TEST_F(VxlanRoutingV6Test, Composite_two_interfaces_irt) {
 
     // cleanup
     client->WaitForIdle();
+    DelLink("virtual-machine-interface", "vnet1",
+            "interface-route-table", "static_route");
+    DelLink("virtual-machine-interface", "vnet2",
+            "interface-route-table", "static_route");
+    client->WaitForIdle();
     DelLrBridgeVrf("vn1", 1);
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
@@ -2400,21 +2419,25 @@ TEST_F(VxlanRoutingV6Test, Composite_two_interfaces_fip) {
 
     DelLink("floating-ip", "fip1", "instance-ip", "instance61");
     DelLink("floating-ip", "fip2", "instance-ip", "instance61");
-    DelLink("virtual-machine-interface", input[1].name, "floating-ip", "fip1");
-    DelLink("virtual-machine-interface", input[0].name, "floating-ip", "fip2");
+    DelLink("virtual-machine-interface", input[0].name, "floating-ip", "fip1");
+    DelLink("virtual-machine-interface", input[1].name, "floating-ip", "fip2");
     DelFloatingIp("fip1");
+    DelFloatingIp("fip2");
+    client->WaitForIdle();
 
     DelLrBridgeVrf("vn1", 1);
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 101, "1:1:1:1:1:1:1:101", "vrf1", "vn1",
-        "instance_ip_1", 1);
+                 "instance_ip_1", 1);
+    client->WaitForIdle();
 
     //Check that corresponding objects were deleted
     EXPECT_EQ(fip_list1.size(), 0);
     EXPECT_EQ(fip_list2.size(), 0);
 
-    DeleteVmportEnv(input, INPUT_SIZE(input), true);
+    DeleteVmportFIpEnv(input, INPUT_SIZE(input), true, 0, "vn1", "vrf1");
     DelIPAM("vn1");
+    client->WaitForIdle();
 }
 
 TEST_F(VxlanRoutingV6Test, Add_del_network) {
@@ -2516,10 +2539,11 @@ TEST_F(VxlanRoutingV6Test, Add_del_network) {
             Ip6Address::from_string("2:2:2:2:2:2:2:0"), 112, true);
     client->WaitForIdle();
 
-    DelLrVmiPort("lr-vmi-vn3", 93, "3:3:3:3:3:3:3:99", "vrf3", "vn3",
-            "instance_ip_3", 3);
-    DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
-            "instance_ip_2", 2);
+    DelVnConnectionToLr("lr-vmi-vn3", 93, "3:3:3:3:3:3:3:99", "vrf3", "vn3",
+                        "instance_ip_3", 3);
+    client->WaitForIdle();
+    DelVnConnectionToLr("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
+                        "instance_ip_2", 2);
     client->WaitForIdle();
 
     ValidateRouting(routing_vrf_name,
@@ -2555,10 +2579,11 @@ TEST_F(VxlanRoutingV6Test, Add_del_network) {
     AddIPAM("vn4", ipam_info_4, 1);
     CreateV6VmportEnv(input4, INPUT_SIZE(input4), 0, "vn4", "vrf4", false);
     AddLrVmiPort("lr-vmi-vn4", 94, "4:4:4:4:4:4:4:99", "vrf4", "vn4",
-            "instance_ip_4", 4);
+                 "instance_ip_4", 4);
     AddLrBridgeVrf("vn4", 1);
     AddLrVmiPort("lr-vmi-vn3", 93, "3:3:3:3:3:3:3:99", "vrf3", "vn3",
-            "instance_ip_3", 3);
+                 "instance_ip_3", 3);
+    client->WaitForIdle();
     EXPECT_TRUE(VmInterfaceGet(4)->logical_router_uuid() == nil_uuid());
     EXPECT_TRUE(VmInterfaceGet(94)->logical_router_uuid() != nil_uuid());
     client->WaitForIdle();
@@ -2616,27 +2641,31 @@ TEST_F(VxlanRoutingV6Test, Add_del_network) {
     // Bridge VN3
     DelLrBridgeVrf("vn3", 1);
     DelLrVmiPort("lr-vmi-vn3", 93, "3:3:3:3:3:3:3:99", "vrf3", "vn3",
-            "instance_ip_3", 3);
+                 "instance_ip_3", 3);
     DeleteVmportEnv(input3, INPUT_SIZE(input3), true);
     DelIPAM("vn3");
+    client->WaitForIdle();
 
     DelLrBridgeVrf("vn4", 1);
     DelLrVmiPort("lr-vmi-vn4", 94, "4:4:4:4:4:4:4:99", "vrf4", "vn4",
-            "instance_ip_4", 4);
+                 "instance_ip_4", 4);
     DeleteVmportEnv(input4, INPUT_SIZE(input4), true);
     DelIPAM("vn4");
+    client->WaitForIdle();
 
     // Bridge VN1 & VN2
     DelLrBridgeVrf("vn1", 1);
+    DelLrBridgeVrf("vn2", 1);
     DelLrRoutingVrf(1);
     DelLrVmiPort("lr-vmi-vn1", 91, "1:1:1:1:1:1:1:99", "vrf1", "vn1",
-            "instance_ip_1", 1);
+                 "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2:2:2:2:2:2:2:99", "vrf2", "vn2",
-            "instance_ip_2", 2);
+                 "instance_ip_2", 2);
     DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
     DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
     DelIPAM("vn1");
     DelIPAM("vn2");
+    client->WaitForIdle();
 
     // Project
     DelNode("project", "admin");
