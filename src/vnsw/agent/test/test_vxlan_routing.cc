@@ -4394,6 +4394,446 @@ TEST_F(VxlanRoutingTest, Add_del_bgpaas_composite_interface_and_tunnel) {
     client->WaitForIdle();
 }
 
+TEST_F(VxlanRoutingTest, Deleting_not_last_route) {
+    bgp_peer_ = CreateBgpPeer("127.0.0.1", "remote");
+    using boost::uuids::nil_uuid;
+    struct PortInfo input1[] = {
+        {"vnet1", 1, "1.1.1.10", "00:00:01:01:01:10", 1, 1},
+    };
+    IpamInfo ipam_info_1[] = {
+        {"1.1.1.0", 24, "1.1.1.254", true},
+    };
+
+    struct PortInfo input2[] = {
+        {"vnet2", 2, "2.2.2.20", "00:00:02:02:02:20", 2, 2},
+    };
+    IpamInfo ipam_info_2[] = {
+        {"2.2.2.0", 24, "2.2.2.200", true},
+    };
+
+    // Bridge vrf
+    AddIPAM("vn1", ipam_info_1, 1);
+    AddIPAM("vn2", ipam_info_2, 1);
+
+    CreateVmportEnv(input1, INPUT_SIZE(input1));
+    CreateVmportEnv(input2, INPUT_SIZE(input2));
+
+    AddLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    AddLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+
+    const char *routing_vrf_name = "l3evpn_1";
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    AddLrBridgeVrf("vn2", 1);
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmInterfaceGet(1)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(2)->logical_router_uuid() == nil_uuid());
+
+    EXPECT_TRUE(VmInterfaceGet(91)->logical_router_uuid() != nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(92)->logical_router_uuid() != nil_uuid());
+
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+
+    // checking routing vrf have valid VXLAN ID
+    VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
+    EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
+
+    // check to see if the subnet routes added to the bridge inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+    client->WaitForIdle();
+
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), false);
+    client->WaitForIdle();
+
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", false);
+
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+
+    // check to see if the subnet route for vn added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+
+    // Bridge VN1 & VN2
+    DelLrBridgeVrf("vn1", 1);
+    DelLrBridgeVrf("vn2", 1);
+    DelLrRoutingVrf(1);
+    DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    DelLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
+    DelIPAM("vn1");
+    DelIPAM("vn2");
+    client->WaitForIdle();
+
+    // Project
+    DelNode("project", "admin");
+    client->WaitForIdle();
+
+    // Peer
+    DeleteBgpPeer(bgp_peer_);
+    client->WaitForIdle(5);
+
+    // Checks
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    client->WaitForIdle();
+}
+
+TEST_F(VxlanRoutingTest, Deleting_last_route) {
+    bgp_peer_ = CreateBgpPeer("127.0.0.1", "remote");
+    using boost::uuids::nil_uuid;
+    struct PortInfo input1[] = {
+        {"vnet1", 1, "1.1.1.10", "00:00:01:01:01:10", 1, 1},
+    };
+    IpamInfo ipam_info_1[] = {
+        {"1.1.1.0", 24, "1.1.1.254", true},
+    };
+
+    struct PortInfo input2[] = {
+        {"vnet2", 2, "2.2.2.20", "00:00:02:02:02:20", 2, 2},
+    };
+    IpamInfo ipam_info_2[] = {
+        {"2.2.2.0", 24, "2.2.2.200", true},
+    };
+
+    struct PortInfo input3[] = {
+        {"vnet3", 3, "3.3.3.30", "00:00:03:03:03:30", 3, 3},
+    };
+    IpamInfo ipam_info_3[] = {
+        {"3.3.3.0", 24, "3.3.3.200", true},
+    };
+
+    struct PortInfo input4[] = {
+        {"vnet4", 4, "4.4.4.40", "00:00:04:04:04:40", 4, 4},
+    };
+    IpamInfo ipam_info_4[] = {
+        {"4.4.4.0", 24, "4.4.4.200", true},
+    };
+
+    // Bridge vrf
+    AddIPAM("vn1", ipam_info_1, 1);
+    AddIPAM("vn2", ipam_info_2, 1);
+    AddIPAM("vn3", ipam_info_3, 1);
+    AddIPAM("vn4", ipam_info_4, 1);
+
+    CreateVmportEnv(input1, INPUT_SIZE(input1));
+    CreateVmportEnv(input2, INPUT_SIZE(input2));
+    CreateVmportEnv(input3, INPUT_SIZE(input3));
+    CreateVmportEnv(input4, INPUT_SIZE(input4));
+
+    AddLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                 "instance_ip_1", 1);
+    AddLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                 "instance_ip_2", 2);
+    AddLrVmiPort("lr-vmi-vn3", 93, "3.3.3.99", "vrf3", "vn3",
+                 "instance_ip_3", 3);
+    AddLrVmiPort("lr-vmi-vn4", 94, "4.4.4.99", "vrf4", "vn4",
+                 "instance_ip_4", 4);
+
+    const char *routing_vrf_name = "l3evpn_1";
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    AddLrBridgeVrf("vn2", 1);
+    AddLrBridgeVrf("vn3", 1);
+    AddLrBridgeVrf("vn4", 1);
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmInterfaceGet(1)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(2)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(3)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(4)->logical_router_uuid() == nil_uuid());
+
+    EXPECT_TRUE(VmInterfaceGet(91)->logical_router_uuid() != nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(92)->logical_router_uuid() != nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(93)->logical_router_uuid() != nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(94)->logical_router_uuid() != nil_uuid());
+
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", true, "vn2");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("3.3.3.30"), 32,
+                    "vnet3", true, "vn3");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("4.4.4.40"), 32,
+                    "vnet4", true, "vn4");
+
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateBridge("vrf3", routing_vrf_name,
+                   Ip4Address::from_string("3.3.3.30"), 32, false);
+    ValidateBridge("vrf4", routing_vrf_name,
+                   Ip4Address::from_string("4.4.4.40"), 32, false);
+
+    // checking routing vrf have valid VXLAN ID
+    VrfEntry *routing_vrf = VrfGet(routing_vrf_name);
+    EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
+
+    // check to see if the subnet routes added to the bridge inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("3.3.3.0"), 24, true);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("4.4.4.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("3.3.3.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("4.4.4.0"), 24, true);
+    ValidateBridge("vrf3", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+    ValidateBridge("vrf3", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf3", routing_vrf_name,
+                   Ip4Address::from_string("4.4.4.0"), 24, true);
+    ValidateBridge("vrf4", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+    ValidateBridge("vrf4", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf4", routing_vrf_name,
+                   Ip4Address::from_string("3.3.3.0"), 24, true);
+    client->WaitForIdle();
+
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), false);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), false);
+    DeleteVmportEnv(input3, INPUT_SIZE(input3), false);
+    client->WaitForIdle();
+
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet1", false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet2", false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("3.3.3.30"), 32,
+                    "vnet3", false);
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("4.4.4.40"), 32,
+                    "vnet4", true, "vn4");
+
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.20"), 32, false);
+    ValidateBridge("vrf3", routing_vrf_name,
+                   Ip4Address::from_string("3.3.3.30"), 32, false);
+    ValidateBridge("vrf4", routing_vrf_name,
+                   Ip4Address::from_string("4.4.4.40"), 32, false);
+
+    // check to see if the subnet route for vn added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("3.3.3.0"), 24, true);
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("4.4.4.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("3.3.3.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("4.4.4.0"), 24, true);
+    ValidateBridge("vrf3", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+    ValidateBridge("vrf3", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf3", routing_vrf_name,
+                   Ip4Address::from_string("4.4.4.0"), 24, true);
+    ValidateBridge("vrf4", routing_vrf_name,
+                   Ip4Address::from_string("1.1.1.0"), 24, true);
+    ValidateBridge("vrf4", routing_vrf_name,
+                   Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf4", routing_vrf_name,
+                   Ip4Address::from_string("3.3.3.0"), 24, true);
+
+    DelLink("virtual-network", routing_vrf_name, "routing-instance",
+            routing_vrf_name);
+    DelVrf(routing_vrf_name);
+    DelLink("virtual-network", "vn1", "routing-instance", "vrf1");
+    DelLink("virtual-machine-interface-routing-instance", "lr-vmi-vn1",
+            "routing-instance", "vrf1");
+    DelNode("routing-instance", "vrf1");
+    DelLink("virtual-network", "vn2", "routing-instance", "vrf2");
+    DelLink("virtual-machine-interface-routing-instance", "lr-vmi-vn2",
+            "routing-instance", "vrf2");
+    DelNode("routing-instance", "vrf2");
+    client->WaitForIdle();
+    DelLink("virtual-machine-interface-routing-instance", "lr-vmi-vn4",
+            "routing-instance", "vrf4");
+    DelLink("virtual-network", "vn4", "routing-instance", "vrf4");
+    DelLink("virtual-machine-interface-routing-instance", "vnet4",
+            "routing-instance", "vrf4");
+    DelNode("routing-instance", "vrf4");
+    DelLink("virtual-machine-interface-routing-instance", "lr-vmi-vn3",
+            "routing-instance", "vrf3");
+    DelLink("virtual-network", "vn3", "routing-instance", "vrf3");
+    DelNode("routing-instance", "vrf3");
+    DelLink("virtual-network", "vn1", "virtual-network-network-ipam",
+            "default-network-ipam,vn1");
+    client->WaitForIdle();
+    DelLink("network-ipam", "default-network-ipam",
+            "virtual-network-network-ipam", "default-network-ipam,vn1");
+    DelLink("virtual-network", "vn2", "virtual-network-network-ipam",
+            "default-network-ipam,vn2");
+    DelLink("network-ipam", "default-network-ipam",
+            "virtual-network-network-ipam", "default-network-ipam,vn2");
+    client->WaitForIdle();
+    DelLink("logical-router-virtual-network", routing_vrf_name, "virtual-network",
+            routing_vrf_name, "logical-router-virtual-network");
+    DelLink("virtual-machine-interface", "lr-vmi-vn1", "virtual-network", "vn1");
+    DelLink("virtual-network", "vn1", "instance-ip", "instance_ip_1");
+    DelLink("virtual-machine-interface", "lr-vmi-vn1", "instance-ip",
+            "instance_ip_1");
+    DelLink("virtual-machine-interface", "lr-vmi-vn2", "virtual-network", "vn2");
+    client->WaitForIdle();
+    DelLink("virtual-network", "vn2", "virtual-network-network-ipam",
+            "default-network-ipam,vn2");
+    DelLink("virtual-network", "vn2", "instance-ip", "instance_ip_2");
+    DelLink("virtual-machine-interface", "lr-vmi-vn2", "instance-ip",
+            "instance_ip_2");
+    DelLink("virtual-machine-interface-routing-instance", "lr-vmi-vn4",
+            "virtual-machine-interface", "lr-vmi-vn4");
+    DelLink("virtual-machine-interface", "lr-vmi-vn3", "instance-ip",
+            "instance_ip_3");
+    DelLink("virtual-network", "vn3", "instance-ip", "instance_ip_3");
+    client->WaitForIdle();
+    DelLink("virtual-machine-interface-routing-instance", "lr-vmi-vn1",
+            "virtual-machine-interface", "lr-vmi-vn1");
+    DelLink("network-ipam", "default-network-ipam",
+            "virtual-network-network-ipam", "default-network-ipam,vn4");
+    DelLink("network-ipam", "default-network-ipam",
+            "virtual-network-network-ipam", "default-network-ipam,vn3");
+    DelLink("logical-router", routing_vrf_name, "virtual-machine-interface",
+            "lr-vmi-vn1", "logical-router-interface");
+    client->WaitForIdle();
+    DelLink("virtual-machine-interface", "lr-vmi-vn4", "virtual-network", "vn4");
+    DelLink("virtual-machine-interface", "lr-vmi-vn4", "instance-ip",
+            "instance_ip_4");
+    DelLink("logical-router", routing_vrf_name, "virtual-machine-interface",
+            "lr-vmi-vn4", "logical-router-interface");
+    DelLink("virtual-machine-interface-routing-instance", "lr-vmi-vn3",
+            "virtual-machine-interface", "lr-vmi-vn3");
+    DelLink("logical-router", routing_vrf_name,
+            "virtual-machine-interface", "lr-vmi-vn3",
+            "logical-router-interface");
+    client->WaitForIdle();
+    DelLink("virtual-network", "vn4", "instance-ip", "instance_ip_4");
+    DelLink("virtual-network", "vn4", "virtual-machine-interface",
+            "vnet4");
+    DelLink("virtual-network", "vn4", "instance-ip", "instance4");
+    DelLink("virtual-machine-interface-routing-instance", "vnet4",
+            "virtual-machine-interface", "vnet4");
+    client->WaitForIdle();
+    DelLink("virtual-machine-interface", "vnet4", "instance-ip",
+            "instance4");
+    DelLink("virtual-machine", "vm4", "virtual-machine-interface",
+            "vnet4");
+    DelLink("virtual-machine-interface-routing-instance", "lr-vmi-vn2",
+            "virtual-machine-interface", "lr-vmi-vn2");
+    DelLink("logical-router", routing_vrf_name,
+            "virtual-machine-interface", "lr-vmi-vn2",
+            "logical-router-interface");
+    DelLink("logical-router-virtual-network", routing_vrf_name,
+            "logical-router", routing_vrf_name,
+            "logical-router-virtual-network");
+    client->WaitForIdle();
+    DelNode("virtual-network-network-ipam", "default-network-ipam,vn1");
+    DelNode("virtual-network-network-ipam", "default-network-ipam,vn2");
+    DelNode("virtual-network-network-ipam", "default-network-ipam,vn3");
+    DelNode("virtual-network-network-ipam", "default-network-ipam,vn4");
+    DelVn(routing_vrf_name);
+    DelVn("vn1");
+    DelVn("vn2");
+    client->WaitForIdle();
+    DelVn("vn3");
+    DelVn("vn4");
+    DelInstanceIp("instance_ip_1");
+    DelInstanceIp("instance_ip_2");
+    DelInstanceIp("instance_ip_3");
+    DelInstanceIp("instance_ip_4");
+    DelInstanceIp("instance4");
+    DelVmPortVrf("lr-vmi-vn4");
+    client->WaitForIdle();
+    DelVmPortVrf("vnet4");
+    DelVmPortVrf("lr-vmi-vn4");
+    DelVmPortVrf("lr-vmi-vn2");
+    DelVmPortVrf("lr-vmi-vn3");
+    DelNode("network-ipam", "default-network-ipam");
+    DelNode("virtual-machine-interface", "lr-vmi-vn1");
+    DelNode("virtual-machine-interface", "lr-vmi-vn4");
+    DelNode("virtual-machine-interface", "lr-vmi-vn2");
+    client->WaitForIdle();
+    DelNode("virtual-machine-interface", "vnet4");
+    DelNode("virtual-machine-interface", "lr-vmi-vn3");
+    DelNode("logical-router-virtual-network",
+            routing_vrf_name);
+    DelNode("logical-router", routing_vrf_name);
+    DelNode("virtual-machine", "vm4");
+    client->WaitForIdle();
+
+    DelLrBridgeVrf("vn1", 1);
+    DelLrBridgeVrf("vn2", 1);
+    DelLrBridgeVrf("vn3", 1);
+    DelLrBridgeVrf("vn4", 1);
+
+    DelLrRoutingVrf(1);
+
+    DeleteVmportEnv(input4, INPUT_SIZE(input4), true);
+    client->WaitForIdle();
+
+    DelIPAM("vn1");
+    DelIPAM("vn2");
+    DelIPAM("vn3");
+    DelIPAM("vn4");
+
+    client->WaitForIdle();
+
+    // Peer
+    DeleteBgpPeer(bgp_peer_);
+    client->WaitForIdle(5);
+
+    // Checks
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf3") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf4") == nullptr);
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+                IsEmpty());
+    client->WaitForIdle();
+}
+
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     GETUSERARGS();
