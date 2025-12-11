@@ -467,6 +467,8 @@ class VncZkClient(object):
     _TAG_TYPE_UD_ID_ALLOC_PATH = "%s/typesUD/" % _TAG_ID_ALLOC_ROOT_PATH
     _TAG_VALUE_ID_ALLOC_PATH = "%s/values/%%s/" % _TAG_ID_ALLOC_ROOT_PATH
     _TAG_VALUE_UD_ID_ALLOC_PATH = "%s/values/UD/%%s/" % _TAG_ID_ALLOC_ROOT_PATH
+    # _TAG_TYPE_MAX_ID = (1 << 4) - 1  # 0.5 of byte (max value 15,
+    # initially it was (1 << 15) - 1 - 2 bytes max value 32767
     _TAG_TYPE_MAX_ID = (1 << 15) - 1
     _TAG_TYPE_UD_MIN_ID = (1 << 15)
     _TAG_TYPE_UD_MAX_ID = (1 << 16) - 1
@@ -1063,7 +1065,7 @@ class VncZkClient(object):
                 self._zk_client,
                 self._tag_value_ud_id_alloc_path % type_str,
                 size=self._TAG_VALUE_UD_MAX_ID,
-		start_idx=self._TAG_VALUE_UD_MIN_ID,
+                start_idx=self._TAG_VALUE_UD_MIN_ID,
             ),
         )
         # If ID provided, it's a notify allocation, just lock allocated ID in
@@ -1077,7 +1079,6 @@ class VncZkClient(object):
                     return ud_tag_value_id_allocator.reserve(id, fq_name_str)
                 except ResourceExistsError:
                     raise
-
 
     def free_ud_tag_value_id(self, type_str, id, fq_name_str, notify=False):
         ud_tag_value_id_allocator = self._ud_tag_value_id_allocator.setdefault(

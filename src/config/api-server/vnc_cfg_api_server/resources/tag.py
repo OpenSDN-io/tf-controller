@@ -124,16 +124,56 @@ class TagServer(ResourceMixin, Tag):
     def pre_dbe_update(cls, id, fq_name, obj_dict, db_conn, **kwargs):
         # User cannot update display_name, type, value or id once created
         if (obj_dict.get('display_name') is not None or
-                obj_dict.get('tag_type_name') is not None or
-                obj_dict.get('tag_value') is not None or
-                obj_dict.get('tag_id') is not None):
-            msg = "Tag name, type, value or ID cannot be updated"
-            return (False, (400, msg))
+                obj_dict.get('tag_value') is not None):
+            msg = "Tag name, type, value cannot be updated"
+            return False, (400, msg)
 
         if obj_dict.get('tag_type_refs') is not None:
             msg = "Tag-type reference cannot be updated"
-            return (False, (400, msg))
+            return False, (400, msg)
+        # find current value and change it
+        ok, read_result = cls.dbe_read(cls.db_conn, 'tag', id)
+        if not ok:
+            return ok, read_result
+        old_tag_type_name = read_result.get('tag_type_name')
+        if old_tag_type_name and obj_dict.get("tag_type_name"):
+            if old_tag_type_name != obj_dict.get("tag_type_name"):
+                msg = "Tag type name cannot be updated"
+                return False, (400, msg)
+        old_tag_id = read_result.get('tag_id')
+        if obj_dict.get("force") != "yes":
+            if obj_dict.get("tag_id") and old_tag_id:
+                if obj_dict.get("tag_id") != old_tag_id:
+                    old_high16_int = int(old_tag_id, 16)
+                    new_high16_int = int(obj_dict.get("tag_id"), 16)
+                    old_high16 = (old_high16_int >> 16) & 0xFFFF
+                    new_high16 = (new_high16_int >> 16) & 0xFFFF
+                    if old_high16 != new_high16:
+                        msg = f"Cannot update tag_id. " \
+                              f"Old tag_id {read_result.get('tag_id')}. " \
+                              f"New tag_id {obj_dict.get('tag_id')}. " \
+                              f"High 16bit cannot be updated. " \
+                              f"Old High 16 bit {old_high16}. " \
+                              f"New High 16 bit {new_high16}. "
+                        return False, (400, msg)
 
+        cls.vnc_zk_client.free_tag_value_id(
+            old_tag_type_name,
+            int(read_result['tag_id'], 0) & 0x0000ffff,
+            ':'.join(fq_name),
+        )
+        cls.vnc_zk_client.free_tag_value_id(
+            old_tag_type_name,
+            int(read_result['tag_id'], 0) & 0x0000ffff,
+            ':'.join(fq_name),
+            notify=True
+        )
+        # alloc new one
+        cls.vnc_zk_client.alloc_tag_value_id(
+            old_tag_type_name,
+            ':'.join(fq_name),
+            int(obj_dict.get('tag_id'), 0) & 0x0000ffff,
+        )
         return True, ""
 
     @classmethod
