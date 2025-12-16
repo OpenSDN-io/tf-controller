@@ -52,22 +52,22 @@ class TestTagType(TestTagBase):
 
     def test_tag_type_id_cannot_be_set(self):
         tag_type = TagType(name='tag-type-%s' % self.id(),
-                           tag_type_id='0x0EEF')
+                           tag_type_id='0x00F')
         self.assertRaises(BadRequest, self.api.tag_type_create, tag_type)
 
     def test_ud_tag_type_id_can_be_set(self):
         tag_type = TagType(name='tag-type-%s' % self.id(),
-                           tag_type_id='0xBEEF')
+                           tag_type_id='0x0018')
         tag_type_uuid = self.api.tag_type_create(tag_type)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
-        self.assertEqual(tag_type.tag_type_id, "0xbeef")
+        self.assertEqual(tag_type.tag_type_id, "0x0018")
         self.api.tag_type_delete(id=tag_type_uuid)
 
     def test_tag_type_id_updated(self):
         tag_type = TagType(name='tag-type-%s' % self.id())
         tag_type_uuid = self.api.tag_type_create(tag_type)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
-        tag_type.tag_type_id = '0x0eef'
+        tag_type.tag_type_id = '0x0015'
         self.api.tag_type_update(tag_type)
         tag_type_update = self.api.tag_type_read(id=tag_type_uuid)
         self.assertEqual(tag_type.tag_type_id,
@@ -75,10 +75,10 @@ class TestTagType(TestTagBase):
 
     def test_ud_tag_type_updated(self):
         tag_type = TagType(name='tag-type-%s' % self.id(),
-                           tag_type_id="0x8eef")
+                           tag_type_id="0x0020")
         tag_type_uuid = self.api.tag_type_create(tag_type)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
-        tag_type.tag_type_id = '0xbeef'
+        tag_type.tag_type_id = '0x0011'
         self.api.tag_type_update(tag_type)
         tag_type_update = self.api.tag_type_read(id=tag_type_uuid)
         self.assertEqual(tag_type.tag_type_id,
@@ -86,12 +86,12 @@ class TestTagType(TestTagBase):
 
     def test_ud_tag_type_id_cannot_be_assigned_to_multiple_tag_types(self):
         tag_type = TagType(name='tag-type-%s' % self.id(),
-                           tag_type_id="0x8eef")
+                           tag_type_id="0x0012")
         tag_type_uuid = self.api.tag_type_create(tag_type)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
 
         tag_type = TagType(name="fake-tag-type%s" % self.id(),
-                           tag_type_id="0x8eef")
+                           tag_type_id="0x0012")
         self.assertRaises(BadRequest, self.api.tag_type_create, tag_type)
         self.api.tag_type_delete(id=tag_type_uuid)
 
@@ -122,7 +122,7 @@ class TestTagType(TestTagBase):
     def test_allocate_ud_tag_type_id(self):
         mock_zk = self._api_server._db_conn._zk_db
         type_str = 'tag-type-%s' % self.id()
-        tag_type = TagType(name=type_str, tag_type_id="0xbeef",)
+        tag_type = TagType(name=type_str, tag_type_id="0x0013",)
         tag_type_uuid = self.api.tag_type_create(tag_type)
 
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
@@ -145,7 +145,7 @@ class TestTagType(TestTagBase):
     def test_deallocate_ud_tag_type_id(self):
         mock_zk = self._api_server._db_conn._zk_db
         type_str = 'tag-type-%s' % self.id()
-        tag_type = TagType(name=type_str, tag_type_id="0xbeef",)
+        tag_type = TagType(name=type_str, tag_type_id="0x0014",)
         tag_type_uuid = self.api.tag_type_create(tag_type)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         zk_id = int(tag_type.tag_type_id, 0)
@@ -171,7 +171,7 @@ class TestTagType(TestTagBase):
     def test_not_deallocate_ud_tag_type_id_if_value_does_not_correspond(self):
         mock_zk = self._api_server._db_conn._zk_db
         type_str = 'tag-type-%s' % self.id()
-        tag_type = TagType(name=type_str, tag_type_id="0xbeef")
+        tag_type = TagType(name=type_str, tag_type_id="0x0015")
         tag_type_uuid = self.api.tag_type_create(tag_type)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         zk_id = int(tag_type.tag_type_id, 0)

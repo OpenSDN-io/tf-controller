@@ -290,7 +290,9 @@ class IndexAllocator(object):
             if self._in_use.all():
                 idx = len(self._in_use)
                 if idx > self._max_alloc:
-                    raise ResourceExhaustionError()
+                    msg = (f"idx {idx} bigger than max alloc {self._max_alloc} "
+                           f"path {self._path} and size {self._size}")
+                    raise ResourceExhaustionError(msg)
                 self._in_use.append(1)
             else:
                 idx = self._in_use.index(0)

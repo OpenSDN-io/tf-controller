@@ -122,7 +122,7 @@ class TestTag(TestTagBase):
         tag_type = 'fake_type-%s' % self.id()
         tag_value = 'fake_value-%s' % self.id()
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
-                  tag_id='0x0EAD0EEF')
+                  tag_id='0x000D0EEF')
         self.assertRaises(BadRequest, self.api.tag_create, tag)
 
     # test to create user define tag-type and tag

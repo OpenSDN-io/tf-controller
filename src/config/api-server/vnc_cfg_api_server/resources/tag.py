@@ -39,9 +39,9 @@ class TagServer(ResourceMixin, Tag):
         tag_value_id = None
         tag_type_id = None
 
-        # For user defined tags tag id and tag-type id
-        # is input from user. Range for user defined
-        # ids are 32768 - 65535. Both values are expected
+        # For user defined tags tag_id is input from user.
+        # Range for user defined
+        # ids are 16 - 65535. Value are expected
         # in hex format.
         if tag_id is not None:
             try:
@@ -52,8 +52,8 @@ class TagServer(ResourceMixin, Tag):
 
         if tag_value_id is not None and \
            not cls.vnc_zk_client.user_def_tag(tag_value_id):
-            msg = "Tag id can be set only for user defined tags in range\
-                   32678-65535"
+            msg = f"Tag value id can be set only " \
+                  f"in range 0-65535. Current tag_value_id {tag_value_id}"
             return False, (400, msg)
 
         if obj_dict.get('tag_type_refs') is not None:
@@ -66,15 +66,19 @@ class TagServer(ResourceMixin, Tag):
 
         if not ok and result[0] == 404:
             if tag_type_id is not None and \
-               not cls.vnc_zk_client.user_def_tag(tag_type_id):
+               not cls.vnc_zk_client.user_def_tag_type(tag_type_id):
                 msg = "Tag type id can be set only for user defined tag types\
-                        in range 32678-65535"
+                        in range 16-65535"
                 return False, (400, msg)
-
+            # If no tag_type_id need to use internal request to create tag_type
+            # in user defined scope, internal_request say to alloc_tag_type_id
+            # for use user defined scoped instead of auto (0-15)
             params = {"id_perms": IdPermsType(user_visible=False),
                       "tag_type_id": None if tag_type_id is None
                       else "0x%x" % tag_type_id,
+                      "internal_request": True,
                       }
+
             ok, result = cls.server.get_resource_class('tag_type').locate(
                 [type_str], **params)
             if not ok:
@@ -112,7 +116,11 @@ class TagServer(ResourceMixin, Tag):
         # value id is None in case of Failure otherwise any positive
         # value between 0 and 65535
         if value_id is None:
-            return False, (400, "Failed to allocate tag Id")
+            return False, (400, f"Failed to allocate tag id with "
+                                f"value id: {tag_value_id}, "
+                                f"tag type id: {tag_type_id}, "
+                                f"type_str {type_str}, "
+                                f"fq_name_str {':'.join(obj_dict['fq_name'])}")
 
         # Compose Tag ID with the type ID and value ID
         obj_dict['tag_id'] = "{}{:04x}".format(tag_type['tag_type_id'],

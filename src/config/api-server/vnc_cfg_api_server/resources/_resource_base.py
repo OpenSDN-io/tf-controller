@@ -244,6 +244,8 @@ class ResourceMixin(metaclass=ResourceMixinMeta):
         obj_dict = json.loads(json.dumps(obj, default=_obj_serializer_all))
         for ref_name in cls.ref_fields & set(kwargs.keys()):
             obj_dict[ref_name] = copy.deepcopy(kwargs[ref_name])
+        if kwargs.get('internal_request'):
+            obj_dict['internal_request'] = True
         try:
             cls.server.internal_request_create(cls.resource_type, obj_dict)
         except HttpError as e:
