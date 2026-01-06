@@ -2673,6 +2673,52 @@ class DBInterface(object):
         if tags:
             fip_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
                                   if 'neutron_tag' in t['to'][0]]
+        if not (fip_q_dict.get('port_id') and port_obj):
+            return fip_q_dict
+
+        c_uuid = fip_q_dict['port_id']
+        c_ip = fip_q_dict.get('fixed_ip_address')
+        c_owner = (port_obj.get_virtual_machine_interface_device_owner() or
+                   '')
+
+        if not str(c_owner).startswith('compute:'):
+            return fip_q_dict
+
+        vn_refs = port_obj.get_virtual_network_refs()
+        if not vn_refs:
+            return fip_q_dict
+
+        vn_uuid = vn_refs[0]['uuid']
+        iip_objs = self._instance_ip_list(back_ref_id=[vn_uuid])
+        found_vip = None
+
+        for iip in iip_objs:
+            if iip.get_instance_ip_address() != c_ip:
+                continue
+
+            for ref in iip.get_virtual_machine_interface_refs() or []:
+                if ref['uuid'] == c_uuid:
+                    continue
+
+                try:
+                    cand_vmi = self._virtual_machine_interface_read(
+                        port_id=ref['uuid'])
+                    cand_owner_raw = (
+                        cand_vmi.get_virtual_machine_interface_device_owner())
+                    cand_owner_str = str(cand_owner_raw) \
+                        if cand_owner_raw is not None else ""
+
+                    if not cand_owner_str.startswith('compute:'):
+                        found_vip = ref['uuid']
+                        break
+                except Exception:
+                    continue
+
+            if found_vip:
+                break
+
+        if found_vip:
+            fip_q_dict['port_id'] = found_vip
 
         return fip_q_dict
     # end _floatingip_vnc_to_neutron
