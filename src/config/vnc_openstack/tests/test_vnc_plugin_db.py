@@ -107,7 +107,9 @@ class TestDbInterface(unittest.TestCase):
                     fake_virtual_machine_interface_properties),
                 get_virtual_network_refs=lambda: [
                     {
-                        'uuid': net_uuid}])
+                        'uuid': net_uuid}],
+                get_virtual_machine_interface_device_owner=lambda: None
+            )
 
         def fake_virtual_machine_interface_list(*args, **kwargs):
             obj_uuids = kwargs.get('obj_uuids', [])
@@ -118,7 +120,10 @@ class TestDbInterface(unittest.TestCase):
                         get_virtual_machine_interface_properties=(
                             fake_virtual_machine_interface_properties),
                         get_virtual_network_refs=(
-                            lambda: [{'uuid': 'match_vn_uuid'}]))]
+                            lambda: [{'uuid': 'match_vn_uuid'}]),
+                        get_virtual_machine_interface_device_owner=lambda: None
+                    )
+                ]
             return []
 
         dbi._vnc_lib = flexmock(
@@ -237,3 +242,68 @@ class TestDbInterface(unittest.TestCase):
                 {'tenant': 'tenant', 'is_admin': False},
                 {'id': 1, 'port_id': 11},
                 db.UPDATE)
+
+    def test_floating_ip_find_vip_port(self):
+        dbi = MockDbInterface()
+
+        fip_uuid = str(uuid.uuid4())
+        compute_port_uuid = str(uuid.uuid4())
+        vip_port_uuid = str(uuid.uuid4())
+        vn_uuid = str(uuid.uuid4())
+        fixed_ip = '10.0.0.5'
+
+        def fake_virtual_machine_interface_read(id, fq_name=None, fields=None,
+                                                parent_id=None, **kwargs):
+            if id == compute_port_uuid:
+                return flexmock(
+                    uuid=compute_port_uuid,
+                    get_virtual_machine_interface_device_owner=(
+                        lambda: 'compute:nova'),
+                    get_virtual_network_refs=lambda: [{'uuid': vn_uuid}],
+                    get_virtual_machine_interface_properties=lambda: None
+                )
+            elif id == vip_port_uuid:
+                return flexmock(
+                    uuid=vip_port_uuid,
+                    get_virtual_machine_interface_device_owner=lambda: None,
+                    get_virtual_network_refs=lambda: [{'uuid': vn_uuid}],
+                    get_virtual_machine_interface_properties=lambda: None
+                )
+            return None
+
+        dbi._vnc_lib = flexmock(
+            fq_name_to_id=lambda *args: 'net_id',
+            virtual_machine_interface_read=fake_virtual_machine_interface_read,
+            logical_routers_list=lambda parent_id, detail: [])
+
+        # Mock objects
+        id_perms_obj = flexmock(
+            uuid='id_perms_uuid',
+            get_created=lambda: 'create_time',
+            get_last_modified=lambda: 'last_modified_time',
+            get_description=lambda: 'description')
+
+        fip_obj = flexmock(
+            uuid=fip_uuid,
+            get_fq_name=lambda: ['domain', 'project', 'fip'],
+            get_project_refs=lambda: [{'uuid': str(uuid.uuid4())}],
+            get_floating_ip_address=lambda: '1.2.3.4',
+            get_floating_ip_fixed_ip_address=lambda: fixed_ip,
+            get_id_perms=lambda: id_perms_obj,
+            get_perms2=lambda: flexmock(get_owner=lambda: str(uuid.uuid4())),
+            get_tag_refs=lambda: None,
+            get_virtual_machine_interface_refs=lambda: [
+                {'uuid': compute_port_uuid}])
+
+        iip_obj = flexmock(
+            get_instance_ip_address=lambda: fixed_ip,
+            get_virtual_machine_interface_refs=lambda: [
+                {'uuid': compute_port_uuid},
+                {'uuid': vip_port_uuid}])
+
+        dbi._instance_ip_list = (
+            lambda back_ref_id: [iip_obj] if back_ref_id == [vn_uuid] else [])
+
+        result = dbi._floatingip_vnc_to_neutron(fip_obj)
+
+        self.assertEqual(result['port_id'], vip_port_uuid)
