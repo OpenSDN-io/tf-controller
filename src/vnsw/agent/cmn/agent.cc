@@ -1141,7 +1141,7 @@ void Agent::TaskTrace(const char *file_name, uint32_t line_no,
                       const Task *task, const char *description,
                       uint64_t delay) {
     TaskTrace::TraceMsg(TaskTraceBuf, file_name, line_no,
-                        task->GetTaskId(), task->GetTaskInstance(),
+                        task->task_code_id(), task->task_data_id(),
                         description, delay, task->Description());
 }
 

@@ -599,11 +599,11 @@ bool OvsdbClientIdl::ConcurrencyCheck() const {
         return session_->TestConcurrencyAllow();
     }
 
-    if (current->GetTaskId() == ksync_task_id) {
+    if (current->task_code_id() == ksync_task_id) {
         return true;
     }
 
-    if (current->GetTaskId() == db_task_id) {
+    if (current->task_code_id() == db_task_id) {
         return true;
     }
 

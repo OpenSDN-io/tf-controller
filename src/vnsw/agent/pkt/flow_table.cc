@@ -100,10 +100,10 @@ bool FlowTable::ConcurrencyCheck(int task_id, bool check_task_instance) {
         return true;
     }
 
-    if (current->GetTaskId() != task_id)
+    if (current->task_code_id() != task_id)
         return false;
     if (check_task_instance) {
-	if (current->GetTaskInstance() != table_index_)
+	if (current->task_data_id() != table_index_)
 	   return false;
     }
     return true;
