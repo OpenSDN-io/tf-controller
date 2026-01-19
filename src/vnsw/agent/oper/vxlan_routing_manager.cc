@@ -927,7 +927,7 @@ void VxlanRoutingManager::UpdateSubnetRoute(const VrfEntry *bridge_vrf,
             nh_req.key.reset(new VrfNHKey(routing_vrf->GetName(), false, false));
             nh_req.data.reset(new VrfNHData(false, false, false));
             bridge_vrf->GetInetUnicastRouteTable(vn_ipam_itr->ip_prefix)->
-            AddEvpnRoutingRoute(vn_ipam_itr->ip_prefix, vn_ipam_itr->plen, routing_vrf,
+            AddEvpnRoutingRouteReq(vn_ipam_itr->ip_prefix, vn_ipam_itr->plen, routing_vrf,
                         agent_->evpn_routing_peer(),
                         SecurityGroupList(),
                         CommunityList(),
