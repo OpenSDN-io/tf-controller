@@ -578,7 +578,7 @@ void VxlanRoutingManager::RoutingVrfDeleteAllRoutes(VrfEntry* rt_vrf) {
                                               vrf_name, prefix_ip, plen,
                                               nullptr);
 
-            if (rt_active_peer->GetType() != Peer::BGP_PEER) {
+        if (rt_active_peer->GetType() != Peer::BGP_PEER) {
             // Delete routes originated from bridge networks
             EvpnAgentRouteTable::DeleteReq(rt_active_peer,
                                            vrf_name,
@@ -837,9 +837,15 @@ void VxlanRoutingManager::DeleteSubnetRoute(const VnEntry *vn, const std::string
 
         for (std::vector<VnIpam>::iterator ipam_itr = bridge_vn_ipam.begin();
             ipam_itr < bridge_vn_ipam.end(); ipam_itr++) {
-            (*it)->GetVrf()->GetInetUnicastRouteTable(ipam_itr->ip_prefix)->
-                Delete(agent_->evpn_routing_peer(), (*it)->GetVrf()->GetName(),
-                    ipam_itr->GetSubnetAddress(), ipam_itr->plen, NULL);
+                std::string it_vrf_name = "";
+                if (lr_vrf_info.bridge_vrf_names_list_.count((*it)) == 1) {
+                    it_vrf_name = lr_vrf_info.bridge_vrf_names_list_.at((*it));
+                    if (it_vrf_name != std::string("")) {
+                        InetUnicastAgentRouteTable::Delete(agent_->evpn_routing_peer(),
+                        it_vrf_name, ipam_itr->GetSubnetAddress(),
+                        ipam_itr->plen);
+                    }
+                }
         }
         std::vector<VnIpam> vn_ipam = (*it)->GetVnIpam();
 
