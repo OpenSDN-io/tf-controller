@@ -23,15 +23,16 @@ class TagTypeServer(ResourceMixin, TagType):
         # return error. Tag type set is only supported for user defined
         # tag types.
         if tag_type_id is not None and \
-           not cls.vnc_zk_client.user_def_tag(tag_type_id):
-            msg = "Tag type can be set only with user defined id in range\
-                    32768-65535"
+           not cls.vnc_zk_client.user_def_tag_type(tag_type_id):
+            msg = "Tag type can be set only with user defined id" \
+                  " in range 16-65535"
             return False, (400, msg)
         # Allocate ID for tag-type
-
+        internal_request = obj_dict.get('internal_request', False)
         try:
             type_id = cls.vnc_zk_client.alloc_tag_type_id(type_str,
-                                                          tag_type_id)
+                                                          tag_type_id,
+                                                          internal_request)
         except ResourceExistsError:
             return False, (400, "Tag Type with same Id already exists")
 
@@ -43,7 +44,8 @@ class TagTypeServer(ResourceMixin, TagType):
         # type_id is None for failure case and in range 0 to 65535 for success
         # case
         if type_id is None:
-            return False, (400, "Failed to allocate tag type Id")
+            return False, (400, f"Failed to allocate tag type id {tag_type_id}"
+                                f"type string {type_str}")
 
         obj_dict['tag_type_id'] = "0x{:04x}".format(type_id)
 
