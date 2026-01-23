@@ -412,6 +412,14 @@ class SnatAgentTest(unittest.TestCase):
 
         router = config_db.LogicalRouterSM.locate(ROUTER_1['uuid'])
         router.update(router_dict)
+
+        # Mock virtual_network_read for delete_snat_vn to return a proper
+        # VirtualNetwork object (a bare Mock is not iterable for back_refs)
+        snat_vn_obj = VirtualNetwork('snat-si-left_si_' + ROUTER_1['uuid'])
+        snat_vn_obj.uuid = 'snat-vn-uuid'
+        self.vnc_lib.virtual_network_read.return_value = snat_vn_obj
+        self.vnc_lib.virtual_network_delete = mock.Mock()
+
         self.snat_agent.update_snat_instance(router)
 
         if not deleted:
@@ -802,6 +810,16 @@ class SnatAgentTest(unittest.TestCase):
         self.vnc_lib.route_table_delete = mock.Mock(side_effect=
                                                         _raise_no_id_exception)
 
+        # Mock virtual_network_read for delete_snat_vn to return a proper
+        # VirtualNetwork object (a bare Mock is not iterable for back_refs)
+        snat_vn_obj = VirtualNetwork(
+            'snat-si-left_' + si_obj.get_fq_name()[-1])
+        snat_vn_obj.uuid = 'snat-vn-uuid'
+        orig_vn_read_mock = self.vnc_lib.virtual_network_read
+        self.vnc_lib.virtual_network_read = mock.Mock(
+            return_value=snat_vn_obj)
+        self.vnc_lib.virtual_network_delete = mock.Mock()
+
         # Attempt to delete SNAT instance.
         self.snat_agent.cleanup_snat_instance(ROUTER_1['uuid'], si_obj.uuid)
 
@@ -817,5 +835,6 @@ class SnatAgentTest(unittest.TestCase):
         # Reset simulation of logical router lookup failure.
         self.vnc_lib.ref_update = ref_original_mock
         self.vnc_lib.route_table_delete = rt_delete_original_mock
+        self.vnc_lib.virtual_network_read = orig_vn_read_mock
         self.vnc_lib.service_instance_delete = orig_si_delete_mock
         self.vnc_lib.service_instance_read = original_si_read_mock

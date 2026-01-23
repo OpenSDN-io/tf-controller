@@ -1,14 +1,21 @@
 import copy
 import uuid
 
-from vnc_api.vnc_api import *
+from vnc_api.vnc_api import (
+    RouteTable,
+    RouteTableType,
+    RouteType,
+    ServiceInstance,
+    ServiceInstanceInterfaceType,
+    ServiceInstanceType,
+    ServiceScaleOutType,
+)
 
 from .agent import Agent
 from cfgm_common import exceptions as vnc_exc
 from cfgm_common import svc_info
 from .config_db import VirtualNetworkSM, LogicalRouterSM, \
-    ServiceInstanceSM, ServiceTemplateSM, \
-    DBBaseSM
+    ServiceInstanceSM, ServiceTemplateSM, DBBaseSM, InstanceIpSM
 from .module_logger import MessageID
 from .sandesh.snat_agent import ttypes as sandesh
 
@@ -217,42 +224,55 @@ class SNATAgent(Agent):
                              si_obj.name)
         vn_fq_name = si_obj.fq_name[:-1] + [vn_name]
         try:
-            vn_obj = self._vnc_lib.virtual_network_read(fq_name=vn_fq_name)
+            # Read VN with back_refs to get VMIs directly from VNC API
+            vn_obj = self._vnc_lib.virtual_network_read(
+                fq_name=vn_fq_name,
+                fields=['virtual_machine_interface_back_refs',
+                        'instance_ip_back_refs'])
         except vnc_exc.NoIdError:
-
             self.logger.debug("Unable to find virtual network %s. " \
                               "Delete of SNAT instance %s failed." % \
                               (vn_name, si_obj.name))
             return
 
-        vn = VirtualNetworkSM.get(vn_obj.uuid)
-        if not vn:
-            return
+        vmi_back_refs = vn_obj.get_virtual_machine_interface_back_refs() or []
+        vmi_list = [vmi_ref['uuid'] for vmi_ref in vmi_back_refs]
 
-        for vmi_id in vn.virtual_machine_interfaces:
+        # Remove virtual network references explicitly before cleanup
+        for vmi_id in vmi_list:
             try:
                 self._vnc_lib.ref_update('virtual-machine-interface',
-                    vmi_id, 'virtual-network', vn.uuid, None, 'DELETE')
+                    vmi_id, 'virtual-network', vn_obj.uuid, None, 'DELETE')
             except vnc_exc.NoIdError:
-                self.logger.debug( \
-                    "Update of vnc lib for vmi %s virtual network %s failed" % \
-                    (vmi_id, vn_name))
-                pass
+                self.logger.debug(
+                    "Deleting vmi %s reference from virtual network %s failed" % \
+                    (vmi_id, vn_obj.uuid))
 
-        for iip_id in vn.instance_ips:
+        # Reuse existing cleanup method to delete VMIs with all their references
+        if vmi_list:
+            self._svc_mon.vm_manager.cleanup_svc_vm_ports(vmi_list)
+
+        # Clean up any remaining instance IPs that might not have been
+        # associated with VMIs
+        iip_back_refs = vn_obj.get_instance_ip_back_refs() or []
+        for iip_ref in iip_back_refs:
+            iip_id = iip_ref['uuid']
             try:
                 self._vnc_lib.instance_ip_delete(id=iip_id)
+                InstanceIpSM.delete(iip_id)
             except vnc_exc.NoIdError:
-                self.logger.debug( \
-                     "Unable to find IIP %s in virtual network %s." % \
-                     (iip_id, vn_name))
                 pass
 
         try:
-            self._vnc_lib.virtual_network_delete(id=vn.uuid)
-        except (vnc_exc.RefsExistError, vnc_exc.NoIdError):
-            self.logger.debug("Delete of virtual network %s failed." % \
-                              (vn_name))
+            self._vnc_lib.virtual_network_delete(id=vn_obj.uuid)
+            VirtualNetworkSM.delete(vn_obj.uuid)
+        except vnc_exc.RefsExistError as e:
+            self.logger.debug("Delete of virtual network %s failed with "
+                              "RefsExistError: %s. VN may still have "
+                              "references preventing deletion." % \
+                              (vn_name, str(e)))
+        except vnc_exc.NoIdError:
+            self.logger.debug("Virtual network %s already deleted." % (vn_name))
             pass
 
     def delete_snat_instance(self, router_obj):
@@ -336,6 +356,9 @@ class SNATAgent(Agent):
                 self.logger.debug("Route table %s delete failed. " % \
                                   (rt_name))
                 pass
+
+        # Delete left network (SNAT VN and its internal ports)
+        self.delete_snat_vn(si_obj)
 
         # Delete service instance
         self._vnc_lib.service_instance_delete(id=si_id)
