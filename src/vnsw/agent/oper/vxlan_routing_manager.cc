@@ -178,24 +178,35 @@ void VxlanRoutingVrfMapper::WalkRoutingVrf(const boost::uuids::uuid &lr_uuid,
             lr_vrf_info_map_[lr_uuid];
     const VrfEntry *routing_vrf = routing_vrf_info.routing_vrf_;
     DBTable::DBTableWalkRef walk_ref;
-    EvpnAgentRouteTable *evpn_table = NULL;
+
     if (withdraw) {
+        InetUnicastAgentRouteTable *inet4_table = nullptr;
+        InetUnicastAgentRouteTable *inet6_table = nullptr;
         const VrfEntry *bridge_vrf = vn->GetVrf();
         if (bridge_vrf && routing_vrf) {
-            evpn_table =
-            static_cast<EvpnAgentRouteTable *>(
-                bridge_vrf->GetEvpnRouteTable());
+            inet4_table = bridge_vrf->GetInet4UnicastRouteTable();
+            inet6_table = bridge_vrf->GetInet6UnicastRouteTable();
         }
-        if (!evpn_table) {
-            return;
+        if (inet4_table) {
+            walk_ref = inet4_table->
+            AllocWalker(boost::bind(
+                &VxlanRoutingManager::WithdrawEvpnRouteFromRoutingVrf,
+                mgr_, routing_vrf, _1, _2),
+                boost::bind(&VxlanRoutingVrfMapper::RoutingVrfRouteWalkDone,
+                this, _1, _2));
+            inet4_table->WalkAgain(walk_ref);
         }
-        walk_ref = evpn_table->
-        AllocWalker(boost::bind(&VxlanRoutingManager::WithdrawEvpnRouteFromRoutingVrf,
-            mgr_, routing_vrf, _1, _2),
-            boost::bind(&VxlanRoutingVrfMapper::RoutingVrfRouteWalkDone,
-            this, _1, _2));
-        evpn_table->WalkAgain(walk_ref);
+        if (inet6_table) {
+            walk_ref = inet6_table->
+            AllocWalker(boost::bind(
+                &VxlanRoutingManager::WithdrawEvpnRouteFromRoutingVrf,
+                mgr_, routing_vrf, _1, _2),
+                boost::bind(&VxlanRoutingVrfMapper::RoutingVrfRouteWalkDone,
+                this, _1, _2));
+            inet6_table->WalkAgain(walk_ref);
+        }
     } else {
+        EvpnAgentRouteTable *evpn_table = NULL;
         if (routing_vrf) {
             evpn_table =
             static_cast<EvpnAgentRouteTable *>(
