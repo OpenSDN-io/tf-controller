@@ -174,6 +174,22 @@ void AgentUveBase::BuildTagIdsFromList(const TagList &tl, UveTagData *info)
     }
 }
 
+void AgentUveBase::set_default_interval(uint32_t new_interval) {
+    if (new_interval == 0) {
+        default_interval_ = kDefaultInterval;
+    } else {
+        default_interval_ = new_interval;
+    }
+}
+
+void AgentUveBase::set_incremental_interval(uint32_t new_interval) {
+    if (new_interval == 0) {
+        incremental_interval_ = kIncrementalInterval;
+    } else {
+        incremental_interval_ = new_interval;
+    }
+}
+
 void AgentUveBase::Shutdown() {
     vn_uve_table_.get()->Shutdown();
     vm_uve_table_.get()->Shutdown();
