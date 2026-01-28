@@ -1627,7 +1627,7 @@ protected:
     }
 
     bool CheckTagList(autogen::EnetTagListType &rt_tag_list,
-                      const vector<int> &tag_list) {
+                      const vector<uint64_t> &tag_list) {
         if (rt_tag_list.tag.size() != tag_list.size())
             return false;
         for (size_t idx = 0; idx < tag_list.size(); ++idx) {
@@ -1639,7 +1639,7 @@ protected:
     }
 
     bool CheckRouteTagList(test::NetworkAgentMockPtr agent,
-        const string &network, const string &prefix, vector<int> &tag_list) {
+        const string &network, const string &prefix, vector<uint64_t> &tag_list) {
         task_util::TaskSchedulerLock lock;
         const autogen::EnetItemType *rt =
             agent->EnetRouteLookup(network, prefix);
@@ -1707,7 +1707,7 @@ protected:
 
 
     void VerifyRouteTagList(test::NetworkAgentMockPtr agent,
-        const string &network, const string &prefix, vector<int> &tag_list) {
+        const string &network, const string &prefix, vector<uint64_t> &tag_list) {
         TASK_UTIL_EXPECT_TRUE(
             CheckRouteTagList(agent, network, prefix, tag_list));
     }
@@ -2197,7 +2197,7 @@ TEST_F(BgpXmppEvpnTest2, RouteAddWithTagList) {
     // Add route from agent A with TagList
     stringstream eroute_a;
     eroute_a << "aa:00:00:00:00:01,10.1.1.1/32";
-    vector<int> tag_list = list_of (1)(2);
+    vector<uint64_t> tag_list = list_of (1)(2);
     test::NextHop next_hop1("192.168.1.1", 0, tag_list);
     agent_a_->AddEnetRoute("blue", eroute_a.str(), next_hop1);
     task_util::WaitForIdle();
@@ -2205,7 +2205,7 @@ TEST_F(BgpXmppEvpnTest2, RouteAddWithTagList) {
     // Add route from agent B with TagList
     stringstream eroute_b;
     eroute_b << "bb:00:00:00:00:01,10.1.2.1/32";
-    vector<int> tag_list_1 = list_of (3)(4);
+    vector<uint64_t> tag_list_1 = list_of (3)(4);
     test::NextHop next_hop2("192.168.1.1", 0, tag_list_1);
     agent_b_->AddEnetRoute("blue", eroute_b.str(), next_hop2);
     task_util::WaitForIdle();

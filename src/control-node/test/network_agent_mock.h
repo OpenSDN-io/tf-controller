@@ -211,7 +211,7 @@ struct NextHop {
         }
     }
 
-    NextHop(std::string address, uint32_t label, std::vector<int> &tag_list,
+    NextHop(std::string address, uint32_t label, std::vector<uint64_t> &tag_list,
             const std::string virtual_network = "") :
             address_(address), no_label_(false), label_(label), l3_label_(0),
             tag_list_(tag_list), virtual_network_(virtual_network) {
@@ -250,7 +250,7 @@ struct NextHop {
             return false;
         }
 
-        std::vector<int>::iterator it;
+        std::vector<uint64_t>::iterator it;
         for (it = tag_list_.begin(); it != tag_list_.end(); it++) {
             if (std::find(other.tag_list_.begin(), other.tag_list_.end(), *it)
                 == other.tag_list_.end()) {
@@ -268,7 +268,7 @@ struct NextHop {
     int label_;
     int l3_label_;
     std::vector<std::string> tunnel_encapsulations_;
-    std::vector<int> tag_list_;
+    std::vector<uint64_t> tag_list_;
     std::string virtual_network_;
 };
 
