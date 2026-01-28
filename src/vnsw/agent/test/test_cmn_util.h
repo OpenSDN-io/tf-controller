@@ -76,7 +76,7 @@ struct TestQosConfigData {
 struct TestTag {
     std::string name_;
     uint32_t uuid_;
-    uint32_t id_;
+    uint64_t id_;
 };
 
 boost::uuids::uuid MakeUuid(int id);
@@ -378,7 +378,7 @@ void AddMirrorAcl(const char *name, int id, const char *src_vn,
                   const char *dest_vn, const char *action,
                   std::string mirror_ip);
 void AddSg(const char *name, int id, int sg_id = 1);
-void AddTag(const char *name, int id);
+void AddTag(const char *name, uint64_t id);
 void DelOperDBAcl(int id);
 void AddFloatingIp(const char *name, int id, const char *addr,
                    const char *fixed_ip="0.0.0.0",
@@ -787,7 +787,7 @@ void FreeLabel(uint32_t label);
 void AddBridgeDomain(const char *name, uint32_t id, uint32_t isid,
                      bool mac_learning = true);
 void AddVmportBridgeDomain(const char *name, uint32_t vlan_tag);
-void AddTag(const char *name, uint32_t uuid, uint32_t id,
+void AddTag(const char *name, uint32_t uuid, uint64_t id,
             const std::string type = "");
 void AddFirewallPolicyRuleLink(const std::string &node_name,
                                const std::string &fp,
