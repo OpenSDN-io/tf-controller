@@ -19,7 +19,7 @@ request sandesh InterfaceUveInfoReq {
  */
 struct SandeshUveTagInfo {
     /** Tag Identifier */
-    1: u32    id;
+    1: u64    id;
     /** Type of tag */
     2: string type;
     /** Name of tag */

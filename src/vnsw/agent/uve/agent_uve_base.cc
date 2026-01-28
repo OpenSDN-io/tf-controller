@@ -63,7 +63,7 @@ void AgentUveBase::BuildTagNamesFromList(const TagList &tl, UveTagData *info)
     TagTable *table = agent_->tag_table();
     TagList::const_iterator it = tl.begin();
     while (it != tl.end()) {
-        uint32_t type = ((uint32_t)*it >> TagEntry::kTagTypeBitShift);
+        uint64_t type = ((uint64_t)*it >> TagEntry::kTagTypeBitShift);
         switch (type) {
         case TagTable::APPLICATION:
             info->application = table->TagName(*it);
@@ -112,13 +112,13 @@ void AgentUveBase::BuildTagNamesFromList(const TagList &tl, UveTagData *info)
 }
 
 /* Web-UI requires tag-id to returned as hex string. This should start with 0x
- * and have exactly 8 digits/characters. Zero should be used for filling leading
- * characters if the tag-id is not 8 digits wide. Web-UI uses this id to do
+ * and have exactly 12 digits/characters. Zero should be used for filling leading
+ * characters if the tag-id is not 12 digits wide. Web-UI uses this id to do
  * lookup in API server */
-string AgentUveBase::IntegerToHexString(uint32_t value) const {
+string AgentUveBase::TagIDToHexString(uint64_t value) const {
     std::stringstream ss;
     ss << "0x" << std::setfill('0') <<
-        std::setw(8) << std::hex << (uint32_t)value;
+        std::setw(12) << std::hex << (uint64_t)value;
     return ss.str();
 }
 
@@ -126,48 +126,48 @@ void AgentUveBase::BuildTagIdsFromList(const TagList &tl, UveTagData *info)
     const {
     TagList::const_iterator it = tl.begin();
     while (it != tl.end()) {
-        uint32_t type = ((uint32_t)*it >> TagEntry::kTagTypeBitShift);
+        uint64_t type = ((uint64_t)*it >> TagEntry::kTagTypeBitShift);
         switch (type) {
         case TagTable::APPLICATION:
-            info->application = IntegerToHexString(*it);
+            info->application = TagIDToHexString(*it);
             break;
         case TagTable::TIER:
-            info->tier = IntegerToHexString(*it);
+            info->tier = TagIDToHexString(*it);
             break;
         case TagTable::SITE:
-            info->site = IntegerToHexString(*it);
+            info->site = TagIDToHexString(*it);
             break;
         case TagTable::DEPLOYMENT:
-            info->deployment = IntegerToHexString(*it);
+            info->deployment = TagIDToHexString(*it);
             break;
         case TagTable::LABEL:
             if (info->fill_type == UveTagData::SET) {
-                info->label_set.insert(IntegerToHexString(*it));
+                info->label_set.insert(TagIDToHexString(*it));
                 break;
             } else if (info->fill_type == UveTagData::VECTOR) {
-                info->label_vector.push_back(IntegerToHexString(*it));
+                info->label_vector.push_back(TagIDToHexString(*it));
                 break;
             }
             if (!info->labels.empty()) {
                 info->labels += ";";
             }
-            info->labels.append(IntegerToHexString(*it));
+            info->labels.append(TagIDToHexString(*it));
             break;
         case TagTable::NEUTRON_FWAAS:
-            info->application = IntegerToHexString(*it);
+            info->application = TagIDToHexString(*it);
             break;
         default:
             if (info->fill_type == UveTagData::SET) {
-                info->custom_tag_set.insert(IntegerToHexString(*it));
+                info->custom_tag_set.insert(TagIDToHexString(*it));
                 break;
             } else if (info->fill_type == UveTagData::VECTOR) {
-                info->custom_tag_vector.push_back(IntegerToHexString(*it));
+                info->custom_tag_vector.push_back(TagIDToHexString(*it));
                 break;
             }
             if (!info->custom_tags.empty()) {
                 info->custom_tags += ";";
             }
-            info->custom_tags.append(IntegerToHexString(*it));
+            info->custom_tags.append(TagIDToHexString(*it));
             break;
         }
         ++it;

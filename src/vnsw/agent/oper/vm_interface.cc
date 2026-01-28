@@ -2876,7 +2876,7 @@ VmInterface::TagEntry::TagEntry(const TagEntry &rhs) :
     type_(rhs.type_), uuid_(rhs.uuid_) {
 }
 
-VmInterface::TagEntry::TagEntry(uint32_t type, const uuid &u) :
+VmInterface::TagEntry::TagEntry(uint64_t type, const uuid &u) :
     ListEntry(), VmInterfaceState(), type_(type), uuid_(u) {
 }
 

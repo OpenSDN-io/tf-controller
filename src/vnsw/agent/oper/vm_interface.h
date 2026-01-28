@@ -811,7 +811,7 @@ public:
     struct TagEntry : ListEntry, VmInterfaceState {
         TagEntry();
         TagEntry(const TagEntry &rhs);
-        TagEntry(uint32_t tag_type, const boost::uuids::uuid &uuid);
+        TagEntry(uint64_t tag_type, const boost::uuids::uuid &uuid);
         virtual ~TagEntry();
 
         bool operator == (const TagEntry &rhs) const;
@@ -824,7 +824,7 @@ public:
         bool DeleteL3(const Agent *agent, VmInterface *vmi) const;
 
         mutable TagEntryRef tag_;
-        uint32_t type_;
+        uint64_t type_;
         mutable boost::uuids::uuid uuid_;
     };
     typedef std::set<TagEntry, TagEntry> TagEntrySet;
