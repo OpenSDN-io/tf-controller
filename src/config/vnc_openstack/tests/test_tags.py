@@ -155,8 +155,9 @@ class NeutronTagsTestCase(test_case.NeutronBackendTestCase):
             self.assertIn(res['id'], expected_uuids)
             self.assertGreaterEqual(len(res['tags']), 1)
 
-    def assert_multiple_not_tags_match(self, resource_name, resources, tags):
-        """Assert all resources with not-tag match have been fetched.
+    def assert_multiple_not_tags_any_match(self, resource_name, resources,
+                                           tags):
+        """Assert all resources with not-tag-any match have been fetched.
 
         :param (str) resource_name: Name of resource to check
         :param (dict) resources: Dict with tag:vnc_resource pairs
@@ -166,7 +167,7 @@ class NeutronTagsTestCase(test_case.NeutronBackendTestCase):
             resource_name,
             proj_uuid=self.project.uuid,
             req_filters={
-                'not-tags': tags,
+                'not-tags-any': tags,
             },
         )
         # check if response is not empty
@@ -190,9 +191,8 @@ class NeutronTagsTestCase(test_case.NeutronBackendTestCase):
         for expected_uuid in expected_uuids:
             self.assertIn(expected_uuid, result_uuids)
 
-    def assert_multiple_not_tags_any_match(self, resource_name, resources,
-                                           tags):
-        """Assert all resources with not-tags-any match have been fetched.
+    def assert_multiple_not_tags_match(self, resource_name, resources, tags):
+        """Assert all resources with not-tags match have been fetched.
 
         :param (str) resource_name: Name of resource to check
         :param (dict) resources: Dict with tag:vnc_resource pairs
@@ -202,7 +202,7 @@ class NeutronTagsTestCase(test_case.NeutronBackendTestCase):
             resource_name,
             proj_uuid=self.project.uuid,
             req_filters={
-                'not-tags-any': tags,
+                'not-tags': tags,
             },
         )
         # check if response is not empty
