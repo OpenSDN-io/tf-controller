@@ -1266,10 +1266,8 @@ bool AclEntrySpec::Populate(Agent *agent, IFMapNode *fw_rule_node,
         src_policy_id_str = nt;
     } else if (fw_rule->endpoint_1().tags.size()) {
         src_addr_type = AddressMatch::TAGS;
-        std::vector<int>::const_iterator it =
-            fw_rule->endpoint_1().tag_ids.begin();
-        for (;it != fw_rule->endpoint_1().tag_ids.end(); it++) {
-            src_tags.push_back(*it);
+        for (uint64_t tag_fwe : fw_rule->endpoint_1().tag_ids) {
+            src_tags.push_back(tag_fwe);
         }
          //Sort the tags for optimizing comparision
         std::sort(src_tags.begin(), src_tags.end());
@@ -1298,10 +1296,8 @@ bool AclEntrySpec::Populate(Agent *agent, IFMapNode *fw_rule_node,
         dst_policy_id_str = nt;
     } else if (fw_rule->endpoint_2().tags.size()) {
         dst_addr_type = AddressMatch::TAGS;
-        std::vector<int>::const_iterator it =
-            fw_rule->endpoint_2().tag_ids.begin();
-        for (;it != fw_rule->endpoint_2().tag_ids.end(); it++) {
-            dst_tags.push_back(*it);
+        for (uint64_t tag_fwe : fw_rule->endpoint_2().tag_ids) {
+            dst_tags.push_back(tag_fwe);
         }
         //Sort the tags for optimizing comparision
         std::sort(dst_tags.begin(), dst_tags.end());
