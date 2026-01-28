@@ -394,7 +394,7 @@ BgpProto::Update::~Update() {
 }
 
 struct BgpAttrCodeCompare {
-    bool operator()(BgpAttribute *lhs, BgpAttribute *rhs) {
+    bool operator()(BgpAttribute *lhs, BgpAttribute *rhs) const {
         return lhs->code < rhs->code;
     }
 };

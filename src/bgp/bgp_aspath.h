@@ -165,7 +165,7 @@ inline void intrusive_ptr_release(const AsPath *cpath) {
 typedef boost::intrusive_ptr<const AsPath> AsPathPtr;
 
 struct AsPathCompare {
-    bool operator()(const AsPath *lhs, const AsPath *rhs) {
+    bool operator()(const AsPath *lhs, const AsPath *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
@@ -323,7 +323,7 @@ inline void intrusive_ptr_release(const AsPath4Byte *cpath) {
 typedef boost::intrusive_ptr<const AsPath4Byte> AsPath4BytePtr;
 
 struct AsPath4ByteCompare {
-    bool operator()(const AsPath4Byte *lhs, const AsPath4Byte *rhs) {
+    bool operator()(const AsPath4Byte *lhs, const AsPath4Byte *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
@@ -481,7 +481,7 @@ inline void intrusive_ptr_release(const As4Path *cpath) {
 typedef boost::intrusive_ptr<const As4Path> As4PathPtr;
 
 struct As4PathCompare {
-    bool operator()(const As4Path *lhs, const As4Path *rhs) {
+    bool operator()(const As4Path *lhs, const As4Path *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };

@@ -849,6 +849,6 @@ InstanceState::InstanceState() : DBState(),
 void InstanceState::Clear() {
     pid_ = 0;
     status_ = 0;
-    errors_.empty();
-    cmd_.empty();
+    errors_.clear();
+    cmd_.clear();
 }

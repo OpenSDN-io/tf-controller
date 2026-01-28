@@ -54,7 +54,7 @@ bool AgentParam::GetIpAddress(const string &str, Ip4Address *addr) {
 }
 
 bool AgentParam::ParseIp(const string &key, Ip4Address *server) {
-    optional<string> opt_str;
+    boost::optional<string> opt_str;
     if (opt_str = tree_.get_optional<string>(key)) {
         Ip4Address addr;
         if (GetIpAddress(opt_str.get(), &addr) == false) {
@@ -72,7 +72,7 @@ bool AgentParam::ParseIp(const string &key, Ip4Address *server) {
 
 bool AgentParam::ParseServerList(const string &key, Ip4Address *server1,
                                  Ip4Address *server2) {
-    optional<string> opt_str;
+    boost::optional<string> opt_str;
     Ip4Address addr;
     vector<string> tokens;
     if (opt_str = tree_.get_optional<string>(key)) {
@@ -127,7 +127,7 @@ bool AgentParam::ParseAddress(const std::string &addr_string,
 bool AgentParam::ParseServerList(const std::string &key,
                                  Ip4Address *server1, uint16_t *port1,
                                  Ip4Address *server2, uint16_t *port2) {
-    optional<string> opt_str;
+    boost::optional<string> opt_str;
     if (opt_str = tree_.get_optional<string>(key)) {
         vector<string> tokens;
         boost::split(tokens, opt_str.get(), boost::is_any_of(" \t"));

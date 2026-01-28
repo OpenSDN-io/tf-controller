@@ -111,7 +111,7 @@ inline void intrusive_ptr_release(const Community *ccomm) {
 typedef boost::intrusive_ptr<const Community> CommunityPtr;
 
 struct CommunityCompare {
-    bool operator()(const Community *lhs, const Community *rhs) {
+    bool operator()(const Community *lhs, const Community *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
@@ -450,7 +450,7 @@ inline void intrusive_ptr_release(const ExtCommunity *cextcomm) {
 typedef boost::intrusive_ptr<const ExtCommunity> ExtCommunityPtr;
 
 struct ExtCommunityCompare {
-    bool operator()(const ExtCommunity *lhs, const ExtCommunity *rhs) {
+    bool operator()(const ExtCommunity *lhs, const ExtCommunity *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
@@ -679,7 +679,7 @@ typedef boost::intrusive_ptr<const LargeCommunity> LargeCommunityPtr;
 
 /// @brief A structure to compare order LargeCommunity objects.
 struct LargeCommunityCompare {
-    bool operator()(const LargeCommunity *lhs, const LargeCommunity *rhs) {
+    bool operator()(const LargeCommunity *lhs, const LargeCommunity *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
