@@ -332,24 +332,24 @@ bool VxlanRoutingManager::WithdrawEvpnRouteFromRoutingVrf(
     const VrfEntry *routing_vrf,
     DBTablePartBase *partition, DBEntryBase *e) {
 
-    EvpnRouteEntry *evpn_rt = dynamic_cast<EvpnRouteEntry *>(e);
+    InetUnicastRouteEntry *inet_rt = dynamic_cast<InetUnicastRouteEntry *>(e);
 
-    if (!routing_vrf || !routing_vrf->GetEvpnRouteTable()  ||  !evpn_rt) {
+    if (!routing_vrf || !routing_vrf->GetEvpnRouteTable()  ||  !inet_rt) {
         return true;
     }
     EvpnAgentRouteTable *routing_evpn = static_cast<EvpnAgentRouteTable*>(
         routing_vrf->GetEvpnRouteTable());
     const EvpnRouteEntry *rt_route = routing_evpn->FindRoute(
-        MacAddress(), evpn_rt->prefix_address(), evpn_rt->prefix_length(), 0);
-    if (RoutePrefixIsEqualTo(rt_route, evpn_rt->prefix_address(),
-        evpn_rt->prefix_length())) {
+        MacAddress(), inet_rt->prefix_address(), inet_rt->prefix_length(), 0);
+    if (RoutePrefixIsEqualTo(rt_route, inet_rt->prefix_address(),
+        inet_rt->prefix_length())) {
         // Remove deleted EVPN Type 5 record in the routing VRF
         EvpnAgentRouteTable::DeleteReq(
             routing_vrf_interface_peer_,
             routing_vrf->GetName(),
             MacAddress(),
-            evpn_rt->prefix_address(),
-            evpn_rt->prefix_length(),
+            inet_rt->prefix_address(),
+            inet_rt->prefix_length(),
             0,  // ethernet_tag = 0 for Type5
             NULL);
     }

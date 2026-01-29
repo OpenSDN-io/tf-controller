@@ -495,18 +495,19 @@ public:
 
     /// @brief Deletes a given EVPN route from EVPN table of the routing
     /// VRF instance
-    bool WithdrawEvpnRouteFromRoutingVrf
-    (const VrfEntry *routing_vrf, DBTablePartBase *partition, DBEntryBase *e);
+    bool WithdrawEvpnRouteFromRoutingVrf(const VrfEntry *routing_vrf,
+                                         DBTablePartBase *partition,
+                                         DBEntryBase *e);
 
     /// @brief Performs advertisement and deletion of routing routes
     /// (with VrfNH) in bridge VRF instances. External tunnels and routes
     /// with a prefix that is not present in bridge VRF instance are
     /// selected for leaking
     bool LeakRoutesIntoBridgeTables(DBTablePartBase *partition,
-        DBEntryBase *e,
-        const boost::uuids::uuid &uuid,
-        const VnEntry *vn,
-        bool update = false);
+                                    DBEntryBase *e,
+                                    const boost::uuids::uuid &uuid,
+                                    const VnEntry *vn,
+                                    bool update = false);
 
     /// @brief Handles routing routes (with VrfNH) update in the routing VRF
     /// instance.
@@ -520,7 +521,7 @@ private:
     /// @brief Deletes subnet routes (actually, paths with VrfNH) in
     /// the given bridge VRF. This function is demanded at vn.c:618
     void DeleteSubnetRoute(const VrfEntry *vrf);
-    //void DeleteSubnetRoute(const VrfEntry *vrf, VnIpam *ipam = NULL);
+    // void DeleteSubnetRoute(const VrfEntry *vrf, VnIpam *ipam = NULL);
 
     /// @brief Deletes subnet routes from a specified virtual network
     /// (VirtualNetwork)
@@ -530,14 +531,14 @@ private:
     /// @brief Delete routes to IPAM, specified by IP prefix and prefix
     /// length
     void DeleteIpamRoutes(const VnEntry *vn,
-    const std::string& vrf_name,
-    const IpAddress& ipam_prefix,
-    const uint32_t plen);
+                          const std::string& vrf_name,
+                          const IpAddress& ipam_prefix,
+                          const uint32_t plen);
 
     /// @brief Updates subnet routes (actually, paths with VrfNH) in
     /// the given bridge VRF
     void UpdateSubnetRoute(const VrfEntry *vrf,
-                            const VrfEntry *routing_vrf);
+                           const VrfEntry *routing_vrf);
 public:
 
     /// @brief Updates Sandesh response
