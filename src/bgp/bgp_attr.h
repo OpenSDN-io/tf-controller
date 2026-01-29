@@ -266,7 +266,7 @@ inline void intrusive_ptr_release(const ClusterList *ccluster_list) {
 typedef boost::intrusive_ptr<ClusterList> ClusterListPtr;
 
 struct ClusterListCompare {
-    bool operator()(const ClusterList *lhs, const ClusterList *rhs) {
+    bool operator()(const ClusterList *lhs, const ClusterList *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
@@ -420,7 +420,7 @@ inline void intrusive_ptr_release(const PmsiTunnel *cpmsi_tunnel) {
 typedef boost::intrusive_ptr<PmsiTunnel> PmsiTunnelPtr;
 
 struct PmsiTunnelCompare {
-    bool operator()(const PmsiTunnel *lhs, const PmsiTunnel *rhs) {
+    bool operator()(const PmsiTunnel *lhs, const PmsiTunnel *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
@@ -484,7 +484,7 @@ public:
     typedef std::vector<Edge *> EdgeList;
 
     struct EdgeCompare {
-        bool operator()(const Edge *lhs, const Edge *rhs) {
+        bool operator()(const Edge *lhs, const Edge *rhs) const {
             BOOL_KEY_COMPARE(*lhs, *rhs);
             return false;
         }
@@ -524,7 +524,7 @@ inline void intrusive_ptr_release(const EdgeDiscovery *cediscovery) {
 typedef boost::intrusive_ptr<EdgeDiscovery> EdgeDiscoveryPtr;
 
 struct EdgeDiscoveryCompare {
-    bool operator()(const EdgeDiscovery *lhs, const EdgeDiscovery *rhs) {
+    bool operator()(const EdgeDiscovery *lhs, const EdgeDiscovery *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
@@ -591,7 +591,7 @@ public:
     typedef std::vector<Edge *> EdgeList;
 
     struct EdgeCompare {
-        bool operator()(const Edge *lhs, const Edge *rhs) {
+        bool operator()(const Edge *lhs, const Edge *rhs) const {
             BOOL_KEY_COMPARE(*lhs, *rhs);
             return false;
         }
@@ -632,7 +632,7 @@ inline void intrusive_ptr_release(const EdgeForwarding *ceforwarding) {
 typedef boost::intrusive_ptr<EdgeForwarding> EdgeForwardingPtr;
 
 struct EdgeForwardingCompare {
-    bool operator()(const EdgeForwarding *lhs, const EdgeForwarding *rhs) {
+    bool operator()(const EdgeForwarding *lhs, const EdgeForwarding *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
@@ -675,7 +675,7 @@ public:
 };
 
 struct BgpOListElemCompare {
-    bool operator()(const BgpOListElem *lhs, const BgpOListElem *rhs) {
+    bool operator()(const BgpOListElem *lhs, const BgpOListElem *rhs) const {
         BOOL_KEY_COMPARE(*lhs, *rhs);
         return false;
     }
@@ -746,7 +746,7 @@ inline void intrusive_ptr_release(const BgpOList *colist) {
 typedef boost::intrusive_ptr<BgpOList> BgpOListPtr;
 
 struct BgpOListCompare {
-    bool operator()(const BgpOList *lhs, const BgpOList *rhs) {
+    bool operator()(const BgpOList *lhs, const BgpOList *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };
@@ -997,7 +997,7 @@ inline void intrusive_ptr_release(const BgpAttr *cattrp) {
 typedef boost::intrusive_ptr<const BgpAttr> BgpAttrPtr;
 
 struct BgpAttrCompare {
-    bool operator()(const BgpAttr *lhs, const BgpAttr *rhs) {
+    bool operator()(const BgpAttr *lhs, const BgpAttr *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };

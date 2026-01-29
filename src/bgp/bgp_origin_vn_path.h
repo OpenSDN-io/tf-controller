@@ -103,7 +103,7 @@ inline void intrusive_ptr_release(const OriginVnPath *covnpath) {
 typedef boost::intrusive_ptr<const OriginVnPath> OriginVnPathPtr;
 
 struct OriginVnPathCompare {
-    bool operator()(const OriginVnPath *lhs, const OriginVnPath *rhs) {
+    bool operator()(const OriginVnPath *lhs, const OriginVnPath *rhs) const {
         return lhs->CompareTo(*rhs) < 0;
     }
 };

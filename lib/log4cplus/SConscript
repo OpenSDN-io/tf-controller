@@ -4,10 +4,12 @@ vpath = '#/third_party/log4cplus-2.1.1'
 
 env = DefaultEnvironment()
 
-if env['CPP_STANDARD'] != 'c++11':
-  stdoption = ''
-else:
+if env['CPP_STANDARD'] == 'c++11':
   stdoption = 'CXXFLAGS=-std=c++11 '
+elif env['CPP_STANDARD'] == 'c++17':
+  stdoption = 'CXXFLAGS=-std=c++17 '
+else:
+  stdoption = ''
 
 config_opts = (stdoption + '--prefix=' + str(Dir('#/build')) +
        ' --enable-static=yes --enable-thread-pool=no  --enable-threads=yes')

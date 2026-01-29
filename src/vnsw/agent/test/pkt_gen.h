@@ -90,10 +90,10 @@ public:
         /* data is the one for which we are calculating checksum and its size
            len in bytes */
 
-        register uint32_t sum=0;
+        uint32_t sum=0;
         uint16_t ans;
-        register uint16_t *temp=data;
-        register uint32_t odd = len;
+        uint16_t *temp=data;
+        uint32_t odd = len;
 
         /* adding 16 bits every time to sum */
         while( odd > 1) {

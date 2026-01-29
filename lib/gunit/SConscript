@@ -14,7 +14,7 @@ if hasattr(platform, 'dist'):
 else:
    distname = distro.id()
    version = distro.version(best=True)
-if env['CPP_STANDARD'] != 'c++11':
+if env['CPP_STANDARD'] not in ['c++11', 'c++17']:
     gtest_path = '#/third_party/gtest-1.6.0'
     gmock_path = '#/third_party/gmock-1.6.0'
 else:
