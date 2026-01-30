@@ -3,3 +3,4 @@ contrail-api-client==0.1.dev0
 sandesh==0.1.dev0
 sandesh_common==0.1.dev0
 ansible==2.6.13
+setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
