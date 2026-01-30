@@ -2,6 +2,7 @@
  * Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <uve/agent_uve_base.h>
 #include <ifmap/ifmap_node.h>
 #include <vnc_cfg_types.h>
 #include <base/address_util.h>
@@ -85,55 +86,60 @@ void VRouter::ConfigAddChange(IFMapNode *node) {
     autogen::VirtualRouter *cfg = static_cast<autogen::VirtualRouter *>
         (node->GetObject());
     VRouterSubnetSet new_subnet_list;
-    if (node->IsDeleted() == false) {
-        const std::vector<autogen::KeyValuePair> &tblengths =
-		cfg->tracebuffer_length();
-    	int new_buf_size;
-        for (const auto& kv_pair : tblengths) {
-	    try {
-		new_buf_size = boost::lexical_cast<int>(kv_pair.value);
-	    } catch (const boost::bad_lexical_cast& e) {
-		continue;
-	    }
-	    if (new_buf_size <= 0) {
-	        continue;
-	    }
-	    SandeshTraceBufferResetSize(kv_pair.key, new_buf_size);
-	}
-    	name_ = node->name();
-        display_name_ = cfg->display_name();
-        IFMapNode *vr_ipam_link = agent()->config_manager()->
-            FindAdjacentIFMapNode(node, "virtual-router-network-ipam");
-        /* If the link is deleted, clear the subnets configured earlier */
-        if (!vr_ipam_link) {
-            ClearSubnets();
-            return;
-        }
-        autogen::VirtualRouterNetworkIpam *vr_ipam =
-            static_cast<autogen::VirtualRouterNetworkIpam *>
-            (vr_ipam_link->GetObject());
-        const autogen::VirtualRouterNetworkIpamType &data = vr_ipam->data();
-        std::vector<autogen::SubnetType>::const_iterator it =
-            data.subnet.begin();
-        while (it != data.subnet.end()) {
-            VRouterSubnet subnet(it->ip_prefix, it->ip_prefix_len);
-            new_subnet_list.insert(subnet);
-            ++it;
-        }
-
-        if (new_subnet_list != subnet_list_) {
-            bool changed = AuditList<VRouter, VRouterSubnetSet::iterator>
-                (*this, subnet_list_.begin(), subnet_list_.end(),
-                 new_subnet_list.begin(), new_subnet_list.end());
-            if (changed) {
-                agent()->oper_db()->route_leak_manager()->
-                    ReEvaluateRouteExports();
-            }
-        }
-    } else {
-        ClearSubnets();
+    if (node->IsDeleted()) {
+         ClearSubnets();
+         return;
     }
-    return;
+
+    const std::vector<autogen::KeyValuePair> &tblengths =
+    cfg->tracebuffer_length();
+    int new_buf_size;
+    for (const auto& kv_pair : tblengths) {
+        try {
+            new_buf_size = boost::lexical_cast<int>(kv_pair.value);
+        } catch (const boost::bad_lexical_cast& e) {
+            continue;
+        }
+        if (new_buf_size <= 0) {
+            continue;
+        }
+        SandeshTraceBufferResetSize(kv_pair.key, new_buf_size);
+    }
+
+    agent()->uve()->set_default_interval(cfg->agent_uve_default_interval());
+    agent()->uve()->set_incremental_interval(
+        cfg->agent_uve_incremental_interval());
+
+    name_ = node->name();
+    display_name_ = cfg->display_name();
+    IFMapNode *vr_ipam_link = agent()->config_manager()->
+        FindAdjacentIFMapNode(node, "virtual-router-network-ipam");
+    /* If the link is deleted, clear the subnets configured earlier */
+    if (!vr_ipam_link) {
+        ClearSubnets();
+        return;
+    }
+    autogen::VirtualRouterNetworkIpam *vr_ipam =
+        static_cast<autogen::VirtualRouterNetworkIpam *>
+        (vr_ipam_link->GetObject());
+    const autogen::VirtualRouterNetworkIpamType &data = vr_ipam->data();
+    std::vector<autogen::SubnetType>::const_iterator it =
+        data.subnet.begin();
+    while (it != data.subnet.end()) {
+        VRouterSubnet subnet(it->ip_prefix, it->ip_prefix_len);
+        new_subnet_list.insert(subnet);
+        ++it;
+    }
+
+    if (new_subnet_list != subnet_list_) {
+        bool changed = AuditList<VRouter, VRouterSubnetSet::iterator>
+            (*this, subnet_list_.begin(), subnet_list_.end(),
+                new_subnet_list.begin(), new_subnet_list.end());
+        if (changed) {
+            agent()->oper_db()->route_leak_manager()->
+                ReEvaluateRouteExports();
+        }
+    }
 }
 
 void VRouter::DeleteSubnetRoutes() {

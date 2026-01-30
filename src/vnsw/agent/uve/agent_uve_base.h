@@ -100,6 +100,16 @@ public:
     uint32_t incremental_interval() const { return incremental_interval_; }
     void BuildTagNamesFromList(const TagList &tl, UveTagData *info) const;
     void BuildTagIdsFromList(const TagList &tl, UveTagData *info) const;
+
+    /// @brief Sets the default interval (time between two dispatches of
+    /// Agent's information to UVE).
+    void set_default_interval(uint32_t new_interval = kDefaultInterval);
+
+    /// @brief Sets the incremental interval (time between dispatches of
+    /// Agent's information and its remnant to UVE).
+    void set_incremental_interval(uint32_t new_interval =
+                                  kIncrementalInterval);
+
 protected:
     boost::scoped_ptr<VnUveTableBase> vn_uve_table_;
     boost::scoped_ptr<VmUveTableBase> vm_uve_table_;
