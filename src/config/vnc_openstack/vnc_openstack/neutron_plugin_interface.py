@@ -238,10 +238,10 @@ class NeutronPluginInterface(object):
                     bool(set(res_tags) & tags_to_fetch['tags-any']))
             if 'not-tags' in tags:
                 to_fetch.append(
-                    not bool(set(res_tags) & tags_to_fetch['not-tags']))
+                    not tags_to_fetch['not-tags'].issubset(set(res_tags)))
             if 'not-tags-any' in tags:
                 to_fetch.append(
-                    not tags_to_fetch['not-tags-any'].issubset(set(res_tags)))
+                    not bool(set(res_tags) & tags_to_fetch['not-tags-any']))
             if all(to_fetch):
                 res_ids.append(res_uuid)
 
