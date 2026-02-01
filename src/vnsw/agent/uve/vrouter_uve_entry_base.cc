@@ -46,7 +46,11 @@ VrouterUveEntryBase::~VrouterUveEntryBase() {
 
 void VrouterUveEntryBase::StartTimer() {
     timer_->Cancel();
-    timer_->Start(AgentUveBase::kDefaultInterval,
+    uint32_t tm_interval = AgentUveBase::kDefaultInterval;
+    if (agent_ != nullptr && agent_->uve() != nullptr) {
+        tm_interval = agent_->uve()->default_interval();
+    }
+    timer_->Start(tm_interval,
                   boost::bind(&VrouterUveEntryBase::TimerExpiry, this));
 }
 

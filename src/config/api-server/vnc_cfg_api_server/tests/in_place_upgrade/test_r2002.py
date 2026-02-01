@@ -1306,6 +1306,7 @@ class TestInPlaceUpgradeR2002(test_case.InPlaceUpgradeTestCase):
             'virtual_router_tracebuffer_length': {},
             'agent_uve_incremental_interval': 0,
             'agent_uve_default_interval': 0,
+            'agent_stats_collector_interval': 0,
             'display_name': 'some string',
         }
         obj = self.set_properties(VirtualRouter, prop_map)
@@ -1326,6 +1327,7 @@ class TestInPlaceUpgradeR2002(test_case.InPlaceUpgradeTestCase):
             'virtual_router_tracebuffer_length': {},
             'agent_uve_incremental_interval': 0,
             'agent_uve_default_interval': 0,
+            'agent_stats_collector_interval': 0,
             'display_name': 'some string',
         }
         obj = self.set_properties(PortProfile, prop_map)

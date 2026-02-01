@@ -13,6 +13,8 @@
 #include <oper/vrf.h>
 #include <oper/config_manager.h>
 #include <sandesh/sandesh_trace.h>
+#include <vrouter/stats_collector/agent_stats_collector.h>
+#include <init/agent_param.h>
 
 VRouterSubnet::VRouterSubnet(const std::string& ip, uint8_t prefix_len) {
     boost::system::error_code ec;
@@ -109,6 +111,13 @@ void VRouter::ConfigAddChange(IFMapNode *node) {
     agent()->uve()->set_default_interval(cfg->agent_uve_default_interval());
     agent()->uve()->set_incremental_interval(
         cfg->agent_uve_incremental_interval());
+    if (cfg->agent_stats_collector_interval() > 0) {
+        agent()->stats_collector()->set_expiry_time(
+            cfg->agent_stats_collector_interval());
+    } else {
+        agent()->stats_collector()->set_expiry_time(
+            agent()->params()->agent_stats_interval());
+    }
 
     name_ = node->name();
     display_name_ = cfg->display_name();
