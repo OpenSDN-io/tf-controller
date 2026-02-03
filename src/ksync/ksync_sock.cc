@@ -2,8 +2,11 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
 #include <string>
+
 #include "base/os.h"
+
 #if defined(__linux__)
 #include <asm/types.h>
 #include <linux/netlink.h>
@@ -11,6 +14,7 @@
 #include <linux/genetlink.h>
 #include <linux/sockios.h>
 #endif
+
 #include <sys/socket.h>
 
 #include <boost/bind.hpp>
@@ -43,7 +47,7 @@ int KSyncSock::vnsw_netlink_family_id_;
 AgentSandeshContext *KSyncSock::agent_sandesh_ctx_[kRxWorkQueueCount];
 std::unique_ptr<KSyncSock> KSyncSock::sock_;
 pid_t KSyncSock::pid_;
-tbb::atomic<bool> KSyncSock::shutdown_;
+std::atomic<bool> KSyncSock::shutdown_;
 
 // Name of task used in KSync Response work-queues
 const char* IoContext::io_wq_names[IoContext::MAX_WORK_QUEUES] =
@@ -283,10 +287,10 @@ void KSyncSock::SetSeqno(uint32_t seq) {
 uint32_t KSyncSock::AllocSeqNo(IoContext::Type type, uint32_t instance) {
     uint32_t seq;
     if (type == IoContext::IOC_UVE) {
-        seq = uve_seqno_.fetch_and_add(1);
+        seq = uve_seqno_.fetch_add(1);
         seq = (seq * kRxWorkQueueCount + (instance % kRxWorkQueueCount)) << 1;
     } else {
-        seq = seqno_.fetch_and_add(1);
+        seq = seqno_.fetch_add(1);
         seq = (seq * kRxWorkQueueCount + (instance % kRxWorkQueueCount)) << 1;
         seq |= KSYNC_DEFAULT_Q_ID_SEQ;
     }

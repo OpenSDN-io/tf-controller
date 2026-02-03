@@ -438,12 +438,12 @@ Icmpv6VrfState::~Icmpv6VrfState() {
 }
 
 void intrusive_ptr_add_ref(Icmpv6PathPreferenceState *ps) {
-    ps->refcount_.fetch_and_increment();
+    ps->refcount_++;
 }
 
 void intrusive_ptr_release(Icmpv6PathPreferenceState *ps) {
     Icmpv6VrfState *state = ps->vrf_state();
-    int prev = ps->refcount_.fetch_and_decrement();
+    int prev = ps->refcount_.fetch_sub(1);
     if (prev == 1) {
         state->Erase(ps->ip());
         delete ps;

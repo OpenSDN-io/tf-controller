@@ -8,7 +8,7 @@
 #define vnsw_agent_stats_hpp
 
 #include <stdint.h>
-#include <tbb/atomic.h>
+#include <atomic>
 
 typedef boost::function<uint32_t()> FlowCountFn;
 class AgentStats {
@@ -84,8 +84,8 @@ public:
     uint32_t sandesh_http_sessions() const {return sandesh_http_sessions_;}
 
     void incr_flow_created() {
-        flow_created_.fetch_and_increment();
-        uint32_t count = flow_count_.fetch_and_increment();
+        flow_created_++;
+        uint32_t count = flow_count_.fetch_add(1);
         if (count > max_flow_count_)
             max_flow_count_ = count + 1;
     }
@@ -103,7 +103,7 @@ public:
 
     uint32_t hold_flow_count() const {return hold_flow_count_;}
 
-    void incr_flow_aged() { flow_aged_.fetch_and_increment(); }
+    void incr_flow_aged() { flow_aged_++; }
     uint64_t flow_aged() const {return flow_aged_;}
 
     int flow_stats_update_timeout() const {
@@ -254,13 +254,13 @@ private:
     uint64_t pkt_drop_due_to_flow_trap_;
 
     // Flow stats
-    tbb::atomic<uint32_t> flow_count_;
+    std::atomic<uint32_t> flow_count_;
     uint32_t max_flow_count_;
-    tbb::atomic<uint32_t> hold_flow_count_;
+    std::atomic<uint32_t> hold_flow_count_;
     uint64_t flow_drop_due_to_max_limit_;
     uint64_t flow_drop_due_to_linklocal_limit_;
-    tbb::atomic<uint64_t> flow_created_;
-    tbb::atomic<uint64_t> flow_aged_;
+    std::atomic<uint64_t> flow_created_;
+    std::atomic<uint64_t> flow_aged_;
     FlowCounters added_;
     FlowCounters deleted_;
     int flow_stats_update_timeout_;

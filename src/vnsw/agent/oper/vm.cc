@@ -69,7 +69,7 @@ bool VmEntry::DBEntrySandesh(Sandesh *sresp, std::string &name) const {
 void VmEntry::update_flow_count(int val) const {
     VmTable *vm_table = static_cast<VmTable *>(get_table());
     int max_flows = vm_table->agent()->max_vm_flows();
-    int tmp = flow_count_.fetch_and_add(val);
+    int tmp = flow_count_.fetch_add(val);
 
     if (max_flows == FLOWS_LIMIT_UNLIMITED) {
         // max_flows are not configured,

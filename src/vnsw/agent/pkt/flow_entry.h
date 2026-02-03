@@ -8,7 +8,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/intrusive/list.hpp>
-#include <tbb/atomic.h>
+#include <atomic>
 #include <tbb/mutex.h>
 #include <tbb/recursive_mutex.h>
 #include <base/util.h>
@@ -817,7 +817,7 @@ private:
     uint8_t gen_id_;
     uint32_t flow_handle_;
     FlowEntryPtr reverse_flow_entry_;
-    static tbb::atomic<int> alloc_count_;
+    static std::atomic<int> alloc_count_;
     bool deleted_;
     uint32_t flags_;
     uint16_t short_flow_reason_;
@@ -838,7 +838,7 @@ private:
     // Ksync entry for the flow
     FlowTableKSyncEntry *ksync_entry_;
     // atomic refcount
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
     tbb::mutex mutex_;
     boost::intrusive::list_member_hook<> free_list_node_;
     FlowStatsCollector *fsc_;

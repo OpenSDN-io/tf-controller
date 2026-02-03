@@ -8,7 +8,6 @@
 #include <boost/intrusive/list.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/atomic.h>
 
 #include <oper/oper_db.h>
 #include <filter/traffic_action.h>

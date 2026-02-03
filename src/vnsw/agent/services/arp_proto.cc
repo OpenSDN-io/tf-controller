@@ -114,12 +114,12 @@ void ArpProto::VrfNotify(DBTablePartBase *part, DBEntryBase *entry) {
 }
 
 void intrusive_ptr_add_ref(ArpPathPreferenceState *aps) {
-    aps->refcount_.fetch_and_increment();
+    aps->refcount_++;
 }
 
 void intrusive_ptr_release(ArpPathPreferenceState *aps) {
     ArpVrfState *state = aps->vrf_state();
-    int prev = aps->refcount_.fetch_and_decrement();
+    int prev = aps->refcount_.fetch_sub(1);
     if (prev == 1) {
         state->Erase(aps->ip(), aps->plen());
         delete aps;

@@ -2,6 +2,7 @@
  * Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
 #include <vector>
 #include <bitset>
 #include <arpa/inet.h>
@@ -106,7 +107,7 @@ const std::map<uint16_t, const char*>
         ((uint16_t)DROP_FWAAS_REVERSE_OUT_POLICY, "Flow drop REVERSE OUT FWAAS Policy")
         ((uint16_t)SHORT_L3MH_PHY_INTF_DOWN, "Short flow l3mh compute physical interface flap");
 
-tbb::atomic<int> FlowEntry::alloc_count_;
+std::atomic<int> FlowEntry::alloc_count_;
 SecurityGroupList FlowEntry::default_sg_list_;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -453,13 +454,13 @@ FlowEntry::FlowEntry(FlowTable *flow_table) :
     // it should not have any other explicit set to NULL
     ksync_entry_ = NULL;
     Reset();
-    alloc_count_.fetch_and_increment();
+    alloc_count_++;
 }
 
 FlowEntry::~FlowEntry() {
     assert(refcount_ == 0);
     Reset();
-    alloc_count_.fetch_and_decrement();
+    alloc_count_--;
 }
 
 void FlowEntry::Reset() {
@@ -564,12 +565,12 @@ void FlowEntry::Copy(FlowEntry *rhs, bool update) {
 // Routines to initialize FlowEntry from PktControlInfo
 /////////////////////////////////////////////////////////////////////////////
 void intrusive_ptr_add_ref(FlowEntry *fe) {
-    fe->refcount_.fetch_and_increment();
+    fe->refcount_++;
 }
 
 void intrusive_ptr_release(FlowEntry *fe) {
     FlowTable *flow_table = fe->flow_table();
-    int prev = fe->refcount_.fetch_and_decrement();
+    int prev = fe->refcount_.fetch_sub(1);
     if (prev == 1) {
         if (fe->on_tree()) {
             if (flow_table->ConcurrencyCheck(flow_table->flow_task_id())

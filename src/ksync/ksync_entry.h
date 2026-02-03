@@ -7,7 +7,7 @@
 
 #include <boost/intrusive_ptr.hpp>
 #include <boost/intrusive/set.hpp>
-#include <tbb/atomic.h>
+#include <atomic>
 #include <sandesh/common/vns_constants.h>
 #include <sandesh/common/vns_types.h>
 #include <sandesh/sandesh_trace.h>
@@ -189,7 +189,7 @@ private:
 
     size_t              index_;
     KSyncState          state_;
-    tbb::atomic<int>    refcount_;
+    std::atomic<int>    refcount_;
     bool                seen_;
 
     // Stale Entry flag indicates an entry as stale, which will be

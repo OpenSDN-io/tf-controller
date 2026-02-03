@@ -22,7 +22,7 @@ TokenPool::~TokenPool() {
 }
 
 void TokenPool::FreeToken() {
-    int val = token_count_.fetch_and_increment();
+    int val = token_count_.fetch_add(1);
     assert(val <= max_tokens_);
     if (val == low_water_mark_) {
         proto_->TokenAvailable(this);
@@ -39,14 +39,14 @@ bool TokenPool::TokenCheck() const {
 }
 
 TokenPtr TokenPool::GetToken() {
-    int val = token_count_.fetch_and_decrement();
+    int val = token_count_.fetch_sub(1);
     if (val < min_tokens_)
         min_tokens_ = val;
     return TokenPtr(new Token(this));
 }
 
 TokenPtr FlowTokenPool::GetToken(FlowEntry *entry) {
-    int val = token_count_.fetch_and_decrement();
+    int val = token_count_.fetch_sub(1);
     if (val < min_tokens_)
         min_tokens_ = val;
     return TokenPtr(new FlowToken(this, entry));

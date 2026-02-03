@@ -6,7 +6,7 @@
 #define SRC_VNSW_AGENT_OVS_TOR_AGENT_OVSDB_CLIENT_CONNECTION_STATE_H_
 
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/atomic.h>
+#include <atomic>
 #include <base/connection_info.h>
 #include <db/db.h>
 #include <db/db_entry.h>
@@ -91,7 +91,7 @@ private:
     // provide re-export functionality on both Active and Backup ToR
     // Agent
     HaStaleDevVnTable *ha_stale_dev_vn_table_;
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
     DISALLOW_COPY_AND_ASSIGN(ConnectionStateEntry);
 };
 

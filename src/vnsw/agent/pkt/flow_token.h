@@ -2,7 +2,7 @@
 #define __AGENT_PKT_FLOW_TOKEN_H__
 
 #include <memory>
-#include <tbb/atomic.h>
+#include <atomic>
 #include <base/util.h>
 
 class Token;
@@ -43,7 +43,7 @@ protected:
     int max_tokens_;
     int min_tokens_;
     int low_water_mark_;
-    tbb::atomic<int> token_count_;
+    std::atomic<int> token_count_;
     mutable uint64_t failures_;
     uint64_t restarts_;
     Proto *proto_;

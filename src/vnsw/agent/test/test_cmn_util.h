@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_test_cmn_util_h
 #define vnsw_agent_test_cmn_util_h
 
+#include <atomic>
+
 #include "test/test_init.h"
 
 using namespace std;
@@ -49,7 +51,7 @@ private:
     friend class HoldTask;
     int task_id_;
     int task_instance_;
-    tbb::atomic<bool> task_held_;
+    std::atomic<bool> task_held_;
 };
 
 struct TestForwardingClassData {

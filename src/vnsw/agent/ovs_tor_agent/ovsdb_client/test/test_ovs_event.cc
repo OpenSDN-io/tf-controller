@@ -2,6 +2,8 @@
  * Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
+
 #include "base/os.h"
 #include "testing/gunit.h"
 
@@ -171,7 +173,7 @@ public:
     OvsPeerManager *peer_manager_;
     OvsdbClientTcpSession *tcp_session_;
     OvsdbClientIdlPtr immediate_close_idl_;
-    tbb::atomic<bool> immediate_close_done_;
+    std::atomic<bool> immediate_close_done_;
 };
 
 TEST_F(OvsdbEventTest, ImmediateConnectionDown) {

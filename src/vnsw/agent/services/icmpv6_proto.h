@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_icmpv6_proto_h
 #define vnsw_agent_icmpv6_proto_h
 
+#include <atomic>
+
 #include "pkt/proto.h"
 #include "services/icmpv6_handler.h"
 #include "services/ndp_entry.h"
@@ -328,7 +330,7 @@ private:
     IpAddress svc_ip_;
     WaitForTrafficIntfMap l3_wait_for_traffic_map_;
     WaitForTrafficIntfMap evpn_wait_for_traffic_map_;
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
 };
 
 typedef boost::intrusive_ptr<Icmpv6PathPreferenceState>

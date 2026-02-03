@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_flow_proto_hpp
 #define vnsw_agent_flow_proto_hpp
 
+#include <atomic>
+
 #include <net/if.h>
 #include "cmn/agent_cmn.h"
 #include "base/queue_task.h"
@@ -110,7 +112,7 @@ public:
     void SetProfileData(ProfileData *data);
     uint32_t linklocal_flow_count() const { return linklocal_flow_count_; }
     void update_linklocal_flow_count(int val) {
-        int tmp = linklocal_flow_count_.fetch_and_add(val);
+        int tmp = linklocal_flow_count_.fetch_add(val);
         if (val < 0)
             assert(tmp >= val);
     }
@@ -150,7 +152,7 @@ private:
     std::vector<KSyncFlowEventQueue *> flow_ksync_queue_;
     std::vector<FlowTable *> flow_table_list_;
     UpdateFlowEventQueue flow_update_queue_;
-    tbb::atomic<int> linklocal_flow_count_;
+    std::atomic<int> linklocal_flow_count_;
     bool use_vrouter_hash_;
     FlowTraceFilter ipv4_trace_filter_;
     FlowTraceFilter ipv6_trace_filter_;

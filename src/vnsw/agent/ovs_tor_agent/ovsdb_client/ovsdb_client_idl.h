@@ -6,10 +6,10 @@
 #define SRC_VNSW_AGENT_OVS_TOR_AGENT_OVSDB_CLIENT_OVSDB_CLIENT_IDL_H_
 
 #include <assert.h>
+#include <atomic>
 #include <queue>
 
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/atomic.h>
 
 #include <cmn/agent_cmn.h>
 #include <cmn/agent.h>
@@ -222,7 +222,7 @@ private:
     // transaction stats per IDL
     TxnStats stats_;
 
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
     std::unique_ptr<OvsPeer> route_peer_;
     std::unique_ptr<VMInterfaceKSyncObject> vm_interface_table_;
     std::unique_ptr<PhysicalSwitchTable> physical_switch_table_;

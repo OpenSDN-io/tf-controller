@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_arp_proto_hpp
 #define vnsw_agent_arp_proto_hpp
 
+#include <atomic>
+
 #include "pkt/proto.h"
 #include "services/arp_handler.h"
 #include "services/arp_entry.h"
@@ -318,7 +320,7 @@ private:
     MacAddress mac_;
     WaitForTrafficIntfMap l3_wait_for_traffic_map_;
     WaitForTrafficIntfMap evpn_wait_for_traffic_map_;
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
 };
 
 typedef boost::intrusive_ptr<ArpPathPreferenceState> ArpPathPreferenceStatePtr;

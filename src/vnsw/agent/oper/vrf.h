@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_vrf_hpp
 #define vnsw_agent_vrf_hpp
 
+#include <atomic>
+
 #include <cmn/agent_cmn.h>
 #include <cmn/index_vector.h>
 #include <cmn/agent.h>
@@ -250,7 +252,7 @@ private:
     bool allow_route_add_on_deleted_vrf_;
     string bmac_vrf_name_;
     uint32_t isid_;
-    tbb::atomic<uint32_t> mac_aging_time_;
+    std::atomic<uint32_t> mac_aging_time_;
     tbb::mutex delete_reuse_mutex_;
     bool learning_enabled_;
     bool layer2_control_word_;

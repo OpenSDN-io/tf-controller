@@ -311,20 +311,20 @@ void AgentRouteWalker::RouteWalkDoneInternal(DBTableBase *part,
 
 void AgentRouteWalker::DecrementWalkCount() {
     assert(walk_count_ != AgentRouteWalker::kInvalidWalkCount);
-    walk_count_.fetch_and_decrement();
+    walk_count_--;
 }
 
 void AgentRouteWalker::DecrementRouteWalkCount(const VrfEntry *vrf) {
     VrfRouteWalkCountMap::iterator it = route_walk_count_.find(vrf);
     if (it != route_walk_count_.end()) {
-        it->second.fetch_and_decrement();
+        it->second--;
         if (it->second == AgentRouteWalker::kInvalidWalkCount)
             route_walk_count_.erase(vrf);
     }
 }
 
 void AgentRouteWalker::IncrementRouteWalkCount(const VrfEntry *vrf) {
-    route_walk_count_[vrf].fetch_and_increment();
+    route_walk_count_[vrf]++;
 }
 
 void AgentRouteWalker::Callback(VrfEntry *vrf) {
@@ -461,11 +461,11 @@ AgentRouteWalker::DeregisterDone(AgentRouteWalkerPtr walker) {
 }
 
 void intrusive_ptr_add_ref(AgentRouteWalker *w) {
-    w->refcount_.fetch_and_increment();
+    w->refcount_++;
 }
 
 void intrusive_ptr_release(AgentRouteWalker *w) {
-    if (w->refcount_.fetch_and_decrement() == 1) {
+    if (w->refcount_.fetch_sub(1) == 1) {
         delete w;
     }
 }

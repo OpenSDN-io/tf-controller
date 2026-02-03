@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_icmpv6_handler_h_
 #define vnsw_agent_icmpv6_handler_h_
 
+#include <atomic>
+
 #include "pkt/proto_handler.h"
 
 #define IPV6_ADDR_SIZE_BYTES  16
@@ -66,7 +68,7 @@ private:
 
     icmp6_hdr *icmp_;
     uint16_t icmp_len_;
-    mutable tbb::atomic<uint32_t> refcount_;
+    mutable std::atomic<uint32_t> refcount_;
     DISALLOW_COPY_AND_ASSIGN(Icmpv6Handler);
 };
 

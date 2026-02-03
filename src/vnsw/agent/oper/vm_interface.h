@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_vm_interface_hpp
 #define vnsw_agent_vm_interface_hpp
 
+#include <atomic>
+
 #include <oper/oper_dhcp_options.h>
 #include <oper/audit_list.h>
 #include <oper/ecmp_load_balance.h>
@@ -1741,7 +1743,7 @@ private:
     bool mac_ip_learning_enable_;
     // Max flows for VMI
     uint32_t max_flows_;
-    mutable tbb::atomic<int> flow_count_;
+    mutable std::atomic<int> flow_count_;
 
     // Attributes
     std::unique_ptr<MacVmBindingState> mac_vm_binding_state_;

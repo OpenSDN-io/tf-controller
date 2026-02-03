@@ -17,7 +17,6 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/thread.hpp>
 
-#include <tbb/atomic.h>
 #include <tbb/concurrent_queue.h>
 
 #include "ksync_object.h"
@@ -152,7 +151,7 @@ bool KSyncTxQueue::EnqueueInternal(IoContext *io_context) {
     }
     queue_.push(io_context);
     enqueues_++;
-    size_t ncount = queue_len_.fetch_and_increment() + 1;
+    size_t ncount = queue_len_.fetch_add(1) + 1;
     if (ncount > max_queue_len_)
         max_queue_len_ = ncount;
     if (ncount == 1) {

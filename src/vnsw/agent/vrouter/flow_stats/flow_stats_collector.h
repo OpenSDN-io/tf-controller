@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_flow_stats_collector_h
 #define vnsw_agent_flow_stats_collector_h
 
+#include <atomic>
+
 #include <boost/static_assert.hpp>
 #include <pkt/flow_table.h>
 #include <cmn/agent_cmn.h>
@@ -244,7 +246,7 @@ private:
     //    are covered before disabling the fag
     bool retry_delete_;
     Queue request_queue_;
-    tbb::atomic<bool> deleted_;
+    std::atomic<bool> deleted_;
     FlowAgingTableKey flow_aging_key_;
     uint32_t instance_id_;
     FlowStatsManager *flow_stats_manager_;

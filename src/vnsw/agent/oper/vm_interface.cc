@@ -3453,7 +3453,7 @@ void VmInterface::CopyTagIdList(TagList *tag_id_list) const {
 
 void VmInterface::update_flow_count(int val) const {
     int max_flows = FLOWS_LIMIT_UNLIMITED;
-    int new_flow_count = flow_count_.fetch_and_add(val);
+    int new_flow_count = flow_count_.fetch_add(val);
 
     {
         int maxv = std::max(max_flows_, agent()->global_max_vmi_flows());

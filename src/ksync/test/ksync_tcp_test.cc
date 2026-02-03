@@ -2,6 +2,7 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
 #include <iostream>
 #include <fstream>
 
@@ -263,8 +264,8 @@ VlanKSyncObject *VlanKSyncObject::singleton_;
 
 class DBKSyncTcpTest : public ::testing::Test {
 protected:
-    tbb::atomic<long> adc_notification;
-    tbb::atomic<long> del_notification;
+    std::atomic<long> adc_notification;
+    std::atomic<long> del_notification;
 
 public:
     DBKSyncTcpTest() {

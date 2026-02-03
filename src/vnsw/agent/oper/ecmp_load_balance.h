@@ -4,6 +4,8 @@
 
 #ifndef vnsw_agent_ecmp_load_balance_hpp
 #define vnsw_agent_ecmp_load_balance_hpp
+
+#include <atomic>
 #include <boost/intrusive_ptr.hpp>
 #include <vnc_cfg_types.h>
 
@@ -228,15 +230,15 @@ public:
 private:
    friend void intrusive_ptr_add_ref(EcmpField* ptr);
    friend void intrusive_ptr_release(EcmpField* ptr);
-   mutable tbb::atomic<uint32_t> ref_count_;
+   mutable std::atomic<uint32_t> ref_count_;
 };
 
 inline void intrusive_ptr_add_ref(EcmpField* ptr) {
-    ptr->ref_count_.fetch_and_increment();
+    ptr->ref_count_++;
 }
 
 inline void intrusive_ptr_release(EcmpField* ptr) {
-    uint32_t prev = ptr->ref_count_.fetch_and_decrement();
+    uint32_t prev = ptr->ref_count_.fetch_sub(1);
     if (prev == 1) {
       delete ptr;
     }

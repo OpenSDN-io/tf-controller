@@ -5,6 +5,7 @@
 #ifndef vnsw_agent_arp_handler_hpp
 #define vnsw_agent_arp_handler_hpp
 
+#include <atomic>
 #include "pkt/proto_handler.h"
 
 #define GRATUITOUS_ARP 0x0100 // keep this different from standard ARP commands
@@ -41,7 +42,7 @@ private:
 
     ether_arp *arp_;
     in_addr_t arp_tpa_;
-    mutable tbb::atomic<uint32_t> refcount_;
+    mutable std::atomic<uint32_t> refcount_;
     DISALLOW_COPY_AND_ASSIGN(ArpHandler);
 };
 

@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_vm_hpp
 #define vnsw_agent_vm_hpp
 
+#include <atomic>
+
 #include <cmn/agent_cmn.h>
 #include <oper/oper_db.h>
 #include <agent_types.h>
@@ -57,7 +59,7 @@ public:
 
     uint32_t linklocal_flow_count() const { return linklocal_flow_count_; }
     void update_linklocal_flow_count(int val) const {
-        int tmp = linklocal_flow_count_.fetch_and_add(val);
+        int tmp = linklocal_flow_count_.fetch_add(val);
         if (val < 0)
             assert(tmp >= val);
     }
@@ -69,8 +71,8 @@ private:
     friend class VmTable;
     boost::uuids::uuid uuid_;
     std::string name_;
-    mutable tbb::atomic<int> flow_count_;
-    mutable tbb::atomic<int> linklocal_flow_count_;
+    mutable std::atomic<int> flow_count_;
+    mutable std::atomic<int> linklocal_flow_count_;
     mutable bool drop_new_flows_;
     DISALLOW_COPY_AND_ASSIGN(VmEntry);
 };

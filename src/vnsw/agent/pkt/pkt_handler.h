@@ -13,7 +13,6 @@
 #include <netinet/ip_icmp.h>
 #include <netinet/igmp.h>
 
-#include <tbb/atomic.h>
 #include <boost/array.hpp>
 
 #include <base/address.h>

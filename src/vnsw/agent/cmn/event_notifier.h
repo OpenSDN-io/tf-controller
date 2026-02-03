@@ -5,6 +5,8 @@
 #ifndef event_notifier_h
 #define event_notifier_h
 
+#include <atomic>
+
 #include <base/util.h>
 #include <base/queue_task.h>
 #include <boost/shared_ptr.hpp>
@@ -49,7 +51,7 @@ public:
     Type type() const {return type_;}
 
 private:
-    tbb::atomic<int> ref_count_;
+    std::atomic<int> ref_count_;
     Type type_;
 };
 

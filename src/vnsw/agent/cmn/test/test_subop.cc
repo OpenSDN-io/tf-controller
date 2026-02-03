@@ -2,6 +2,8 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
+
 #include "testing/gunit.h"
 #include "base/logging.h"
 #include <io/event_manager.h>
@@ -108,8 +110,8 @@ public:
     static void ClearCount() {adc_notification = 0; del_notification = 0;};
     static DBTable *table_;
     static DBTableBase::ListenerId listener_id_;
-    static tbb::atomic<long> adc_notification;
-    static tbb::atomic<long> del_notification;
+    static std::atomic<long> adc_notification;
+    static std::atomic<long> del_notification;
 };
 
 int EntryC::free_count_;
@@ -122,8 +124,8 @@ int TableC::del_count_;
 
 DBTableBase::ListenerId ClientC::listener_id_;
 DBTable *ClientC::table_;
-tbb::atomic<long> ClientC::adc_notification;
-tbb::atomic<long> ClientC::del_notification;
+std::atomic<long> ClientC::adc_notification;
+std::atomic<long> ClientC::del_notification;
 
 void init_db_tables() {
     TableC::Register();

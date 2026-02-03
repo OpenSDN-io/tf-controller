@@ -5,6 +5,9 @@
 #ifndef vnsw_agent_flow_stats_maanger_h
 #define vnsw_agent_flow_stats_maanger_h
 
+#include <atomic>
+
+
 #include <cmn/agent_cmn.h>
 #include <cmn/index_vector.h>
 #include <uve/stats_collector.h>
@@ -143,11 +146,11 @@ public:
     }
 
     uint32_t session_export_count_reset() {
-        return session_export_count_.fetch_and_store(0);
+        return session_export_count_.exchange(0);
     }
 
     uint32_t session_export_without_sampling_reset() {
-        return session_export_without_sampling_.fetch_and_store(0);
+        return session_export_without_sampling_.exchange(0);
     }
 
     uint32_t session_export_drops() const { return session_export_drops_; }
@@ -212,17 +215,17 @@ private:
     uint64_t threshold_;
     uint32_t prev_cfg_flow_export_rate_;
     uint32_t session_export_rate_;
-    tbb::atomic<uint32_t> session_export_count_;
-    tbb::atomic<uint64_t> session_sample_exports_;
-    tbb::atomic<uint64_t> session_msg_exports_;
-    tbb::atomic<uint64_t> session_exports_;
-    tbb::atomic<uint64_t> session_export_disable_drops_;
-    tbb::atomic<uint64_t> session_export_sampling_drops_;
-    tbb::atomic<uint32_t> session_export_without_sampling_;
-    tbb::atomic<uint64_t> session_export_drops_;
-    tbb::atomic<bool> sessions_sampled_atleast_once_;
-    tbb::atomic<uint64_t> session_global_slo_logging_drops_;
-    tbb::atomic<uint64_t> session_slo_logging_drops_;
+    std::atomic<uint32_t> session_export_count_;
+    std::atomic<uint64_t> session_sample_exports_;
+    std::atomic<uint64_t> session_msg_exports_;
+    std::atomic<uint64_t> session_exports_;
+    std::atomic<uint64_t> session_export_disable_drops_;
+    std::atomic<uint64_t> session_export_sampling_drops_;
+    std::atomic<uint32_t> session_export_without_sampling_;
+    std::atomic<uint64_t> session_export_drops_;
+    std::atomic<bool> sessions_sampled_atleast_once_;
+    std::atomic<uint64_t> session_global_slo_logging_drops_;
+    std::atomic<uint64_t> session_slo_logging_drops_;
     Timer* timer_;
     bool delete_short_flow_;
     //Protocol based array for minimal tree comparision

@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_route_walker_hpp
 #define vnsw_agent_route_walker_hpp
 
+#include <atomic>
+
 #include <boost/intrusive_ptr.hpp>
 #include <boost/array.hpp>
 
@@ -94,7 +96,7 @@ public:
     static const int kInvalidWalkCount = 0;
     typedef boost::function<void()> WalkDone;
     typedef boost::function<void(VrfEntry *)> RouteWalkDoneCb;
-    typedef std::map<const VrfEntry *, tbb::atomic<int> > VrfRouteWalkCountMap;
+    typedef std::map<const VrfEntry *, std::atomic<int> > VrfRouteWalkCountMap;
 
     virtual ~AgentRouteWalker();
 
@@ -141,7 +143,7 @@ private:
     void OnRouteTableWalkCompleteForVrf(VrfEntry *vrf);
     void DecrementWalkCount();
     void DecrementRouteWalkCount(const VrfEntry *vrf);
-    void IncrementWalkCount() {walk_count_.fetch_and_increment();}
+    void IncrementWalkCount() {walk_count_++;}
     void IncrementRouteWalkCount(const VrfEntry *vrf);
     void WalkTable(AgentRouteTable *table,
                    DBTable::DBTableWalkRef &route_table_walk_ref);
@@ -166,14 +168,14 @@ private:
     Agent *agent_;
     std::string name_;
     VrfRouteWalkCountMap route_walk_count_;
-    tbb::atomic<int> walk_count_;
+    std::atomic<int> walk_count_;
     WalkDone walk_done_cb_;
     RouteWalkDoneCb route_walk_done_for_vrf_cb_;
     DBTable::DBTableWalkRef vrf_walk_ref_;
     AgentRouteWalkerManager *mgr_;
     bool deregister_done_;
     DBTable::DBTableWalkRef delete_walk_ref_;
-    mutable tbb::atomic<uint32_t> refcount_;
+    mutable std::atomic<uint32_t> refcount_;
     DISALLOW_COPY_AND_ASSIGN(AgentRouteWalker);
 };
 

@@ -460,7 +460,7 @@ void intrusive_ptr_add_ref(const ArpHandler *p) {
 }
 
 void intrusive_ptr_release(const ArpHandler *p) {
-    if (p->refcount_.fetch_and_decrement() == 1) {
+    if (p->refcount_.fetch_sub(1) == 1) {
         delete p;
     }
 }

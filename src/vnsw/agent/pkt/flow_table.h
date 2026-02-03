@@ -22,7 +22,6 @@
 
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/atomic.h>
 #include <tbb/mutex.h>
 #include <base/util.h>
 #include <base/address.h>

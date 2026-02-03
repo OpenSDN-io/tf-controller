@@ -29,13 +29,13 @@ bool Peer::DeleteOnZeroRefcount() const {
 }
 
 void intrusive_ptr_add_ref(const Peer *p) {
-    p->refcount_.fetch_and_increment();
+    p->refcount_++;
     // validate that reference is not taken while delete is in progress
     assert(!p->IsDeleted());
 }
 
 void intrusive_ptr_release(const Peer *p) {
-    if (p->refcount_.fetch_and_decrement() == 1 && p->DeleteOnZeroRefcount()) {
+    if (p->refcount_.fetch_sub(1) == 1 && p->DeleteOnZeroRefcount()) {
         delete p;
     }
 }
@@ -63,7 +63,7 @@ DynamicPeer::~DynamicPeer() {
 void DynamicPeer::ProcessDelete(DynamicPeer *p) {
     p->StopRouteExports();
 
-    if (p->deleted_.fetch_and_store(true)) {
+    if (p->deleted_.exchange(true)) {
         return;
     }
 

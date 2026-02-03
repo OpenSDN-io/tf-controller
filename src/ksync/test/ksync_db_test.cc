@@ -2,13 +2,13 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
 #include <iostream>
 #include <fstream>
 
 #include <boost/intrusive/avl_set.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/bind.hpp>
-#include <tbb/atomic.h>
 
 #include "base/logging.h"
 #include "testing/gunit.h"
@@ -253,8 +253,8 @@ VlanKSyncObject *VlanKSyncObject::singleton_;
 
 class DBKSyncTest : public ::testing::Test {
 protected:
-    tbb::atomic<long> adc_notification;
-    tbb::atomic<long> del_notification;
+    std::atomic<long> adc_notification;
+    std::atomic<long> del_notification;
 
 public:
     DBKSyncTest() {

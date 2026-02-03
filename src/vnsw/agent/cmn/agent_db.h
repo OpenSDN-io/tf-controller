@@ -5,6 +5,7 @@
 #ifndef vnsw_agent_db_hpp
 #define vnsw_agent_db_hpp
 
+#include <atomic>
 #include <cmn/agent_cmn.h>
 
 class Agent;
@@ -25,14 +26,14 @@ class AgentRefCount {
 public:
     friend void intrusive_ptr_add_ref(const Derived* p) {
         const AgentRefCount *entry = (const AgentRefCount *) (p);
-        if (entry->refcount_.fetch_and_increment() == 0) {
+        if (entry->refcount_.fetch_add(1) == 0) {
             p->SetRefState();
         }
     }
 
     friend void intrusive_ptr_release(const Derived* p) {
         const AgentRefCount *entry = (const AgentRefCount *) (p);
-        if (entry->refcount_.fetch_and_decrement() == 1) {
+        if (entry->refcount_.fetch_sub(1) == 1) {
             p->ClearRefState();
         }
     }
@@ -63,7 +64,7 @@ protected:
     mutable std::set<IntrusiveReferrer> back_ref_set_;
 
 private:
-    mutable tbb::atomic<uint32_t> refcount_;
+    mutable std::atomic<uint32_t> refcount_;
 };
 
 /////////////////////////////////////////////////////////////////////////////

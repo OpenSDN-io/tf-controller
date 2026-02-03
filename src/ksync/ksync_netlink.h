@@ -6,7 +6,6 @@
 #define ctrlplane_ksync_entry_netlink_h
 
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/atomic.h>
 
 class KSyncObject;
 

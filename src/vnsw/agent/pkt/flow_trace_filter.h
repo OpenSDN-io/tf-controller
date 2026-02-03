@@ -1,5 +1,8 @@
 #ifndef __AGENT_FLOW_TRACE_FILTER_H__
 #define __AGENT_FLOW_TRACE_FILTER_H__
+
+#include <atomic>
+
 #include <base/address_util.h>
 
 struct FlowKey;
@@ -35,7 +38,7 @@ struct FlowTraceFilter {
     // Number of successful calls to Match API. Note, this is not same as
     // number of flows traced. A flow can call Match multiple times and the
     // counter is incremented every-time
-    tbb::atomic<uint64_t> count_;
+    std::atomic<uint64_t> count_;
 
     FlowTraceFilter();
     ~FlowTraceFilter() { }

@@ -5,6 +5,7 @@
 #ifndef ctrlplane_ksync_sock_h
 #define ctrlplane_ksync_sock_h
 
+#include <atomic>
 #include <vector>
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
@@ -12,7 +13,6 @@
 #include <boost/asio/netlink_protocol.hpp>
 #include <boost/asio/netlink_endpoint.hpp>
 
-#include <tbb/atomic.h>
 #include <tbb/mutex.h>
 
 #include <base/queue_task.h>
@@ -479,8 +479,8 @@ private:
 
 private:
     char *rx_buff_;
-    tbb::atomic<uint32_t> seqno_;
-    tbb::atomic<uint32_t> uve_seqno_;
+    std::atomic<uint32_t> seqno_;
+    std::atomic<uint32_t> uve_seqno_;
     // Read ksync responses inline
     // The IoContext WaitTree is not used when response is read-inline
     bool read_inline_;
@@ -507,7 +507,7 @@ private:
     // Picking AgentSandeshContext based on work-queue index also makes it
     // thread safe
     static AgentSandeshContext *agent_sandesh_ctx_[kRxWorkQueueCount];
-    static tbb::atomic<bool> shutdown_;
+    static std::atomic<bool> shutdown_;
 
     DISALLOW_COPY_AND_ASSIGN(KSyncSock);
 };

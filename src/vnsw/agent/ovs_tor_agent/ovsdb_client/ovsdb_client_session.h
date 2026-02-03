@@ -5,6 +5,7 @@
 #ifndef SRC_VNSW_AGENT_OVS_TOR_AGENT_OVSDB_CLIENT_OVSDB_CLIENT_SESSION_H_
 #define SRC_VNSW_AGENT_OVS_TOR_AGENT_OVSDB_CLIENT_OVSDB_CLIENT_SESSION_H_
 
+#include <atomic>
 #include <assert.h>
 
 #include <base/timer.h>
@@ -70,7 +71,7 @@ private:
     Agent *agent_;
     OvsPeerManager *manager_;
     struct json_parser * parser_;
-    tbb::atomic<bool> idl_inited_;
+    std::atomic<bool> idl_inited_;
     std::string connection_time_;
     DISALLOW_COPY_AND_ASSIGN(OvsdbClientSession);
 };

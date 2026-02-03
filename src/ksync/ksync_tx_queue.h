@@ -44,10 +44,10 @@
 #include <sys/eventfd.h>
 #include <pthread.h>
 #include <algorithm>
+#include <atomic>
 #include <vector>
 #include <set>
 
-#include <tbb/atomic.h>
 #include <tbb/concurrent_queue.h>
 class KSyncSock;
 class IoContext;
@@ -92,9 +92,9 @@ private:
     std::string cpu_pin_policy_;
     KSyncSock *sock_;
     Queue queue_;
-    tbb::atomic<bool> shutdown_;
+    std::atomic<bool> shutdown_;
     pthread_t event_thread_;
-    tbb::atomic<size_t> queue_len_;
+    std::atomic<size_t> queue_len_;
     mutable size_t max_queue_len_;
 
     mutable size_t enqueues_;

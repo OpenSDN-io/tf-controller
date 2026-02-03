@@ -5,6 +5,7 @@
 #ifndef vnsw_agent_peer_h_
 #define vnsw_agent_peer_h_
 
+#include <atomic>
 #include <string>
 #include <map>
 #include <tbb/mutex.h>
@@ -103,7 +104,7 @@ private:
     Type type_;
     std::string name_;
     bool export_to_controller_;
-    mutable tbb::atomic<uint32_t> refcount_;
+    mutable std::atomic<uint32_t> refcount_;
     // Sequence number can be used for tracking event based changes like
     // add/update on peer flaps(as example).
     uint64_t sequence_number_;
@@ -147,8 +148,8 @@ private:
     virtual bool DeleteOnZeroRefcount() const;
 
     Timer *delete_timeout_timer_;
-    tbb::atomic<bool> deleted_;
-    tbb::atomic<bool> skip_add_change_;
+    std::atomic<bool> deleted_;
+    std::atomic<bool> skip_add_change_;
     DISALLOW_COPY_AND_ASSIGN(DynamicPeer);
 };
 
