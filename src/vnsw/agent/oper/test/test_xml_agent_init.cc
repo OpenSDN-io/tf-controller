@@ -44,6 +44,7 @@ void TestXmlAgentInit::RegisterDBClients() {
 }
 
 TestClient *PhysicalDeviceTestInit(const char *init_file, bool ksync_init) {
+    logging_ptr.reset(new Logging{});
     TestClient *client = new TestClient(new TestXmlAgentInit());
     TestXmlAgentInit *init =
         static_cast<TestXmlAgentInit *>(client->agent_init());
@@ -74,7 +75,7 @@ TestClient *PhysicalDeviceTestInit(const char *init_file, bool ksync_init) {
     agent->set_ksync_sync_mode(true);
 
     // Initialize agent and kick start initialization
-    init->Start();
+    init->Start(*logging_ptr);
     WaitForInitDone(agent);
 
     client->Init();

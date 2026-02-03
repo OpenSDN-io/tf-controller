@@ -90,7 +90,7 @@ void AgentInit::InitPlatform() {
 
 // Start of Agent init.
 // Trigger init in DBTable task context
-int AgentInit::Start() {
+int AgentInit::Start(Logging &logging) {
     agent_->set_task_scheduler(TaskScheduler::GetInstance());
     agent_->set_agent_init(this);
 
@@ -109,10 +109,10 @@ int AgentInit::Start() {
                                                    get_slo_destination();
     std::string log_property_file = agent_param_->log_property_file();
     if (log_property_file.size()) {
-        LoggingInit(log_property_file);
+        logging.Init(log_property_file);
     }
     else {
-        LoggingInit(agent_param_->log_file(), agent_param_->log_file_size(),
+        logging.Init(agent_param_->log_file(), agent_param_->log_file_size(),
                     agent_param_->log_files_count(), false,
                     agent_param_->syslog_facility(), module_name,
                     SandeshLevelTolog4Level(

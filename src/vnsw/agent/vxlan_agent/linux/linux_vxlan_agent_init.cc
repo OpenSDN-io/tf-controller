@@ -57,8 +57,8 @@ void LinuxVxlanAgentInit::ProcessOptions
     AgentInit::ProcessOptions(config_file, program_name);
 }
 
-int LinuxVxlanAgentInit::Start() {
-    return AgentInit::Start();
+int LinuxVxlanAgentInit::Start(Logging &logging) {
+    return AgentInit::Start(logging);
 }
 
 /****************************************************************************

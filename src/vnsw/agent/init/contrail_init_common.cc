@@ -49,8 +49,8 @@ void ContrailInitCommon::ProcessOptions
     AgentInit::ProcessOptions(config_file, program_name);
 }
 
-int ContrailInitCommon::Start() {
-    return AgentInit::Start();
+int ContrailInitCommon::Start(Logging &logging) {
+    return AgentInit::Start(logging);
 }
 
 /****************************************************************************

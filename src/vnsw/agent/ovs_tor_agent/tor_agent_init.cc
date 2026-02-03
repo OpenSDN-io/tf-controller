@@ -49,7 +49,7 @@ void TorAgentInit::ProcessOptions
     AgentInit::ProcessOptions(config_file, program_name);
 }
 
-int TorAgentInit::Start() {
+int TorAgentInit::Start(Logging &logging) {
     return AgentInit::Start();
 }
 

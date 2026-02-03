@@ -26,7 +26,7 @@ class TorAgentInit : public AgentInit {
 
     void ProcessOptions(const std::string &config_file,
                         const std::string &program_name);
-    int Start();
+    int Start(Logging &logging);
 
     virtual std::string InstanceId();
     virtual int ModuleType();

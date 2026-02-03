@@ -23,7 +23,7 @@ public:
     void ProcessOptions(const std::string &config_file,
                         const std::string &program_name);
 
-    int Start();
+    int Start(Logging &logging);
 
     // Initialization virtual methods
     void FactoryInit();

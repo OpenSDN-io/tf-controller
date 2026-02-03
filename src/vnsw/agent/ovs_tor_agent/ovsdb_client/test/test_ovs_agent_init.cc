@@ -285,6 +285,7 @@ bool LoadXml(AgentUtXmlTest &test) {
 }
 
 TestClient *OvsTestInit(const char *init_file, bool ovs_init, bool use_ssl) {
+    logging_ptr.reset(new Logging{});
     TestClient *client = new TestClient(new TestOvsAgentInit());
     TestOvsAgentInit *init =
         static_cast<TestOvsAgentInit *>(client->agent_init());
@@ -317,7 +318,7 @@ TestClient *OvsTestInit(const char *init_file, bool ovs_init, bool use_ssl) {
     agent->set_ksync_sync_mode(true);
 
     // Initialize agent and kick start initialization
-    init->Start();
+    init->Start(*logging_ptr);
     WaitForInitDone(agent);
 
     client->Init();
