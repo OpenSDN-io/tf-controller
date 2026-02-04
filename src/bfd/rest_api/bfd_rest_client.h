@@ -10,6 +10,8 @@
 #include <boost/system/error_code.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <http/client/http_client.h>
+#include <tbb/mutex.h>
+#include <tbb/compat/condition_variable>
 
 #include "base/util.h"
 #include "io/event_manager.h"

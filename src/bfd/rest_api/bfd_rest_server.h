@@ -7,6 +7,7 @@
 
 #include <map>
 #include <boost/asio/ip/address.hpp>
+#include <tbb/mutex.h>
 
 #include "base/regex.h"
 #include "http/http_request.h"

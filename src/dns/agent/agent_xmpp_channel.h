@@ -10,6 +10,7 @@
 #include <string>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <tbb/mutex.h>
 
 #include "xmpp/xmpp_channel.h"
 #include "bind/bind_util.h"
