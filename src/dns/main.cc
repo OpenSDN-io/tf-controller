@@ -216,6 +216,7 @@ void ReConfigSignalHandler(const boost::system::error_code &error, int sig) {
 }
 
 int main(int argc, char *argv[]) {
+    Logging logging;
     // Initialize the task scheduler
     int num_threads_to_tbb = TaskScheduler::GetDefaultThreadCount() +
         ConfigClientManager::GetNumWorkers();
@@ -242,10 +243,10 @@ int main(int argc, char *argv[]) {
 
     std::string log_property_file = options.log_property_file();
     if (log_property_file.size()) {
-        LoggingInit(log_property_file);
+        logging.Init(log_property_file);
     }
     else {
-        LoggingInit(options.log_file(), options.log_file_size(),
+        logging.Init(options.log_file(), options.log_file_size(),
                     options.log_files_count(), options.use_syslog(),
                     options.syslog_facility(), module_name,
                     SandeshLevelTolog4Level(

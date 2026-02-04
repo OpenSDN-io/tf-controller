@@ -21,7 +21,7 @@ public:
     void ProcessOptions(const std::string &config_file,
                         const std::string &program_name);
     void ProcessComputeAddress(AgentParam *param);
-    int Start();
+    int Start(Logging &logging);
 
     // Initialization virtual methods
     void CreateModules();

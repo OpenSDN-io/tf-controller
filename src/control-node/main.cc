@@ -229,18 +229,19 @@ int main(int argc, char *argv[]) {
     Signal::SignalCallbackMap smap = boost::assign::map_list_of
         (SIGHUP, sighup_handlers)
         (SIGUSR1, sigusr1_handlers)
-        (SIGTERM, sigterm_handler)
-    ;
+        (SIGTERM, sigterm_handler);
     Signal signal(&evm, smap);
+
+    Logging logging;
 
     ControlNode::SetProgramName(argv[0]);
     Module::type module = Module::CONTROL_NODE;
     string module_name = g_vns_constants.ModuleNames.find(module)->second;
     std::string log_property_file = options.log_property_file();
     if (log_property_file.size()) {
-        LoggingInit(log_property_file);
+        logging.Init(log_property_file);
     } else {
-        LoggingInit(options.log_file(), options.log_file_size(),
+        logging.Init(options.log_file(), options.log_file_size(),
                     options.log_files_count(), options.use_syslog(),
                     options.syslog_facility(), module_name,
                     SandeshLevelTolog4Level(

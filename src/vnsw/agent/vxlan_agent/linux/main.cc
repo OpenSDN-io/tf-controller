@@ -19,6 +19,7 @@ void RouterIdDepInit(Agent *agent) {
 
 int main(int argc, char *argv[]) {
     AgentParam params(false, false, false, false);
+    Logging logging;
 
     const opt::variables_map &var_map = params.var_map();
     try {
@@ -67,7 +68,7 @@ int main(int argc, char *argv[]) {
 
     // kick start initialization
     int ret = 0;
-    if ((ret = init.Start()) != 0) {
+    if ((ret = init.Start(logging)) != 0) {
         return ret;
     }
 

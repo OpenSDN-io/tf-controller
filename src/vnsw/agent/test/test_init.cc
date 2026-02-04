@@ -2,6 +2,7 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <memory>
 #include "base/os.h"
 #include "test/test_init.h"
 #include "oper/mirror_table.h"
@@ -20,6 +21,8 @@
 namespace opt = boost::program_options;
 
 boost::thread asio_thread;
+
+std::unique_ptr<Logging> logging_ptr;
 
 void *asio_poll() {
     Agent::GetInstance()->event_manager()->Run();
@@ -49,7 +52,7 @@ TestClient *TestInit(const char *init_file, bool ksync_init, bool pkt_init,
                      int agent_stats_interval, int flow_stats_interval,
                      bool asio, bool ksync_sync_mode,
                      int vrouter_stats_interval, bool backup_enable) {
-
+    logging_ptr.reset(new Logging{});
     TestClient *client = new TestClient(new TestAgentInit());
     TestAgentInit *init = client->agent_init();
     Agent *agent = client->agent();
@@ -82,7 +85,7 @@ TestClient *TestInit(const char *init_file, bool ksync_init, bool pkt_init,
 
     // Initialize agent and kick start initialization
     TaskScheduler::GetInstance();
-    init->Start();
+    init->Start(*logging_ptr);
 
     WaitForInitDone(agent);
 
@@ -120,6 +123,7 @@ TestClient *TestInit(const char *init_file, bool ksync_init, bool pkt_init,
 }
 
 TestClient *VGwInit(const string &init_file, bool ksync_init) {
+    logging_ptr.reset(new Logging{});
     TestClient *client = new TestClient(new TestAgentInit());
 
     TestAgentInit *init = client->agent_init();
@@ -148,7 +152,7 @@ TestClient *VGwInit(const string &init_file, bool ksync_init) {
     }
 
     // kick start initialization
-    init->Start();
+    init->Start(*logging_ptr);
 
     WaitForInitDone(agent);
 
@@ -210,6 +214,7 @@ void TestShutdown() {
     AgentStats::GetInstance()->Shutdown();
     AsioStop();
     VerifyShutdown();
+    logging_ptr.release();
 }
 
 void TestClient::Shutdown() {

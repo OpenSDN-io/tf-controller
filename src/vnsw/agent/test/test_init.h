@@ -638,4 +638,6 @@ void AsioRun();
 
 extern TestClient *client;
 
+extern std::unique_ptr<Logging> logging_ptr;
+
 #endif // vnsw_agent_test_init_h

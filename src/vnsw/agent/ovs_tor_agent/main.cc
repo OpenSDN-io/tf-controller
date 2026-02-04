@@ -15,6 +15,7 @@ using std::string;
 
 int main(int argc, char *argv[]) {
     TorAgentParam params;
+    Logging logging;
 
     try {
         // Add ToR speicific options
@@ -65,7 +66,7 @@ int main(int argc, char *argv[]) {
 
     // kick start initialization
     int ret = 0;
-    if ((ret = init.Start()) != 0) {
+    if ((ret = init.Start(logging)) != 0) {
         return ret;
     }
 

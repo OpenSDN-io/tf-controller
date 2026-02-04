@@ -35,7 +35,7 @@ public:
     void InitPlatform();
 
     // Kickstarts initialization
-    virtual int Start();
+    virtual int Start(Logging &logging);
 
     // Initialize the agent factory based on platform
     virtual void FactoryInit() = 0;

@@ -102,6 +102,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    Logging logging;
+
     // Read agent parameters from config file and arguments
     params.Init(init_file, argv[0]);
 
@@ -139,7 +141,7 @@ int main(int argc, char *argv[]) {
     init.set_agent_param(&params);
     // kick start initialization
     int ret = 0;
-    if ((ret = init.Start()) != 0) {
+    if ((ret = init.Start(logging)) != 0) {
         return ret;
     }
 
