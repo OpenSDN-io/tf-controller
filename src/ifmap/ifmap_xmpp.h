@@ -8,6 +8,7 @@
 #include <boost/function.hpp>
 #include <boost/system/error_code.hpp>
 #include <tbb/atomic.h>
+#include <tbb/mutex.h>
 
 #include <map>
 #include <string>
