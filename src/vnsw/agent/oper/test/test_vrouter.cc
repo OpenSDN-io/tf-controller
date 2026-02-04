@@ -17,7 +17,6 @@
 
 #include <base/logging.h>
 #include <io/event_manager.h>
-#include <tbb/task.h>
 #include <base/task.h>
 #include <sandesh/sandesh_trace.h>
 

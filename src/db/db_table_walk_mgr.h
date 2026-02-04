@@ -14,7 +14,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include <tbb/mutex.h>
-#include <tbb/task.h>
 
 #include "base/logging.h"
 #include "base/task_trigger.h"

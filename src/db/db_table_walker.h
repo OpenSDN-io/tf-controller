@@ -7,7 +7,6 @@
 
 #include <boost/function.hpp>
 #include <boost/dynamic_bitset.hpp>
-#include <tbb/task.h>
 
 #include "base/logging.h"
 #include "db/db_table.h"

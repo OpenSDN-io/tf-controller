@@ -9,7 +9,6 @@
 
 #include <base/logging.h>
 #include <boost/bind.hpp>
-#include <tbb/task.h>
 #include <base/task.h>
 #include "io/test/event_manager_test.h"
 

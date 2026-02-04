@@ -5,7 +5,6 @@
 #include "base/os.h"
 #include <base/logging.h>
 #include <io/event_manager.h>
-#include <tbb/task.h>
 #include <base/task.h>
 
 #include <boost/shared_ptr.hpp>

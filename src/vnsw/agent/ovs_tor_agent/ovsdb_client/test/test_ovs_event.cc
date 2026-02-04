@@ -10,7 +10,6 @@
 #include <base/logging.h>
 #include <io/event_manager.h>
 #include <io/test/event_manager_test.h>
-#include <tbb/task.h>
 #include <base/task.h>
 
 #include <cmn/agent_cmn.h>
