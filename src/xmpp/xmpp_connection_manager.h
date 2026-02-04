@@ -5,6 +5,7 @@
 #ifndef XMPP_XMPP_CONNECTION_MANAGER_H
 #define XMPP_XMPP_CONNECTION_MANAGER_H
 
+#include <tbb/mutex.h>
 #include "base/queue_task.h"
 #include "io/ssl_server.h"
 
