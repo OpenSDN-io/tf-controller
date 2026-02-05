@@ -114,10 +114,10 @@ public:
             blocked_count = 0;
             blocked_duration_usecs = 0;
         }
-        tbb::atomic<uint64_t> calls;
-        tbb::atomic<uint64_t> bytes;
-        tbb::atomic<uint64_t> blocked_count;
-        tbb::atomic<uint64_t> blocked_duration_usecs;
+        uint64_t calls;
+        uint64_t bytes;
+        uint64_t blocked_count;
+        uint64_t blocked_duration_usecs;
     };
 
     virtual ~IPeerDebugStats() { }

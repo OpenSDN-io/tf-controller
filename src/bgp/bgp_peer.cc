@@ -116,7 +116,7 @@ public:
 
     virtual void GetRxSocketStats(IPeerDebugStats::SocketStats *stats) const {
         if (peer_->session()) {
-            io::SocketStats socket_stats(peer_->session()->GetSocketStats());
+            const io::SocketStats &socket_stats = peer_->session()->GetSocketStats();
             stats->calls = socket_stats.read_calls;
             stats->bytes = socket_stats.read_bytes;
         }
@@ -124,7 +124,7 @@ public:
 
     virtual void GetTxSocketStats(IPeerDebugStats::SocketStats *stats) const {
         if (peer_->session()) {
-            io::SocketStats socket_stats(peer_->session()->GetSocketStats());
+            const io::SocketStats &socket_stats = peer_->session()->GetSocketStats();
             stats->calls = socket_stats.write_calls;
             stats->bytes = socket_stats.write_bytes;
             stats->blocked_count = socket_stats.write_blocked;

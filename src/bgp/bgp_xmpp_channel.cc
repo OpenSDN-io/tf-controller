@@ -208,7 +208,7 @@ public:
     virtual void GetRxSocketStats(IPeerDebugStats::SocketStats *stats) const {
         const XmppSession *session = parent_->GetSession();
         if (session) {
-            io::SocketStats socket_stats(session->GetSocketStats());
+            const io::SocketStats &socket_stats = session->GetSocketStats();
             stats->calls = socket_stats.read_calls;
             stats->bytes = socket_stats.read_bytes;
         }
@@ -217,7 +217,7 @@ public:
     virtual void GetTxSocketStats(IPeerDebugStats::SocketStats *stats) const {
         const XmppSession *session = parent_->GetSession();
         if (session) {
-            io::SocketStats socket_stats(session->GetSocketStats());
+            const io::SocketStats &socket_stats = session->GetSocketStats();
             stats->calls = socket_stats.write_calls;
             stats->bytes = socket_stats.write_bytes;
             stats->blocked_count = socket_stats.write_blocked;
