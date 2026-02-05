@@ -1334,7 +1334,7 @@ void XmppStateMachine::ProcessStreamHeaderMessage(XmppSession *session,
         const XmppStanza::XmppMessage *msg) {
     XmppConnectionManager *connection_manager =
         dynamic_cast<XmppConnectionManager *>(connection_->server());
-    tbb::mutex::scoped_lock lock(connection_manager->mutex());
+    std::scoped_lock lock(connection_manager->mutex());
 
     // Update "To" information which can be used to map an older session
     session->Connection()->SetTo(msg->from);

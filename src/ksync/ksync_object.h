@@ -5,7 +5,8 @@
 #ifndef ctrlplane_ksync_object_h
 #define ctrlplane_ksync_object_h
 
-#include <tbb/mutex.h>
+#include <mutex>
+
 #include <tbb/recursive_mutex.h>
 #include <base/queue_task.h>
 #include <base/timer.h>
@@ -153,7 +154,7 @@ protected:
     void ClearStale(KSyncEntry *entry);
     // Big lock on the tree
     // TODO: Make this more fine granular
-    mutable tbb::recursive_mutex  lock_;
+    mutable std::recursive_mutex lock_;
     void ChangeKey(KSyncEntry *entry, uint32_t arg);
     virtual void UpdateKey(KSyncEntry *entry, uint32_t arg) { }
 

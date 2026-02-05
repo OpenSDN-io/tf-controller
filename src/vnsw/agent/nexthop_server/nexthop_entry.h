@@ -14,7 +14,6 @@
 #include <boost/shared_ptr.hpp>
 #include <cstdio>
 #include <iostream>
-#include <tbb/mutex.h>
 
 class NexthopDBEntry {
 

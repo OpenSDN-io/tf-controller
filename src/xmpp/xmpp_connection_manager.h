@@ -5,7 +5,8 @@
 #ifndef XMPP_XMPP_CONNECTION_MANAGER_H
 #define XMPP_XMPP_CONNECTION_MANAGER_H
 
-#include <tbb/mutex.h>
+#include <mutex>
+
 #include "base/queue_task.h"
 #include "io/ssl_server.h"
 
@@ -25,14 +26,14 @@ public:
     void EnqueueSession(XmppSession *session);
     size_t GetSessionQueueSize() const;
     virtual LifetimeActor *deleter() = 0;
-    tbb::mutex &mutex() const { return mutex_; }
+    std::mutex &mutex() const { return mutex_; }
 
 private:
     bool DequeueSession(TcpSessionPtr tcp_session);
     void WorkQueueExitCallback(bool done);
 
     WorkQueue<TcpSessionPtr> session_queue_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
 
     DISALLOW_COPY_AND_ASSIGN(XmppConnectionManager);
 };

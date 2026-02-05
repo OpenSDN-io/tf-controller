@@ -16,8 +16,6 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/nil_generator.hpp>
 
-#include <tbb/mutex.h>
-
 #include <io/event_manager.h>
 #include <db/db.h>
 #include <db/db_entry.h>

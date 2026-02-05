@@ -9,6 +9,8 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <mutex>
+
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <virtual_machine_types.h>
@@ -59,7 +61,7 @@ protected:
     UveVmMap uve_vm_map_;
     Agent *agent_;
     /* For exclusion between kTaskFlowStatsCollector and kTaskDBExclude */
-    tbb::mutex uve_vm_map_mutex_;
+    std::mutex uve_vm_map_mutex_;
 private:
     virtual VmUveEntryPtr Allocate(const VmEntry *vm);
     void InterfaceNotify(DBTablePartBase *partition, DBEntryBase *e);

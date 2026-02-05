@@ -13,7 +13,6 @@
 #include <oper/vn.h>
 #include "pkt/flow_proto.h"
 #include "pkt/flow_table.h"
-#include <tbb/mutex.h>
 #include <uve/l4_port_bitmap.h>
 #include <uve/vn_uve_entry.h>
 #include <uve/vn_uve_table_base.h>

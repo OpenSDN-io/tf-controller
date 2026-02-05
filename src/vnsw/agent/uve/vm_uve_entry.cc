@@ -17,7 +17,7 @@ VmUveEntry::~VmUveEntry() {
 
 void VmUveEntry::UpdatePortBitmap(uint8_t proto, uint16_t sport,
                                   uint16_t dport) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (deleted_ && !renewed_) {
         /* Skip updates on VmUveEntry if it is marked for delete */
         return;
@@ -37,7 +37,7 @@ void VmUveEntry::UpdatePortBitmap(uint8_t proto, uint16_t sport,
 
 bool VmUveEntry::SetVmPortBitmap(UveVirtualMachineAgent *uve) {
     bool changed = false;
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     vector<uint32_t> tcp_sport;
     if (port_bitmap_.tcp_sport_.Sync(tcp_sport)) {

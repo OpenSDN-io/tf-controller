@@ -78,7 +78,7 @@ bool BfdProto::BfdHealthCheckSessionControl(
                         remote_port,
                         source_ip);
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     switch (action) {
         case HealthCheckTable::CREATE_SERVICE:
         case HealthCheckTable::UPDATE_SERVICE:
@@ -161,7 +161,7 @@ bool BfdProto::BfdHealthCheckSessionControl(
 void BfdProto::NotifyHealthCheckInstanceService(uint32_t interface,
                                                 IpAddress address,
                                                 std::string &data) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     BfdSessionsKey key(interface, address);
     Sessions::iterator it = sessions_.find(key);
     if (it == sessions_.end()) {
@@ -209,7 +209,7 @@ void BfdProto::HandleReceiveSafe(
          uint8_t len,
          boost::system::error_code ec) {
 
-    tbb::mutex::scoped_lock lock(rx_mutex_);
+    std::scoped_lock lock(rx_mutex_);
     bfd_communicator().HandleReceive(
                                   packet, local_endpoint, remote_endpoint,
                                   session_index,

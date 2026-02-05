@@ -337,7 +337,7 @@ bool XmppServer::MayDelete() const {
 // concurrently from 2 different threads in tests.
 //
 void XmppServer::Shutdown() {
-    tbb::mutex::scoped_lock lock(deletion_mutex_);
+    std::scoped_lock lock(deletion_mutex_);
     deleter_->Delete();
 }
 
@@ -398,7 +398,7 @@ size_t XmppServer::ConnectionEventCount() const {
 }
 
 size_t XmppServer::ConnectionMapSize() const {
-    tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
+    ReadLock lock(connection_map_mutex_);
     return connection_map_.size();
 }
 
@@ -407,7 +407,7 @@ size_t XmppServer::ConnectionCount() const {
 }
 
 XmppServerConnection *XmppServer::FindConnection(Endpoint remote_endpoint) {
-    tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
+    ReadLock lock(connection_map_mutex_);
     ConnectionMap::iterator loc = connection_map_.find(remote_endpoint);
     if (loc != connection_map_.end()) {
         return loc->second;
@@ -416,7 +416,7 @@ XmppServerConnection *XmppServer::FindConnection(Endpoint remote_endpoint) {
 }
 
 XmppServerConnection *XmppServer::FindConnection(const string &address) {
-    tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
+    ReadLock lock(connection_map_mutex_);
     for (auto& value : connection_map_) {
         if (value.second->ToString() == address)
             return value.second;
@@ -425,7 +425,7 @@ XmppServerConnection *XmppServer::FindConnection(const string &address) {
 }
 
 bool XmppServer::ClearConnection(const string &hostname) {
-    tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
+    ReadLock lock(connection_map_mutex_);
     for (auto& value : connection_map_) {
         if (value.second->GetComputeHostName() == hostname) {
             value.second->Clear();
@@ -436,14 +436,14 @@ bool XmppServer::ClearConnection(const string &hostname) {
 }
 
 void XmppServer::UpdateAllConnections(uint8_t time_out) {
-    tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
+    ReadLock lock(connection_map_mutex_);
     for (auto& value : connection_map_) {
         value.second->UpdateKeepAliveTimer(time_out);
     }
 }
 
 void XmppServer::ClearAllConnections() {
-    tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
+    ReadLock lock(connection_map_mutex_);
     for (auto& value : connection_map_) {
         value.second->Clear();
     }
@@ -488,7 +488,7 @@ SslSession *XmppServer::AllocSession(SslSocket *socket) {
 // the allocated xmpp data structures are not fully processed yet.
 //
 bool XmppServer::AcceptSession(TcpSession *tcp_session) {
-    tbb::mutex::scoped_lock lock(deletion_mutex_);
+    std::scoped_lock lock(deletion_mutex_);
     if (deleter_->IsDeleted())
         return false;
 
@@ -520,7 +520,7 @@ void XmppServer::RemoveConnection(XmppServerConnection *connection) {
 
     assert(connection->IsDeleted());
     Endpoint endpoint = connection->endpoint();
-    tbb::reader_writer_lock::scoped_lock lock(connection_map_mutex_);
+    WriteLock lock(connection_map_mutex_);
     ConnectionMap::iterator loc = connection_map_.find(endpoint);
     assert(loc != connection_map_.end() && loc->second == connection);
     connection_map_.erase(loc);
@@ -528,7 +528,7 @@ void XmppServer::RemoveConnection(XmppServerConnection *connection) {
 
 void XmppServer::SwapXmppConnectionMapEntries(
         XmppConnection *connection1, XmppConnection *connection2) {
-    tbb::reader_writer_lock::scoped_lock lock(connection_map_mutex_);
+    WriteLock lock(connection_map_mutex_);
     ConnectionMap::iterator loc1 =
         connection_map_.find(connection1->endpoint());
     assert(loc1 != connection_map_.end());
@@ -550,7 +550,7 @@ void XmppServer::InsertConnection(XmppServerConnection *connection) {
     Endpoint endpoint = connection->endpoint();
     ConnectionMap::iterator loc;
     bool result;
-    tbb::reader_writer_lock::scoped_lock lock(connection_map_mutex_);
+    WriteLock lock(connection_map_mutex_);
     tie(loc, result) = connection_map_.insert(make_pair(endpoint, connection));
     assert(result);
     max_connections_ = max(max_connections_, connection_map_.size());
@@ -583,7 +583,7 @@ XmppServerConnection *XmppServer::CreateConnection(XmppSession *session) {
 }
 
 void XmppServer::SetDscpValue(uint8_t value) {
-    tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
+    ReadLock lock(connection_map_mutex_);
     dscp_value_ = value;
     for (auto& value : connection_map_) {
         XmppServerConnection *connection = value.second;
@@ -674,7 +674,7 @@ void XmppServer::RemoveDeletedConnection(XmppServerConnection *connection) {
 
 XmppConnectionEndpoint *XmppServer::FindConnectionEndpoint(
     const string &endpoint_name) {
-    tbb::mutex::scoped_lock lock(endpoint_map_mutex_);
+    std::scoped_lock lock(endpoint_map_mutex_);
     ConnectionEndpointMap::const_iterator loc =
         connection_endpoint_map_.find(endpoint_name);
     return (loc != connection_endpoint_map_.end() ? loc->second : NULL);
@@ -686,7 +686,7 @@ XmppConnectionEndpoint *XmppServer::LocateConnectionEndpoint(
     if (!connection)
         return NULL;
 
-    tbb::mutex::scoped_lock lock(endpoint_map_mutex_);
+    std::scoped_lock lock(endpoint_map_mutex_);
 
     ConnectionEndpointMap::const_iterator loc =
         connection_endpoint_map_.find(connection->ToString());
@@ -719,7 +719,7 @@ XmppConnectionEndpoint *XmppServer::LocateConnectionEndpoint(
 // simply have called XmppConnectionEndpoint::reset_connection directly.
 //
 void XmppServer::ReleaseConnectionEndpoint(XmppServerConnection *connection) {
-    tbb::mutex::scoped_lock lock(endpoint_map_mutex_);
+    std::scoped_lock lock(endpoint_map_mutex_);
 
     if (!connection->conn_endpoint())
         return;
@@ -730,7 +730,7 @@ void XmppServer::ReleaseConnectionEndpoint(XmppServerConnection *connection) {
 
 void XmppServer::FillShowConnections(
     vector<ShowXmppConnection> *show_connection_list) const {
-    tbb::reader_writer_lock::scoped_lock_read lock(connection_map_mutex_);
+    ReadLock lock(connection_map_mutex_);
     for (const auto& value : connection_map_) {
         const XmppServerConnection *connection = value.second;
         ShowXmppConnection show_connection;

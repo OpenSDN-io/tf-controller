@@ -309,12 +309,12 @@ FlowMgmtEntry *VnFlowMgmtTree::Allocate(const FlowMgmtKey *key) {
 }
 
 void VnFlowMgmtTree::InsertEntry(FlowMgmtKey *key, FlowMgmtEntry *entry) {
-    tbb::mutex::scoped_lock mutex(mutex_);
+    std::scoped_lock mutex(mutex_);
     FlowMgmtTree::InsertEntry(key, entry);
 }
 
 void VnFlowMgmtTree::RemoveEntry(Tree::iterator it) {
-    tbb::mutex::scoped_lock mutex(mutex_);
+    std::scoped_lock mutex(mutex_);
     FlowMgmtTree::RemoveEntry(it);
 }
 
@@ -322,7 +322,7 @@ void VnFlowMgmtTree::VnFlowCounters(const VnEntry *vn,
                                     uint32_t *ingress_flow_count,
                                     uint32_t *egress_flow_count) {
     VnFlowMgmtKey key(vn);
-    tbb::mutex::scoped_lock mutex(mutex_);
+    std::scoped_lock mutex(mutex_);
     VnFlowMgmtEntry *entry = static_cast<VnFlowMgmtEntry *>(Find(&key));
     if (entry) {
         *ingress_flow_count += entry->ingress_flow_count();
@@ -334,12 +334,12 @@ void VnFlowMgmtTree::VnFlowCounters(const VnEntry *vn,
 // Interface Flow Management
 /////////////////////////////////////////////////////////////////////////////
 void InterfaceFlowMgmtTree::InsertEntry(FlowMgmtKey *key, FlowMgmtEntry *entry){
-    tbb::mutex::scoped_lock mutex(mutex_);
+    std::scoped_lock mutex(mutex_);
     FlowMgmtTree::InsertEntry(key, entry);
 }
 
 void InterfaceFlowMgmtTree::RemoveEntry(Tree::iterator it) {
-    tbb::mutex::scoped_lock mutex(mutex_);
+    std::scoped_lock mutex(mutex_);
     FlowMgmtTree::RemoveEntry(it);
 }
 
@@ -348,7 +348,7 @@ void InterfaceFlowMgmtTree::InterfaceFlowCount(const Interface *itf,
                                                uint64_t *aged,
                                                uint32_t *active_flows) {
     InterfaceFlowMgmtKey key(itf);
-    tbb::mutex::scoped_lock mutex(mutex_);
+    std::scoped_lock mutex(mutex_);
     InterfaceFlowMgmtEntry *entry = static_cast<InterfaceFlowMgmtEntry *>
         (Find(&key));
     if (entry) {

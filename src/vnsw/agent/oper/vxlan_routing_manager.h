@@ -5,6 +5,8 @@
 #ifndef __AGENT_OPER_VXLAN_ROUTING_H
 #define __AGENT_OPER_VXLAN_ROUTING_H
 
+#include <mutex>
+
 #include <cmn/agent_cmn.h>
 #include <cmn/agent.h>
 #include <oper/oper_db.h>
@@ -607,7 +609,7 @@ private:
 
     /// A mutex object to prevent simultaneous update of local sequence
     /// number property.
-    static tbb::mutex mutex_;
+    static std::mutex mutex_;
 
     /// Friends declarations
 

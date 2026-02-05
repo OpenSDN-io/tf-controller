@@ -99,7 +99,7 @@ void VmEntry::SetInterfacesDropNewFlows(bool drop_new_flows) const {
     VmTable *vm_table = static_cast<VmTable *>(get_table());
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
-    tbb::mutex::scoped_lock lock(back_ref_mutex_);
+    std::scoped_lock lock(back_ref_mutex_);
     std::set<IntrusiveReferrer>::const_iterator it = back_ref_set_.begin();
     for (; it != back_ref_set_.end(); it++) {
         VmInterface *vm_intf = static_cast<VmInterface *>((*it).first);

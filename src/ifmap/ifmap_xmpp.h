@@ -5,13 +5,13 @@
 #ifndef __XMPP_IFMAP_INC__
 #define __XMPP_IFMAP_INC__
 
+#include <map>
+#include <string>
+#include <mutex>
+
 #include <boost/function.hpp>
 #include <boost/system/error_code.hpp>
 #include <tbb/atomic.h>
-#include <tbb/mutex.h>
-
-#include <map>
-#include <string>
 
 #include "base/queue_task.h"
 #include "ifmap/ifmap_client.h"
@@ -170,7 +170,7 @@ private:
     XmppServer *xmpp_server_;
     IFMapServer *ifmap_server_;
     ChannelMap channel_map_;
-    tbb::mutex channel_map_mutex_; // serializes access to channel_map_
+    std::mutex channel_map_mutex_; // serializes access to channel_map_
     WorkQueue<ConfigTaskQueueEntry> config_task_work_queue_;
 
     bool ProcessChannelUnregister(ConfigTaskQueueEntry entry);

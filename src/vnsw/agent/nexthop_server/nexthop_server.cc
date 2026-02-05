@@ -35,7 +35,7 @@ NexthopDBServer::EventHandler(UnixDomainSocketServer * server,
                               UnixDomainSocketSession * session,
                               UnixDomainSocketServer::Event event)
 {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (event == UnixDomainSocketServer::NEW_SESSION) {
         NexthopDBClient::ClientPtr cl(new NexthopDBClient(session, this));
         AddClient(cl);
@@ -94,7 +94,7 @@ NexthopDBServer::AddNexthop(NexthopDBEntry::NexthopPtr nh)
 NexthopDBEntry::NexthopPtr
 NexthopDBServer::FindOrCreateNexthop(const std::string &nh_str)
 {
-    tbb::mutex::scoped_lock lock (mutex_);
+    std::scoped_lock lock (mutex_);
 
     /*
      * Does the nexthop exist? If so, return.
@@ -118,7 +118,7 @@ NexthopDBServer::FindOrCreateNexthop(const std::string &nh_str)
 void
 NexthopDBServer::FindAndRemoveNexthop(const std::string &str)
 {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     if (nexthop_table_[str] == NULL) {
         return;

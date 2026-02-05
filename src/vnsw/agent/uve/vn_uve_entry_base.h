@@ -13,7 +13,6 @@
 #include <oper/interface_common.h>
 #include <oper/interface.h>
 #include <oper/vn.h>
-#include <tbb/mutex.h>
 #include <cmn/agent_cmn.h>
 
 //The class that defines data-structures to store VirtualNetwork information

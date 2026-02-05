@@ -6,6 +6,8 @@
 #define vnsw_agent_pkt_test_pkt0_interface_hpp
 
 #include <string>
+#include <mutex>
+
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
@@ -40,7 +42,7 @@ public:
     const std::string &Name() const { return name_; }
 
     void IoShutdownControlInterface() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         pkt0_sock_.close();
         pkt0_client_sock_.close();
     }
@@ -200,7 +202,7 @@ private:
     }
 
     void Pkt0ClientRead() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         pkt0_client_read_buff_ = new uint8_t[ControlInterface::kMaxPacketSize];
         pkt0_client_sock_.async_receive(
             boost::asio::buffer(pkt0_client_read_buff_,
@@ -228,7 +230,7 @@ private:
     boost::asio::ip::udp::endpoint pkt0_client_ep_;
     uint8_t *pkt0_client_read_buff_;
     Callback client_cb_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 
     DISALLOW_COPY_AND_ASSIGN(TestPkt0Interface);
 };

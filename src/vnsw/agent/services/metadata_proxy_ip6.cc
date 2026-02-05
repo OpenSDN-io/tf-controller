@@ -38,7 +38,7 @@ void MetadataProxy::AdvertiseMetaDataLinkLocalRoutes(const VmInterface* vm_intf,
         return;
     }
 
-    tbb::mutex::scoped_lock lock(ll_ipv6_addr_mutex_);
+    std::scoped_lock lock(ll_ipv6_addr_mutex_);
     {
         InetUnicastAgentRouteTable *intf_inet_table =
             intf_vrf->GetInet6UnicastRouteTable();
@@ -77,7 +77,7 @@ void MetadataProxy::DeleteMetaDataLinkLocalRoute(const VmInterface* vm_intf) {
     if (vm_intf == NULL)
         return;
 
-    tbb::mutex::scoped_lock lock(ll_ipv6_addr_mutex_);
+    std::scoped_lock lock(ll_ipv6_addr_mutex_);
 
     Ip6Address ll_ip = Ip6Address::from_string(std::string("::"));
     if (!ll_ipv6_addresses_.count(vm_intf->name()))

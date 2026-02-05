@@ -73,25 +73,25 @@ void IFMapUpdateSender::QueueActive() {
         return;
     }
     queue_active_ = true;
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     StartTask();
 }
 
 void IFMapUpdateSender::SendActive(int index) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     send_scheduled_.set(index);
     StartTask();
 }
 
 void IFMapUpdateSender::GetSendScheduled(BitSet *current) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     *current = send_scheduled_;
     send_scheduled_.clear();
     task_scheduled_ = false;
 }
 
 void IFMapUpdateSender::CleanupClient(int index) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     send_scheduled_.reset(index);
     send_blocked_.reset(index);
 }

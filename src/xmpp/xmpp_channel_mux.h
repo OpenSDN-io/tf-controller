@@ -5,9 +5,10 @@
 #ifndef __XMPP_CHANNEL_MUX_H__
 #define __XMPP_CHANNEL_MUX_H__
 
+#include <mutex>
+
 #include <boost/system/error_code.hpp>
 #include <tbb/atomic.h>
-#include <tbb/mutex.h>
 #include "xmpp/xmpp_channel.h"
 #include "xmpp/xmpp_proto.h"
 #include "xmpp/xmpp_state_machine.h"
@@ -91,7 +92,7 @@ private:
     SendReadyCb cb_;
     RefererSet referers_;
     XmppConnection *connection_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     RxMessageTraceCb rx_message_trace_cb_;
     TxMessageTraceCb tx_message_trace_cb_;
     tbb::atomic<time_t> last_received_;

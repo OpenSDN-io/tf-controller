@@ -5,7 +5,8 @@
 #ifndef __dns_manager_h__
 #define __dns_manager_h__
 
-#include <tbb/mutex.h>
+#include <mutex>
+
 #include <base/index_allocator.h>
 #include <mgr/dns_oper.h>
 #include <bind/named_config.h>
@@ -140,7 +141,7 @@ private:
     void ResetTransId(uint16_t);
     inline bool CheckName(std::string rec_name, std::string name);
 
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     BindStatus bind_status_;
     DnsConfigManager config_mgr_;
     ConfigClientManager *config_client_manager_;

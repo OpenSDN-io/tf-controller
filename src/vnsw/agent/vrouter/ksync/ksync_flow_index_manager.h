@@ -4,7 +4,8 @@
 #ifndef __VNSW_AGENT_VROUTER_KSYNC_KSYNC_FLOW_INDEX_MANAGER_H__
 #define __VNSW_AGENT_VROUTER_KSYNC_KSYNC_FLOW_INDEX_MANAGER_H__
 
-#include <tbb/mutex.h>
+#include <mutex>
+
 #include <pkt/flow_entry.h>
 
 ////////////////////////////////////////////////////////////////////////////
@@ -41,7 +42,7 @@ public:
             assert(0);
         }
 
-        tbb::mutex mutex_;
+        std::mutex mutex_;
         FlowEntryPtr owner_;
     };
     KSyncFlowIndexManager(KSync *ksync);

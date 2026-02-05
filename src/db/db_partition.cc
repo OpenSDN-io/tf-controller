@@ -5,9 +5,10 @@
 #include "db/db_partition.h"
 
 #include <list>
+#include <mutex>
+
 #include <tbb/atomic.h>
 #include <tbb/concurrent_queue.h>
-#include <tbb/mutex.h>
 
 #include "base/task.h"
 #include "db/db.h"
@@ -99,7 +100,7 @@ public:
     // exclusive with DB task, but can be called concurrently from multiple
     // bgp::ConfigHelper tasks.
     void SetActive(DBTablePartBase *tpart) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         change_list_.push_back(tpart);
         MaybeStartRunnerUnlocked();
     }
@@ -146,7 +147,7 @@ private:
     uint64_t total_request_count_;
     uint64_t max_request_queue_len_;
     RemoveQueue remove_queue_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     int db_partition_id_;
     bool disable_;
     bool running_;
@@ -247,12 +248,12 @@ void DBPartition::WorkQueue::MaybeStartRunnerUnlocked() {
 }
 
 void DBPartition::WorkQueue::MaybeStartRunner() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     MaybeStartRunnerUnlocked();
 }
 
 bool DBPartition::WorkQueue::RunnerDone() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (disable_ || (request_queue_.empty() && remove_queue_.empty())) {
         running_ = false;
         return true;

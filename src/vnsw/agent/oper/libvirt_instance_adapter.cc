@@ -2,6 +2,10 @@
  * Copyright (c) 2015 Codilime
  */
 
+#include "oper/libvirt_instance_adapter.h"
+
+#include <fstream>
+
 #include <arpa/inet.h>
 #include <errno.h>
 #include <libvirt/libvirt.h>
@@ -11,9 +15,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <pugixml/pugixml.hpp>
-#include <fstream>
 #include "cfg/cfg_init.h"
-#include "oper/libvirt_instance_adapter.h"
 #include "oper/service_instance.h"
 #include "oper/instance_task.h"
 #include "oper/interface_common.h"
@@ -25,7 +27,7 @@ using pugi::xml_node;
 using pugi::xml_attribute;
 using pugi::xml_parse_result;
 
-tbb::mutex LibvirtInstanceAdapter::conn_mutex_;
+std::mutex LibvirtInstanceAdapter::conn_mutex_;
 
 static bool close_descriptor(int fd) {
     while (close(fd) < 0) {
@@ -283,7 +285,7 @@ std::string LibvirtInstanceAdapter::GenIntfName(
 
 bool LibvirtInstanceAdapter::EnsureConnected() {
     // gets called from InstanceTask threads
-    tbb::mutex::scoped_lock lock(conn_mutex_);
+    std::scoped_lock lock(conn_mutex_);
 
     LOG(DEBUG, "ensuring we have a libvirt connection");
     if (conn_ == NULL) {
@@ -398,7 +400,7 @@ void LibvirtInstanceAdapter::UnregisterInterfaces(
 }
 
 void LibvirtInstanceAdapter::CloseConnection() {
-    tbb::mutex::scoped_lock lock(conn_mutex_);
+    std::scoped_lock lock(conn_mutex_);
     LOG(DEBUG, "closing libvirt connection");
     if (conn_ != NULL) {
         virConnectClose(conn_);

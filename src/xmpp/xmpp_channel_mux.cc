@@ -43,7 +43,7 @@ xmps::PeerState XmppChannelMux::GetPeerState() const {
 }
 
 void XmppChannelMux::WriteReady(const boost::system::error_code &ec) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     WriteReadyCbMap::iterator iter = map_.begin();
     WriteReadyCbMap::iterator next = iter;
@@ -60,7 +60,7 @@ bool XmppChannelMux::Send(const uint8_t *msg, size_t msgsize,
                           SendReadyCb cb) {
     if (!connection_) return false;
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     last_sent_ = UTCTimestamp();
     bool res = connection_->Send(msg, msgsize, msg_str);
     if (res == false) {

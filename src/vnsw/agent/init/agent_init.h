@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_init_agent_init_hpp
 #define vnsw_agent_init_agent_init_hpp
 
+#include <mutex>
+
 #include <boost/program_options.hpp>
 #include <init/agent_param.h>
 
@@ -168,7 +170,7 @@ private:
     std::unique_ptr<Agent> agent_;
     AgentParam *agent_param_;
 
-    tbb::mutex init_mutex_;
+    std::mutex init_mutex_;
     std::unique_ptr<TaskTrigger> trigger_;
 
     std::unique_ptr<AgentStats> stats_;

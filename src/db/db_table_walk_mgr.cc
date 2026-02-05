@@ -28,7 +28,7 @@ DBTableWalkMgr::DBTableWalkMgr()
 
 bool DBTableWalkMgr::ProcessWalkRequestList() {
     CHECK_CONCURRENCY("db::Walker");
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (!current_table_walk_.empty()) return true;
     while (true) {
         if (walk_request_list_.empty()) break;
@@ -88,7 +88,7 @@ void DBTableWalkMgr::WalkAgain(DBTable::DBTableWalkRef ref) {
 }
 
 void DBTableWalkMgr::WalkTable(DBTable::DBTableWalkRef walk) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     DBTable *table = walk->table();
 
     if (walk->in_progress()) {

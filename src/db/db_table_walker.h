@@ -5,6 +5,8 @@
 #ifndef ctrlplane_db_table_walker_h
 #define ctrlplane_db_table_walker_h
 
+#include <mutex>
+
 #include <boost/function.hpp>
 #include <boost/dynamic_bitset.hpp>
 
@@ -87,7 +89,7 @@ private:
 
     // List of walkers allocated
     int task_id_;
-    tbb::mutex walkers_mutex_;
+    std::mutex walkers_mutex_;
     WalkerList walkers_;
     WalkerMap walker_map_;
 };

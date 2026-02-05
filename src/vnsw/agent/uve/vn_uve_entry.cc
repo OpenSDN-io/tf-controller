@@ -22,7 +22,7 @@ VnUveEntry::~VnUveEntry() {
 
 void VnUveEntry::UpdatePortBitmap(uint8_t proto, uint16_t sport,
                                   uint16_t dport) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (deleted_ && !renewed_) {
         /* Skip updates on VnUveEntry if it is marked for delete */
         return;
@@ -32,7 +32,7 @@ void VnUveEntry::UpdatePortBitmap(uint8_t proto, uint16_t sport,
 
 void VnUveEntry::UpdateInterVnStats(const string &dst_vn, uint64_t bytes,
                                     uint64_t pkts, bool outgoing) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (deleted_ && !renewed_) {
         /* Skip updates on VnUveEntry if it is marked for delete */
         return;
@@ -62,7 +62,7 @@ void VnUveEntry::UpdateInterVnStats(const string &dst_vn, uint64_t bytes,
 
 /* Remove all the elements of map entry value which is a set */
 void VnUveEntry::ClearInterVnStats() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     VnStatsSet::iterator stats_it = inter_vn_stats_.begin();
     VnStatsSet::iterator del_it;
     while(stats_it != inter_vn_stats_.end()) {
@@ -74,7 +74,7 @@ void VnUveEntry::ClearInterVnStats() {
 
 bool VnUveEntry::SetVnPortBitmap(UveVirtualNetworkAgent &uve) {
     bool changed = false;
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     vector<uint32_t> tcp_sport;
     if (port_bitmap_.tcp_sport_.Sync(tcp_sport)) {
@@ -199,7 +199,7 @@ bool VnUveEntry::PopulateInterVnStats(UveVirtualNetworkAgent &s_vn) {
     vector<InterVnStats> vn_stats_list;
 
     {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         VnStatsSet::iterator it = inter_vn_stats_.begin();
         VnStats *stats;
         VnStatsPtr stats_ptr;

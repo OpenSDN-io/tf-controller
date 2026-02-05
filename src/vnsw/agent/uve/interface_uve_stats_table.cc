@@ -144,7 +144,7 @@ void InterfaceUveStatsTable::SendInterfaceStats(void) {
     while (it != interface_tree_.end()) {
         UveInterfaceEntry* entry = it->second.get();
         {
-            tbb::mutex::scoped_lock lock(entry->mutex_);
+            std::scoped_lock lock(entry->mutex_);
             SendInterfaceStatsMsg(entry);
         }
         it++;
@@ -177,7 +177,7 @@ void InterfaceUveStatsTable::UpdateFloatingIpStats(const FipInfo &fip_info) {
     if (intf == NULL) {
         return;
     }
-    tbb::mutex::scoped_lock lock(interface_tree_mutex_);
+    std::scoped_lock lock(interface_tree_mutex_);
     VmInterface *vmi = static_cast<VmInterface *>(intf);
     InterfaceMap::iterator intf_it = interface_tree_.find(vmi->cfg_name());
 
@@ -217,7 +217,7 @@ bool InterfaceUveStatsTable::FrameFipStatsMsg(const VmInterface *itf,
 
 void InterfaceUveStatsTable::UpdatePortBitmap
     (const string &name, uint8_t proto, uint16_t sport, uint16_t dport) {
-    tbb::mutex::scoped_lock lock(interface_tree_mutex_);
+    std::scoped_lock lock(interface_tree_mutex_);
     InterfaceMap::const_iterator it = interface_tree_.find(name);
 
     if (it != interface_tree_.end()) {
@@ -228,7 +228,7 @@ void InterfaceUveStatsTable::UpdatePortBitmap
 
 InterfaceUveTable::FloatingIp * InterfaceUveStatsTable::FipEntry
     (uint32_t fip, const string &vn, Interface *intf) {
-    tbb::mutex::scoped_lock lock(interface_tree_mutex_);
+    std::scoped_lock lock(interface_tree_mutex_);
     VmInterface *vmi = static_cast<VmInterface *>(intf);
     InterfaceMap::iterator intf_it = interface_tree_.find(vmi->cfg_name());
 
@@ -283,7 +283,7 @@ void InterfaceUveStatsTable::SendInterfaceAceStats(const string &name,
 
 void InterfaceUveStatsTable::UpdateVmiTagBasedStats(const EndpointStatsInfo
                                                     &info) {
-    tbb::mutex::scoped_lock lock(interface_tree_mutex_);
+    std::scoped_lock lock(interface_tree_mutex_);
     InterfaceMap::iterator intf_it = interface_tree_.find(info.vmi->cfg_name());
     if (intf_it != interface_tree_.end()) {
         UveInterfaceEntry *entry = intf_it->second.get();
@@ -295,7 +295,7 @@ void InterfaceUveStatsTable::BuildInterfaceUveInfo(InterfaceUveInfoResp *r) {
 
     vector<InterfaceUveInfo> &list =
         const_cast<std::vector<InterfaceUveInfo>&>(r->get_resp_list());
-    tbb::mutex::scoped_lock lock(interface_tree_mutex_);
+    std::scoped_lock lock(interface_tree_mutex_);
     InterfaceMap::iterator intf_it = interface_tree_.begin();
     while (intf_it != interface_tree_.end()) {
         InterfaceUveInfo item;

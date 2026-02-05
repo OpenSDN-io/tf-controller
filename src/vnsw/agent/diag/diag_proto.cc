@@ -91,7 +91,7 @@ bool DiagProto::SegmentHealthCheckProcess(
 }
 
 void DiagProto::IncrementDiagStats(uint32_t itf_id, DiagStatsType type) {
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     DiagStats new_entry;
     std::pair<DiagStatsMap::iterator, bool> ret = stats_.insert(DiagStatsPair
                                                                 (itf_id,
@@ -119,7 +119,7 @@ void DiagProto::FillSandeshHealthCheckResponse(SegmentHealthCheckPktStatsResp
                                                *resp) {
     vector<SegmentHealthCheckStats> &list =
         const_cast<std::vector<SegmentHealthCheckStats>&>(resp->get_stats());
-    tbb::mutex::scoped_lock lock(stats_mutex_);
+    std::scoped_lock lock(stats_mutex_);
     DiagProto::DiagStatsMap::const_iterator it = stats_.begin();
     while (it != stats_.end()) {
         SegmentHealthCheckStats item;

@@ -5,6 +5,8 @@
 #ifndef __AGENT_OPER_BGP_ROUTER_H
 #define __AGENT_OPER_BGP_ROUTER_H
 
+#include <mutex>
+
 #include <cmn/agent_cmn.h>
 #include <oper/oper_db.h>
 #include <bgp_schema_types.h>
@@ -76,7 +78,7 @@ public:
     BgpRouterConfig(Agent *agent);
     virtual ~BgpRouterConfig();
 
-    tbb::mutex &mutex() { return mutex_; }
+    std::mutex &mutex() { return mutex_; }
     uint32_t GetBgpRouterCount() { return bgp_router_tree_.size(); }
     uint32_t GetBgpRouterCount(const std::string &cnz_name);
     uint32_t GetControlNodeZoneCount() {
@@ -106,7 +108,7 @@ public:
                 return inet_labeled_af_enabled_; }
 private:
     void UpdateBgpRouterConfigAf();
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     BgpRouterTree bgp_router_tree_;
     ControlNodeZoneTree control_node_zone_tree_;
     bool inet_labeled_af_enabled_;

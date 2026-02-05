@@ -62,7 +62,6 @@ public:
     MacIpLearningTable* GetMacIpLearningTable();
 
 private:
-    tbb::mutex::scoped_lock mutex_;
     MacLearningPartitionList mac_learning_partition_list_;
     MacIpLearningTablePtr mac_ip_learning_tbl_;
     TokenPool add_tokens_;

@@ -42,7 +42,7 @@ bool VmUveTableBase::TimerExpiry() {
         if (entry->deleted()) {
             SendVmDeleteMsg(entry->vm_config_name());
             if (!entry->renewed()) {
-                tbb::mutex::scoped_lock lock(uve_vm_map_mutex_);
+                std::scoped_lock lock(uve_vm_map_mutex_);
                 uve_vm_map_.erase(prev);
             } else {
                 entry->set_deleted(false);

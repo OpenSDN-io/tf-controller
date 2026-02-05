@@ -357,12 +357,12 @@ IFMapChannelManager::IFMapChannelManager(XmppServer *xmpp_server,
 }
 
 IFMapChannelManager::~IFMapChannelManager() {
-    tbb::mutex::scoped_lock lock(channel_map_mutex_);
+    std::scoped_lock lock(channel_map_mutex_);
     STLDeleteElements(&channel_map_);
 }
 
 IFMapXmppChannel *IFMapChannelManager::FindChannel(XmppChannel *channel) {
-    tbb::mutex::scoped_lock lock(channel_map_mutex_);
+    std::scoped_lock lock(channel_map_mutex_);
     ChannelMap::iterator loc =
         channel_map_.find(const_cast<XmppChannel *>(channel));
     if (loc != channel_map_.end()) {
@@ -372,7 +372,7 @@ IFMapXmppChannel *IFMapChannelManager::FindChannel(XmppChannel *channel) {
 }
 
 IFMapXmppChannel *IFMapChannelManager::FindChannel(std::string tostring) {
-    tbb::mutex::scoped_lock lock(channel_map_mutex_);
+    std::scoped_lock lock(channel_map_mutex_);
     BOOST_FOREACH(ChannelMap::value_type &i, channel_map_) {
         if (i.second->ToString() == tostring)
             return i.second;
@@ -386,13 +386,13 @@ IFMapXmppChannel *IFMapChannelManager::CreateIFMapXmppChannel(
         Create<IFMapXmppChannel>(channel,
             ifmap_server_,
             this);
-    tbb::mutex::scoped_lock lock(channel_map_mutex_);
+    std::scoped_lock lock(channel_map_mutex_);
     channel_map_.insert(std::make_pair(channel, ifmap_chnl));
     return ifmap_chnl;
 }
 
 void IFMapChannelManager::DeleteIFMapXmppChannel(IFMapXmppChannel *ifmap_chnl) {
-    tbb::mutex::scoped_lock lock(channel_map_mutex_);
+    std::scoped_lock lock(channel_map_mutex_);
     channel_map_.erase(ifmap_chnl->channel());
     delete ifmap_chnl;
 }
@@ -476,7 +476,7 @@ void IFMapChannelManager::EnqueueChannelUnregister(XmppChannel *channel) {
 
 void IFMapChannelManager::FillChannelMap(
         std::vector<IFMapXmppChannelMapEntry> *out_map) {
-    tbb::mutex::scoped_lock lock(channel_map_mutex_);
+    std::scoped_lock lock(channel_map_mutex_);
     for (ChannelMap::iterator iter = channel_map_.begin();
          iter != channel_map_.end(); ++iter) {
         IFMapXmppChannel *ifmap_chnl = iter->second;

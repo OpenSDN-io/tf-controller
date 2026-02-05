@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_vn_uve_entry_h
 #define vnsw_agent_vn_uve_entry_h
 
+#include <mutex>
+
 #include <uve/l4_port_bitmap.h>
 #include "pkt/flow_proto.h"
 #include "pkt/flow_table.h"
@@ -118,7 +120,7 @@ private:
      * 1. kTaskFlowStatsCollector and Agent::Uve
      * 2. kTaskFlowStatsCollector and kTaskDBExclude
      */
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     uint64_t in_bytes_;
     uint64_t out_bytes_;
     uint64_t prev_stats_update_time_;

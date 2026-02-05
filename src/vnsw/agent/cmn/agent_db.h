@@ -6,6 +6,7 @@
 #define vnsw_agent_db_hpp
 
 #include <atomic>
+#include <mutex>
 #include <cmn/agent_cmn.h>
 
 class Agent;
@@ -41,14 +42,14 @@ public:
     friend void intrusive_ptr_add_back_ref(const IntrusiveReferrer ref,
                                            const Derived* p) {
         const AgentRefCount *entry = (const AgentRefCount *) (p);
-        tbb::mutex::scoped_lock lock(entry->back_ref_mutex_);
+        std::scoped_lock lock(entry->back_ref_mutex_);
         entry->back_ref_set_.insert(ref);
     }
 
     friend void intrusive_ptr_del_back_ref(const IntrusiveReferrer ref,
                                            const Derived* p) {
         const AgentRefCount *entry = (const AgentRefCount *) (p);
-        tbb::mutex::scoped_lock lock(entry->back_ref_mutex_);
+        std::scoped_lock lock(entry->back_ref_mutex_);
         entry->back_ref_set_.erase(ref);
     }
 
@@ -60,7 +61,7 @@ protected:
     virtual ~AgentRefCount() {assert(refcount_ == 0);};
     void swap(AgentRefCount&) {};
 
-    mutable tbb::mutex back_ref_mutex_;
+    mutable std::mutex back_ref_mutex_;
     mutable std::set<IntrusiveReferrer> back_ref_set_;
 
 private:

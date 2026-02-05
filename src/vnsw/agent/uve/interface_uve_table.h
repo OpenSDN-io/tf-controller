@@ -9,6 +9,8 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <mutex>
+
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <interface_types.h>
@@ -228,7 +230,7 @@ public:
          *        security_policy_stats_map_ and resets
          *        security_policy_stats_map_
          */
-        tbb::mutex mutex_;
+        std::mutex mutex_;
 
         UveInterfaceEntry(const VmInterface *i) : intf_(i),
             uuid_(i->GetUuid()), port_bitmap_(),
@@ -310,7 +312,7 @@ protected:
     Agent *agent_;
     InterfaceMap interface_tree_;
     /* For exclusion between kTaskFlowStatsCollector and kTaskDBExclude */
-    tbb::mutex interface_tree_mutex_;
+    std::mutex interface_tree_mutex_;
 private:
     virtual UveInterfaceEntryPtr Allocate(const VmInterface *vm);
     void InterfaceNotify(DBTablePartBase *partition, DBEntryBase *e);

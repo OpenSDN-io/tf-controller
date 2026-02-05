@@ -7,13 +7,13 @@
 
 #include <list>
 #include <set>
+#include <mutex>
 
 #include <boost/assign.hpp>
 #include <boost/function.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <tbb/mutex.h>
 
 #include "base/logging.h"
 #include "base/task_trigger.h"
@@ -180,7 +180,7 @@ private:
 
     // Mutex to protect walk_request_list_ and walk_request_set_ as
     // Walk can be requested from task which may run concurrently
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     WalkRequestInfoList walk_request_list_;
     WalkRequestInfoSet walk_request_set_;
 

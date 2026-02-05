@@ -8,7 +8,6 @@
 #include <atomic>
 #include <string>
 #include <map>
-#include <tbb/mutex.h>
 #include <db/db_table_walker.h>
 #include <base/address.h>
 #include <boost/intrusive_ptr.hpp>

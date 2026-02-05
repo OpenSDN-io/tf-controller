@@ -5,9 +5,11 @@
 #ifndef __XMPP_SERVER_H__
 #define __XMPP_SERVER_H__
 
+#include <mutex>
+#include <shared_mutex>
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <tbb/reader_writer_lock.h>
 
 #include "base/lifetime.h"
 #include "base/queue_task.h"
@@ -27,6 +29,10 @@ class TcpSession;
 class XmppConnectionEndpoint;
 class XmppConfigUpdater;
 class XmppServerConnection;
+
+typedef std::shared_mutex Lock;
+typedef std::unique_lock<Lock>  WriteLock;
+typedef std::shared_lock<Lock>  ReadLock;
 
 // Class to represent Xmpp Server
 class XmppServer : public XmppConnectionManager {
@@ -109,7 +115,7 @@ protected:
     virtual SslSession *AllocSession(SslSocket *socket);
     virtual bool AcceptSession(TcpSession *session);
 
-    mutable tbb::reader_writer_lock connection_map_mutex_;
+    mutable Lock connection_map_mutex_;
     typedef std::map<Endpoint, XmppServerConnection *> ConnectionMap;
     ConnectionMap connection_map_;
 
@@ -132,10 +138,10 @@ private:
     ConnectionSet deleted_connection_set_;
     size_t max_connections_;
 
-    tbb::mutex endpoint_map_mutex_;
+    std::mutex endpoint_map_mutex_;
     ConnectionEndpointMap connection_endpoint_map_;
 
-    tbb::mutex deletion_mutex_;
+    std::mutex deletion_mutex_;
     boost::scoped_ptr<LifetimeManager> lifetime_manager_;
     boost::scoped_ptr<DeleteActor> deleter_;
 

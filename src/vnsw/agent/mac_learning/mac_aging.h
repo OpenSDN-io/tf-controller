@@ -5,7 +5,10 @@
 #ifndef SRC_VNSW_AGENT_MAC_LEARNING_MAC_AGING_H_
 #define SRC_VNSW_AGENT_MAC_LEARNING_MAC_AGING_H_
 
+#include <mutex>
+
 #include "cmn/agent.h"
+
 class MacEntryResp;
 class SandeshMacEntry;
 
@@ -132,7 +135,7 @@ private:
     uint32_t partition_id_;
     MacAgingQueue request_queue_;
     Timer *timer_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     MacAgingTableMap aging_table_map_;
     DISALLOW_COPY_AND_ASSIGN(MacAgingPartition);
 };

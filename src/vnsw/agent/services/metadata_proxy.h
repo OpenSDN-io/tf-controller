@@ -5,10 +5,12 @@
 #ifndef vnsw_agent_metadata_proxy_h_
 #define vnsw_agent_metadata_proxy_h_
 
+#include <map>
+#include <mutex>
+
 #include "http/client/http_client.h"
 #include "http/http_session.h"
 #include "oper/vm_interface.h"
-#include <map>
 
 class MetadataServer;
 class MetadataClient;
@@ -198,7 +200,7 @@ private:
     /// MetadataProxy::ll_ipv6_addresses_ table and member functions:
     /// MetadataProxy::DeleteMetaDataLinkLocalRoute,
     /// MetadataProxy::AdvertiseMetaDataLinkLocalRoutes
-    tbb::mutex ll_ipv6_addr_mutex_;
+    std::mutex ll_ipv6_addr_mutex_;
 
     DISALLOW_COPY_AND_ASSIGN(MetadataProxy);
 };

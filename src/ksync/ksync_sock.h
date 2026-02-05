@@ -7,13 +7,13 @@
 
 #include <atomic>
 #include <vector>
+#include <mutex>
+
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
 
 #include <boost/asio/netlink_protocol.hpp>
 #include <boost/asio/netlink_endpoint.hpp>
-
-#include <tbb/mutex.h>
 
 #include <base/queue_task.h>
 #include <sandesh/common/vns_constants.h>
@@ -422,7 +422,7 @@ protected:
     KSyncBulkSandeshContext *GetBulkSandeshContext(uint32_t seqno);
     void ProcessDataInline(char *data);
 
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     nl_client *nl_client_;
     // Tree of all IoContext pending ksync response
     WaitTree wait_tree_;
@@ -473,7 +473,7 @@ private:
     bool ProcessRxData(KSyncRxQueueData data);
     bool SendAsyncImpl(IoContext *ioc);
     bool SendAsyncStart() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return (wait_tree_.size() <= KSYNC_ACK_WAIT_THRESHOLD);
     }
 

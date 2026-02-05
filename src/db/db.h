@@ -7,9 +7,9 @@
 
 #include <map>
 #include <vector>
+#include <mutex>
 
 #include <boost/function.hpp>
-#include <tbb/mutex.h>
 
 #include "base/util.h"
 
@@ -85,7 +85,7 @@ private:
     static int partition_count_;
     static FactoryMap *factories();
 
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     int task_id_;
     std::vector<DBPartition *> partitions_;
     TableMap tables_;

@@ -63,7 +63,7 @@ public:
 
     virtual void ReceiveConfigUpdate(const XmppStanza::XmppMessage *msg) {
         if (parent_->down()) return;
-        tbb::mutex::scoped_lock lock(parent_->get_mutex());
+        std::scoped_lock lock(parent_->get_mutex());
         if (parent_->down()) return;
 
         XmlPugi *pugi = static_cast<XmlPugi *>(msg->dom.get());
@@ -116,7 +116,7 @@ public:
 
     virtual void ReceiveUpdate(const XmppStanza::XmppMessage *msg) {
         if (parent_->down()) return;
-        tbb::mutex::scoped_lock lock(parent_->get_mutex());
+        std::scoped_lock lock(parent_->get_mutex());
         if (parent_->down()) return;
 
         XmlPugi *pugi = static_cast<XmlPugi *>(msg->dom.get());
@@ -953,20 +953,20 @@ public:
     // accesses them off xmpp::XmppStateMachine task or bgp::Config task, which
     // are mutually exclusive.
     void RegisterReceive(xmps::PeerId id, ReceiveCb cb) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         XmppChannelMux::RegisterReceive(id, cb);
     }
     void UnRegisterReceive(xmps::PeerId id) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         XmppChannelMux::UnRegisterReceive(id);
     }
     void ProcessXmppMessage(const XmppStanza::XmppMessage *msg) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         XmppChannelMux::ProcessXmppMessage(msg);
     }
 
 private:
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 };
 
 void NetworkAgentMock::Initialize() {
@@ -1029,7 +1029,7 @@ void NetworkAgentMock::XmppHandleChannelEvent(XmppChannel *channel,
                                               xmps::PeerState state) {
     if (state == xmps::READY)
         return;
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     ClearInstances();
 }
 
@@ -1116,7 +1116,7 @@ NetworkAgentMock::AgentPeer *NetworkAgentMock::GetAgent() {
 }
 
 void NetworkAgentMock::SessionDown() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     down_ = true;
     XmppConnection *connection =
         client_->FindConnection("network-control@contrailsystems.com");
@@ -1125,7 +1125,7 @@ void NetworkAgentMock::SessionDown() {
 }
 
 void NetworkAgentMock::SessionUp() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     down_ = false;
     XmppConnection *connection =
         client_->FindConnection("network-control@contrailsystems.com");
@@ -1498,7 +1498,7 @@ void NetworkAgentMock::InstanceMgr<T>::Subscribe(const std::string &network,
                                 "Waiting for agent " << parent_->ToString() <<
                                 " to become established");
     }
-    tbb::mutex::scoped_lock lock(parent_->get_mutex());
+    std::scoped_lock lock(parent_->get_mutex());
 
     typename InstanceMap::iterator loc = instance_map_.find(network);
     if (loc == instance_map_.end()) {
@@ -1523,7 +1523,7 @@ bool NetworkAgentMock::InstanceMgr<T>::HasSubscribed(
         const std::string &network) {
     // if (!parent_->IsEstablished()) return false;
 
-    tbb::mutex::scoped_lock lock(parent_->get_mutex());
+    std::scoped_lock lock(parent_->get_mutex());
 
     typename InstanceMap::iterator loc = instance_map_.find(network);
     return (loc != instance_map_.end());
@@ -1541,7 +1541,7 @@ void NetworkAgentMock::InstanceMgr<T>::Unsubscribe(const std::string &network,
                                 " to become established");
     }
 
-    tbb::mutex::scoped_lock lock(parent_->get_mutex());
+    std::scoped_lock lock(parent_->get_mutex());
     AgentPeer *peer = parent_->GetAgent();
 
     //
@@ -1684,7 +1684,7 @@ template<typename T>
 int NetworkAgentMock::InstanceMgr<T>::Count(const std::string &network) const {
     typename InstanceMgr<T>::InstanceMap::const_iterator loc;
 
-    tbb::mutex::scoped_lock lock(parent_->get_mutex());
+    std::scoped_lock lock(parent_->get_mutex());
     loc = instance_map_.find(network);
     if (loc == instance_map_.end()) {
         return 0;
@@ -1696,7 +1696,7 @@ template<typename T>
 int NetworkAgentMock::InstanceMgr<T>::Count() const {
     int count = 0;
 
-    tbb::mutex::scoped_lock lock(parent_->get_mutex());
+    std::scoped_lock lock(parent_->get_mutex());
     for (typename InstanceMgr<T>::InstanceMap::const_iterator iter =
             instance_map_.begin(); iter != instance_map_.end(); ++iter) {
         count += iter->second->Count();
@@ -1714,10 +1714,10 @@ template<typename T>
 const T *NetworkAgentMock::InstanceMgr<T>::Lookup(const std::string &network,
         const std::string &prefix, bool take_lock) const {
     typename InstanceMgr<T>::InstanceMap::const_iterator loc;
-    tbb::mutex::scoped_lock lock;
+    std::unique_lock<std::mutex> lock(parent_->get_mutex(), std::defer_lock);
 
     if (take_lock)
-        lock.acquire(parent_->get_mutex());
+        lock.lock();
 
     loc = instance_map_.find(network);
     if (loc == instance_map_.end()) {
@@ -1777,7 +1777,7 @@ bool NetworkAgentMock::HasSubscribed(const std::string &network) const {
 // Return number of nexthops associated with a given route
 int NetworkAgentMock::RouteNextHopCount(const std::string &network,
                                         const std::string &prefix) {
-    tbb::mutex::scoped_lock lock(get_mutex());
+    std::scoped_lock lock(get_mutex());
 
     const RouteEntry *entry = route_mgr_->Lookup(network, prefix, false);
     if (!entry)

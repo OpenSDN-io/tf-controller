@@ -5,13 +5,14 @@
 #ifndef SRC_VNSW_AGENT_MAC_IP_LEARNING_MAC_LEARNING_H_
 #define SRC_VNSW_AGENT_MAC_IP_LEARNING_MAC_LEARNING_H_
 
+#include <mutex>
+
 #include "cmn/agent.h"
 #include "mac_ip_learning_key.h"
 #include "mac_learning_base.h"
 #include "mac_learning_event.h"
 #include "pkt/flow_token.h"
 #include "health_check.h"
-#include <tbb/mutex.h>
 
 class MacIpLearningTable;
 class MacIpLearningRequestQueue;
@@ -106,7 +107,7 @@ private:
     Agent *agent_;
     MacIpLearningEntryMap mac_ip_learning_entry_map_;
     MacIpLearningRequestQueue work_queue_;
-    tbb::mutex macip_map_mutex_;
+    std::mutex macip_map_mutex_;
     DISALLOW_COPY_AND_ASSIGN(MacIpLearningTable);
 };
 #endif

@@ -5,7 +5,8 @@
 #ifndef __ctrlplane__ifmap_update_sender__
 #define __ctrlplane__ifmap_update_sender__
 
-#include <tbb/mutex.h>
+#include <mutex>
+
 #include "base/bitset.h"
 #include "ifmap/ifmap_encoder.h"
 
@@ -64,7 +65,7 @@ private:
     IFMapUpdateQueue *queue_;
     IFMapMessage *message_;
 
-    tbb::mutex mutex_;          // protect scheduling of send task
+    std::mutex mutex_;          // protect scheduling of send task
     bool task_scheduled_;
     bool queue_active_;
     BitSet send_scheduled_;     // client-set for which send active was called

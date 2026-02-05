@@ -211,7 +211,7 @@ DBTableWalker::WalkId DBTableWalker::WalkTable(DBTable *table,
                                                WalkCompleteFn walk_complete,
                                                bool postpone_walk) {
     table->incr_walk_request_count();
-    tbb::mutex::scoped_lock lock(walkers_mutex_);
+    std::scoped_lock lock(walkers_mutex_);
     size_t i = walker_map_.find_first();
     if (i == walker_map_.npos) {
         i = walkers_.size();
@@ -232,18 +232,18 @@ DBTableWalker::WalkId DBTableWalker::WalkTable(DBTable *table,
 }
 
 void DBTableWalker::WalkCancel(WalkId id) {
-    tbb::mutex::scoped_lock lock(walkers_mutex_);
+    std::scoped_lock lock(walkers_mutex_);
     walkers_[id]->StopWalk();
     // Purge to be called after task has stopped
 }
 
 void DBTableWalker::WalkResume(WalkId id) {
-    tbb::mutex::scoped_lock lock(walkers_mutex_);
+    std::scoped_lock lock(walkers_mutex_);
     walkers_[id]->ResumeWalk();
 }
 
 void DBTableWalker::PurgeWalker(WalkId id) {
-    tbb::mutex::scoped_lock lock(walkers_mutex_);
+    std::scoped_lock lock(walkers_mutex_);
     Walker *walker = walkers_[id];
     DBTable *table = walker->table_;
     delete walker;

@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_bfd_proto_h_
 #define vnsw_agent_bfd_proto_h_
 
+#include <mutex>
+
 #include "pkt/proto.h"
 #include "pkt/pkt_handler.h"
 #include "services/bfd_handler.h"
@@ -136,8 +138,8 @@ private:
     typedef std::map<BfdSessionsKey, HealthCheckInstanceService *, BfdSessionsKeyCmp> Sessions;
     typedef std::pair<BfdSessionsKey, HealthCheckInstanceService *> SessionsPair;
 
-    tbb::mutex mutex_; // lock for sessions_ access between health check & BFD
-    tbb::mutex rx_mutex_; // lock for BFD control & keepalive Rx data
+    std::mutex mutex_; // lock for sessions_ access between health check & BFD
+    std::mutex rx_mutex_; // lock for BFD control & keepalive Rx data
     boost::shared_ptr<PktInfo> msg_;
     BfdCommunicator communicator_;
     BFD::Server *server_;

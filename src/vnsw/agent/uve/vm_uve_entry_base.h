@@ -9,7 +9,8 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <tbb/mutex.h>
+#include <mutex>
+
 #include <virtual_machine_types.h>
 #include <uve/l4_port_bitmap.h>
 #include <uve/vm_stat.h>
@@ -53,7 +54,7 @@ protected:
     bool deleted_;
     bool renewed_;
     /* For exclusion between kTaskFlowStatsCollector and Agent::Uve */
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 private:
     bool UveVmInterfaceListChanged
         (const std::vector<std::string> &new_l) const;

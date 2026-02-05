@@ -89,7 +89,7 @@ BgpRouterPtr BgpRouterConfig::GetBgpRouterFromXmppServer(
         xmpp_server_ip_presence = false;
     }
     BgpRouterPtr entry;
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     BgpRouterTree::const_iterator it = bgp_router_tree_.begin();
     for ( ;it != bgp_router_tree_.end(); it++) {
         entry = it->second;
@@ -114,7 +114,7 @@ BgpRouterPtr BgpRouterConfig::GetBgpRouterFromXmppServer(
 
 BgpRouterPtr BgpRouterConfig::GetBgpRouterFromControlNodeZone(
     const std::string &cnz_name) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     ControlNodeZoneTree::const_iterator cnz_it =
         control_node_zone_tree_.find(cnz_name);
     if (cnz_it != control_node_zone_tree_.end()) {
@@ -132,7 +132,7 @@ BgpRouterPtr BgpRouterConfig::GetBgpRouterFromControlNodeZone(
 }
 
 uint32_t BgpRouterConfig::GetBgpRouterCount(const std::string &cnz_name) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     ControlNodeZoneTree::const_iterator cnz_it =
         control_node_zone_tree_.find(cnz_name);
     if (cnz_it != control_node_zone_tree_.end()) {
@@ -246,7 +246,7 @@ void BgpRouterConfig::ConfigAddChange(IFMapNode *node) {
 
     std::string name = node->name();
     BgpRouterPtr entry;
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     BgpRouterTree::const_iterator it = bgp_router_tree_.find(name);
     if (it != bgp_router_tree_.end()) {
         entry = it->second;
@@ -276,7 +276,7 @@ void BgpRouterConfig::ConfigDelete(IFMapNode *node) {
         return;
 
     std::string name = node->name();
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     BgpRouterTree::const_iterator it = bgp_router_tree_.find(name);
     if (it != bgp_router_tree_.end()) {
         BgpRouterPtr entry = it->second;

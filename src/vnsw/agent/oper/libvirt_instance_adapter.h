@@ -4,12 +4,15 @@
 
 #ifndef SRC_VNSW_AGENT_OPER_LIBVIRT_INSTANCE_ADAPTER_H_
 #define SRC_VNSW_AGENT_OPER_LIBVIRT_INSTANCE_ADAPTER_H_
+
+#include <mutex>
+#include <map>
+#include <string>
+
 #include <tbb/tbb.h>
 #include <libvirt/libvirt.h>
 #include <boost/uuid/uuid_io.hpp>
 #include <pugixml/pugixml.hpp>
-#include <map>
-#include <string>
 #include "oper/instance_manager_adapter.h"
 #include "oper/service_instance.h"
 #include "oper/instance_task.h"
@@ -107,7 +110,7 @@ class LibvirtInstanceAdapter : public InstanceManagerAdapter {
     Agent *agent_;
     std::string libvirt_conn_addr_;
     virConnectPtr conn_;
-    static tbb::mutex conn_mutex_;
+    static std::mutex conn_mutex_;
 };
 #endif  // SRC_VNSW_AGENT_OPER_LIBVIRT_INSTANCE_ADAPTER_H_
 

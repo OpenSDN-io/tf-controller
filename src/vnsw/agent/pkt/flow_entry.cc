@@ -3839,7 +3839,7 @@ bool PortCacheTable::Age() {
         return false;
     }
 
-    tbb::recursive_mutex::scoped_lock lock(port_table_->mutex());
+    std::lock_guard<std::recursive_mutex> lock(port_table_->mutex());
     uint16_t no_of_entries = tree_.size() / kCacheAging;
     uint16_t entries_processed = 0;
     uint64_t current_time = UTCTimestampUsec();
@@ -3956,7 +3956,7 @@ uint16_t PortTable::Allocate(const FlowKey &key) {
         return key.src_port;
     }
 
-    tbb::recursive_mutex::scoped_lock lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     //Check if the entry is present in flow cache tree
     const PortCacheEntry *entry = cache_.Find(key);
     if (entry) {
@@ -4000,7 +4000,7 @@ PortTable::CreatePortEntry(uint16_t port_no) {
 }
 
 void PortTable::Free(const FlowKey &key, uint16_t port, bool release) {
-    tbb::recursive_mutex::scoped_lock lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     PortCacheEntry cache_entry(key, kInvalidPort);
     if (release) {
         //Delete from cache entry
@@ -4113,7 +4113,7 @@ void PortTable::UpdatePortConfig(const PortConfig *pc) {
 }
 
 bool PortTable::HandlePortConfig(const PortConfig &pc) {
-    tbb::recursive_mutex::scoped_lock lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     uint16_t old_port_count = port_to_bit_index_.size();
     port_config_ = pc;
 
@@ -4161,7 +4161,7 @@ uint16_t PortTable::GetPortIndex(uint16_t port) const {
 
 void PortTable::GetFlowKeyList(uint16_t port,
                                std::vector<FlowKey> &list) const {
-    tbb::recursive_mutex::scoped_lock lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (port_to_bit_index_.find(port) == port_to_bit_index_.end()) {
         return;
     }

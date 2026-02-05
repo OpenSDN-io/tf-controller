@@ -1,3 +1,5 @@
+#include <mutex>
+
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cmn/agent_cmn.h>
@@ -18,7 +20,7 @@
 
 uint32_t VxlanRoutingManager::loc_sequence_ = 0;
 
-tbb::mutex VxlanRoutingManager::mutex_;
+std::mutex VxlanRoutingManager::mutex_;
 
 /*
  *

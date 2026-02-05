@@ -855,7 +855,7 @@ void VrfTable::VrfReuse(const std::string  name) {
 
 void VrfTable::OnZeroRefcount(AgentDBEntry *e) {
     VrfEntry *vrf = static_cast<VrfEntry *>(e);
-    tbb::mutex::scoped_lock lock(vrf->delete_reuse_mutex_);
+    std::scoped_lock lock(vrf->delete_reuse_mutex_);
     if (e->IsDeleted()) {
         vrf->DeleteRouteTables();
         name_tree_.erase(vrf->GetName());

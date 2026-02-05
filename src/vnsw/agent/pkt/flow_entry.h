@@ -5,12 +5,12 @@
 #ifndef __AGENT_PKT_FLOW_ENTRY_H__
 #define __AGENT_PKT_FLOW_ENTRY_H__
 
+#include <mutex>
+#include <atomic>
+
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/intrusive/list.hpp>
-#include <atomic>
-#include <tbb/mutex.h>
-#include <tbb/recursive_mutex.h>
 #include <base/util.h>
 #include <base/address.h>
 #include <db/db_table_walker.h>
@@ -647,7 +647,7 @@ class FlowEntry {
     const MacAddress &dmac() const { return data_.dmac; }
     bool on_tree() const { return on_tree_; }
     void set_on_tree() { on_tree_ = true; }
-    tbb::mutex &mutex() { return mutex_; }
+    std::mutex &mutex() { return mutex_; }
 
     const Interface *intf_entry() const { return data_.intf_entry.get(); }
     const VnEntry *vn_entry() const { return data_.vn_entry.get(); }
@@ -839,7 +839,7 @@ private:
     FlowTableKSyncEntry *ksync_entry_;
     // atomic refcount
     std::atomic<int> refcount_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     boost::intrusive::list_member_hook<> free_list_node_;
     FlowStatsCollector *fsc_;
     uint32_t last_event_;
@@ -1040,7 +1040,7 @@ public:
         cache_.set_timeout(timeout);
     }
 
-    tbb::recursive_mutex& mutex() {
+    std::recursive_mutex& mutex() {
         return mutex_;
     }
 
@@ -1052,7 +1052,7 @@ public:
     }
 
     std::vector<uint16_t> GetPortList() const {
-        tbb::recursive_mutex::scoped_lock lock(mutex_);
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
         std::vector<uint16_t> port_list;
         PortToBitIndexMap::const_iterator it = port_to_bit_index_.begin();
         for(; it != port_to_bit_index_.end(); it++) {
@@ -1096,7 +1096,7 @@ private:
 
     //Number of port that agent can bind on
     PortConfig port_config_;
-    mutable tbb::recursive_mutex mutex_;
+    mutable std::recursive_mutex mutex_;
     std::unique_ptr<TaskTrigger> task_trigger_;
 };
 

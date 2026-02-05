@@ -5,9 +5,10 @@
 #ifndef ctrlplane_db_table_partition_h
 #define ctrlplane_db_table_partition_h
 
+#include <mutex>
+
 #include <boost/intrusive/list.hpp>
 #include <tbb/spin_rw_mutex.h>
-#include <tbb/mutex.h>
 
 #include "db/db_entry.h"
 
@@ -123,7 +124,7 @@ private:
     DBEntry *FindInternal(const DBEntry *entry);
     const DBEntry *FindInternal(const DBEntry *entry) const;
 
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
     Tree tree_;
     DISALLOW_COPY_AND_ASSIGN(DBTablePartition);
 };

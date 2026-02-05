@@ -46,7 +46,7 @@ static bool IsGivenTypeCompositeNextHop(const NextHop *nh,
 //
 
 uint32_t VxlanRoutingManager::GetNewLocalSequence(const AgentPath* path) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     const NextHop *path_nh = path->nexthop();
     if (path_nh->GetType() != NextHop::COMPOSITE) {
         return 0;

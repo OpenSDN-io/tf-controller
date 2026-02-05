@@ -2,8 +2,6 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <tbb/mutex.h>
-
 #include "base/logging.h"
 #include "base/task_annotations.h"
 #include "base/time_util.h"
@@ -94,7 +92,7 @@ void DBTablePartition::Process(DBClient *client, DBRequest *req) {
 }
 
 void DBTablePartition::Add(DBEntry *entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     std::pair<Tree::iterator, bool> ret = tree_.insert(*entry);
     assert(ret.second);
     entry->set_table_partition(static_cast<DBTablePartBase *>(this));
@@ -103,12 +101,12 @@ void DBTablePartition::Add(DBEntry *entry) {
 }
 
 void DBTablePartition::Change(DBEntry *entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     Notify(entry);
 }
 
 void DBTablePartition::Remove(DBEntryBase *db_entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     DBEntry *entry = static_cast<DBEntry *>(db_entry);
     parent()->AddRemoveCallback(entry, false);
 
@@ -127,7 +125,7 @@ void DBTablePartition::Remove(DBEntryBase *db_entry) {
 }
 
 void DBTablePartition::AddWithoutAlloc(DBEntry *entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     tree_.insert(*entry);
     entry->set_table_partition(static_cast<DBTablePartBase *>(this));
     Notify(entry);
@@ -135,7 +133,7 @@ void DBTablePartition::AddWithoutAlloc(DBEntry *entry) {
 }
 
 void DBTablePartition::RemoveWithoutDelete(DBEntry *entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     bool success = tree_.erase(*entry);
     if (!success) {
         LOG(FATAL, "ABORT: DB node erase failed for table " + parent()->name());
@@ -166,12 +164,12 @@ DBEntry *DBTablePartition::FindNoLock(const DBEntry *entry) {
 }
 
 DBEntry *DBTablePartition::Find(const DBEntry *entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return FindInternal(entry);
 }
 
 const DBEntry *DBTablePartition::Find(const DBEntry *entry) const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return FindInternal(entry);
 }
 
@@ -186,12 +184,12 @@ DBEntry *DBTablePartition::FindNoLock(const DBRequestKey *key) {
 DBEntry *DBTablePartition::Find(const DBRequestKey *key) {
     DBTable *table = static_cast<DBTable *>(parent());
     std::unique_ptr<DBEntry> entry_ptr = table->AllocEntry(key);
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return FindInternal(entry_ptr.get());
 }
 
 DBEntry *DBTablePartition::FindNext(const DBRequestKey *key) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     DBTable *table = static_cast<DBTable *>(parent());
     std::unique_ptr<DBEntry> entry_ptr = table->AllocEntry(key);
 
@@ -205,7 +203,7 @@ DBEntry *DBTablePartition::FindNext(const DBRequestKey *key) {
 // Returns the matching entry or next in lex order
 DBEntry *DBTablePartition::lower_bound(const DBEntryBase *key) {
     const DBEntry *entry = static_cast<const DBEntry *>(key);
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     Tree::iterator it = tree_.lower_bound(*entry);
     if (it != tree_.end()) {
@@ -215,7 +213,7 @@ DBEntry *DBTablePartition::lower_bound(const DBEntryBase *key) {
 }
 
 DBEntry *DBTablePartition::GetFirst() {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     Tree::iterator it = tree_.begin();
     if (it == tree_.end()) {
         return NULL;
@@ -226,7 +224,7 @@ DBEntry *DBTablePartition::GetFirst() {
 // Returns the next entry (Doesn't search). Threaded walk
 DBEntry *DBTablePartition::GetNext(const DBEntryBase *key) {
     const DBEntry *entry = static_cast<const DBEntry *>(key);
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     Tree::const_iterator it = tree_.iterator_to(*entry);
     it++;

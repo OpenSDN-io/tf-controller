@@ -5,6 +5,10 @@
 #ifndef _AGENT_NHS_NEXTHOP_SERVER_H_
 #define _AGENT_NHS_NEXTHOP_SERVER_H_
 
+#include <cstdio>
+#include <iostream>
+#include <mutex>
+
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/signal_set.hpp>
@@ -12,12 +16,9 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <cstdio>
-#include <iostream>
 #include "io/usock_server.h"
 #include "nexthop_client.h"
 #include "nexthop_entry.h"
-#include <tbb/mutex.h>
 
 /*
  * The main server object for serving nexthops to connected clients.
@@ -53,7 +54,7 @@ class NexthopDBServer
     boost::scoped_ptr<UnixDomainSocketServer> io_server_;
     NexthopDB nexthop_table_;
     ClientDB client_table_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 };
 
 #endif

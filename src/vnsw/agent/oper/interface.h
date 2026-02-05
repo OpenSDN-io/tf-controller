@@ -10,6 +10,8 @@
 // Interface class
 /////////////////////////////////////////////////////////////////////////////
 
+#include <mutex>
+
 #include <boost/optional.hpp>
 #include <cmn/agent_cmn.h>
 #include <cmn/index_vector.h>
@@ -481,7 +483,7 @@ private:
 
     // On restart, DHCP Snoop entries are read from kernel and updated in the
     // ASIO context. Lock used to synchronize
-    tbb::mutex dhcp_snoop_mutex_;
+    std::mutex dhcp_snoop_mutex_;
     DhcpSnoopMap dhcp_snoop_map_;
     UpdateFloatingIpFn update_floatingip_cb_;
     VmiToVmiTypeMap vmi_to_vmitype_map_;

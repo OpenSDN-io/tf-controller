@@ -148,7 +148,7 @@ void VnUveTableBase::SendDeleteVnMsg(const string &vn) {
 void VnUveTableBase::Delete(const std::string &name) {
     UveVnMap::iterator it = uve_vn_map_.find(name);
     if (it != uve_vn_map_.end()) {
-        tbb::mutex::scoped_lock lock(uve_vn_map_mutex_);
+        std::scoped_lock lock(uve_vn_map_mutex_);
         uve_vn_map_.erase(it);
     }
 }

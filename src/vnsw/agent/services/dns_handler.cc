@@ -211,7 +211,7 @@ error:
 }
 
 bool DnsHandler::HandleDefaultDnsRequest(const VmInterface *vmitf) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     uint16_t ret = DNS_ERR_NO_ERROR;
     DnsProto *dns_proto = agent()->GetDnsProto();
     rkey_ = new QueryKey(vmitf, dns_->xid);

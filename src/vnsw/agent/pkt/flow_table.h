@@ -6,6 +6,8 @@
 #define __AGENT_FLOW_TABLE_H__
 
 #include <map>
+#include <mutex>
+
 #if defined(__GNUC__)
 #include "base/compiler.h"
 #if __GNUC_PREREQ(4, 5)
@@ -22,7 +24,6 @@
 
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/mutex.h>
 #include <base/util.h>
 #include <base/address.h>
 #include <db/db_table_walker.h>
@@ -66,12 +67,12 @@ class FlowEventKSync;
         is_flow_rflow_key_same = true; \
         rflow = NULL; \
     } \
-    tbb::mutex tmp_mutex1, tmp_mutex2, *mutex_ptr_1, *mutex_ptr_2; \
+    std::mutex tmp_mutex1, tmp_mutex2, *mutex_ptr_1, *mutex_ptr_2; \
     FlowTable::GetMutexSeq(flow ? flow->mutex() : tmp_mutex1, \
                            rflow ? rflow->mutex() : tmp_mutex2, \
                            &mutex_ptr_1, &mutex_ptr_2); \
-    tbb::mutex::scoped_lock lock1(*mutex_ptr_1); \
-    tbb::mutex::scoped_lock lock2(*mutex_ptr_2); \
+    std::scoped_lock lock1(*mutex_ptr_1); \
+    std::scoped_lock lock2(*mutex_ptr_2); \
     if (is_flow_rflow_key_same) { \
         flow->MakeShortFlow(FlowEntry::SHORT_SAME_FLOW_RFLOW_KEY); \
     }
@@ -253,8 +254,8 @@ public:
     int flow_delete_task_id() const { return flow_delete_task_id_; }
     int flow_ksync_task_id() const { return flow_ksync_task_id_; }
     int flow_logging_task_id() const { return flow_logging_task_id_; }
-    static void GetMutexSeq(tbb::mutex &mutex1, tbb::mutex &mutex2,
-                            tbb::mutex **mutex_ptr_1, tbb::mutex **mutex_ptr_2);
+    static void GetMutexSeq(std::mutex &mutex1, std::mutex &mutex2,
+                            std::mutex **mutex_ptr_1, std::mutex **mutex_ptr_2);
     static void GetFlowSandeshActionParams(const FlowAction &action_info,
                                            std::string &action_str);
 
@@ -299,7 +300,7 @@ private:
     // maintain the linklocal flow info against allocated fd, debug purpose only
     LinkLocalFlowInfoMap linklocal_flow_info_map_;
     FlowEntryFreeList free_list_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     int flow_task_id_;
     int flow_update_task_id_;
     int flow_delete_task_id_;

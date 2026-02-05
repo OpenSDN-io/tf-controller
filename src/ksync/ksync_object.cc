@@ -106,7 +106,7 @@ KSyncEntry *KSyncObject::Find(const KSyncEntry *key) {
 }
 
 KSyncEntry *KSyncObject::Next(const KSyncEntry *entry) const {
-    tbb::recursive_mutex::scoped_lock lock(lock_);
+    std::lock_guard<std::recursive_mutex> lock(lock_);
     Tree::const_iterator it;
     if (entry == NULL) {
         it = tree_.begin();
@@ -154,7 +154,7 @@ void KSyncObject::ClearStale(KSyncEntry *entry) {
 // Creates a KSync entry. Calling routine sets no_lookup to TRUE when its
 // guaranteed that KSync entry is not present (ex: flow)
 KSyncEntry *KSyncObject::Create(const KSyncEntry *key, bool no_lookup) {
-    tbb::recursive_mutex::scoped_lock lock(lock_);
+    std::lock_guard<std::recursive_mutex> lock(lock_);
 
     KSyncEntry *entry = NULL;
     if (no_lookup == false)
@@ -184,7 +184,7 @@ KSyncEntry *KSyncObject::CreateStale(const KSyncEntry *key) {
     // Should not be called without initialising stale entry
     // cleanup InitStaleEntryCleanup
     assert(stale_entry_cleanup_timer_ != NULL);
-    tbb::recursive_mutex::scoped_lock lock(lock_);
+    std::lock_guard<std::recursive_mutex> lock(lock_);
     KSyncEntry *entry = Find(key);
     if (entry == NULL) {
         entry = CreateImpl(key);
@@ -234,7 +234,7 @@ void KSyncObject::Delete(KSyncEntry *entry) {
 }
 
 void KSyncObject::ChangeKey(KSyncEntry *entry, uint32_t arg) {
-    tbb::recursive_mutex::scoped_lock lock(lock_);
+    std::lock_guard<std::recursive_mutex> lock(lock_);
     assert(tree_.erase(*entry) > 0);
     uint32_t old_key = GetKey(entry);
     UpdateKey(entry, arg);
@@ -271,7 +271,7 @@ void KSyncObject::Free(KSyncEntry *entry) {
 
 void KSyncObject::SafeNotifyEvent(KSyncEntry *entry,
                                   KSyncEntry::KSyncEvent event) {
-    tbb::recursive_mutex::scoped_lock lock(lock_);
+    std::lock_guard<std::recursive_mutex> lock(lock_);
     NotifyEvent(entry, event);
 }
 
@@ -361,7 +361,7 @@ void KSyncDBObject::CleanupOnDel(KSyncEntry *entry) {
 // Generates events for the KSyncEntry state-machine based DBEntry
 // Stores the KSyncEntry allocated as DBEntry-state
 void KSyncDBObject::Notify(DBTablePartBase *partition, DBEntryBase *e) {
-    tbb::recursive_mutex::scoped_lock lock(lock_);
+    std::lock_guard<std::recursive_mutex> lock(lock_);
     DBEntry *entry = static_cast<DBEntry *>(e);
     DBTableBase *table = partition->parent();
     assert(table_ == table);
@@ -1425,7 +1425,7 @@ void KSyncObject::NotifyEvent(KSyncEntry *entry, KSyncEntry::KSyncEvent event) {
 }
 
 void KSyncObject::NetlinkAckInternal(KSyncEntry *entry, KSyncEntry::KSyncEvent event) {
-    tbb::recursive_mutex::scoped_lock lock(lock_);
+    std::lock_guard<std::recursive_mutex> lock(lock_);
     entry->Response();
     NotifyEvent(entry, event);
 }
@@ -1518,7 +1518,7 @@ void KSyncObject::BackRefReEval(KSyncEntry *key) {
 
     std::vector<KSyncEntry *>::iterator it = buf.begin();
     while (it != buf.end()) {
-        tbb::recursive_mutex::scoped_lock lock((*it)->GetObject()->lock_);
+        std::lock_guard<std::recursive_mutex> lock((*it)->GetObject()->lock_);
         NotifyEvent(*it, KSyncEntry::RE_EVAL);
         it++;
     }

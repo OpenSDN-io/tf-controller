@@ -3,6 +3,9 @@
  */
 
 // global_vrouter.cc - operational data for global vrouter configuration
+
+#include <mutex>
+
 #include <boost/foreach.hpp>
 #include <base/util.h>
 #include <cmn/agent_cmn.h>
@@ -278,7 +281,7 @@ public:
     void ResolveList(const std::vector<std::string> &name_list) {
         std::vector<Ip4Address> empty_addr_list;
         ResolveMap new_addr_map;
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         BOOST_FOREACH(std::string name, name_list) {
             ResolveName(name);
             ResolveMap::iterator it = address_map_.find(name);
@@ -294,7 +297,7 @@ public:
 
     // Called from client tasks to resolve name to address
     bool Resolve(const std::string &name, Ip4Address *address) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         ResolveMap::iterator it = address_map_.find(name);
         if (it != address_map_.end() && it->second.size()) {
             int index = rand() % it->second.size();
@@ -309,7 +312,7 @@ public:
 
     // Timer handler; re-resolve all DNS names
     bool OnTimeout() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         for (ResolveMap::const_iterator it = address_map_.begin();
              it != address_map_.end(); ++it) {
             ResolveName(it->first);
@@ -319,7 +322,7 @@ public:
 
     // Called in DB context
     bool IsAddressInUse(const Ip4Address &ip) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         for (ResolveMap::const_iterator it = address_map_.begin();
              it != address_map_.end(); ++it) {
             BOOST_FOREACH(Ip4Address address, it->second) {
@@ -354,7 +357,7 @@ private:
                         std::string &name, boost_udp::resolver *resolver) {
         std::vector<Ip4Address> old_list;
         ResolveMap::iterator addr_it;
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         addr_it = address_map_.find(name);
         if (addr_it != address_map_.end()) {
             old_list.swap(addr_it->second);
@@ -373,7 +376,7 @@ private:
     }
 
     Timer *timer_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     ResolveMap address_map_;
     uint64_t request_count_;
     uint64_t response_count_;

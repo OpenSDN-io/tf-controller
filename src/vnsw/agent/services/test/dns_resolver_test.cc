@@ -2,6 +2,8 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <mutex>
+
 #include "base/os.h"
 #include "testing/gunit.h"
 
@@ -160,7 +162,7 @@ public:
 
     void ItfUpdate(DBEntryBase *entry) {
         Interface *itf = static_cast<Interface *>(entry);
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (entry->IsDeleted()) {
             LOG(DEBUG, "DNS test : interface deleted " << itf_id_);
             itf_id_ = 0;
@@ -173,7 +175,7 @@ public:
     }
 
     uint32_t GetItfCount() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return itf_count_;
     }
 
@@ -187,7 +189,7 @@ public:
     }
 
     std::size_t GetItfId(int index) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return itf_id_;
     }
 
@@ -353,7 +355,7 @@ private:
     DBTableBase::ListenerId rid_;
     uint32_t itf_id_;
     uint32_t itf_count_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 };
 
 class AsioRunEvent : public Task {

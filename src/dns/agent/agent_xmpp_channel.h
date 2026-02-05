@@ -8,9 +8,10 @@
 #include <map>
 #include <set>
 #include <string>
+#include <mutex>
+
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <tbb/mutex.h>
 
 #include "xmpp/xmpp_channel.h"
 #include "bind/bind_util.h"
@@ -73,7 +74,7 @@ private:
     uint8_t ChannelToDscp(const XmppChannel *xc) const;
     XmppServer *server_;
     ChannelMap channel_map_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     RecordRequestWorkQueue work_queue_;
 };
 

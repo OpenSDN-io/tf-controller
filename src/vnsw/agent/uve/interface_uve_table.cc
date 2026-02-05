@@ -43,7 +43,7 @@ bool InterfaceUveTable::TimerExpiry() {
         if (entry->deleted_) {
             SendInterfaceDeleteMsg(cfg_name);
             if (!entry->renewed_) {
-                tbb::mutex::scoped_lock lock(interface_tree_mutex_);
+                std::scoped_lock lock(interface_tree_mutex_);
                 interface_tree_.erase(prev);
             } else {
                 entry->deleted_ = false;
@@ -268,7 +268,7 @@ void InterfaceUveTable::UveInterfaceEntry::HandleTagListChange() {
 
 void InterfaceUveTable::UveInterfaceEntry::UpdatePortBitmap
     (uint8_t proto, uint16_t sport, uint16_t dport) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     /* No need to update stats if the entry is marked for delete and not
      * renewed */
     if (deleted_ && !renewed_) {
@@ -464,7 +464,7 @@ void InterfaceUveTable::InterfaceDeleteHandler(const string &name) {
         return;
     }
     UveInterfaceEntry* entry = it->second.get();
-    tbb::mutex::scoped_lock lock(entry->mutex_);
+    std::scoped_lock lock(entry->mutex_);
     /* We need to reset all non-key fields to ensure that they have right
      * values since the entry is getting re-used. Also update the 'deleted_'
      * and 'renewed_' flags */
@@ -577,7 +577,7 @@ bool InterfaceUveTable::UveInterfaceEntry::OutBandChanged(uint64_t out_band)
 
 void InterfaceUveTable::UveInterfaceEntry::UpdateFloatingIpStats
                                     (const FipInfo &fip_info) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     /* No need to update stats if the entry is marked for delete and not
      * renewed */
     if (deleted_ && !renewed_) {
@@ -785,7 +785,7 @@ void InterfaceUveTable::UveInterfaceEntry::UpdateCounters
 void InterfaceUveTable::UveInterfaceEntry::UpdateInterfaceFwPolicyStats
     (const FlowUveFwPolicyInfo &info) {
     ace_stats_changed_ = true;
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     /* If TagList of VMI has changed clear the earlier statistics as they are
      * valid only for previous TagList.
      */
@@ -864,7 +864,7 @@ bool InterfaceUveTable::UveInterfaceEntry::FrameInterfaceAceStatsMsg
 
 void InterfaceUveTable::UveInterfaceEntry::UpdateSecurityPolicyStats
     (const EndpointStatsInfo &info) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     local_tagset_ = info.local_tagset;
     UveSecurityPolicyStatsPtr stats(new UveSecurityPolicyStats
                                     (info.local_tagset, info.remote_tagset,

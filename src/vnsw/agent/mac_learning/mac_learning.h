@@ -5,6 +5,8 @@
 #ifndef SRC_VNSW_AGENT_MAC_LEARNING_MAC_LEARNING_H_
 #define SRC_VNSW_AGENT_MAC_LEARNING_MAC_LEARNING_H_
 
+#include <mutex>
+
 #include "cmn/agent.h"
 #include "mac_learning_key.h"
 #include "mac_learning_base.h"
@@ -106,26 +108,26 @@ public:
     }
 
     void AddToken(TokenPtr ptr) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         list_.push_back(ptr);
     }
 
     void ReleaseToken() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         list_.clear();
     }
 
     void CopyToken(MacLearningEntry *entry) {
         MacPbbLearningEntry *entry1 =
             dynamic_cast<MacPbbLearningEntry *>(entry);
-        tbb::mutex::scoped_lock lock(mutex_);
-        tbb::mutex::scoped_lock lock2(entry1->mutex_);
+        std::scoped_lock lock(mutex_);
+        std::scoped_lock lock2(entry1->mutex_);
         list_ = entry1->list_;
         entry1->list_.clear();
     }
 
     bool HasTokens() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return list_.size();
     }
     void EnqueueToTable(MacLearningEntryRequestPtr req);
@@ -136,7 +138,7 @@ protected:
     uint32_t index_;
     uint32_t ethernet_tag_;
     TokenList list_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 private:
     DISALLOW_COPY_AND_ASSIGN(MacPbbLearningEntry);
 };

@@ -2,6 +2,8 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <mutex>
+
 #include "base/os.h"
 #include "testing/gunit.h"
 
@@ -127,7 +129,7 @@ public:
 
     void ItfUpdate(DBEntryBase *entry) {
         Interface *itf = static_cast<Interface *>(entry);
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         unsigned int i;
         for (i = 0; i < itf_id_.size(); ++i)
             if (itf_id_[i] == itf->id())
@@ -148,7 +150,7 @@ public:
     }
 
     uint32_t GetItfCount() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return itf_count_;
     }
 
@@ -358,7 +360,7 @@ private:
     uint32_t data_size_;
     DBTableBase::ListenerId rid_;
     std::vector<std::size_t> itf_id_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 };
 
 TEST_F(MetadataTest, MetadataReqTest) {

@@ -5,12 +5,13 @@
 #ifndef __ctrlplane__network_agent_mock__
 #define __ctrlplane__network_agent_mock__
 
+#include <map>
+#include <mutex>
+
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <map>
 #include <pugixml/pugixml.hpp>
 #include <tbb/compat/condition_variable>
-#include <tbb/mutex.h>
 
 #include "base/queue_task.h"
 #include "bgp/extended-community/load_balance.h"
@@ -696,7 +697,7 @@ public:
 
     XmppClient *client() { return client_; }
     void Delete();
-    tbb::mutex &get_mutex() { return mutex_; }
+    std::mutex &get_mutex() { return mutex_; }
     bool down() { return down_; }
 
     const std::string local_address() const { return local_address_; }
@@ -736,7 +737,7 @@ private:
     int server_port_;
     bool skip_updates_processing_;
     bool down_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     bool xmpp_auth_enabled_;
     int id_;
 };

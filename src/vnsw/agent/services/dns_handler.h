@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_dns_handler_hpp
 #define vnsw_agent_dns_handler_hpp
 
+#include <mutex>
+
 #include "pkt/proto_handler.h"
 #include "vnc_cfg_types.h"
 #include "bind/bind_util.h"
@@ -122,7 +124,7 @@ private:
     uint16_t query_name_update_len_;   // num bytes added in the query section
     uint16_t pend_req_;
     ResolvList resolv_list_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     bool default_method_;
     uint8_t curr_index_;
     bool SendDnsQuery(DnsResolverInfo *resolver, uint16_t xid);

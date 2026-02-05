@@ -6,6 +6,7 @@
 #define vnsw_agent_vrf_hpp
 
 #include <atomic>
+#include <mutex>
 
 #include <cmn/agent_cmn.h>
 #include <cmn/index_vector.h>
@@ -253,7 +254,7 @@ private:
     string bmac_vrf_name_;
     uint32_t isid_;
     std::atomic<uint32_t> mac_aging_time_;
-    tbb::mutex delete_reuse_mutex_;
+    std::mutex delete_reuse_mutex_;
     bool learning_enabled_;
     bool layer2_control_word_;
     bool l2_;

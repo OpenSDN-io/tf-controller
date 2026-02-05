@@ -5,6 +5,8 @@
 #ifndef vnsw_agent_diag_proto_hpp
 #define vnsw_agent_diag_proto_hpp
 
+#include <mutex>
+
 #include <pkt/pkt_handler.h>
 #include <pkt/proto.h>
 #include <pkt/proto_handler.h>
@@ -61,7 +63,7 @@ private:
      *            health-check replies)
      * Introspect (which reads stats for filling introspect response)
      */
-    tbb::mutex stats_mutex_;
+    std::mutex stats_mutex_;
     DiagStatsMap stats_;
     DISALLOW_COPY_AND_ASSIGN(DiagProto);
 };

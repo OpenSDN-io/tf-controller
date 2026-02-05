@@ -6,8 +6,8 @@
 #define ctrlplane_ksync_sock_user_h
 
 #include <queue>
+#include <mutex>
 
-#include <tbb/mutex.h>
 #include <boost/asio.hpp>
 #include <boost/asio/buffer.hpp>
 
@@ -130,7 +130,7 @@ public:
     ksync_map_vrf vrf_map;
     typedef std::queue<KSyncUserSockContext *> ksync_map_ctx_queue;
     ksync_map_ctx_queue ctx_queue_;
-    tbb::mutex  ctx_queue_lock_;
+    std::mutex  ctx_queue_lock_;
 
     virtual uint32_t GetSeqno(char *data);
     virtual bool IsMoreData(char *data);
@@ -206,7 +206,7 @@ public:
     friend class VrfDumpHandler;
     void SetBlockMsgProcessing(bool enable);
     bool IsBlockMsgProcessing() {
-        tbb::mutex::scoped_lock lock(ctx_queue_lock_);
+        std::scoped_lock lock(ctx_queue_lock_);
         return block_msg_processing_;
     }
 

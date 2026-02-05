@@ -214,7 +214,7 @@ PortSubscribeTable::~PortSubscribeTable() {
 
 void PortSubscribeTable::AddVmi(const boost::uuids::uuid &u,
                              PortSubscribeEntryPtr entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     std::pair<VmiTree::iterator, bool> ret =
         vmi_tree_.insert(std::make_pair(u, entry));
     if (ret.second == false) {
@@ -237,7 +237,7 @@ void PortSubscribeTable::AddVmi(const boost::uuids::uuid &u,
 }
 
 void PortSubscribeTable::DeleteVmi(const boost::uuids::uuid &u) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     VmiTree::iterator it = vmi_tree_.find(u);
     if (it == vmi_tree_.end())
         return;
@@ -248,7 +248,7 @@ void PortSubscribeTable::DeleteVmi(const boost::uuids::uuid &u) {
 
 PortSubscribeEntryPtr PortSubscribeTable::GetVmi(const boost::uuids::uuid &u)
     const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     VmiTree::const_iterator it = vmi_tree_.find(u);
     if (it == vmi_tree_.end())
         return PortSubscribeEntryPtr();
@@ -267,7 +267,7 @@ void PortSubscribeTable::AddVmVnPort(const boost::uuids::uuid &vm_uuid,
                                      const boost::uuids::uuid &vn_uuid,
                                      const boost::uuids::uuid &vmi_uuid,
                                      PortSubscribeEntryPtr entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     std::pair<VmVnTree::iterator, bool> ret = vmvn_subscribe_tree_.insert
         (make_pair(VmVnUuidEntry(vm_uuid, vn_uuid, vmi_uuid),entry));
     if (ret.second == false) {
@@ -291,7 +291,7 @@ void PortSubscribeTable::DeleteVmVnPort
 (const boost::uuids::uuid &vm_uuid,
 const boost::uuids::uuid &vn_uuid,
 const boost::uuids::uuid &vmi_uuid) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     VmVnTree::iterator it =
         vmvn_subscribe_tree_.find(VmVnUuidEntry(vm_uuid, vn_uuid, vmi_uuid));
     if (it == vmvn_subscribe_tree_.end())
@@ -317,7 +317,7 @@ PortSubscribeEntryPtr PortSubscribeTable::GetVmVnPort
 (const boost::uuids::uuid &vm_uuid,
  const boost::uuids::uuid &vn_uuid,
  const boost::uuids::uuid &vmi_uuid) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return GetVmVnPortNoLock(vm_uuid, vn_uuid, vmi_uuid);
 }
 
@@ -444,7 +444,7 @@ void PortSubscribeTable::UpdateVmiIfnodeInfo
  */
 void PortSubscribeTable::HandleVmiIfnodeAdd(const boost::uuids::uuid &vmi_uuid,
                                             const VmInterfaceConfigData *data) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     UpdateVmiIfnodeInfo(vmi_uuid, data);
     // Add vm-interface if possible
     PortSubscribeEntryPtr entry_ref =
@@ -499,7 +499,7 @@ void PortSubscribeTable::DeleteVmiIfnodeInfo
  */
 void PortSubscribeTable::HandleVmiIfnodeDelete
 (const boost::uuids::uuid &vmi_uuid) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     DeleteVmiIfnodeInfo(vmi_uuid);
 }
 
@@ -550,7 +550,7 @@ PortSubscribeEntryPtr PortSubscribeTable::Get
 (const boost::uuids::uuid &vmi_uuid,
  const boost::uuids::uuid &vm_uuid,
  const boost::uuids::uuid &vn_uuid) const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     VmiTree::const_iterator it = vmi_tree_.find(vmi_uuid);
     if (it != vmi_tree_.end())
         return it->second;
@@ -585,7 +585,7 @@ bool PortSubscribeTable::VmVnToVmiSetNoLock
 bool PortSubscribeTable::VmVnToVmiSet
 (const boost::uuids::uuid &vm_uuid,
  std::set<boost::uuids::uuid> &vmi_uuid_set) const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return VmVnToVmiSetNoLock(vm_uuid, vmi_uuid_set);
 }
 

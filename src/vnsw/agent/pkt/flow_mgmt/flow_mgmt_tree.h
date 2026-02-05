@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <map>
+#include <mutex>
 #include <pkt/flow_mgmt/flow_mgmt_key.h>
 
 class FlowMgmtKeyNode;
@@ -108,7 +109,7 @@ public:
 private:
     // We need to support query of counters in VN from other threads.
     // So, implement synchronization on access to VN Flow Tree
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     DISALLOW_COPY_AND_ASSIGN(VnFlowMgmtTree);
 };
 
@@ -127,7 +128,7 @@ public:
 private:
     // We need to support query of counters in Interface from other threads.
     // So, implement synchronization on access to Interface Flow Tree
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     DISALLOW_COPY_AND_ASSIGN(InterfaceFlowMgmtTree);
 };
 

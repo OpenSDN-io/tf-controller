@@ -15,7 +15,6 @@
 #include <iostream>
 #include "io/usock_server.h"
 #include "nexthop_entry.h"
-#include <tbb/mutex.h>
 
 class NexthopDBServer;
 

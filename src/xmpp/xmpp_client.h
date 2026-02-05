@@ -5,6 +5,8 @@
 #ifndef __XMPP_CLIENT_H__
 #define __XMPP_CLIENT_H__
 
+#include <mutex>
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
 #include "io/ssl_server.h"
@@ -72,7 +74,7 @@ private:
 
     ConnectionMap connection_map_;
     ConnectionEventCbMap connection_event_map_;
-    tbb::mutex connection_event_map_mutex_;
+    std::mutex connection_event_map_mutex_;
 
     boost::scoped_ptr<XmppConfigManager> config_mgr_;
     boost::scoped_ptr<LifetimeManager> lifetime_manager_;

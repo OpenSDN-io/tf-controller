@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <bitset>
+#include <mutex>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/assign/list_of.hpp>
@@ -119,9 +120,9 @@ bool FlowTable::ConcurrencyCheck(int task_id) {
 
 // When multiple lock are taken, there is possibility of deadlocks. We do
 // deadlock avoidance by ensuring "consistent ordering of locks"
-void FlowTable::GetMutexSeq(tbb::mutex &mutex1, tbb::mutex &mutex2,
-                            tbb::mutex **mutex_ptr_1,
-                            tbb::mutex **mutex_ptr_2) {
+void FlowTable::GetMutexSeq(std::mutex &mutex1, std::mutex &mutex2,
+                            std::mutex **mutex_ptr_1,
+                            std::mutex **mutex_ptr_2) {
     *mutex_ptr_1 = NULL;
     *mutex_ptr_2 = NULL;
     if (&mutex1 < &mutex2) {
@@ -760,7 +761,7 @@ void FlowTable::DisableKSyncSend(FlowEntry *flow, uint32_t evict_gen_id) {
 /////////////////////////////////////////////////////////////////////////////
 void FlowTable::AddLinkLocalFlowInfo(int fd, uint32_t index, const FlowKey &key,
                                      const uint64_t timestamp) {
-    tbb::mutex::scoped_lock mutext(mutex_);
+    std::scoped_lock mutext(mutex_);
     LinkLocalFlowInfoMap::iterator it = linklocal_flow_info_map_.find(fd);
     if (it == linklocal_flow_info_map_.end()) {
         linklocal_flow_info_map_.insert(
@@ -772,7 +773,7 @@ void FlowTable::AddLinkLocalFlowInfo(int fd, uint32_t index, const FlowKey &key,
 }
 
 void FlowTable::DelLinkLocalFlowInfo(int fd) {
-    tbb::mutex::scoped_lock mutext(mutex_);
+    std::scoped_lock mutext(mutex_);
     linklocal_flow_info_map_.erase(fd);
 }
 

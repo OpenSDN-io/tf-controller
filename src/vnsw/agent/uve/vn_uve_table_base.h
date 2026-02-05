@@ -9,6 +9,8 @@
 #include <set>
 #include <map>
 #include <vector>
+#include <mutex>
+
 #include <virtual_network_types.h>
 #include <oper/vn.h>
 #include <uve/vn_uve_entry_base.h>
@@ -48,7 +50,7 @@ protected:
     UveVnMap uve_vn_map_;
     Agent *agent_;
     /* For exclusion between kTaskFlowStatsCollector and kTaskDBExclude */
-    tbb::mutex uve_vn_map_mutex_;
+    std::mutex uve_vn_map_mutex_;
 private:
     VnUveEntryBase* Add(const VnEntry *vn);
     void Add(const std::string &vn);

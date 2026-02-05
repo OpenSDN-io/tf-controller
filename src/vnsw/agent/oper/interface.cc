@@ -7,7 +7,6 @@
 #include <net/ethernet.h>
 #include <netinet/ether.h>
 #include <boost/uuid/uuid_io.hpp>
-#include <tbb/mutex.h>
 
 #include "base/logging.h"
 #include "base/address.h"
@@ -715,7 +714,7 @@ bool PacketInterface::OnChange(PacketInterfaceData *data) {
 //
 // InterfaceKScan table is populated on agent restart
 const Ip4Address InterfaceTable::GetDhcpSnoopEntry(const std::string &ifname) {
-    tbb::mutex::scoped_lock lock(dhcp_snoop_mutex_);
+    std::scoped_lock lock(dhcp_snoop_mutex_);
     const DhcpSnoopIterator it = dhcp_snoop_map_.find(ifname);
     if (it != dhcp_snoop_map_.end()) {
         return it->second.addr_;
@@ -725,7 +724,7 @@ const Ip4Address InterfaceTable::GetDhcpSnoopEntry(const std::string &ifname) {
 }
 
 void InterfaceTable::DeleteDhcpSnoopEntry(const std::string &ifname) {
-    tbb::mutex::scoped_lock lock(dhcp_snoop_mutex_);
+    std::scoped_lock lock(dhcp_snoop_mutex_);
     const DhcpSnoopIterator it = dhcp_snoop_map_.find(ifname);
     if (it == dhcp_snoop_map_.end()) {
         return;
@@ -737,7 +736,7 @@ void InterfaceTable::DeleteDhcpSnoopEntry(const std::string &ifname) {
 // Set config_seen_ flag in DHCP Snoop entry.
 // Create the DHCP Snoop entry, if not already present
 void InterfaceTable::DhcpSnoopSetConfigSeen(const std::string &ifname) {
-    tbb::mutex::scoped_lock lock(dhcp_snoop_mutex_);
+    std::scoped_lock lock(dhcp_snoop_mutex_);
     const DhcpSnoopIterator it = dhcp_snoop_map_.find(ifname);
     Ip4Address addr(0);
 
@@ -749,7 +748,7 @@ void InterfaceTable::DhcpSnoopSetConfigSeen(const std::string &ifname) {
 
 void InterfaceTable::AddDhcpSnoopEntry(const std::string &ifname,
                                        const Ip4Address &addr) {
-    tbb::mutex::scoped_lock lock(dhcp_snoop_mutex_);
+    std::scoped_lock lock(dhcp_snoop_mutex_);
     DhcpSnoopEntry entry(addr, false);
     const DhcpSnoopIterator it = dhcp_snoop_map_.find(ifname);
 
@@ -770,7 +769,7 @@ void InterfaceTable::AddDhcpSnoopEntry(const std::string &ifname,
 
 // Audit DHCP Snoop table. Delete the entries which are not seen from config
 void InterfaceTable::AuditDhcpSnoopTable() {
-    tbb::mutex::scoped_lock lock(dhcp_snoop_mutex_);
+    std::scoped_lock lock(dhcp_snoop_mutex_);
     DhcpSnoopIterator it = dhcp_snoop_map_.begin();
     while (it != dhcp_snoop_map_.end()){
         DhcpSnoopIterator del_it = it++;
@@ -1491,7 +1490,7 @@ bool Interface::IsUveActive() const {
 }
 
 void Interface::UpdateOperStateOfSubIntf(const InterfaceTable *table) {
-    tbb::mutex::scoped_lock lock(Interface::back_ref_mutex_);
+    std::scoped_lock lock(Interface::back_ref_mutex_);
     std::set<IntrusiveReferrer>::const_iterator it = Interface::back_ref_set_.begin();
     for (; it != Interface::back_ref_set_.end(); it++) {
         VmInterface *vm_intf = static_cast<VmInterface *>((*it).first);

@@ -787,7 +787,7 @@ void KSyncSockTypeMap::PurgeBlockedMsg() {
 }
 
 void KSyncSockTypeMap::SetBlockMsgProcessing(bool enable) {
-    tbb::mutex::scoped_lock lock(ctx_queue_lock_);
+    std::scoped_lock lock(ctx_queue_lock_);
     if (block_msg_processing_ != enable) {
         block_msg_processing_ = enable;
         if (!block_msg_processing_) {
@@ -823,7 +823,7 @@ void KSyncUserSockContext::IfMsgHandler(vr_interface_req *req) {
     KSyncUserSockIfContext *ifctx = new KSyncUserSockIfContext(GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(ifctx);
     } else {
         ifctx->Process();
@@ -906,7 +906,7 @@ void KSyncUserSockContext::FlowMsgHandler(vr_flow_req *req) {
     KSyncUserSockFlowContext *flowctx = new KSyncUserSockFlowContext(GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(flowctx);
     } else {
         flowctx->Process();
@@ -941,7 +941,7 @@ void KSyncUserSockContext::NHMsgHandler(vr_nexthop_req *req) {
     KSyncUserSockNHContext *nhctx = new KSyncUserSockNHContext(GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(nhctx);
     } else {
         nhctx->Process();
@@ -976,7 +976,7 @@ void KSyncUserSockContext::MplsMsgHandler(vr_mpls_req *req) {
     KSyncUserSockMplsContext *mplsctx = new KSyncUserSockMplsContext(GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(mplsctx);
     } else {
         mplsctx->Process();
@@ -1009,7 +1009,7 @@ void KSyncUserSockContext::RouteMsgHandler(vr_route_req *req) {
     KSyncUserSockRouteContext *rtctx = new KSyncUserSockRouteContext(GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(rtctx);
     } else {
         rtctx->Process();
@@ -1081,7 +1081,7 @@ void KSyncUserSockContext::VxLanMsgHandler(vr_vxlan_req *req) {
         new KSyncUserSockVxLanContext(GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(vxlanctx);
     } else {
         vxlanctx->Process();
@@ -1105,7 +1105,7 @@ void KSyncUserSockContext::VrouterOpsMsgHandler(vrouter_ops *req) {
         new KSyncUserVrouterOpsContext(GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(vrouter_ops);
     } else {
         vrouter_ops->Process();
@@ -1145,7 +1145,7 @@ void KSyncUserSockContext::VrfAssignMsgHandler(vr_vrf_assign_req *req) {
         new KSyncUserSockVrfAssignContext(GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(ctx);
     } else {
         ctx->Process();
@@ -1180,7 +1180,7 @@ void KSyncUserSockContext::VrfMsgHandler(vr_vrf_req *req) {
         new KSyncUserSockVrfContext(GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(ctx);
     } else {
         ctx->Process();
@@ -1204,7 +1204,7 @@ void KSyncUserSockContext::VrfStatsMsgHandler(vr_vrf_stats_req *req) {
                                                           GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(vrfctx);
     } else {
         vrfctx->Process();
@@ -1225,7 +1225,7 @@ void KSyncUserSockContext::DropStatsMsgHandler(vr_drop_stats_req *req) {
                                                           GetSeqNum(), req);
 
     if (sock->IsBlockMsgProcessing()) {
-        tbb::mutex::scoped_lock lock(sock->ctx_queue_lock_);
+        std::scoped_lock lock(sock->ctx_queue_lock_);
         sock->ctx_queue_.push(dropctx);
     } else {
         dropctx->Process();

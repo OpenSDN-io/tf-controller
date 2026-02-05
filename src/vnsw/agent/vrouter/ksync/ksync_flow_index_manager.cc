@@ -1,6 +1,9 @@
 /*
  * Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
  */
+
+ #include <mutex>
+
 #include <pkt/flow_proto.h>
 #include <pkt/pkt_types.h>
 #include <pkt/flow_entry.h>
@@ -10,13 +13,13 @@
 #include "ksync_init.h"
 
 #define INDEX_LOCK(idx) \
-    tbb::mutex tmp_mutex, *mutex_ptr;\
+    std::mutex tmp_mutex, *mutex_ptr;\
     if (idx == FlowEntry::kInvalidFlowHandle) {\
         mutex_ptr = &tmp_mutex;\
     } else {\
         mutex_ptr = &index_list_[idx].mutex_;\
     }\
-    tbb::mutex::scoped_lock lock(*mutex_ptr);
+    std::scoped_lock lock(*mutex_ptr);
 
 //////////////////////////////////////////////////////////////////////////////
 // KSyncFlowIndexManager routines

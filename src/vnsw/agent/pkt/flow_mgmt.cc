@@ -397,7 +397,7 @@ bool FlowMgmtManager::RequestHandler(FlowMgmtRequestPtr req) {
         // Before processing event, set the request pointer in flow to
         // NULL. This ensures flow-entry enqueues new request from now
         // onwards
-        tbb::mutex::scoped_lock mutex(flow->mutex());
+        std::scoped_lock mutex(flow->mutex());
         flow->set_flow_mgmt_request(NULL);
 
         // Update flow-mgmt information based on flow-state

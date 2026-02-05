@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 #include <string>
 #include <string>
@@ -15,7 +16,6 @@
 
 #include <base/util.h>
 #include <base/address.h>
-#include <tbb/mutex.h>
 #include <db/db_table.h>
 #include <db/db_entry.h>
 #include <vnc_cfg_types.h>
@@ -294,7 +294,7 @@ private:
     Agent *agent_;
     InterfaceTable *interface_table_;
     VNController *controller_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
     VmiTree vmi_tree_;
     IFMapAgentTable *vmi_config_table_;
     DBTableBase::ListenerId vmi_config_listener_id_;

@@ -114,7 +114,7 @@ bool FlowEventQueueBase::CanEnqueue(FlowEvent *event) {
 
     case FlowEvent::DELETE_DBENTRY:
     case FlowEvent::DELETE_FLOW: {
-        tbb::mutex::scoped_lock mutext(flow->mutex());
+        std::scoped_lock mutext(flow->mutex());
         ret = flow->GetPendingAction()->SetDelete();
         break;
     }
@@ -126,13 +126,13 @@ bool FlowEventQueueBase::CanEnqueue(FlowEvent *event) {
     }
 
     case FlowEvent::RECOMPUTE_FLOW: {
-        tbb::mutex::scoped_lock mutext(flow->mutex());
+        std::scoped_lock mutext(flow->mutex());
         ret = flow->GetPendingAction()->SetRecomputeDBEntry();
         break;
     }
 
     case FlowEvent::REVALUATE_DBENTRY: {
-        tbb::mutex::scoped_lock mutext(flow->mutex());
+        std::scoped_lock mutext(flow->mutex());
         ret = flow->GetPendingAction()->SetRevaluate();
         break;
     }
@@ -151,21 +151,21 @@ bool FlowEventQueueBase::CanProcess(FlowEvent *event) {
 
     case FlowEvent::DELETE_DBENTRY:
     case FlowEvent::DELETE_FLOW: {
-        tbb::mutex::scoped_lock mutext(flow->mutex());
+        std::scoped_lock mutext(flow->mutex());
         events_processed_++;
         ret = flow->GetPendingAction()->CanDelete();
         break;
     }
 
     case FlowEvent::FLOW_MESSAGE: {
-        tbb::mutex::scoped_lock mutext(flow->mutex());
+        std::scoped_lock mutext(flow->mutex());
         events_processed_++;
         ret = flow->GetPendingAction()->CanRecompute();
         break;
     }
 
     case FlowEvent::RECOMPUTE_FLOW: {
-        tbb::mutex::scoped_lock mutext(flow->mutex());
+        std::scoped_lock mutext(flow->mutex());
         events_processed_++;
         ret = flow->GetPendingAction()->CanRecomputeDBEntry();
         break;
@@ -173,7 +173,7 @@ bool FlowEventQueueBase::CanProcess(FlowEvent *event) {
 
     case FlowEvent::REVALUATE_DBENTRY: {
         events_processed_++;
-        tbb::mutex::scoped_lock mutext(flow->mutex());
+        std::scoped_lock mutext(flow->mutex());
         ret = flow->GetPendingAction()->CanRevaluate();
         break;
     }
@@ -211,7 +211,7 @@ void FlowEventQueueBase::ProcessDone(FlowEvent *event, bool update_rev_flow) {
     }
 
     case FlowEvent::RECOMPUTE_FLOW: {
-        tbb::mutex::scoped_lock mutext(flow->mutex());
+        std::scoped_lock mutext(flow->mutex());
         flow->GetPendingAction()->ResetRecomputeDBEntry();
         break;
     }

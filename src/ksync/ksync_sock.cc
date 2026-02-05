@@ -394,7 +394,7 @@ bool KSyncSock::ProcessKernelData(KSyncBulkSandeshContext *bulk_sandesh_context,
     if (data.bulk_msg_context_ == NULL) {
         uint32_t seqno = GetSeqno(data.buff_);
         {
-            tbb::mutex::scoped_lock lock(mutex_);
+            std::scoped_lock lock(mutex_);
             it = wait_tree_.find(seqno);
         }
         if (it == wait_tree_.end()) {
@@ -412,7 +412,7 @@ bool KSyncSock::ProcessKernelData(KSyncBulkSandeshContext *bulk_sandesh_context,
         if (data.bulk_msg_context_ != NULL) {
             delete data.bulk_msg_context_;
         } else {
-            tbb::mutex::scoped_lock lock(mutex_);
+            std::scoped_lock lock(mutex_);
             wait_tree_.erase(it);
         }
     }
@@ -489,7 +489,7 @@ void KSyncSock::OnEmptyQueue(bool done) {
     KSyncBulkMsgContext *bulk_message_context = NULL;
     if (use_wait_tree_) {
         if (read_inline_ == false) {
-            tbb::mutex::scoped_lock lock(mutex_);
+            std::scoped_lock lock(mutex_);
             WaitTree::iterator it = wait_tree_.find(bulk_seq_no_);
             assert(it != wait_tree_.end());
             bulk_message_context = &it->second;
@@ -560,7 +560,7 @@ KSyncBulkMsgContext *KSyncSock::LocateBulkContext
     }
 
     if (use_wait_tree_) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (bulk_seq_no_ == kInvalidBulkSeqNo) {
             bulk_seq_no_ = seqno;
             bulk_buf_size_ = 0;
