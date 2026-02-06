@@ -13,13 +13,9 @@
 #include "ksync_init.h"
 
 #define INDEX_LOCK(idx) \
-    std::mutex tmp_mutex, *mutex_ptr;\
-    if (idx == FlowEntry::kInvalidFlowHandle) {\
-        mutex_ptr = &tmp_mutex;\
-    } else {\
-        mutex_ptr = &index_list_[idx].mutex_;\
-    }\
-    std::scoped_lock lock(*mutex_ptr);
+    auto lock = (idx != FlowEntry::kInvalidFlowHandle) \
+        ? std::unique_lock<std::mutex>(index_list_[idx].mutex_) \
+        : std::unique_lock<std::mutex>();
 
 //////////////////////////////////////////////////////////////////////////////
 // KSyncFlowIndexManager routines

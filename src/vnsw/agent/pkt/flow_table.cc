@@ -118,22 +118,6 @@ bool FlowTable::ConcurrencyCheck(int task_id) {
 // FlowTable Add/Delete routines
 /////////////////////////////////////////////////////////////////////////////
 
-// When multiple lock are taken, there is possibility of deadlocks. We do
-// deadlock avoidance by ensuring "consistent ordering of locks"
-void FlowTable::GetMutexSeq(std::mutex &mutex1, std::mutex &mutex2,
-                            std::mutex **mutex_ptr_1,
-                            std::mutex **mutex_ptr_2) {
-    *mutex_ptr_1 = NULL;
-    *mutex_ptr_2 = NULL;
-    if (&mutex1 < &mutex2) {
-        *mutex_ptr_1 = &mutex1;
-        *mutex_ptr_2 = &mutex2;
-    } else {
-        *mutex_ptr_1 = &mutex2;
-        *mutex_ptr_2 = &mutex1;
-    }
-}
-
 FlowEntry *FlowTable::Find(const FlowKey &key) {
     assert(ConcurrencyCheck(flow_task_id_) == true);
     FlowEntryMap::iterator it;

@@ -67,12 +67,22 @@ class FlowEventKSync;
         is_flow_rflow_key_same = true; \
         rflow = NULL; \
     } \
-    std::mutex tmp_mutex1, tmp_mutex2, *mutex_ptr_1, *mutex_ptr_2; \
-    FlowTable::GetMutexSeq(flow ? flow->mutex() : tmp_mutex1, \
-                           rflow ? rflow->mutex() : tmp_mutex2, \
-                           &mutex_ptr_1, &mutex_ptr_2); \
-    std::scoped_lock lock1(*mutex_ptr_1); \
-    std::scoped_lock lock2(*mutex_ptr_2); \
+    std::unique_lock<std::mutex> lock1, lock2; \
+    if (flow && rflow) { \
+        auto l1 = std::unique_lock<std::mutex>(flow->mutex(), std::defer_lock); \
+        lock1.swap(l1); \
+        auto l2 = std::unique_lock<std::mutex>(rflow->mutex(), std::defer_lock); \
+        lock2.swap(l2); \
+        std::lock(lock1, lock2); \
+    } else if (flow) { \
+        auto l1 = std::unique_lock<std::mutex>(flow->mutex(), std::defer_lock); \
+        lock1.swap(l1); \
+        lock1.lock(); \
+    } else if (rflow) { \
+        auto l2 = std::unique_lock<std::mutex>(rflow->mutex(), std::defer_lock); \
+        lock2.swap(l2); \
+        lock2.lock(); \
+    } \
     if (is_flow_rflow_key_same) { \
         flow->MakeShortFlow(FlowEntry::SHORT_SAME_FLOW_RFLOW_KEY); \
     }
@@ -254,8 +264,6 @@ public:
     int flow_delete_task_id() const { return flow_delete_task_id_; }
     int flow_ksync_task_id() const { return flow_ksync_task_id_; }
     int flow_logging_task_id() const { return flow_logging_task_id_; }
-    static void GetMutexSeq(std::mutex &mutex1, std::mutex &mutex2,
-                            std::mutex **mutex_ptr_1, std::mutex **mutex_ptr_2);
     static void GetFlowSandeshActionParams(const FlowAction &action_info,
                                            std::string &action_str);
 
