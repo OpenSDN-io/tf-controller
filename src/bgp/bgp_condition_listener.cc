@@ -68,7 +68,7 @@ public:
     }
 
     // Mutex required to manager MatchState list for concurrency
-    tbb::mutex &table_state_mutex() {
+    std::mutex &table_state_mutex() {
         return table_state_mutex_;
     }
 
@@ -93,7 +93,7 @@ public:
     }
 
 private:
-    tbb::mutex table_state_mutex_;
+    std::mutex table_state_mutex_;
     BgpTable *table_;
     DBTableBase::ListenerId id_;
     DBTable::DBTableWalkRef walk_ref_;
@@ -139,7 +139,7 @@ void BgpConditionListener::AddMatchCondition(BgpTable *table,
                                              RequestDoneCb cb) {
     CHECK_CONCURRENCY("bgp::Config", "bgp::ConfigHelper");
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     ConditionMatchTableState *ts = NULL;
     TableMap::iterator loc = map_.find(table);
     if (loc == map_.end()) {
@@ -170,7 +170,7 @@ void BgpConditionListener::RemoveMatchCondition(BgpTable *table,
                                                 RequestDoneCb cb) {
     CHECK_CONCURRENCY("bgp::Config", "bgp::ConfigHelper");
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     obj->SetDeleted();
 
     TableMap::iterator loc = map_.find(table);
@@ -200,7 +200,7 @@ bool BgpConditionListener::CheckMatchState(BgpTable *table, BgpRoute *route,
                                            ConditionMatch *obj) {
     TableMap::iterator loc = map_.find(table);
     ConditionMatchTableState *ts = loc->second;
-    tbb::mutex::scoped_lock lock(ts->table_state_mutex());
+    std::scoped_lock lock(ts->table_state_mutex());
 
     // Get the DBState.
     MatchState *dbstate =
@@ -225,7 +225,7 @@ ConditionMatchState * BgpConditionListener::GetMatchState(BgpTable *table,
                                                           ConditionMatch *obj) {
     TableMap::iterator loc = map_.find(table);
     ConditionMatchTableState *ts = loc->second;
-    tbb::mutex::scoped_lock lock(ts->table_state_mutex());
+    std::scoped_lock lock(ts->table_state_mutex());
 
     // Get the DBState
     MatchState *dbstate =
@@ -247,7 +247,7 @@ void BgpConditionListener::SetMatchState(BgpTable *table, BgpRoute *route,
                                          ConditionMatchState *state) {
     TableMap::iterator loc = map_.find(table);
     ConditionMatchTableState *ts = loc->second;
-    tbb::mutex::scoped_lock lock(ts->table_state_mutex());
+    std::scoped_lock lock(ts->table_state_mutex());
 
     // Get the DBState
     MatchState *dbstate =
@@ -275,7 +275,7 @@ void BgpConditionListener::RemoveMatchState(BgpTable *table, BgpRoute *route,
                                             ConditionMatch *obj) {
     TableMap::iterator loc = map_.find(table);
     ConditionMatchTableState *ts = loc->second;
-    tbb::mutex::scoped_lock lock(ts->table_state_mutex());
+    std::scoped_lock lock(ts->table_state_mutex());
 
     // Get the DBState
     MatchState *dbstate =

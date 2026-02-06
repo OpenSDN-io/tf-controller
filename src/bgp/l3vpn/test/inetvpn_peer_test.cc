@@ -91,7 +91,7 @@ protected:
         if (root->parent() == a_red_inet_)
             BGP_DEBUG_UT("Server A Red Inet table notification");
         {
-            tbb::mutex::scoped_lock lock(notification_count_lock_);
+            std::scoped_lock lock(notification_count_lock_);
             notification_count_[root->parent()]++;
         }
 
@@ -245,7 +245,7 @@ protected:
     }
 
     void ClearCounters() {
-        tbb::mutex::scoped_lock lock(notification_count_lock_);
+        std::scoped_lock lock(notification_count_lock_);
         notification_count_[a_vpn_] = 0;
         notification_count_[b_vpn_] = 0;
         notification_count_[a_blue_inet_] = 0;
@@ -255,7 +255,7 @@ protected:
     }
 
     int GetNotificationCount(DBTableBase *table_base) {
-        tbb::mutex::scoped_lock lock(notification_count_lock_);
+        std::scoped_lock lock(notification_count_lock_);
         return notification_count_[table_base];
     }
 
@@ -424,7 +424,7 @@ protected:
     BgpPeerTest *b_peer_blue_;
     int vpn_notify_count_;
 
-    tbb::mutex notification_count_lock_;
+    std::mutex notification_count_lock_;
     map<DBTableBase *, int> notification_count_;
 
     DBTableBase::ChangeCallback func_;

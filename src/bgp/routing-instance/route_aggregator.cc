@@ -703,7 +703,7 @@ void RouteAggregator<T>::RetryDelete() {
 
 template <typename T>
 void RouteAggregator<T>::EvaluateAggregateRoute(AggregateRoutePtr entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     update_aggregate_list_.insert(entry);
     update_list_trigger_->Set();
 }
@@ -711,7 +711,7 @@ void RouteAggregator<T>::EvaluateAggregateRoute(AggregateRoutePtr entry) {
 template <typename T>
 void RouteAggregator<T>::UnregisterAndResolveRouteAggregate(
                                                     AggregateRoutePtr entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     unregister_aggregate_list_.insert(entry);
     unregister_list_trigger_->Set();
 }

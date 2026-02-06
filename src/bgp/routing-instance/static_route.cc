@@ -727,7 +727,7 @@ bool StaticRouteMgr<T>::ProcessUnregisterList() {
 
 template <typename T>
 void StaticRouteMgr<T>::UnregisterAndResolveStaticRoute(StaticRoutePtr entry) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     unregister_static_route_list_.insert(entry);
     unregister_list_trigger_->Set();
 }

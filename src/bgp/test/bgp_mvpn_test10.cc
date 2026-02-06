@@ -40,7 +40,7 @@ TEST_P(BgpMvpnTest, Type3_SPMSI_With_ErmVpnRoute_5) {
     ErmVpnRoute *ermvpn_rt[instances_set_count_*groups_count_];
     for (size_t i = 1; i <= instances_set_count_; i++) {
         for (size_t j = 1; j <= groups_count_; j++) {
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = NULL;
             PMSIParams pmsi(PMSIParams(10, "1.2.3.4", "gre",
                             &ermvpn_rt[(i-1)*groups_count_+(j-1)]));
@@ -63,7 +63,7 @@ TEST_P(BgpMvpnTest, Type3_SPMSI_With_ErmVpnRoute_5) {
             ErmVpnRoute *rt =
                 AddErmVpnRoute(fabric_ermvpn_[i-1], ermvpn_prefix(i, j),
                                "target:127.0.0.1:1100");
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = rt;
         }
 
@@ -89,24 +89,24 @@ TEST_P(BgpMvpnTest, Type3_SPMSI_With_ErmVpnRoute_5) {
 
             // Update PMSI.
             {
-                tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+                std::scoped_lock lock(pmsi_params_mutex);
                 pmsi_params.erase(sg(i, j));
             }
 
             PMSIParams pmsi(PMSIParams(20, "1.2.3.5", "udp",
                                        &ermvpn_rt[(i-1)*groups_count_+(j-1)]));
             {
-                tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+                std::scoped_lock lock(pmsi_params_mutex);
                 assert(pmsi_params.insert(make_pair(sg(i, j), pmsi)).second);
             }
             TASK_UTIL_EXPECT_EQ(ermvpn_rt[(i-1)*groups_count_+(j-1)],
                 AddErmVpnRoute(fabric_ermvpn_[i-1], ermvpn_prefix(i, j),
                                "target:127.0.0.1:1101"));
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::unique_lock<std::mutex> lock(pmsi_params_mutex);
             // Verify that leafad path or its attributes did not change.
             std::map<SG, const PMSIParams>::iterator iter =
                 pmsi_params.find(sg(i, j));
-            lock.release();
+            lock.unlock();
             assert(iter != pmsi_params.end());
             TASK_UTIL_EXPECT_NE(red_path, leafad_red_rt->BestPath());
             TASK_UTIL_EXPECT_NE(green_path, leafad_green_rt->BestPath());
@@ -131,7 +131,7 @@ TEST_P(BgpMvpnTest, Type3_SPMSI_With_ErmVpnRoute_5) {
             DeleteMvpnRoute(red_[i-1], native_prefix7(j));
             DeleteMvpnRoute(green_[i-1], native_prefix7(j));
             {
-                tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+                std::scoped_lock lock(pmsi_params_mutex);
                 pmsi_params.erase(sg(i, j));
             }
             DeleteErmVpnRoute(fabric_ermvpn_[i-1], ermvpn_prefix(i, j));

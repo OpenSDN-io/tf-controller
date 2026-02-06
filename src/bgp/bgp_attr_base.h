@@ -7,12 +7,12 @@
 
 #include <boost/functional/hash.hpp>
 #include <boost/scoped_array.hpp>
-#include <tbb/mutex.h>
 
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
+#include <mutex>
 
 #include "base/parse_object.h"
 #include "base/task.h"
@@ -125,14 +125,14 @@ public:
     explicit BgpPathAttributeDB(int hash_size = GetHashSize())
         : hash_size_(hash_size),
           set_(new Set[hash_size]),
-          mutex_(new tbb::mutex[hash_size]) {
+          mutex_(new std::mutex[hash_size]) {
     }
 
     size_t Size() {
         size_t size = 0;
 
         for (size_t i = 0; i < hash_size_; i++) {
-            tbb::mutex::scoped_lock lock(mutex_[i]);
+            std::scoped_lock lock(mutex_[i]);
             size += set_[i].size();
         }
         return size;
@@ -141,7 +141,7 @@ public:
     void Delete(Type *attr) {
         size_t hash = HashCompute(attr);
 
-        tbb::mutex::scoped_lock lock(mutex_[hash]);
+        std::scoped_lock lock(mutex_[hash]);
         assert(set_[hash].erase(attr));
     }
 
@@ -183,7 +183,7 @@ private:
         size_t hash = HashCompute(attr);
         while (true) {
             // Grab mutex to keep db access thread safe.
-            tbb::mutex::scoped_lock lock(mutex_[hash]);
+            std::scoped_lock lock(mutex_[hash]);
             std::pair<typename Set::iterator, bool> ret;
 
             // Try to insert the passed entry into the database.
@@ -239,7 +239,7 @@ private:
     typedef std::set<Type *, TypeCompare> Set;
     size_t hash_size_;
     boost::scoped_array<Set> set_;
-    boost::scoped_array<tbb::mutex> mutex_;
+    boost::scoped_array<std::mutex> mutex_;
 };
 
 #endif  // SRC_BGP_BGP_ATTR_BASE_H_

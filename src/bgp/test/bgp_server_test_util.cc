@@ -2,6 +2,8 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <mutex>
+
 #include "bgp_server_test_util.h"
 
 #include <boost/foreach.hpp>
@@ -38,7 +40,7 @@ TcpSession::Event StateMachineTest::skip_tcp_event_ = TcpSession::EVENT_NONE;
 // two bgp_server()s even though they use the same loopback IP address.
 //
 static std::map<ip::tcp::endpoint, BgpPeerKey> peer_connect_map_;
-static tbb::mutex peer_connect_map_mutex_;
+static std::mutex peer_connect_map_mutex_;
 typedef ip::tcp::socket Socket;
 
 BgpServerTest::BgpServerTest(EventManager *evm, const string &localname,
@@ -305,7 +307,7 @@ void BgpPeerTest::BindLocalEndpoint(BgpSession *session) {
             boost::uuids::nil_generator nil;
             peer_key.uuid = nil();
         }
-        tbb::mutex::scoped_lock lock(peer_connect_map_mutex_);
+        std::scoped_lock lock(peer_connect_map_mutex_);
         peer_connect_map_[local_endpoint] = peer_key;
     }
     return;
@@ -358,7 +360,7 @@ BgpPeer *PeerManagerTest::PeerLookup(
     bool present;
 
     {
-        tbb::mutex::scoped_lock lock(peer_connect_map_mutex_);
+        std::scoped_lock lock(peer_connect_map_mutex_);
 
         present = peer_connect_map_.count(remote_endpoint) > 0;
         if (present) {
@@ -390,7 +392,7 @@ BgpPeer *PeerManagerTest::PeerLookup(
 
 // Find peer based on remote-endpoint port (BGPaaS client)
 BgpPeer *BgpServerTest::FindPeer(TcpSession::Endpoint remote_endpoint) const {
-    tbb::mutex::scoped_lock lock(peer_connect_map_mutex_);
+    std::scoped_lock lock(peer_connect_map_mutex_);
     if (peer_connect_map_.count(remote_endpoint) > 0)
         remote_endpoint = peer_connect_map_.at(remote_endpoint).endpoint;
     return BgpServer::FindPeer(remote_endpoint);

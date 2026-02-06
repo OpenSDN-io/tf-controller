@@ -1666,7 +1666,7 @@ bool ServiceChainMgr<T>::LocateServiceChain(RoutingInstance *rtinstance,
     CHECK_CONCURRENCY("bgp::Config", "bgp::ConfigHelper");
 
     // Verify whether the entry already exists.
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     ServiceChainMap::iterator it = chain_set_.find(rtinstance);
     if (it != chain_set_.end()) {
         ServiceChainT *chain = static_cast<ServiceChainT *>(it->second.get());
@@ -1887,7 +1887,7 @@ void ServiceChainMgr<T>::StopServiceChain(RoutingInstance *rtinstance) {
     CHECK_CONCURRENCY("bgp::Config", "bgp::ConfigHelper");
 
     // Remove the routing instance from pending chains list.
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (ServiceChainIsPending(rtinstance)) {
         ServiceChainGroup *group = FindServiceChainGroup(rtinstance);
         if (group)

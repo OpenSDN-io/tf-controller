@@ -2,13 +2,15 @@
  * Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/assign/list_of.hpp>
-#include <boost/foreach.hpp>
-#include <boost/program_options.hpp>
+#include <mutex>
 #include <fstream>
 #include <iostream>
 #include <list>
 #include <signal.h>
+
+#include <boost/assign/list_of.hpp>
+#include <boost/foreach.hpp>
+#include <boost/program_options.hpp>
 
 #include "base/task_annotations.h"
 #include "base/test/addr_test_util.h"
@@ -283,7 +285,7 @@ public:
 
     virtual bool DeleteChannel(BgpXmppChannel *channel) {
         if (bgp_xmpp_channels_) {
-            tbb::mutex::scoped_lock lock(mutex_);
+            std::scoped_lock lock(mutex_);
             std::vector<BgpXmppChannel *>::iterator iter;
             iter = std::find(bgp_xmpp_channels_->begin(),
                              bgp_xmpp_channels_->end(), channel);
@@ -296,7 +298,7 @@ public:
     void set_bgp_xmpp_channels(vector<BgpXmppChannel *> *bgp_xmpp_channels) {
         TASK_UTIL_EXPECT_NE_MSG(static_cast<BgpXmppChannel *>(NULL), channel_,
                                 "Waiting for channel creation");
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         bgp_xmpp_channels_ = bgp_xmpp_channels;
         bgp_xmpp_channels_->push_back(channel_);
         channel_ = NULL;
@@ -304,7 +306,7 @@ public:
 
     BgpXmppChannel *channel_;
     std::vector<BgpXmppChannel *> *bgp_xmpp_channels_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 };
 
 class SandeshServerTest : public SandeshServer {

@@ -141,7 +141,7 @@ void RoutingPolicyMgr::DestroyRoutingPolicy(RoutingPolicy *policy) {
 void RoutingPolicyMgr::ApplyRoutingPolicy(RoutingInstance *instance) {
     CHECK_CONCURRENCY("bgp::Config", "bgp::ConfigHelper");
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     BOOST_FOREACH(RoutingInstance::RouteTableList::value_type &entry,
                   instance->GetTables()) {
         BgpTable *table = entry.second;
@@ -200,7 +200,7 @@ bool RoutingPolicyMgr::UpdateRoutingPolicyList(
                                         RoutingPolicyAttachList *oper_list) {
     CHECK_CONCURRENCY("bgp::Config", "bgp::ConfigHelper");
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     bool update_policy = false;
     // Number of routing policies is different
     if (oper_list->size() != cfg_list.size())

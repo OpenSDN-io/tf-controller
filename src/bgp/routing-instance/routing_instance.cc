@@ -101,7 +101,7 @@ RoutingInstanceMgr::~RoutingInstanceMgr() {
 
 size_t RoutingInstanceMgr::GetMvpnProjectManagerCount(
             const string &network) const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     MvpnProjectManagerNetworks::const_iterator iter =
         mvpn_project_managers_.find(network);
@@ -148,7 +148,7 @@ bool RoutingInstanceMgr::deleted() {
 // be configured on multiple virtual networks.
 //
 void RoutingInstanceMgr::InstanceTargetAdd(RoutingInstance *rti) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     for (RoutingInstance::RouteTargetList::const_iterator it =
          rti->GetExportList().begin(); it != rti->GetExportList().end(); ++it) {
         if (rti->GetImportList().find(*it) == rti->GetImportList().end())
@@ -167,7 +167,7 @@ void RoutingInstanceMgr::InstanceTargetAdd(RoutingInstance *rti) {
 // in the map because of the same check in InstanceTargetAdd.
 //
 void RoutingInstanceMgr::InstanceTargetRemove(const RoutingInstance *rti) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     for (RoutingInstance::RouteTargetList::const_iterator it =
          rti->GetExportList().begin(); it != rti->GetExportList().end(); ++it) {
         if (rti->GetImportList().find(*it) == rti->GetImportList().end())
@@ -198,7 +198,7 @@ const RoutingInstance *RoutingInstanceMgr::GetInstanceByTarget(
 // Add an entry for the vn index to the VnIndexMap.
 //
 void RoutingInstanceMgr::InstanceVnIndexAdd(RoutingInstance *rti) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (rti->virtual_network_index())
         vn_index_map_.insert(make_pair(rti->virtual_network_index(), rti));
 }
@@ -209,7 +209,7 @@ void RoutingInstanceMgr::InstanceVnIndexAdd(RoutingInstance *rti) {
 // need to make sure that we remove the entry that matches the RoutingInstance.
 //
 void RoutingInstanceMgr::InstanceVnIndexRemove(const RoutingInstance *rti) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     if (!rti->virtual_network_index())
         return;
 
@@ -295,7 +295,7 @@ int RoutingInstanceMgr::GetVnIndexByExtCommunity(
 
 int
 RoutingInstanceMgr::RegisterInstanceOpCallback(RoutingInstanceCb callback) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     size_t i = bmap_.find_first();
     if (i == bmap_.npos) {
         i = callbacks_.size();
@@ -311,7 +311,7 @@ RoutingInstanceMgr::RegisterInstanceOpCallback(RoutingInstanceCb callback) {
 }
 
 void RoutingInstanceMgr::UnregisterInstanceOpCallback(int listener) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     callbacks_[listener] = NULL;
     if ((size_t) listener == callbacks_.size() - 1) {
         while (!callbacks_.empty() && callbacks_.back() == NULL) {
@@ -329,7 +329,7 @@ void RoutingInstanceMgr::UnregisterInstanceOpCallback(int listener) {
 }
 
 void RoutingInstanceMgr::NotifyInstanceOp(string name, Operation op) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     for (InstanceOpListenersList::iterator iter = callbacks_.begin();
          iter != callbacks_.end(); ++iter) {
         if (*iter != NULL) {
@@ -381,7 +381,7 @@ const RoutingInstance *RoutingInstanceMgr::GetRoutingInstance(
 
 RoutingInstance *RoutingInstanceMgr::GetRoutingInstanceLocked(
     const string &name) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     RoutingInstanceList::iterator iter = instances_.find(name);
     if (iter != instances_.end())
         return iter->second;
@@ -389,7 +389,7 @@ RoutingInstance *RoutingInstanceMgr::GetRoutingInstanceLocked(
 }
 
 void RoutingInstanceMgr::InsertRoutingInstance(RoutingInstance *rtinstance) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     instances_.insert(make_pair(rtinstance->config()->name(),
                 rtinstance));
 }
@@ -429,7 +429,7 @@ void RoutingInstanceMgr::LocateRoutingInstance(const string &name) {
 // Update VirtualNetwork to RoutingInstance name mapping.
 bool RoutingInstanceMgr::CreateVirtualNetworkMapping(
         const string &virtual_network, const string &instance_name) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     VirtualNetworksMap::iterator iter;
     bool inserted;
@@ -441,7 +441,7 @@ bool RoutingInstanceMgr::CreateVirtualNetworkMapping(
 
 bool RoutingInstanceMgr::DeleteVirtualNetworkMapping(
         const string &virtual_network, const string &instance_name) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     VirtualNetworksMap::iterator iter = virtual_networks_.find(virtual_network);
     assert(iter != virtual_networks_.end());
@@ -882,7 +882,7 @@ void RoutingInstanceMgr::CreateRoutingInstanceNeighbors(
     const BgpInstanceConfig *config) {
     if (config->neighbor_list().empty())
         return;
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     neighbor_config_list_.insert(config->name());
     neighbor_config_trigger_->Set();
 }
@@ -998,7 +998,7 @@ RoutingInstance::RoutingInstance(string name, BgpServer *server,
       manager_delete_ref_(this, NULL),
       mvpn_project_manager_network_(BgpConfigManager::kFabricInstance) {
     if (mgr) {
-        tbb::mutex::scoped_lock lock(mgr->mutex());
+        std::scoped_lock lock(mgr->mutex());
         manager_delete_ref_.Reset(mgr->deleter());
     }
 }
@@ -1500,7 +1500,7 @@ void RoutingInstance::AddRTargetRoute(uint32_t asn,
     DBTablePartition *tbl_partition =
         static_cast<DBTablePartition *>(table->GetTablePartition(0));
 
-    tbb::mutex::scoped_lock lock(mgr_->mutex());
+    std::scoped_lock lock(mgr_->mutex());
     RTargetRoute *route =
         static_cast<RTargetRoute *>(tbl_partition->Find(&rt_key));
     if (!route) {
@@ -1542,7 +1542,7 @@ void RoutingInstance::DeleteRTargetRoute(as_t asn,
     DBTablePartition *tbl_partition =
         static_cast<DBTablePartition *>(table->GetTablePartition(0));
 
-    tbb::mutex::scoped_lock lock(mgr_->mutex());
+    std::scoped_lock lock(mgr_->mutex());
     RTargetRoute *route =
         static_cast<RTargetRoute *>(tbl_partition->Find(&rt_key));
     if (!route || !route->RemovePath(BgpPath::Local, index_))

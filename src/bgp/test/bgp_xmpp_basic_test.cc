@@ -2,7 +2,10 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/assign/list_of.hpp>
+
+ #include <mutex>
+
+ #include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
 
 #include "base/test/task_test_util.h"
@@ -372,7 +375,7 @@ public:
                                 bool queue_disable) {
         if (sm->IsActiveChannel())
             return;
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         if (create) {
             xmpp_state_machines_.insert(sm);
             sm->set_queue_disable(queue_disable);
@@ -403,7 +406,7 @@ protected:
     test::NetworkAgentMockPtr agent_x3_;
     boost::scoped_ptr<BgpXmppChannelManager> cm_x_;
     std::set<XmppStateMachineTest *> xmpp_state_machines_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
 };
 
 bool BgpXmppBasicTest::validate_done_ = false;

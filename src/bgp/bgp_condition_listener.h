@@ -7,12 +7,13 @@
 
 #include <boost/intrusive_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <tbb/mutex.h>
 
 #include <map>
 #include <set>
 #include <string>
+#include <mutex>
 
+#include <tbb/atomic.h>
 #include "base/util.h"
 
 class BgpRoute;
@@ -50,7 +51,7 @@ public:
     bool deleted() const { return deleted_; }
 
     void IncrementNumMatchstate() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         num_matchstate_++;
     }
 
@@ -77,7 +78,7 @@ private:
     bool deleted_;
     bool walk_done_;
 
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     uint32_t num_matchstate_;
 
     tbb::atomic<int> refcount_;
@@ -219,7 +220,7 @@ private:
     void EnableTableWalkProcessing();
 
     BgpServer *server_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     TableMap map_;
     PurgeTableStateList purge_list_;
     boost::scoped_ptr<TaskTrigger> purge_trigger_;

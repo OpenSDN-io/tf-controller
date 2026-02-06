@@ -3148,7 +3148,7 @@ void BgpXmppChannelManager::RoutingInstanceCallback(string vrf_name, int op) {
 }
 
 void BgpXmppChannelManager::VisitChannels(BgpXmppChannelManager::VisitorFn fn) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     BOOST_FOREACH(XmppChannelMap::value_type &i, channel_map_) {
         fn(i.second);
     }
@@ -3156,7 +3156,7 @@ void BgpXmppChannelManager::VisitChannels(BgpXmppChannelManager::VisitorFn fn) {
 
 void BgpXmppChannelManager::VisitChannels(BgpXmppChannelManager::VisitorFn fn)
         const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     BOOST_FOREACH(const XmppChannelMap::value_type &i, channel_map_) {
         fn(i.second);
     }
@@ -3196,7 +3196,7 @@ BgpXmppChannel *BgpXmppChannelManager::CreateChannel(XmppChannel *channel) {
 
 void BgpXmppChannelManager::XmppHandleChannelEvent(XmppChannel *channel,
                                                    xmps::PeerState state) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     XmppChannelMap::iterator it = channel_map_.find(channel);
     BgpXmppChannel *bgp_xmpp_channel = NULL;

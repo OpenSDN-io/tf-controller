@@ -7,6 +7,7 @@
 
 #include <map>
 #include <set>
+#include <mutex>
 
 #include "bgp/routing-instance/istatic_route_mgr.h"
 
@@ -144,7 +145,7 @@ private:
     BgpConditionListener *listener_;
     StaticRouteMap  static_route_map_;
     WorkQueue<StaticRouteRequest *> *static_route_queue_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     StaticRouteProcessList unregister_static_route_list_;
     boost::scoped_ptr<TaskTrigger> unregister_list_trigger_;
 

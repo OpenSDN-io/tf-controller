@@ -11,7 +11,6 @@
 #include <boost/intrusive_ptr.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <tbb/mutex.h>
 #include <tbb/spin_rw_mutex.h>
 
 #include <list>
@@ -19,6 +18,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "base/bitset.h"
 #include "base/index_map.h"
@@ -385,7 +385,7 @@ public:
     BgpServer *server() { return server_; }
     const BgpServer *server() const { return server_; }
     LifetimeActor *deleter();
-    tbb::mutex &mutex() { return mutex_; }
+    std::mutex &mutex() { return mutex_; }
 
     uint32_t deleted_count() const { return deleted_count_; }
     void increment_deleted_count() { deleted_count_++; }
@@ -433,7 +433,7 @@ private:
              RoutingInstanceStatsData *instance_info) const;
 
     BgpServer *server_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
     mutable tbb::spin_rw_mutex rw_mutex_;
     std::vector<RoutingInstanceConfigList> instance_config_lists_;
     std::vector<TaskTrigger *> instance_config_triggers_;

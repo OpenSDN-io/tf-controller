@@ -2,6 +2,8 @@
  * Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <mutex>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/format.hpp>
 
@@ -74,7 +76,7 @@ struct SG {
 
 
 static std::map<SG, const PMSIParams> pmsi_params;
-static tbb::mutex pmsi_params_mutex;
+static std::mutex pmsi_params_mutex;
 
 class RoutingInstanceTest : public RoutingInstance {
 public:
@@ -155,7 +157,7 @@ public:
 
     virtual ErmVpnRoute *GetGlobalTreeRootRoute(const Ip4Address &source,
             const Ip4Address &group) const {
-        tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+        std::unique_lock<std::mutex> lock(pmsi_params_mutex);
         const RoutingInstanceTest *ri =
             dynamic_cast<const RoutingInstanceTest *>(
                 table()->routing_instance());
@@ -166,10 +168,10 @@ public:
             return NULL;
 
         ErmVpnRoute **ermvpn_rtp = iter->second.ermvpn_rt;
-        lock.release();
+        lock.unlock();
         TASK_UTIL_EXPECT_NE(static_cast<ErmVpnRoute *>(NULL), *ermvpn_rtp);
 
-        tbb::mutex::scoped_lock lock2(pmsi_params_mutex);
+        std::scoped_lock lock2(pmsi_params_mutex);
         assert((*ermvpn_rtp)->GetPrefix().source().to_string() ==
                 source.to_string());
         assert((*ermvpn_rtp)->GetPrefix().group().to_string() ==
@@ -179,7 +181,7 @@ public:
 
     virtual bool GetForestNodePMSI(ErmVpnRoute *rt, uint32_t *label,
             Ip4Address *address, std::vector<std::string> *encap) const {
-        tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+        std::scoped_lock lock(pmsi_params_mutex);
 
         if (!rt)
             return false;
@@ -528,12 +530,12 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute) {
     ErmVpnRoute *ermvpn_rt[instances_set_count_*groups_count_];
     for (size_t i = 1; i <= instances_set_count_; i++) {
         for (size_t j = 1; j <= groups_count_; j++) {
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::unique_lock<std::mutex> lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = NULL;
             PMSIParams pmsi(PMSIParams(10, "1.2.3.4", "gre",
                             &ermvpn_rt[(i-1)*groups_count_+(j-1)]));
             pmsi_params.insert(make_pair(sg(i, j), pmsi));
-            lock.release();
+            lock.unlock();
             AddEvpnRoute(red_[i-1], prefix6(i, j));
         }
     }
@@ -545,7 +547,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute) {
             ErmVpnRoute *rt =
                 AddErmVpnRoute(red_ermvpn_[i-1], ermvpn_prefix(i, j),
                                "target:127.0.0.1:1100");
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = rt;
         }
     }
@@ -559,7 +561,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute) {
         for (size_t j = 1; j <= groups_count_; j++) {
             DeleteEvpnRoute(red_[i-1], prefix6(i, j));
             {
-                tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+                std::scoped_lock lock(pmsi_params_mutex);
                 pmsi_params.erase(sg(i, j));
             }
             DeleteErmVpnRoute(red_ermvpn_[i-1], ermvpn_prefix(i, j));
@@ -592,7 +594,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute_2) {
     ErmVpnRoute *ermvpn_rt[instances_set_count_*groups_count_];
     for (size_t i = 1; i <= instances_set_count_; i++) {
         for (size_t j = 1; j <= groups_count_; j++) {
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = NULL;
             PMSIParams pmsi(PMSIParams(10, "1.2.3.4", "gre",
                             &ermvpn_rt[(i-1)*groups_count_+(j-1)]));
@@ -605,7 +607,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute_2) {
             ErmVpnRoute *rt =
                 AddErmVpnRoute(red_ermvpn_[i-1], ermvpn_prefix(i, j),
                                "target:127.0.0.1:1100");
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = rt;
         }
     }
@@ -616,7 +618,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute_2) {
     for (size_t i = 1; i <= instances_set_count_; i++) {
         for (size_t j = 1; j <= groups_count_; j++) {
             {
-                tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+                std::scoped_lock lock(pmsi_params_mutex);
                 pmsi_params.erase(sg(i, j));
             }
             DeleteErmVpnRoute(red_ermvpn_[i-1], ermvpn_prefix(i, j));
@@ -650,7 +652,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute_3) {
     ErmVpnRoute *ermvpn_rt[instances_set_count_*groups_count_];
     for (size_t i = 1; i <= instances_set_count_; i++) {
         for (size_t j = 1; j <= groups_count_; j++) {
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = NULL;
             PMSIParams pmsi(PMSIParams(10, "1.2.3.4", "gre",
                             &ermvpn_rt[(i-1)*groups_count_+(j-1)]));
@@ -665,7 +667,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute_3) {
             ErmVpnRoute *rt =
                 AddErmVpnRoute(red_ermvpn_[i-1], ermvpn_prefix(i, j),
                                "target:127.0.0.1:1100");
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = rt;
         }
 
@@ -697,7 +699,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute_3) {
         for (size_t j = 1; j <= groups_count_; j++) {
             DeleteEvpnRoute(red_[i-1], prefix6(i, j));
             {
-                tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+                std::scoped_lock lock(pmsi_params_mutex);
                 assert(pmsi_params.erase(sg(i, j)) == 1);
             }
             DeleteErmVpnRoute(red_ermvpn_[i-1], ermvpn_prefix(i, j));
@@ -731,7 +733,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute_Optimisation) {
     ErmVpnRoute *ermvpn_rt[instances_set_count_*groups_count_];
     for (size_t i = 1; i <= instances_set_count_; i++) {
         for (size_t j = 1; j <= groups_count_; j++) {
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = NULL;
             PMSIParams pmsi(PMSIParams(10, "1.2.3.4", "gre",
                             &ermvpn_rt[(i-1)*groups_count_+(j-1)]));
@@ -752,7 +754,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute_Optimisation) {
             // thirty one minutes ago to enable optimisation.
             uint64_t start = UTCTimestampUsec();
             rt->set_last_update_at(start-1860000000);
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = rt;
         }
 
@@ -784,7 +786,7 @@ TEST_P(BgpEvpnTest, Smet_With_ErmVpnRoute_Optimisation) {
         for (size_t j = 1; j <= groups_count_; j++) {
             DeleteEvpnRoute(red_[i-1], prefix6(i, j));
             {
-                tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+                std::scoped_lock lock(pmsi_params_mutex);
                 assert(pmsi_params.erase(sg(i, j)) == 1);
             }
             DeleteErmVpnRoute(red_ermvpn_[i-1], ermvpn_prefix(i, j));

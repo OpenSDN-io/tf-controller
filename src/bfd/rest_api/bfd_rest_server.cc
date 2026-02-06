@@ -238,7 +238,7 @@ void RESTServer::MonitorRESTClientSession(ClientId client_id,
 
 void RESTServer::HandleRequest(HttpSession* session,
                                     const HttpRequest* request) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
 
     std::string path = request->UrlPath();
     BOOST_FOREACH(const RESTServer::HandlerSpecifier& hs, RESTHandlers_) {

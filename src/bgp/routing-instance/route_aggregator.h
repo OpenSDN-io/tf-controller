@@ -5,10 +5,9 @@
 #ifndef SRC_BGP_ROUTING_INSTANCE_ROUTE_AGGREGATOR_H_
 #define SRC_BGP_ROUTING_INSTANCE_ROUTE_AGGREGATOR_H_
 
-#include <tbb/mutex.h>
-
 #include <map>
 #include <set>
+#include <mutex>
 
 #include "bgp/routing-instance/iroute_aggregator.h"
 
@@ -243,7 +242,7 @@ private:
     AggregateRouteMap  aggregate_route_map_;
     boost::scoped_ptr<TaskTrigger> update_list_trigger_;
     boost::scoped_ptr<TaskTrigger> unregister_list_trigger_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     AggregateRouteProcessList update_aggregate_list_;
     AggregateRouteProcessList unregister_aggregate_list_;
     boost::scoped_ptr<DeleteActor> deleter_;

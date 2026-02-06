@@ -6,12 +6,13 @@
 #define BFD_CONFIG_CLIENT_H_
 
 #include <string>
+#include <mutex>
+#include <condition_variable>
+
 #include <boost/optional.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <http/client/http_client.h>
-#include <tbb/mutex.h>
-#include <tbb/compat/condition_variable>
 
 #include "base/util.h"
 #include "io/event_manager.h"
@@ -73,8 +74,8 @@ class RESTClient {
     HttpConnection *long_poll_connection_;
     boost::optional<ClientId> client_id_;
     bool error_;
-    tbb::mutex mutex_;
-    tbb::interface5::condition_variable cond_var_;
+    std::mutex mutex_;
+    std::condition_variable cond_var_;
     bool stopped_;
 };
 

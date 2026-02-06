@@ -2,6 +2,8 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <mutex>
+
 #include "bgp/bgp_condition_listener.h"
 
 #include <boost/foreach.hpp>
@@ -71,7 +73,7 @@ public:
 
         // Some random match on key of the route
         if (prefix_.prefixlen() < ip_route->GetPrefix().prefixlen()) {
-            tbb::mutex::scoped_lock lock(mutex_);
+            std::scoped_lock lock(mutex_);
             if (deleted) {
                 if (state) {
                     assert(state->del_seen() != true);
@@ -102,17 +104,17 @@ public:
     }
 
     bool matched_routes_empty() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return match_list_.empty();
     }
 
     int matched_routes_size() {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return match_list_.size();
     }
 
     BgpRoute *lookup_matched_routes(const PrefixT &prefix) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         typename MatchList::iterator it = match_list_.find(prefix);;
         if (it == match_list_.end()) {
             return NULL;
@@ -121,7 +123,7 @@ public:
     }
 
     void remove_matched_route(const PrefixT &prefix) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         typename MatchList::iterator it = match_list_.find(prefix);;
         assert(it != match_list_.end());
         match_list_.erase(it);
@@ -129,7 +131,7 @@ public:
 
 private:
     Address::Family family_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     MatchList match_list_;
     PrefixT prefix_;
     bool hold_db_state_;

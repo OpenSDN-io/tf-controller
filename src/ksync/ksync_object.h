@@ -7,7 +7,6 @@
 
 #include <mutex>
 
-#include <tbb/recursive_mutex.h>
 #include <base/queue_task.h>
 #include <base/timer.h>
 #include <sandesh/sandesh_trace.h>

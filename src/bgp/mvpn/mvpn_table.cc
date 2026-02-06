@@ -124,7 +124,7 @@ void MvpnTable::CreateMvpnManagers() {
     if (!server()->mvpn_ipv4_enable())
         return;
     RoutingInstance *rtinstance = routing_instance();
-    tbb::mutex::scoped_lock lock(rtinstance->manager()->mutex());
+    std::scoped_lock lock(rtinstance->manager()->mutex());
 
     // Don't create the MvpnManager for the VPN table.
     if (!rtinstance->IsMasterRoutingInstance() &&
@@ -162,7 +162,7 @@ void MvpnTable::DeleteMvpnManager() {
         return;
     if (routing_instance()->mvpn_project_manager_network().empty())
         return;
-    tbb::mutex::scoped_lock lock(routing_instance()->manager()->mutex());
+    std::scoped_lock lock(routing_instance()->manager()->mutex());
     MvpnProjectManagerNetworks::iterator iter =
         routing_instance()->manager()->mvpn_project_managers().find(
             routing_instance()->mvpn_project_manager_network());

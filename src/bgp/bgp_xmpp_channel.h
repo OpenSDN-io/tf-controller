@@ -5,15 +5,15 @@
 #ifndef SRC_BGP_BGP_XMPP_CHANNEL_H_
 #define SRC_BGP_BGP_XMPP_CHANNEL_H_
 
-#include <boost/function.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <tbb/mutex.h>
-
 #include <map>
 #include <set>
 #include <string>
 #include <utility>
+#include <mutex>
+
+#include <boost/function.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "base/queue_task.h"
 #include "bgp/bgp_rib_policy.h"
@@ -423,11 +423,11 @@ public:
     void DSCPUpdateCallback(uint8_t value);
 
     uint32_t count() const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return channel_map_.size();
     }
     uint32_t NumUpPeer() const {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return channel_map_.size();
     }
 
@@ -459,7 +459,7 @@ private:
     XmppServer *xmpp_server_;
     BgpServer *bgp_server_;
     WorkQueue<BgpXmppChannel *> queue_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
     XmppChannelMap channel_map_;
     XmppChannelNameMap channel_name_map_;
     int id_;

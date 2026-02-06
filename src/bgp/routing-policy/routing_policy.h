@@ -9,7 +9,6 @@
 #include <boost/intrusive_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <tbb/atomic.h>
-#include <tbb/mutex.h>
 #include <sandesh/sandesh_trace.h>
 
 #include <list>
@@ -17,6 +16,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <mutex>
 
 #include "base/lifetime.h"
 #include "base/util.h"
@@ -367,7 +367,7 @@ private:
     class DeleteActor;
 
     BgpServer *server_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     RoutingPolicyList routing_policies_;
     boost::scoped_ptr<DeleteActor> deleter_;
     LifetimeRef<RoutingPolicyMgr> server_delete_ref_;

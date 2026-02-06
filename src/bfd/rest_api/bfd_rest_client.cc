@@ -37,7 +37,7 @@ bool RESTClient::is_initialized_non_locking() {
 }
 
 bool RESTClient::is_initialized() {
-    tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     return is_initialized_non_locking();
 }
 
@@ -45,7 +45,7 @@ void RESTClient::Init() {
     const std::string url = "Session";
     const std::string request = "{}";
 
-    tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
 
     http_client_->Init();
     long_poll_connection_ = http_client_->CreateConnection(ep_);
@@ -59,7 +59,7 @@ void RESTClient::Init() {
 }
 
 void RESTClient::Stop() {
-    tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     if (stopped_)
         return;
     stopped_ = true;
@@ -75,7 +75,7 @@ void RESTClient::SetError() {
 
 bool RESTClient::AddBFDHost(const boost::asio::ip::address& remote_address,
                                     AddBFDHostCb cb) {
-    tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     if (!is_initialized_non_locking())
         return false;
 
@@ -93,7 +93,7 @@ bool RESTClient::AddBFDHost(const boost::asio::ip::address& remote_address,
 
 bool RESTClient::DeleteBFDHost(const boost::asio::ip::address& remote_address,
                                     DeleteBFDHostCb cb) {
-    tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     if (!is_initialized_non_locking())
         return false;
 
@@ -109,7 +109,7 @@ bool RESTClient::DeleteBFDHost(const boost::asio::ip::address& remote_address,
 
 bool RESTClient::GetSession(const boost::asio::ip::address& remote_address,
                                     GetSessionCb cb) {
-    tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     if (!is_initialized_non_locking())
         return false;
 
@@ -123,7 +123,7 @@ bool RESTClient::GetSession(const boost::asio::ip::address& remote_address,
 }
 
 bool RESTClient::Monitor(MonitorCb cb) {
-    tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
 
     if (!is_initialized_non_locking())
         return false;
@@ -191,7 +191,7 @@ void RESTClient::GetBFDConnectionCallback(const std::string& response,
 
 void RESTClient::CreateRESTClientSessionCallback(const std::string& response,
                                          const boost::system::error_code& ec) {
-    tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
 
     if (!ec) {
         if (!response.empty()) {

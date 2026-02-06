@@ -6,7 +6,7 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/foreach.hpp>
 
-#include <tbb/compat/condition_variable>
+#include <condition_variable>
 
 #include "base/task_annotations.h"
 #include "base/test/task_test_util.h"
@@ -27,7 +27,7 @@ class Condition {
 public:
     Condition() : state_(false) { }
     void WaitAndClear() {
-        tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(mutex_);
         while (!state_) {
             cond_var_.wait(lock);
         }
@@ -36,15 +36,15 @@ public:
 
     void Set() {
         {
-            tbb::interface5::unique_lock<tbb::mutex> lock(mutex_);
+            std::unique_lock<std::mutex> lock(mutex_);
             state_ = true;
         }
         cond_var_.notify_one();
     }
 
 private:
-    tbb::mutex mutex_;
-    tbb::interface5::condition_variable cond_var_;
+    std::mutex mutex_;
+    std::condition_variable cond_var_;
     bool state_;
 };
 

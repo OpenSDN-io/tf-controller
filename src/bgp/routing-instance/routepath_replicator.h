@@ -7,13 +7,13 @@
 
 #include <boost/ptr_container/ptr_map.hpp>
 #include <sandesh/sandesh_trace.h>
-#include <tbb/mutex.h>
 
 #include <list>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "base/lifetime.h"
 #include "base/util.h"
@@ -284,7 +284,7 @@ private:
     const BgpServer *server() const { return server_; }
 
     BgpServer *server_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     TableStateList table_state_list_;
     Address::Family family_;
     BgpTable *vpn_table_;

@@ -42,7 +42,7 @@ TEST_P(BgpMvpnTest, Type3_SPMSI_With_ErmVpnRoute_4) {
     ErmVpnRoute *ermvpn_rt[instances_set_count_*groups_count_];
     for (size_t i = 1; i <= instances_set_count_; i++) {
         for (size_t j = 1; j <= groups_count_; j++) {
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = NULL;
             PMSIParams pmsi(PMSIParams(10, "1.2.3.4", "gre",
                             &ermvpn_rt[(i-1)*groups_count_+(j-1)]));
@@ -65,7 +65,7 @@ TEST_P(BgpMvpnTest, Type3_SPMSI_With_ErmVpnRoute_4) {
             ErmVpnRoute *rt =
                 AddErmVpnRoute(fabric_ermvpn_[i-1], ermvpn_prefix(i, j),
                                "target:127.0.0.1:1100");
-            tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+            std::scoped_lock lock(pmsi_params_mutex);
             ermvpn_rt[(i-1)*groups_count_+(j-1)] = rt;
         }
 
@@ -116,7 +116,7 @@ TEST_P(BgpMvpnTest, Type3_SPMSI_With_ErmVpnRoute_4) {
             DeleteMvpnRoute(red_[i-1], native_prefix7(j));
             DeleteMvpnRoute(green_[i-1], native_prefix7(j));
             {
-                tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+                std::scoped_lock lock(pmsi_params_mutex);
                 pmsi_params.erase(sg(i, j));
             }
             DeleteErmVpnRoute(fabric_ermvpn_[i-1], ermvpn_prefix(i, j));

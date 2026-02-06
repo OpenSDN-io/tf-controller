@@ -216,7 +216,7 @@ BgpConditionListener *PathResolver::get_condition_listener(
 //
 void PathResolver::RegisterUnregisterResolverNexthop(
     ResolverNexthop *rnexthop) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     nexthop_reg_unreg_list_.insert(rnexthop);
     nexthop_reg_unreg_trigger_->Set();
 }
@@ -226,7 +226,7 @@ void PathResolver::RegisterUnregisterResolverNexthop(
 // list.
 //
 void PathResolver::UpdateResolverNexthop(ResolverNexthop *rnexthop) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     nexthop_update_list_.insert(rnexthop);
     nexthop_update_trigger_->Set();
 }
@@ -278,7 +278,7 @@ ResolverNexthop *PathResolver::LocateResolverNexthop(IpAddress address,
     CHECK_CONCURRENCY("db::DBTable", "bgp::RouteAggregation",
                       "bgp::Config", "bgp::ConfigHelper");
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     ResolverNexthopKey key(address, table);
     ResolverNexthopMap::iterator loc = nexthop_map_.find(key);
     if (loc != nexthop_map_.end()) {
@@ -479,7 +479,7 @@ bool PathResolver::RouteListener(DBTablePartBase *root, DBEntryBase *entry) {
 // For testing only.
 //
 size_t PathResolver::GetResolverNexthopMapSize() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return nexthop_map_.size();
 }
 
@@ -488,7 +488,7 @@ size_t PathResolver::GetResolverNexthopMapSize() const {
 // For testing only.
 //
 size_t PathResolver::GetResolverNexthopDeleteListSize() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return nexthop_delete_list_.size();
 }
 
@@ -513,7 +513,7 @@ void PathResolver::EnableResolverNexthopRegUnregProcessing() {
 // For testing only.
 //
 size_t PathResolver::GetResolverNexthopRegUnregListSize() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return nexthop_reg_unreg_list_.size();
 }
 
@@ -538,7 +538,7 @@ void PathResolver::EnableResolverNexthopUpdateProcessing() {
 // For testing only.
 //
 size_t PathResolver::GetResolverNexthopUpdateListSize() const {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     return nexthop_update_list_.size();
 }
 
@@ -1372,7 +1372,7 @@ bool ResolverNexthop::ResolverRouteCompare::operator()(
 // Insert route into the set of routes sorted based on the prefix length in
 // descending order. Return true if the route inserted is the new longest match.
 bool ResolverNexthop::InsertRoute(BgpRoute *route) {
-    tbb::mutex::scoped_lock lock(routes_mutex_);
+    std::scoped_lock lock(routes_mutex_);
     routes_.insert(route);
     bool longest_match = (*(routes_.begin()) == route);
     return longest_match;
@@ -1381,18 +1381,18 @@ bool ResolverNexthop::InsertRoute(BgpRoute *route) {
 // Remove route from the set of routes sorted based on the prefix length in
 // descending order. Return true if the route removed was the old longest match.
 bool ResolverNexthop::RemoveRoute(BgpRoute *route) {
-    tbb::mutex::scoped_lock lock(routes_mutex_);
+    std::scoped_lock lock(routes_mutex_);
     bool longest_match = (*(routes_.begin()) == route);
     routes_.erase(route);
     return longest_match;
 }
 
 const BgpRoute *ResolverNexthop::GetRoute() const {
-    tbb::mutex::scoped_lock lock(routes_mutex_);
+    std::scoped_lock lock(routes_mutex_);
     return !routes_.empty() ? *(routes_.begin()) : NULL;
 }
 
 BgpRoute *ResolverNexthop::GetRoute() {
-    tbb::mutex::scoped_lock lock(routes_mutex_);
+    std::scoped_lock lock(routes_mutex_);
     return !routes_.empty() ? *(routes_.begin()) : NULL;
 }

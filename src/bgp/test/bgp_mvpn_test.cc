@@ -2,6 +2,8 @@
  * Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <mutex>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/format.hpp>
 
@@ -74,7 +76,7 @@ struct SG {
 
 
 static std::map<SG, const PMSIParams> pmsi_params;
-static tbb::mutex pmsi_params_mutex;
+static std::mutex pmsi_params_mutex;
 
 class RoutingInstanceTest : public RoutingInstance {
 public:
@@ -157,7 +159,7 @@ public:
 
     virtual ErmVpnRoute *GetGlobalTreeRootRoute(const Ip4Address &source,
             const Ip4Address &group) const {
-        tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+        std::unique_lock<std::mutex> lock(pmsi_params_mutex);
         const RoutingInstanceTest *ri =
             dynamic_cast<const RoutingInstanceTest *>(
                 table()->routing_instance());
@@ -168,10 +170,10 @@ public:
             return NULL;
 
         ErmVpnRoute **ermvpn_rtp = iter->second.ermvpn_rt;
-        lock.release();
+        lock.unlock();
         TASK_UTIL_EXPECT_NE(static_cast<ErmVpnRoute *>(NULL), *ermvpn_rtp);
 
-        tbb::mutex::scoped_lock lock2(pmsi_params_mutex);
+        std::scoped_lock lock2(pmsi_params_mutex);
         assert((*ermvpn_rtp)->GetPrefix().source().to_string() ==
                 source.to_string());
         assert((*ermvpn_rtp)->GetPrefix().group().to_string() ==
@@ -181,7 +183,7 @@ public:
 
     virtual bool GetForestNodePMSI(ErmVpnRoute *rt, uint32_t *label,
             Ip4Address *address, std::vector<std::string> *encap) const {
-        tbb::mutex::scoped_lock lock(pmsi_params_mutex);
+        std::scoped_lock lock(pmsi_params_mutex);
 
         if (!rt)
             return false;

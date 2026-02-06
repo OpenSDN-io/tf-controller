@@ -7,13 +7,13 @@
 
 #include <boost/ptr_container/ptr_map.hpp>
 #include <boost/shared_ptr.hpp>
-#include <tbb/mutex.h>
 
 #include <list>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "base/lifetime.h"
 #include "base/queue_task.h"
@@ -447,7 +447,7 @@ private:
 
     // Mutex is used to serialize access from multiple bgp::ConfigHelper tasks.
     BgpServer *server_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     BgpConditionListener *listener_;
     boost::scoped_ptr<TaskTrigger> resolve_trigger_;
     boost::scoped_ptr<WorkQueue<ServiceChainRequestT *> > process_queue_;

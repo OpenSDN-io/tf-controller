@@ -11,12 +11,12 @@
 #include <sandesh/sandesh.h>
 #include <sandesh/sandesh_trace.h>
 #include <tbb/atomic.h>
-#include <tbb/mutex.h>
 
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "base/queue_task.h"
 #include "base/lifetime.h"
@@ -279,7 +279,7 @@ private:
     bool RequestHandler(RtGroupMgrReq *req);
 
     BgpServer *server_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
     RtGroupMap rtgroup_map_;
     RtGroupMgrTableStateList table_state_;
     boost::scoped_ptr<TaskTrigger> rtarget_route_trigger_;

@@ -298,7 +298,7 @@ void RoutePathReplicator::Join(BgpTable *table, const RouteTarget &rt,
                                bool import) {
     CHECK_CONCURRENCY("bgp::Config", "bgp::ConfigHelper");
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     RPR_TRACE(TableJoin, table->name(), rt.ToString(), import);
 
     bool first = false;
@@ -336,7 +336,7 @@ void RoutePathReplicator::Leave(BgpTable *table, const RouteTarget &rt,
                                 bool import) {
     CHECK_CONCURRENCY("bgp::Config", "bgp::ConfigHelper");
 
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     RtGroup *group = server()->rtarget_group_mgr()->GetRtGroup(rt);
     assert(group);
     RPR_TRACE(TableLeave, table->name(), rt.ToString(), import);

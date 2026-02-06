@@ -6,8 +6,8 @@
 #define BFD_CONFIG_SERVER_H_
 
 #include <map>
+#include <mutex>
 #include <boost/asio/ip/address.hpp>
-#include <tbb/mutex.h>
 
 #include "base/regex.h"
 #include "http/http_request.h"
@@ -82,7 +82,7 @@ class RESTServer {
 
     ClientMap client_sessions_;
     Server *bfd_server_;
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 };
 
 }  // namespace BFD

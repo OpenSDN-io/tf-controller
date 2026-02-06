@@ -6,7 +6,6 @@
 #define SRC_BGP_ROUTING_INSTANCE_PATH_RESOLVER_H_
 
 #include <boost/scoped_ptr.hpp>
-#include <tbb/mutex.h>
 #include <tbb/spin_rw_mutex.h>
 
 #include <map>
@@ -14,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <mutex>
 
 #include "base/lifetime.h"
 #include "base/util.h"
@@ -162,7 +162,7 @@ private:
     BgpTable *table_;
     DBTableBase::ListenerId listener_id_;
     bool nexthop_longest_match_;
-    mutable tbb::mutex mutex_;
+    mutable std::mutex mutex_;
     ResolverNexthopMap nexthop_map_;
     ResolverNexthopList nexthop_reg_unreg_list_;
     boost::scoped_ptr<TaskTrigger> nexthop_reg_unreg_trigger_;
@@ -430,7 +430,7 @@ private:
     IpAddress address_;
     BgpTable *table_;
     bool registered_;
-    mutable tbb::mutex routes_mutex_;
+    mutable std::mutex routes_mutex_;
     std::vector<ResolverPathList> rpath_lists_;
     LifetimeRef<ResolverNexthop> table_delete_ref_;
 

@@ -5,11 +5,12 @@
 #ifndef __BGP_SERVER_TEST_UTIL_H__
 #define __BGP_SERVER_TEST_UTIL_H__
 
+#include <mutex>
+
 #include <boost/any.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <tbb/compat/condition_variable>
-#include <tbb/mutex.h>
 
 #include "base/task_annotations.h"
 #include "base/test/task_test_util.h"
@@ -87,32 +88,32 @@ public:
     // Protect connection db with mutex as it is queried from main thread which
     // does not adhere to control-node scheduler policy.
     XmppServerConnection *FindConnection(const std::string &peer_addr) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         return XmppServer::FindConnection(peer_addr);
     }
 
     void InsertConnection(XmppServerConnection *connection) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         XmppServer::InsertConnection(connection);
     }
 
     void RemoveConnection(XmppServerConnection *connection) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         XmppServer::RemoveConnection(connection);
     }
 
     void InsertDeletedConnection(XmppServerConnection *connection) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         XmppServer::InsertDeletedConnection(connection);
     }
 
     void RemoveDeletedConnection(XmppServerConnection *connection) {
-        tbb::mutex::scoped_lock lock(mutex_);
+        std::scoped_lock lock(mutex_);
         XmppServer::RemoveDeletedConnection(connection);
     }
 
 private:
-    tbb::mutex mutex_;
+    std::mutex mutex_;
 };
 
 class StateMachineTest : public StateMachine {
@@ -288,25 +289,25 @@ public:
 
     bool BgpPeerSendUpdate(const uint8_t *msg, size_t msgsize);
     virtual bool SendUpdate(const uint8_t *msg, size_t msgsize) {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         return send_update_fnc_(msg, msgsize);
     }
 
     void set_send_update_fnc(
             boost::function<bool(const uint8_t *, size_t)> send_update_fnc) {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         send_update_fnc_ = send_update_fnc;
     }
 
     bool BgpPeerMpNlriAllowed(uint16_t afi, uint8_t safi);
     virtual bool MpNlriAllowed(uint16_t afi, uint8_t safi) {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         return mp_nlri_allowed_fnc_(afi, safi);
     }
 
     void set_mp_nlri_allowed_fnc(
             boost::function<bool(uint16_t, uint8_t)> mp_nlri_allowed_fnc) {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         mp_nlri_allowed_fnc_ = mp_nlri_allowed_fnc;
     }
 
@@ -323,12 +324,12 @@ public:
 
     bool BgpPeerIsReady() { return BgpPeer::IsReady(); }
     virtual bool IsReady() const {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         return is_ready_fnc_();
     }
 
     void set_is_ready_fnc(boost::function<bool()> is_ready_fnc) {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         is_ready_fnc_ = is_ready_fnc;
     }
 
@@ -337,24 +338,24 @@ public:
     }
     virtual bool CheckSplitHorizon(uint32_t cluster_id = 0,
                   uint32_t ribout_cid = 0) const {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         return check_split_horizon_fnc_(cluster_id, ribout_cid);
     }
 
     void set_check_split_horizon_fnc(
             boost::function<bool(uint32_t, uint32_t)> check_split_horizon_fnc) {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         check_split_horizon_fnc_ = check_split_horizon_fnc;
     }
 
     bool BgpPeerProcessSession() { return BgpPeer::ProcessSession(); }
     virtual bool ProcessSession() const {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         return process_session_fnc_();
     }
 
     void set_process_session_fnc(boost::function<bool()> process_session_fnc) {
-        tbb::mutex::scoped_lock lock(fnc_mutex_);
+        std::scoped_lock lock(fnc_mutex_);
         process_session_fnc_ = process_session_fnc;
     }
 
@@ -379,7 +380,7 @@ private:
 
     static bool verbose_name_;
     int id_;
-    mutable tbb::mutex fnc_mutex_;
+    mutable std::mutex fnc_mutex_;
     boost::function<bool(const uint8_t *, size_t)> send_update_fnc_;
     boost::function<bool(uint16_t, uint8_t)> mp_nlri_allowed_fnc_;
     boost::function<bool(uint32_t, uint32_t)> check_split_horizon_fnc_;

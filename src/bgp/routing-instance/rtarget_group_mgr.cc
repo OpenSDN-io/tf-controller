@@ -351,7 +351,7 @@ RTargetGroupMgr::~RTargetGroupMgr() {
 
 // Search a RtGroup
 RtGroup *RTargetGroupMgr::GetRtGroup(const RouteTarget &rt) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     RtGroupMap::iterator loc = rtgroup_map_.find(rt);
     if (loc != rtgroup_map_.end()) {
         return loc->second;
@@ -367,7 +367,7 @@ RtGroup *RTargetGroupMgr::GetRtGroup(const ExtCommunity::ExtCommunityValue
 }
 
 RtGroup *RTargetGroupMgr::LocateRtGroup(const RouteTarget &rt) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     RtGroupMap::iterator loc = rtgroup_map_.find(rt);
     RtGroup *group = (loc != rtgroup_map_.end()) ? loc->second : NULL;
     if (group == NULL) {
@@ -395,12 +395,12 @@ void RTargetGroupMgr::NotifyRtGroupUnlocked(const RouteTarget &rt) {
 
 void RTargetGroupMgr::NotifyRtGroup(const RouteTarget &rt) {
     CHECK_CONCURRENCY("bgp::Config", "bgp::ConfigHelper");
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     NotifyRtGroupUnlocked(rt);
 }
 
 void RTargetGroupMgr::RemoveRtGroup(const RouteTarget &rt) {
-    tbb::mutex::scoped_lock lock(mutex_);
+    std::scoped_lock lock(mutex_);
     RtGroupMap::iterator loc = rtgroup_map_.find(rt);
     RtGroup *rtgroup = (loc != rtgroup_map_.end()) ? loc->second : NULL;
     assert(rtgroup);
