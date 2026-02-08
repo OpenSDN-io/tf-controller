@@ -10,7 +10,6 @@
 #include <sandesh/sandesh_types.h>
 #include <sandesh/sandesh.h>
 #include <sandesh/sandesh_trace.h>
-#include <tbb/atomic.h>
 
 #include <map>
 #include <set>

@@ -5,7 +5,6 @@
 #include <vector>
 #include <atomic>
 
-#include <tbb/atomic.h>
 #include <tbb/spin_rw_mutex.h>
 
 #include <boost/bind.hpp>
@@ -48,11 +47,33 @@ void DBRequest::Swap(DBRequest *rhs) {
     swap(data, rhs->data);
 }
 
+// we need copy to be able to resize vector of atomics
+// therefore we don't need the same value in both instances
+template<typename _Tp>
+struct AtomicWithCopy : public std::atomic<_Tp> {
+    // Inherit constructors
+    using std::atomic<_Tp>::atomic;
+
+    // Bring in base class operators and methods
+    using std::atomic<_Tp>::operator=;
+    using std::atomic<_Tp>::load;
+    using std::atomic<_Tp>::store;
+
+    // Custom constructor to handle copy from another AtomicWithCopy (must perform a load/store)
+    AtomicWithCopy(const AtomicWithCopy& other) : std::atomic<_Tp>(other.load()) {}
+    
+    // Custom assignment operator
+    AtomicWithCopy& operator=(const AtomicWithCopy& other) {
+        this->store(other.load());
+        return *this;
+    }
+};
+
 class DBTableBase::ListenerInfo {
 public:
     typedef vector<ChangeCallback> CallbackList;
     typedef vector<string> NameList;
-    typedef vector<tbb::atomic<uint64_t> > StateCountList;
+    typedef vector<AtomicWithCopy<uint64_t>> StateCountList;
 
     explicit ListenerInfo(const string &table_name) :
         db_state_accounting_(true) {
@@ -72,7 +93,7 @@ public:
             callbacks_.push_back(callback);
             names_.push_back(name);
             state_count_.resize(i + 1);
-            state_count_[i] = 0;
+            state_count_[i] = AtomicWithCopy<uint64_t>(0);
         } else {
             bmap_.reset(i);
             if (bmap_.none()) {
@@ -123,12 +144,14 @@ public:
 
     void AddToDBStateCount(ListenerId listener, int count) {
         if (db_state_accounting_ && listener != DBTableBase::kInvalidId) {
+            tbb::spin_rw_mutex::scoped_lock read_lock(rw_mutex_, false);
             state_count_[listener] += count;
         }
     }
 
     uint64_t GetDBStateCount(ListenerId listener) {
         assert(db_state_accounting_ && listener != DBTableBase::kInvalidId);
+        tbb::spin_rw_mutex::scoped_lock read_lock(rw_mutex_, false);
         return state_count_[listener];
     }
 

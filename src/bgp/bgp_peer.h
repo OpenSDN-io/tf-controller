@@ -528,7 +528,7 @@ private:
     uint32_t local_bgp_id_;     // network order
     uint32_t peer_bgp_id_;      // network order
     FamilyAttributesList family_attributes_list_;
-    mutable std::vector<tbb::atomic<uint32_t> > family_primary_path_count_;
+    mutable std::atomic<uint32_t> family_primary_path_count_[Address::NUM_FAMILIES];
     std::vector<std::string> configured_families_;
     std::vector<std::string> negotiated_families_;
     BgpProto::BgpPeerType peer_type_;

@@ -8,7 +8,6 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <tbb/atomic.h>
 #include <sandesh/sandesh_trace.h>
 
 #include <list>

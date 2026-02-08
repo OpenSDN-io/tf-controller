@@ -510,7 +510,6 @@ BgpPeer::BgpPeer(BgpServer *server, RoutingInstance *instance,
           peer_as_(config->peer_as()),
           local_bgp_id_(config->local_identifier()),
           peer_bgp_id_(0),
-          family_primary_path_count_(Address::NUM_FAMILIES),
           peer_type_((config->peer_as() == config->local_as()) ?
                          BgpProto::IBGP : BgpProto::EBGP),
           state_machine_(BgpStaticObjectFactory::Create<StateMachine>(this)),

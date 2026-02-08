@@ -4,8 +4,6 @@
 
 #include "db/db_table_walk_mgr.h"
 
-#include <tbb/atomic.h>
-
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 

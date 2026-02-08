@@ -27,7 +27,6 @@
 
 using std::make_pair;
 using std::string;
-using boost::scoped_ptr;
 
 class BgpTable::DeleteActor : public LifetimeActor {
   public:
@@ -426,21 +425,23 @@ void BgpTable::PrependAsToAs4Path(BgpAttr* attr, as_t asn) const {
 
 // Create as4_path by copying data from as_path
 void BgpTable::CreateAs4Path(BgpAttr *attr) const {
-    if (attr->as_path()) {
-        scoped_ptr<As4PathSpec> new_as_path(new As4PathSpec);
-        const AsPathSpec &as_path = attr->as_path()->path();
-        for (size_t i = 0; i < as_path.path_segments.size(); i++) {
-            As4PathSpec::PathSegment *ps4 = new As4PathSpec::PathSegment;
-            AsPathSpec::PathSegment *ps = as_path.path_segments[i];
-            ps4->path_segment_type = ps->path_segment_type;
-            for (size_t j = 0; j < ps->path_segment.size(); j++) {
-                as_t as = ps->path_segment[j];
-                ps4->path_segment.push_back(as);
-            }
-            new_as_path->path_segments.push_back(ps4);
-        }
-        attr->set_as4_path(new_as_path.get());
+    if (!attr->as_path()) {
+        return;
     }
+
+    std::unique_ptr<As4PathSpec> new_as_path(new As4PathSpec);
+    const AsPathSpec &as_path = attr->as_path()->path();
+    for (size_t i = 0; i < as_path.path_segments.size(); i++) {
+        As4PathSpec::PathSegment *ps4 = new As4PathSpec::PathSegment;
+        AsPathSpec::PathSegment *ps = as_path.path_segments[i];
+        ps4->path_segment_type = ps->path_segment_type;
+        for (size_t j = 0; j < ps->path_segment.size(); j++) {
+            as_t as = ps->path_segment[j];
+            ps4->path_segment.push_back(as);
+        }
+        new_as_path->path_segments.push_back(ps4);
+    }
+    attr->set_as4_path(new_as_path.get());
 }
 
 // Check if aspath_4byte has any asn > 0xFFFF
@@ -460,7 +461,7 @@ bool BgpTable::Has4ByteAsn(BgpAttr *attr) const {
 
 // Create as_path (and as4_path) from as_path4byte
 void BgpTable::CreateAsPath2Byte(BgpAttr *attr) const {
-    scoped_ptr<AsPathSpec> new_as_path(new AsPathSpec);
+    std::unique_ptr<AsPathSpec> new_as_path(new AsPathSpec);
     As4PathSpec *new_as4_path = NULL;
     bool has_4byte_asn = Has4ByteAsn(attr);
     if (has_4byte_asn)
@@ -495,8 +496,10 @@ void BgpTable::CreateAsPath2Byte(BgpAttr *attr) const {
         attr->set_aspath_4byte(NULL);
     }
     attr->set_as_path(new_as_path.get());
-    if (has_4byte_asn)
+    if (has_4byte_asn) {
         attr->set_as4_path(new_as4_path);
+        delete new_as4_path;
+    }
 }
 
 // Create aspath_4byte by merging as_path and as4_path
@@ -509,7 +512,7 @@ void BgpTable::CreateAsPath4Byte(BgpAttr *attr, as_t local_as) const {
     }
     AsPath4ByteSpec::PathSegment *ps4 = NULL;
     bool part_segment = false;
-    scoped_ptr<AsPath4ByteSpec> aspath_4byte(new AsPath4ByteSpec);
+    std::unique_ptr <AsPath4ByteSpec> aspath_4byte(new AsPath4ByteSpec);
     if (attr->as_path()) {
         const AsPathSpec &as_path = attr->as_path()->path();
         int new_as_count = 0;
@@ -568,7 +571,7 @@ void BgpTable::CreateAsPath4Byte(BgpAttr *attr, as_t local_as) const {
         attr->set_as_path(NULL);
     }
     if (local_as) {
-        scoped_ptr<AsPath4ByteSpec> as_path_spec(aspath_4byte->Add(local_as));
+        std::unique_ptr<AsPath4ByteSpec> as_path_spec(aspath_4byte->Add(local_as));
         attr->set_aspath_4byte(as_path_spec.get());
     } else {
         attr->set_aspath_4byte(aspath_4byte.get());

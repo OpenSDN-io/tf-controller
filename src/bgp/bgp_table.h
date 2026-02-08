@@ -5,8 +5,6 @@
 #ifndef SRC_BGP_BGP_TABLE_H_
 #define SRC_BGP_BGP_TABLE_H_
 
-#include <tbb/atomic.h>
-
 #include <map>
 #include <string>
 #include <vector>

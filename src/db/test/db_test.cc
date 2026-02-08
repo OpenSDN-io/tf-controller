@@ -5,7 +5,6 @@
 #include <boost/intrusive/avl_set.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/bind.hpp>
-#include <tbb/atomic.h>
 
 #include "db/db.h"
 #include "db/db_table.h"
