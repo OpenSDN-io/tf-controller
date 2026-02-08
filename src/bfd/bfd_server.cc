@@ -2,6 +2,8 @@
  * Copyright (c) 2014 CodiLime, Inc. All rights reserved.
  */
 
+ #include <atomic>
+ 
 #include "base/task_annotations.h"
 #include "bfd/bfd_server.h"
 #include "bfd/bfd_session.h"
@@ -315,11 +317,11 @@ Discriminator Server::SessionManager::GenerateUniqueDiscriminator() {
         }
 
         Discriminator Next() {
-            return next_.fetch_and_increment();
+            return next_.fetch_add(1);
         }
 
      private:
-        tbb::atomic<Discriminator> next_;
+        std::atomic<Discriminator> next_;
         boost::random::mt19937 gen;
     };
 

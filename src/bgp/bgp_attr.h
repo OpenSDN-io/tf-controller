@@ -6,11 +6,11 @@
 #define SRC_BGP_BGP_ATTR_H_
 
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/atomic.h>
 
 #include <set>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "base/label_block.h"
 #include "base/parse_object.h"
@@ -240,21 +240,21 @@ private:
     friend void intrusive_ptr_release(const ClusterList *ccluster_list);
     friend class ClusterListDB;
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     ClusterListDB *cluster_list_db_;
     ClusterListSpec spec_;
 };
 
 inline int intrusive_ptr_add_ref(const ClusterList *ccluster_list) {
-    return ccluster_list->refcount_.fetch_and_increment();
+    return ccluster_list->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const ClusterList *ccluster_list) {
-    return ccluster_list->refcount_.fetch_and_decrement();
+    return ccluster_list->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const ClusterList *ccluster_list) {
-    int prev = ccluster_list->refcount_.fetch_and_decrement();
+    int prev = ccluster_list->refcount_.fetch_sub(1);
     if (prev == 1) {
         ClusterList *cluster_list = const_cast<ClusterList *>(ccluster_list);
         cluster_list->Remove();
@@ -394,21 +394,21 @@ private:
     uint8_t tunnel_type_;
     Ip4Address identifier_;
     uint32_t label_;
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     PmsiTunnelDB *pmsi_tunnel_db_;
     PmsiTunnelSpec pmsi_spec_;
 };
 
 inline int intrusive_ptr_add_ref(const PmsiTunnel *cpmsi_tunnel) {
-    return cpmsi_tunnel->refcount_.fetch_and_increment();
+    return cpmsi_tunnel->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const PmsiTunnel *cpmsi_tunnel) {
-    return cpmsi_tunnel->refcount_.fetch_and_decrement();
+    return cpmsi_tunnel->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const PmsiTunnel *cpmsi_tunnel) {
-    int prev = cpmsi_tunnel->refcount_.fetch_and_decrement();
+    int prev = cpmsi_tunnel->refcount_.fetch_sub(1);
     if (prev == 1) {
         PmsiTunnel *pmsi_tunnel = const_cast<PmsiTunnel *>(cpmsi_tunnel);
         pmsi_tunnel->Remove();
@@ -498,21 +498,21 @@ private:
     friend void intrusive_ptr_release(const EdgeDiscovery *ediscovery);
     friend class EdgeDiscoveryDB;
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     EdgeDiscoveryDB *edge_discovery_db_;
     EdgeDiscoverySpec edspec_;
 };
 
 inline int intrusive_ptr_add_ref(const EdgeDiscovery *cediscovery) {
-    return cediscovery->refcount_.fetch_and_increment();
+    return cediscovery->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const EdgeDiscovery *cediscovery) {
-    return cediscovery->refcount_.fetch_and_decrement();
+    return cediscovery->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const EdgeDiscovery *cediscovery) {
-    int prev = cediscovery->refcount_.fetch_and_decrement();
+    int prev = cediscovery->refcount_.fetch_sub(1);
     if (prev == 1) {
         EdgeDiscovery *ediscovery = const_cast<EdgeDiscovery *>(cediscovery);
         ediscovery->Remove();
@@ -605,21 +605,21 @@ private:
     friend void intrusive_ptr_release(const EdgeForwarding *ceforwarding);
     friend class EdgeForwardingDB;
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     EdgeForwardingDB *edge_forwarding_db_;
     EdgeForwardingSpec efspec_;
 };
 
 inline int intrusive_ptr_add_ref(const EdgeForwarding *ceforwarding) {
-    return ceforwarding->refcount_.fetch_and_increment();
+    return ceforwarding->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const EdgeForwarding *ceforwarding) {
-    return ceforwarding->refcount_.fetch_and_decrement();
+    return ceforwarding->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const EdgeForwarding *ceforwarding) {
-    int prev = ceforwarding->refcount_.fetch_and_decrement();
+    int prev = ceforwarding->refcount_.fetch_sub(1);
     if (prev == 1) {
         EdgeForwarding *eforwarding =
             const_cast<EdgeForwarding *>(ceforwarding);
@@ -720,21 +720,21 @@ private:
     friend class BgpOListDB;
 
     Elements elements_;
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     BgpOListDB *olist_db_;
     BgpOListSpec olist_spec_;
 };
 
 inline int intrusive_ptr_add_ref(const BgpOList *colist) {
-    return colist->refcount_.fetch_and_increment();
+    return colist->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const BgpOList *colist) {
-    return colist->refcount_.fetch_and_decrement();
+    return colist->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const BgpOList *colist) {
-    int prev = colist->refcount_.fetch_and_decrement();
+    int prev = colist->refcount_.fetch_sub(1);
     if (prev == 1) {
         BgpOList *olist = const_cast<BgpOList *>(colist);
         olist->Remove();
@@ -945,7 +945,7 @@ private:
     friend int intrusive_ptr_del_ref(const BgpAttr *cattrp);
     friend void intrusive_ptr_release(const BgpAttr *cattrp);
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     BgpAttrDB *attr_db_;
     BgpAttrOrigin::OriginType origin_;
     IpAddress nexthop_;
@@ -977,15 +977,15 @@ private:
 };
 
 inline int intrusive_ptr_add_ref(const BgpAttr *cattrp) {
-    return cattrp->refcount_.fetch_and_increment();
+    return cattrp->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const BgpAttr *cattrp) {
-    return cattrp->refcount_.fetch_and_decrement();
+    return cattrp->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const BgpAttr *cattrp) {
-    int prev = cattrp->refcount_.fetch_and_decrement();
+    int prev = cattrp->refcount_.fetch_sub(1);
     if (prev == 1) {
         BgpAttr *attrp = const_cast<BgpAttr *>(cattrp);
         attrp->Remove();

@@ -5,6 +5,8 @@
 #ifndef db_test_cmn_h
 #define db_test_cmn_h
 
+#include <atomic>
+
 #include <boost/assign/list_of.hpp>
 
 #include "io/event_manager.h"
@@ -24,15 +26,15 @@ public:
 
 class DBTest : public ::testing::Test {
 protected:
-    tbb::atomic<long> adc_notification;
-    tbb::atomic<long> del_notification;
-    tbb::atomic<long> add_notification_client1;
-    tbb::atomic<long> add_notification_client2;
-    tbb::atomic<long> del_notification_client1;
-    tbb::atomic<long> del_notification_client2;
-    tbb::atomic<long> walk_count_;
-    tbb::atomic<bool> walk_done_;
-    tbb::atomic<bool> notify_yield;
+    std::atomic<long> adc_notification;
+    std::atomic<long> del_notification;
+    std::atomic<long> add_notification_client1;
+    std::atomic<long> add_notification_client2;
+    std::atomic<long> del_notification_client1;
+    std::atomic<long> del_notification_client2;
+    std::atomic<long> walk_count_;
+    std::atomic<bool> walk_done_;
+    std::atomic<bool> notify_yield;
 public:
     DBTest() : tid_(DBTableBase::kInvalidId), tid_1_(DBTableBase::kInvalidId) {
         itbl = static_cast<VlanTable *>(db_.CreateTable("db.test.vlan.0"));

@@ -16,6 +16,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "bgp/bgp_common.h"
 #include "db/db.h"
@@ -349,12 +350,12 @@ private:
 
     DB db_;
     boost::dynamic_bitset<> peer_bmap_;
-    tbb::atomic<uint32_t> bgp_count_;
-    tbb::atomic<uint32_t> num_up_peer_;
-    tbb::atomic<uint32_t> deleting_count_;
-    tbb::atomic<uint32_t> bgpaas_count_;
-    tbb::atomic<uint32_t> num_up_bgpaas_peer_;
-    tbb::atomic<uint32_t> deleting_bgpaas_count_;
+    std::atomic<uint32_t> bgp_count_;
+    std::atomic<uint32_t> num_up_peer_;
+    std::atomic<uint32_t> deleting_count_;
+    std::atomic<uint32_t> bgpaas_count_;
+    std::atomic<uint32_t> num_up_bgpaas_peer_;
+    std::atomic<uint32_t> deleting_bgpaas_count_;
     BgpPeerList peer_list_;
     EndpointPeerList endpoint_peer_list_;
 
@@ -407,7 +408,7 @@ private:
     boost::scoped_ptr<BgpConfigManager> config_mgr_;
     boost::scoped_ptr<ConfigUpdater> updater_;
 
-    mutable tbb::atomic<uint64_t> message_build_error_;
+    mutable std::atomic<uint64_t> message_build_error_;
 
     DISALLOW_COPY_AND_ASSIGN(BgpServer);
 };

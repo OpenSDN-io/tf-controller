@@ -2,6 +2,8 @@
  * Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
+
 #include "base/task_annotations.h"
 #include "bgp/inet/inet_table.h"
 #include "bgp/routing-instance/rtarget_group_mgr.h"
@@ -269,17 +271,17 @@ public:
     BgpTable *blue_;
     BgpTable *purple_;
 
-    tbb::atomic<long> walk_count_;
-    tbb::atomic<long> walk_count_1_;
-    tbb::atomic<long> walk_count_2_;
-    tbb::atomic<bool> walk_done_;
-    tbb::atomic<bool> walk_done_1_;
-    tbb::atomic<long> walk_done_count_;
-    tbb::atomic<long> walk_done_count_1_;
-    tbb::atomic<long> current_walk_seq_;
-    tbb::atomic<long> current_done_seq_;
+    std::atomic<long> walk_count_;
+    std::atomic<long> walk_count_1_;
+    std::atomic<long> walk_count_2_;
+    std::atomic<bool> walk_done_;
+    std::atomic<bool> walk_done_1_;
+    std::atomic<long> walk_done_count_;
+    std::atomic<long> walk_done_count_1_;
+    std::atomic<long> current_walk_seq_;
+    std::atomic<long> current_done_seq_;
 
-    tbb::atomic<bool> pause_walk_;
+    std::atomic<bool> pause_walk_;
 
     scoped_ptr<BgpInstanceConfigTest> master_cfg_;
     scoped_ptr<BgpInstanceConfigTest> purple_cfg_;

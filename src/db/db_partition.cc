@@ -6,8 +6,8 @@
 
 #include <list>
 #include <mutex>
+#include <atomic>
 
-#include <tbb/atomic.h>
 #include <tbb/concurrent_queue.h>
 
 #include "base/task.h"
@@ -16,7 +16,6 @@
 #include "db/db_entry.h"
 
 using tbb::concurrent_queue;
-using tbb::atomic;
 
 struct RequestQueueEntry {
     // Constructor takes ownership of DBRequest key, data.
@@ -66,7 +65,7 @@ public:
     bool EnqueueRequest(RequestQueueEntry *req_entry) {
         request_queue_.push(req_entry);
         MaybeStartRunner();
-        uint32_t max = request_count_.fetch_and_increment();
+        uint32_t max = request_count_.fetch_add(1);
         if (max > max_request_queue_len_)
             max_request_queue_len_ = max;
         total_request_count_++;
@@ -77,7 +76,7 @@ public:
     bool DequeueRequest(RequestQueueEntry **req_entry) {
         bool success = request_queue_.try_pop(*req_entry);
         if (success) {
-            request_count_.fetch_and_decrement();
+            request_count_.fetch_sub(1);
         }
         return success;
     }
@@ -143,7 +142,7 @@ private:
     DBPartition *db_partition_;
     RequestQueue request_queue_;
     TablePartList change_list_;
-    atomic<long> request_count_;
+    std::atomic<long> request_count_;
     uint64_t total_request_count_;
     uint64_t max_request_queue_len_;
     RemoveQueue remove_queue_;

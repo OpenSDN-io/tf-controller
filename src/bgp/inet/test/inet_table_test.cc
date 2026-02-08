@@ -2,8 +2,9 @@
  * Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
  */
 
-#include "bgp/inet/inet_table.h"
+#include <atomic>
 
+#include "bgp/inet/inet_table.h"
 
 #include "base/task_annotations.h"
 #include "bgp/bgp_config_ifmap.h"
@@ -118,8 +119,8 @@ protected:
     DBTableBase::ListenerId tid_;
     boost::scoped_ptr<BgpInstanceConfig> blue_cfg_;
 
-    tbb::atomic<long> adc_notification_;
-    tbb::atomic<long> del_notification_;
+    std::atomic<long> adc_notification_;
+    std::atomic<long> del_notification_;
 };
 
 TEST_F(InetTableTest, AddDeleteOneRoute) {

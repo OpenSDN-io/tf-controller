@@ -2,8 +2,9 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include "bgp/evpn/evpn_table.h"
+#include <atomic>
 
+#include "bgp/evpn/evpn_table.h"
 
 #include "base/task_annotations.h"
 #include "bgp/bgp_evpn.h"
@@ -207,8 +208,8 @@ protected:
     scoped_ptr<BgpInstanceConfig> blue_cfg_;
     scoped_ptr<BgpInstanceConfig> blue_si_cfg_;
 
-    tbb::atomic<long> adc_notification_;
-    tbb::atomic<long> del_notification_;
+    std::atomic<long> adc_notification_;
+    std::atomic<long> del_notification_;
 };
 
 class EvpnTableAutoDiscoveryTest : public EvpnTableTest {

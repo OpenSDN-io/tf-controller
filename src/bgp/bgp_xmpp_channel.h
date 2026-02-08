@@ -10,6 +10,7 @@
 #include <string>
 #include <utility>
 #include <mutex>
+#include <atomic>
 
 #include <boost/function.hpp>
 #include <boost/system/error_code.hpp>
@@ -73,12 +74,12 @@ public:
             table_unsubscribe = 0;
             table_unsubscribe_complete = 0;
         }
-         tbb::atomic<uint64_t> instance_subscribe;
-         tbb::atomic<uint64_t> instance_unsubscribe;
-         tbb::atomic<uint64_t> table_subscribe;
-         tbb::atomic<uint64_t> table_subscribe_complete;
-         tbb::atomic<uint64_t> table_unsubscribe;
-         tbb::atomic<uint64_t> table_unsubscribe_complete;
+        tbb::atomic<uint64_t> instance_subscribe;
+        tbb::atomic<uint64_t> instance_unsubscribe;
+        tbb::atomic<uint64_t> table_subscribe;
+        tbb::atomic<uint64_t> table_subscribe_complete;
+        tbb::atomic<uint64_t> table_unsubscribe;
+        tbb::atomic<uint64_t> table_unsubscribe_complete;
     };
 
     struct ErrorStats {
@@ -97,10 +98,10 @@ public:
         uint64_t get_inet6_rx_bad_nexthop_count() const;
         uint64_t get_inet6_rx_bad_afi_safi_count() const;
 
-         tbb::atomic<uint64_t> inet6_rx_bad_xml_token_count;
-         tbb::atomic<uint64_t> inet6_rx_bad_prefix_count;
-         tbb::atomic<uint64_t> inet6_rx_bad_nexthop_count;
-         tbb::atomic<uint64_t> inet6_rx_bad_afi_safi_count;
+        tbb::atomic<uint64_t> inet6_rx_bad_xml_token_count;
+        tbb::atomic<uint64_t> inet6_rx_bad_prefix_count;
+        tbb::atomic<uint64_t> inet6_rx_bad_nexthop_count;
+        tbb::atomic<uint64_t> inet6_rx_bad_afi_safi_count;
     };
 
     explicit BgpXmppChannel(XmppChannel *channel, BgpServer *bgp_server = NULL,
@@ -442,7 +443,7 @@ public:
     XmppServer *xmpp_server() { return xmpp_server_; }
     const XmppServer *xmpp_server() const { return xmpp_server_; }
     uint64_t get_subscription_gen_id() {
-        return subscription_gen_id_.fetch_and_increment();
+        return subscription_gen_id_.fetch_add(1);
     }
     bool CollectStats(BgpRouterState *state, bool first) const;
 
@@ -467,9 +468,9 @@ private:
     int asn_listener_id_;
     int identifier_listener_id_;
     int dscp_listener_id_;
-    tbb::atomic<int32_t> deleting_count_;
+    std::atomic<int32_t> deleting_count_;
     // Generation number for subscription tracking
-    tbb::atomic<uint64_t> subscription_gen_id_;
+    std::atomic<uint64_t> subscription_gen_id_;
 
     DISALLOW_COPY_AND_ASSIGN(BgpXmppChannelManager);
 };

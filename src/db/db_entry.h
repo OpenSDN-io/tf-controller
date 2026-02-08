@@ -6,8 +6,7 @@
 #define ctrlplane_db_entry_h
 
 #include <map>
-
-#include <tbb/atomic.h>
+#include <atomic>
 
 #include "db/db_table.h"
 
@@ -53,11 +52,11 @@ public:
     bool is_onlist() { return (flags & Onlist); }
 
     void SetOnRemoveQ() {
-        onremoveq_.fetch_and_store(true);
+        onremoveq_.exchange(true);
     }
     bool IsOnRemoveQ() { return (onremoveq_); }
     void ClearOnRemoveQ() {
-        onremoveq_.fetch_and_store(false);
+        onremoveq_.exchange(false);
     }
 
     //member hook in change list
@@ -84,7 +83,7 @@ private:
     DBTablePartBase *tpart_;
     StateMap state_;
     uint8_t flags;
-    tbb::atomic<bool> onremoveq_;
+    std::atomic<bool> onremoveq_;
     uint64_t last_change_at_; // time at which entry was last 'changed'
     uint64_t last_update_at_; // time at which entry was last 'updated'
     DISALLOW_COPY_AND_ASSIGN(DBEntryBase);

@@ -7,11 +7,11 @@
 
 #include <boost/array.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/atomic.h>
 
 #include <set>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "base/parse_object.h"
 #include "base/util.h"
@@ -77,21 +77,21 @@ private:
 
     void Prepend(const OriginVnValue &value);
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     OriginVnPathDB *ovnpath_db_;
     OriginVnList origin_vns_;
 };
 
 inline int intrusive_ptr_add_ref(const OriginVnPath *covnpath) {
-    return covnpath->refcount_.fetch_and_increment();
+    return covnpath->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const OriginVnPath *covnpath) {
-    return covnpath->refcount_.fetch_and_decrement();
+    return covnpath->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const OriginVnPath *covnpath) {
-    int prev = covnpath->refcount_.fetch_and_decrement();
+    int prev = covnpath->refcount_.fetch_sub(1);
     if (prev == 1) {
         OriginVnPath *ovnpath = const_cast<OriginVnPath *>(covnpath);
         ovnpath->Remove();

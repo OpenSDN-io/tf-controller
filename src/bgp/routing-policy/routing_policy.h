@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 #include <mutex>
+#include <atomic>
 
 #include "base/lifetime.h"
 #include "base/util.h"
@@ -275,18 +276,18 @@ private:
     LifetimeRef<RoutingPolicy> manager_delete_ref_;
 
     // Updated when routing policy undergoes a change
-    tbb::atomic<uint32_t> refcount_;
+    std::atomic<uint32_t> refcount_;
     uint32_t generation_;
     RoutingPolicyTermList terms_;
 };
 
 inline void intrusive_ptr_add_ref(RoutingPolicy *policy) {
-    policy->refcount_.fetch_and_increment();
+    policy->refcount_++;
     return;
 }
 
 inline void intrusive_ptr_release(RoutingPolicy *policy) {
-    int prev = policy->refcount_.fetch_and_decrement();
+    int prev = policy->refcount_.fetch_sub(1);
     if (prev == 1) {
         if (policy->MayDelete())
             policy->RetryDelete();

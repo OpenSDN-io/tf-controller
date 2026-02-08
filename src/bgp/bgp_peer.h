@@ -14,6 +14,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "base/lifetime.h"
 #include "base/util.h"
@@ -515,7 +516,7 @@ private:
     uint32_t cluster_id_;
     OriginOverride origin_override_;
 
-    tbb::atomic<int> membership_req_pending_;
+    std::atomic<int> membership_req_pending_;
     bool defer_close_;
     bool graceful_close_;
     bool as4_supported_;
@@ -537,8 +538,8 @@ private:
     boost::scoped_ptr<PeerStats> peer_stats_;
     boost::scoped_ptr<DeleteActor> deleter_;
     LifetimeRef<BgpPeer> instance_delete_ref_;
-    mutable tbb::atomic<int> total_path_count_;
-    mutable tbb::atomic<int> primary_path_count_;
+    mutable std::atomic<int> total_path_count_;
+    mutable std::atomic<int> primary_path_count_;
     uint64_t flap_count_;
     uint64_t total_flap_count_;
     uint64_t last_flap_;

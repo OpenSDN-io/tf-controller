@@ -7,7 +7,6 @@
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <tbb/atomic.h>
 #include <tbb/spin_rw_mutex.h>
 
 #include <list>
@@ -15,6 +14,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "base/lifetime.h"
 #include "base/queue_task.h"
@@ -213,8 +213,8 @@ private:
     Walker *walker() { return walker_.get(); }
 
     BgpServer *server_;
-    tbb::atomic<uint64_t> current_jobs_count_;
-    tbb::atomic<uint64_t> total_jobs_count_;
+    std::atomic<uint64_t> current_jobs_count_;
+    std::atomic<uint64_t> total_jobs_count_;
     RibStateMap rib_state_map_;
     PeerStateMap peer_state_map_;
     boost::scoped_ptr<Walker> walker_;

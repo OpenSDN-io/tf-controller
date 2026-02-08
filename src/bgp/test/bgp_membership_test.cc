@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2016 Juniper Networks, Inc. All rights reserved.
  */
+
+#include <atomic>
+
 #include <boost/scoped_ptr.hpp>
 #include <boost/uuid/random_generator.hpp>
-#include <tbb/atomic.h>
 
 #include "base/task_annotations.h"
 #include "control-node/control_node.h"
@@ -19,7 +21,6 @@ using boost::scoped_ptr;
 using std::ostringstream;
 using std::string;
 using std::vector;
-using tbb::atomic;
 
 static int gbl_index;
 
@@ -60,7 +61,7 @@ public:
 private:
     RibExportPolicy policy_;
     int index_;
-    atomic<uint64_t> path_cb_count_;
+    std::atomic<uint64_t> path_cb_count_;
     std::string to_str_;
 };
 

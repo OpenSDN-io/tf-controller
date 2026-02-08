@@ -12,6 +12,7 @@
 #include <list>
 #include <set>
 #include <vector>
+#include <atomic>
 
 #include "base/lifetime.h"
 #include "base/task_trigger.h"
@@ -400,7 +401,7 @@ private:
     RoutesSet smet_routes_;
     StatesMap *states_;
     EvpnManager *manager_;
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
 
     DISALLOW_COPY_AND_ASSIGN(EvpnState);
 };
@@ -740,7 +741,7 @@ private:
     ErmVpnTable *ermvpn_table_;
     int listener_id_;
     int ermvpn_listener_id_;
-    tbb::atomic<int> db_states_count_;
+    std::atomic<int> db_states_count_;
     PartitionList partitions_;
     tbb::spin_rw_mutex segment_rw_mutex_;
     SegmentMap segment_map_;
@@ -757,7 +758,7 @@ private:
 
 /// @brief Increment refcont atomically.
 inline void intrusive_ptr_add_ref(EvpnState *evpn_state) {
-    evpn_state->refcount_.fetch_and_increment();
+    evpn_state->refcount_.fetch_add(1);
 }
 
 /// @brief Decrement refcount of an evpn_state. If the refcount falls to 1, it implies
@@ -765,7 +766,7 @@ inline void intrusive_ptr_add_ref(EvpnState *evpn_state) {
 /// structure. Hence, it can be deleted from the container map and destroyed as
 /// well.
 inline void intrusive_ptr_release(EvpnState *evpn_state) {
-    int prev = evpn_state->refcount_.fetch_and_decrement();
+    int prev = evpn_state->refcount_.fetch_sub(1);
     if (prev > 1)
         return;
     if (evpn_state->states()) {

@@ -2,8 +2,9 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include "bgp/l3vpn/inetvpn_table.h"
+#include <atomic>
 
+#include "bgp/l3vpn/inetvpn_table.h"
 
 #include "base/test/task_test_util.h"
 #include "bgp/bgp_config.h"
@@ -105,8 +106,8 @@ protected:
     DBTableBase::ListenerId tid_;
     std::unique_ptr<BgpInstanceConfig> master_cfg_;
 
-    tbb::atomic<long> adc_notification_;
-    tbb::atomic<long> del_notification_;
+    std::atomic<long> adc_notification_;
+    std::atomic<long> del_notification_;
 };
 
 TEST_F(InetVpnTableTest, AllocEntryStr) {

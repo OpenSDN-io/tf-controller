@@ -12,8 +12,8 @@
 #include <set>
 #include <string>
 #include <mutex>
+#include <atomic>
 
-#include <tbb/atomic.h>
 #include "base/util.h"
 
 class BgpRoute;
@@ -81,15 +81,15 @@ private:
     std::mutex mutex_;
     uint32_t num_matchstate_;
 
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
 };
 
 inline void intrusive_ptr_add_ref(ConditionMatch *match) {
-    match->refcount_.fetch_and_increment();
+    match->refcount_.fetch_add(1);
 }
 
 inline void intrusive_ptr_release(ConditionMatch *match) {
-    int prev = match->refcount_.fetch_and_decrement();
+    int prev = match->refcount_.fetch_sub(1);
     if (prev == 1) {
         delete match;
     }

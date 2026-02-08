@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <atomic>
 #include <boost/scoped_ptr.hpp>
 
 #include "base/lifetime.h"
@@ -202,7 +203,7 @@ private:
     ErmVpnTable *ermvpn_table_;
     int listener_id_;
     int identifier_listener_id_;
-    tbb::atomic<int> db_states_count_;
+    std::atomic<int> db_states_count_;
     PartitionList partitions_;
 
     NeighborMap neighbors_;
@@ -319,7 +320,7 @@ private:
     RoutesMap leafad_routes_attr_received_;
     StatesMap *states_;
     MvpnProjectManager *project_manager_;
-    tbb::atomic<int> refcount_;
+    std::atomic<int> refcount_;
 
     DISALLOW_COPY_AND_ASSIGN(MvpnState);
 };
@@ -460,7 +461,7 @@ private:
 
 // Increment refcont atomically.
 inline void intrusive_ptr_add_ref(MvpnState *mvpn_state) {
-    mvpn_state->refcount_.fetch_and_increment();
+    mvpn_state->refcount_.fetch_add(1);
 }
 
 // Decrement refcount of an mvpn_state. If the refcount falls to 1, it implies
@@ -468,7 +469,7 @@ inline void intrusive_ptr_add_ref(MvpnState *mvpn_state) {
 // structure. Hence, it can be deleted from the container map and destroyed as
 // well.
 inline void intrusive_ptr_release(MvpnState *mvpn_state) {
-    int prev = mvpn_state->refcount_.fetch_and_decrement();
+    int prev = mvpn_state->refcount_.fetch_sub(1);
     if (prev > 1)
         return;
     if (mvpn_state->states()) {

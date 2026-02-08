@@ -3,6 +3,8 @@
  */
 
 #include <vector>
+#include <atomic>
+
 #include <tbb/atomic.h>
 #include <tbb/spin_rw_mutex.h>
 
@@ -279,7 +281,7 @@ public:
 
     DBTable *table_;
     // check whether iteration is completed on all Table Partition
-    tbb::atomic<uint16_t> pending_workers_;
+    std::atomic<uint16_t> pending_workers_;
     // For debugging purpose. Few of the tasks in this list could has finished
     // executing and destroyed. List of workers are useful in debugging with
     // gdb/gcore to see the current state of the walk and walk_context
@@ -325,7 +327,7 @@ bool DBTable::WalkWorker::Run() {
 
 walk_done:
     // Check whether all other walks on the table is completed
-    long num_walkers_on_tpart = walker_->pending_workers_.fetch_and_decrement();
+    long num_walkers_on_tpart = walker_->pending_workers_.fetch_sub(1);
     if (num_walkers_on_tpart == 1) {
         table->WalkDone();
     }

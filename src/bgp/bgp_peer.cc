@@ -571,16 +571,16 @@ BgpPeer::BgpPeer(BgpServer *server, RoutingInstance *instance,
             family < Address::NUM_FAMILIES;
             family = static_cast<Address::Family>(family + 1)) {
         family_primary_path_count_[family] = 0;
-         eor_send_timer_[family] =
-             TimerManager::CreateTimer(*server->ioservice(),
-                 "BGP EoR Send timer for " + Address::FamilyToString(family),
-                 TaskScheduler::GetInstance()->GetTaskId("bgp::StateMachine"),
-                 GetTaskInstance());
-         eor_receive_timer_[family] =
-             TimerManager::CreateTimer(*server->ioservice(),
-                 "BGP EoR Receive timer for " + Address::FamilyToString(family),
-                 TaskScheduler::GetInstance()->GetTaskId("bgp::StateMachine"),
-                 GetTaskInstance());
+        eor_send_timer_[family] =
+            TimerManager::CreateTimer(*server->ioservice(),
+                "BGP EoR Send timer for " + Address::FamilyToString(family),
+                TaskScheduler::GetInstance()->GetTaskId("bgp::StateMachine"),
+                GetTaskInstance());
+        eor_receive_timer_[family] =
+            TimerManager::CreateTimer(*server->ioservice(),
+                "BGP EoR Receive timer for " + Address::FamilyToString(family),
+                TaskScheduler::GetInstance()->GetTaskId("bgp::StateMachine"),
+                GetTaskInstance());
     }
 
     total_path_count_ = 0;

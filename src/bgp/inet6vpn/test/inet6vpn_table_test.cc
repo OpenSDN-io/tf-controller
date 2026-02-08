@@ -2,6 +2,8 @@
  * Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
+
 #include "bgp/inet6vpn/inet6vpn_table.h"
 
 #include <boost/format.hpp>
@@ -102,8 +104,8 @@ protected:
     DBTableBase::ListenerId tid_;
     boost::scoped_ptr<BgpInstanceConfig> master_cfg_;
 
-    tbb::atomic<long> adc_notification_;
-    tbb::atomic<long> del_notification_;
+    std::atomic<long> adc_notification_;
+    std::atomic<long> del_notification_;
 };
 
 TEST_F(Inet6VpnTableTest, AddDeleteOneRoute) {

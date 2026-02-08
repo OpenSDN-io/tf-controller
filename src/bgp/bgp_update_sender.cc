@@ -9,6 +9,7 @@
 
 #include <map>
 #include <string>
+#include <atomic>
 
 #include "base/task_annotations.h"
 #include "bgp/ipeer.h"
@@ -230,7 +231,7 @@ private:
     BitSet rib_bitset_;     // bitset of RibOuts advertised by the peer
     vector<int> qactive_cnt_;
     bool in_sync_;          // whether the peer may dequeue tail markers.
-    tbb::atomic<bool> send_ready_;    // whether the peer may send updates.
+    std::atomic<bool> send_ready_;    // whether the peer may send updates.
     size_t rib_iterator_;   // index of last processed rib.
 
     DISALLOW_COPY_AND_ASSIGN(PeerState);

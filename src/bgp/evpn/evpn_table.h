@@ -5,6 +5,7 @@
 #ifndef SRC_BGP_EVPN_EVPN_TABLE_H_
 #define SRC_BGP_EVPN_EVPN_TABLE_H_
 
+#include <atomic>
 #include <string>
 
 #include "bgp/bgp_config_ifmap.h"
@@ -71,10 +72,10 @@ private:
                          const ExtCommunityPtr community,
                          const  EvpnPrefix &evpn_prefix) const;
     EvpnManager *evpn_manager_;
-    mutable tbb::atomic<uint64_t> mac_route_count_;
-    mutable tbb::atomic<uint64_t> unique_mac_route_count_;
-    mutable tbb::atomic<uint64_t> im_route_count_;
-    mutable tbb::atomic<uint64_t> ip_route_count_;
+    mutable std::atomic<uint64_t> mac_route_count_;
+    mutable std::atomic<uint64_t> unique_mac_route_count_;
+    mutable std::atomic<uint64_t> im_route_count_;
+    mutable std::atomic<uint64_t> ip_route_count_;
 
     DISALLOW_COPY_AND_ASSIGN(EvpnTable);
 };

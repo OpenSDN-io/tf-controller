@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <atomic>
 
 #include "base/lifetime.h"
 #include "bgp/bgp_rib_policy.h"
@@ -220,11 +221,11 @@ private:
 
     boost::scoped_ptr<DeleteActor> deleter_;
     LifetimeRef<BgpTable> instance_delete_ref_;
-    tbb::atomic<uint64_t> primary_path_count_;
-    tbb::atomic<uint64_t> secondary_path_count_;
-    tbb::atomic<uint64_t> infeasible_path_count_;
-    tbb::atomic<uint64_t> stale_path_count_;
-    tbb::atomic<uint64_t> llgr_stale_path_count_;
+    std::atomic<uint64_t> primary_path_count_;
+    std::atomic<uint64_t> secondary_path_count_;
+    std::atomic<uint64_t> infeasible_path_count_;
+    std::atomic<uint64_t> stale_path_count_;
+    std::atomic<uint64_t> llgr_stale_path_count_;
 
     DISALLOW_COPY_AND_ASSIGN(BgpTable);
 };

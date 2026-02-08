@@ -5,6 +5,7 @@
 
 #include <boost/foreach.hpp>
 #include <fstream>
+#include <atomic>
 
 #include "base/task_annotations.h"
 #include "bgp/inet/inet_table.h"
@@ -211,7 +212,7 @@ protected:
     DBTableBase::ListenerId green_l_;
     DBTableBase::ListenerId orange_l_;
 
-    std::map<DBTableBase *, tbb::atomic<int> > notification_count_;
+    std::map<DBTableBase *, std::atomic<int> > notification_count_;
 };
 
 namespace {

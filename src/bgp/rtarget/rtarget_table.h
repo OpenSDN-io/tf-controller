@@ -5,6 +5,7 @@
 #ifndef SRC_BGP_RTARGET_RTARGET_TABLE_H_
 #define SRC_BGP_RTARGET_RTARGET_TABLE_H_
 
+#include <atomic>
 #include <string>
 
 #include "bgp/bgp_attr.h"
@@ -51,7 +52,7 @@ private:
                                 const DBRequestKey *prefix);
     void AddRemoveCallback(const DBEntryBase *entry, bool add) const;
 
-    mutable tbb::atomic<time_t> last_updated_;
+    mutable std::atomic<time_t> last_updated_;
 
     DISALLOW_COPY_AND_ASSIGN(RTargetTable);
 };

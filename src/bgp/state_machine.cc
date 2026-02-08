@@ -13,6 +13,7 @@
 #include <list>
 #include <string>
 #include <typeinfo>
+#include <atomic>
 
 #include "base/task_annotations.h"
 #include "bgp/bgp_log.h"
@@ -1688,8 +1689,8 @@ const std::string StateMachine::last_notification_out_error() const {
 // Return the configured hold time in seconds.
 //
 int StateMachine::GetConfiguredHoldTime() const {
-    static tbb::atomic<bool> env_checked = tbb::atomic<bool>();
-    static tbb::atomic<int> env_hold_time = tbb::atomic<int>();
+    static std::atomic<bool> env_checked = std::atomic<bool>();
+    static std::atomic<int> env_hold_time = std::atomic<int>();
 
     // For testing only - configure through environment variable.
     if (!env_checked) {

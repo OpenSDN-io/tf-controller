@@ -4,7 +4,7 @@
 
 #include "db/db_table_walker.h"
 
-#include <tbb/atomic.h>
+#include <atomic>
 
 #include "base/logging.h"
 #include "base/task.h"
@@ -23,7 +23,7 @@ public:
 
     void StopWalk() {
         assert(workers_.empty());
-        should_stop_.fetch_and_store(true);
+        should_stop_.exchange(true);
     }
 
     // Test only - resume walk that was postponed at creation.
@@ -52,10 +52,10 @@ public:
     WalkCompleteFn done_fn_;
 
     // Will be true if Table walk is cancelled
-    tbb::atomic<bool> should_stop_;
+    std::atomic<bool> should_stop_;
 
     // check whether iteration is completed on all Table Partition
-    tbb::atomic<long> status_;
+    std::atomic<long> status_;
 
     std::vector<Task *> workers_;
     int task_id() const { return wkmgr_->task_id(); }
@@ -159,7 +159,7 @@ bool DBTableWalker::Worker::Run() {
 
 walk_done:
     // Check whether all other walks on the table is completed
-    long num_walkers_on_tpart = walker_->status_.fetch_and_decrement();
+    long num_walkers_on_tpart = walker_->status_.fetch_sub(1);
     if (num_walkers_on_tpart == 1) {
         if (walker_->should_stop_) {
             walker_->table_->incr_walk_cancel_count();

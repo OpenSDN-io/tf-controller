@@ -10,6 +10,7 @@
 #include <limits>
 #include <sstream>
 #include <vector>
+#include <atomic>
 
 #include "base/regex.h"
 #include "base/task_annotations.h"
@@ -417,8 +418,8 @@ private:
 
     BgpServer *server_;
     BgpXmppChannel *parent_;
-    mutable tbb::atomic<int> total_path_count_;
-    mutable tbb::atomic<int> primary_path_count_;
+    mutable std::atomic<int> total_path_count_;
+    mutable std::atomic<int> primary_path_count_;
     bool is_closed_;
     bool send_ready_;
     uint64_t closed_at_;

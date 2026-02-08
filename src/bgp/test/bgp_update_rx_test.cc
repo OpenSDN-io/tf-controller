@@ -2,6 +2,7 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
 
 #include <boost/assign/list_of.hpp>
 
@@ -104,8 +105,8 @@ protected:
         peer_ = master_->peer_manager()->PeerLocate(&server_, &nbr_config);
     }
 
-    tbb::atomic<long> adc_notification_;
-    tbb::atomic<long> del_notification_;
+    std::atomic<long> adc_notification_;
+    std::atomic<long> del_notification_;
 
     EventManager evm_;
     BgpServer server_;

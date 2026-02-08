@@ -4,6 +4,7 @@
 
 #include "xmpp/xmpp_state_machine.h"
 
+#include <atomic>
 #include <typeinfo>
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -1207,8 +1208,8 @@ void XmppStateMachine::CancelOpenTimer() {
 }
 
 int XmppStateMachine::GetConfiguredHoldTime() const {
-    static tbb::atomic<bool> env_checked = tbb::atomic<bool>();
-    static tbb::atomic<int> env_hold_time = tbb::atomic<int>();
+    static std::atomic<bool> env_checked = std::atomic<bool>();
+    static std::atomic<int> env_hold_time = std::atomic<int>();
 
     // For testing only - configure through environment variable.
     if (!env_checked) {

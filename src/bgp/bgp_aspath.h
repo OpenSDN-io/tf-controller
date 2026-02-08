@@ -6,8 +6,8 @@
 #define SRC_BGP_BGP_ASPATH_H_
 
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/atomic.h>
 
+#include <atomic>
 #include <algorithm>
 #include <set>
 #include <string>
@@ -139,21 +139,21 @@ private:
     friend int intrusive_ptr_del_ref(const AsPath *cpath);
     friend void intrusive_ptr_release(const AsPath *cpath);
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     AsPathDB *aspath_db_;
     AsPathSpec path_;
 };
 
 inline int intrusive_ptr_add_ref(const AsPath *cpath) {
-    return cpath->refcount_.fetch_and_increment();
+    return cpath->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const AsPath *cpath) {
-    return cpath->refcount_.fetch_and_decrement();
+    return cpath->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const AsPath *cpath) {
-    int prev = cpath->refcount_.fetch_and_decrement();
+    int prev = cpath->refcount_.fetch_sub(1);
     if (prev == 1) {
         AsPath *path = const_cast<AsPath *>(cpath);
         path->Remove();
@@ -297,21 +297,21 @@ private:
     friend int intrusive_ptr_del_ref(const AsPath4Byte *cpath);
     friend void intrusive_ptr_release(const AsPath4Byte *cpath);
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     AsPath4ByteDB *aspath_db_;
     AsPath4ByteSpec path_;
 };
 
 inline int intrusive_ptr_add_ref(const AsPath4Byte *cpath) {
-    return cpath->refcount_.fetch_and_increment();
+    return cpath->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const AsPath4Byte *cpath) {
-    return cpath->refcount_.fetch_and_decrement();
+    return cpath->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const AsPath4Byte *cpath) {
-    int prev = cpath->refcount_.fetch_and_decrement();
+    int prev = cpath->refcount_.fetch_sub(1);
     if (prev == 1) {
         AsPath4Byte *path = const_cast<AsPath4Byte *>(cpath);
         path->Remove();
@@ -455,21 +455,21 @@ private:
     friend int intrusive_ptr_del_ref(const As4Path *cpath);
     friend void intrusive_ptr_release(const As4Path *cpath);
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     As4PathDB *aspath_db_;
     As4PathSpec path_;
 };
 
 inline int intrusive_ptr_add_ref(const As4Path *cpath) {
-    return cpath->refcount_.fetch_and_increment();
+    return cpath->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const As4Path *cpath) {
-    return cpath->refcount_.fetch_and_decrement();
+    return cpath->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const As4Path *cpath) {
-    int prev = cpath->refcount_.fetch_and_decrement();
+    int prev = cpath->refcount_.fetch_sub(1);
     if (prev == 1) {
         As4Path *path = const_cast<As4Path *>(cpath);
         path->Remove();

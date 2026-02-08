@@ -5,12 +5,12 @@
 #ifndef ctrlplane_db_table_h
 #define ctrlplane_db_table_h
 
+#include <atomic>
 #include <memory>
 #include <vector>
 #include <unistd.h>
 #include <boost/function.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <tbb/atomic.h>
 
 #include "base/util.h"
 
@@ -149,12 +149,12 @@ private:
     uint64_t enqueue_count_;
     uint64_t input_count_;
     uint64_t notify_count_;
-    tbb::atomic<uint64_t> walker_count_;
-    tbb::atomic<uint64_t> walk_count_;
-    tbb::atomic<uint64_t> walk_request_count_;
-    tbb::atomic<uint64_t> walk_complete_count_;
-    tbb::atomic<uint64_t> walk_cancel_count_;
-    tbb::atomic<uint64_t> walk_again_count_;
+    std::atomic<uint64_t> walker_count_;
+    std::atomic<uint64_t> walk_count_;
+    std::atomic<uint64_t> walk_request_count_;
+    std::atomic<uint64_t> walk_complete_count_;
+    std::atomic<uint64_t> walk_cancel_count_;
+    std::atomic<uint64_t> walk_again_count_;
 };
 
 // An implementation of DBTableBase that uses boost::set as data-store
@@ -407,19 +407,19 @@ private:
     DBTable *table_;
     DBTable::WalkFn walk_fn_;
     DBTable::WalkCompleteFn walk_complete_;
-    tbb::atomic<WalkState> walk_state_;
-    tbb::atomic<bool> walk_again_;
-    tbb::atomic<int> refcount_;
+    std::atomic<WalkState> walk_state_;
+    std::atomic<bool> walk_again_;
+    std::atomic<int> refcount_;
 
     DISALLOW_COPY_AND_ASSIGN(DBTableWalk);
 };
 
 inline void intrusive_ptr_add_ref(DBTableWalk *walker) {
-    walker->refcount_.fetch_and_increment();
+    walker->refcount_.fetch_add(1);
 }
 
 inline void intrusive_ptr_release(DBTableWalk *walker) {
-    int prev = walker->refcount_.fetch_and_decrement();
+    int prev = walker->refcount_.fetch_sub(1);
     if (prev == 1) {
         DBTable *table = walker->table();
         delete walker;

@@ -2,6 +2,8 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
+#include <atomic>
+
 #include "base/task_annotations.h"
 #include "bgp/bgp_config_parser.h"
 #include "bgp/bgp_factory.h"
@@ -297,8 +299,8 @@ protected:
     BgpSessionManagerCustom *a_session_manager_;
     BgpSessionManagerCustom *b_session_manager_;
     BgpSessionManagerCustom *c_session_manager_;
-    tbb::atomic<long> a_asn_update_notification_cnt_;
-    tbb::atomic<long> b_asn_update_notification_cnt_;
+    std::atomic<long> a_asn_update_notification_cnt_;
+    std::atomic<long> b_asn_update_notification_cnt_;
     as_t a_old_as_;
     as_t b_old_as_;
     as_t a_old_local_as_;

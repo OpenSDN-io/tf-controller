@@ -7,7 +7,7 @@
 #include <boost/bind.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <tbb/atomic.h>
+#include <atomic>
 
 #include "db/db.h"
 #include "db/db_table.h"
@@ -191,7 +191,7 @@ protected:
     TaskScheduler *scheduler_;
 };
 
-tbb::atomic<uint32_t> scale_count_;
+std::atomic<uint32_t> scale_count_;
 class ScaleTask : public Task {
 public:
     ScaleTask(VlanTable *table, bool use_key, bool do_lock, int thread_count,

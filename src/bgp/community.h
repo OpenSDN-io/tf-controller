@@ -8,8 +8,8 @@
 #include <boost/array.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/system/error_code.hpp>
-#include <tbb/atomic.h>
 
+#include <atomic>
 #include <set>
 #include <string>
 #include <vector>
@@ -85,21 +85,21 @@ private:
     void Set(const std::vector<uint32_t> &communities);
     void Remove(const std::vector<uint32_t> &communities);
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     CommunityDB *comm_db_;
     std::vector<uint32_t> communities_;
 };
 
 inline int intrusive_ptr_add_ref(const Community *ccomm) {
-    return ccomm->refcount_.fetch_and_increment();
+    return ccomm->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const Community *ccomm) {
-    return ccomm->refcount_.fetch_and_decrement();
+    return ccomm->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const Community *ccomm) {
-    int prev = ccomm->refcount_.fetch_and_decrement();
+    int prev = ccomm->refcount_.fetch_sub(1);
     if (prev == 1) {
         Community *comm = const_cast<Community *>(ccomm);
         comm->Remove();
@@ -424,21 +424,21 @@ private:
     void RemoveSubCluster();
     void Set(const ExtCommunityList &list);
 
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     ExtCommunityDB *extcomm_db_;
     ExtCommunityList communities_;
 };
 
 inline int intrusive_ptr_add_ref(const ExtCommunity *cextcomm) {
-    return cextcomm->refcount_.fetch_and_increment();
+    return cextcomm->refcount_.fetch_add(1);
 }
 
 inline int intrusive_ptr_del_ref(const ExtCommunity *cextcomm) {
-    return cextcomm->refcount_.fetch_and_decrement();
+    return cextcomm->refcount_.fetch_sub(1);
 }
 
 inline void intrusive_ptr_release(const ExtCommunity *cextcomm) {
-    int prev = cextcomm->refcount_.fetch_and_decrement();
+    int prev = cextcomm->refcount_.fetch_sub(1);
     if (prev == 1) {
         ExtCommunity *extcomm = const_cast<ExtCommunity *>(cextcomm);
         extcomm->Remove();
@@ -645,7 +645,7 @@ private:
     void Set(const LargeCommunityList &list);
 
     /// @brief A reference counter, needed for memory management.
-    mutable tbb::atomic<int> refcount_;
+    mutable std::atomic<int> refcount_;
     /// @brief A pointer to the managing LargeCommunityDB.
     LargeCommunityDB *largecomm_db_;
     /// @brief A list of LargeCommunity storing BGP Large Community values.
@@ -654,18 +654,18 @@ private:
 
 /// @brief Increment reference count atomically.
 inline int intrusive_ptr_add_ref(const LargeCommunity *clargecomm) {
-    return clargecomm->refcount_.fetch_and_increment();
+    return clargecomm->refcount_.fetch_add(1);
 }
 
 /// @brief Decrement reference count of given large community.
 inline int intrusive_ptr_del_ref(const LargeCommunity *clargecomm) {
-    return clargecomm->refcount_.fetch_and_decrement();
+    return clargecomm->refcount_.fetch_sub(1);
 }
 
 /// @brief Release a LargeCommunity instance when the reference count reaches
 /// zero.
 inline void intrusive_ptr_release(const LargeCommunity *clargecomm) {
-    int prev = clargecomm->refcount_.fetch_and_decrement();
+    int prev = clargecomm->refcount_.fetch_sub(1);
     if (prev == 1) {
         LargeCommunity *largecomm = const_cast<LargeCommunity *>(clargecomm);
         largecomm->Remove();

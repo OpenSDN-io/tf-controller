@@ -7,6 +7,7 @@
 
 #include <list>
 #include <string>
+#include <atomic>
 
 #include "base/timer.h"
 #include "base/util.h"
@@ -225,7 +226,7 @@ private:
     MembershipState membership_state_;
     IPeerClose::Families families_;
     Stats stats_;
-    tbb::atomic<int> membership_req_pending_;
+    std::atomic<int> membership_req_pending_;
 };
 
 #endif  // SRC_BGP_PEER_CLOSE_MANAGER_H_
