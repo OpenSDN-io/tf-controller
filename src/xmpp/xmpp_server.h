@@ -30,14 +30,12 @@ class XmppConnectionEndpoint;
 class XmppConfigUpdater;
 class XmppServerConnection;
 
-typedef std::shared_mutex Lock;
-typedef std::unique_lock<Lock>  WriteLock;
-typedef std::shared_lock<Lock>  ReadLock;
-
 // Class to represent Xmpp Server
 class XmppServer : public XmppConnectionManager {
 public:
     typedef boost::asio::ip::tcp::endpoint Endpoint;
+    typedef std::unique_lock<std::shared_mutex> WriteLock;
+    typedef std::shared_lock<std::shared_mutex> ReadLock;
 
     XmppServer(EventManager *evm, const std::string &server_addr,
                const XmppChannelConfig *config);
@@ -115,7 +113,7 @@ protected:
     virtual SslSession *AllocSession(SslSocket *socket);
     virtual bool AcceptSession(TcpSession *session);
 
-    mutable Lock connection_map_mutex_;
+    mutable std::shared_mutex connection_map_mutex_;
     typedef std::map<Endpoint, XmppServerConnection *> ConnectionMap;
     ConnectionMap connection_map_;
 

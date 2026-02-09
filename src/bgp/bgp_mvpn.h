@@ -5,13 +5,13 @@
 #ifndef SRC_BGP_BGP_MVPN_H_
 #define SRC_BGP_BGP_MVPN_H_
 
-#include <tbb/reader_writer_lock.h>
 #include <map>
 #include <set>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <atomic>
+#include <shared_mutex>
 #include <boost/scoped_ptr.hpp>
 
 #include "base/lifetime.h"
@@ -184,7 +184,7 @@ public:
     LifetimeActor *deleter();
     virtual void UpdateSecondaryTablesForReplication(MvpnRoute *rt,
             BgpTable::TableSet *secondary_tables) const;
-    tbb::reader_writer_lock &neighbors_mutex() { return neighbors_mutex_; }
+    std::shared_mutex &neighbors_mutex() { return neighbors_mutex_; }
 
 private:
     friend class MvpnManagerPartition;
@@ -207,7 +207,7 @@ private:
     PartitionList partitions_;
 
     NeighborMap neighbors_;
-    mutable tbb::reader_writer_lock neighbors_mutex_;
+    mutable std::shared_mutex neighbors_mutex_;
 
     boost::scoped_ptr<DeleteActor> deleter_;
     LifetimeRef<MvpnManager> table_delete_ref_;

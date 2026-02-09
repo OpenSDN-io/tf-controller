@@ -238,7 +238,7 @@ bool MvpnNeighbor::operator==(const MvpnNeighbor &rhs) const {
 
 bool MvpnManager::FindNeighbor(const RouteDistinguisher &rd,
                                MvpnNeighbor *nbr) const {
-    tbb::reader_writer_lock::scoped_lock_read lock(neighbors_mutex_);
+    std::shared_lock<std::shared_mutex> lock(neighbors_mutex_);
     NeighborMap::const_iterator iter = neighbors_.find(rd);
     if (iter != neighbors_.end()) {
         *nbr = iter->second;
@@ -254,7 +254,7 @@ const MvpnManager::NeighborMap &MvpnManager::neighbors() const {
 }
 
 size_t MvpnManager::neighbors_count() const {
-    tbb::reader_writer_lock::scoped_lock_read lock(neighbors_mutex_);
+    std::shared_lock<std::shared_mutex> lock(neighbors_mutex_);
     return neighbors_.size();
 }
 
@@ -712,7 +712,7 @@ void MvpnManager::ProcessType1ADRoute(MvpnRoute *route) {
     if (!route->IsUsable()) {
         if (!found)
             return;
-        tbb::reader_writer_lock::scoped_lock lock(neighbors_mutex_);
+        std::unique_lock<std::shared_mutex> lock(neighbors_mutex_);
         MVPN_LOG(MvpnNeighborDelete, old_neighbor.rd().ToString(),
                  old_neighbor.originator().to_string(),
                  old_neighbor.source_as());
@@ -731,7 +731,7 @@ void MvpnManager::ProcessType1ADRoute(MvpnRoute *route) {
     if (found && old_neighbor == neighbor)
         return;
 
-    tbb::reader_writer_lock::scoped_lock lock(neighbors_mutex_);
+    std::unique_lock<std::shared_mutex> lock(neighbors_mutex_);
     if (found)
         neighbors_.erase(rd);
     neighbors_.insert(make_pair(rd, neighbor));

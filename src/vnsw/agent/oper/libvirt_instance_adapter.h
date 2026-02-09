@@ -9,7 +9,6 @@
 #include <map>
 #include <string>
 
-#include <tbb/tbb.h>
 #include <libvirt/libvirt.h>
 #include <boost/uuid/uuid_io.hpp>
 #include <pugixml/pugixml.hpp>

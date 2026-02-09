@@ -315,8 +315,9 @@ public:
     static void FillMvpnNeighborsInfo(MvpnManagerDetailData *data,
             MvpnTable *table, int inst_id) {
         MvpnManager *tm = table->manager();
-        if (!tm) return;
-        tbb::reader_writer_lock::scoped_lock_read lock(tm->neighbors_mutex());
+        if (!tm)
+            return;
+        std::shared_lock<std::shared_mutex> lock(tm->neighbors_mutex());
 
         BOOST_FOREACH(const MvpnManager::NeighborMap::value_type &val,
                       tm->neighbors()) {

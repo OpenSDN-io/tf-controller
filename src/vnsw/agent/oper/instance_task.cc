@@ -2,7 +2,6 @@
  * Copyright (c) 2014 Juniper Networks, Inc. All right reserved.
  */
 
-#include <tbb/tbb.h>
 #include "oper/instance_task.h"
 #include "base/logging.h"
 #include "io/event_manager.h"
