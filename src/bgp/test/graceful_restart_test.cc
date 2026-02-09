@@ -262,9 +262,9 @@ public:
             PeerCloseManager(peer_close) {
     }
     ~PeerCloseManagerTest() { last_stats_ = stats(); }
-    static Stats &last_stats() { return last_stats_; }
+    static const Stats &last_stats() { return last_stats_; }
     static void reset_last_stats() {
-        memset(&last_stats_, 0, sizeof(PeerCloseManagerTest::last_stats()));
+        last_stats_ = Stats();
     }
 
 private:
@@ -1319,8 +1319,8 @@ void GracefulRestartTest::FireGRTimer(PeerCloseManagerTest *pc, bool is_ready) {
         return;
     }
 
+    uint64_t cur_deletes = 0;
     uint64_t deletes = pc->stats().deletes;
-    PeerCloseManager::Stats stats;
     bool is_xmpp = pc->peer_close()->peer()->IsXmppPeer();
     WaitForIdle();
     PeerCloseManagerTest::reset_last_stats();
@@ -1330,11 +1330,11 @@ void GracefulRestartTest::FireGRTimer(PeerCloseManagerTest *pc, bool is_ready) {
             TaskFire(boost::bind(&GracefulRestartTest::GRTimerCallback,
                                  this, pc), "timer::TimerTask");
         WaitForIdle();
-        stats = is_xmpp ? PeerCloseManagerTest::last_stats() : pc->stats();
-        if (stats.deletes > deletes)
+        cur_deletes = is_xmpp ? PeerCloseManagerTest::last_stats().deletes : pc->stats().deletes;
+        if (cur_deletes > deletes)
             break;
     }
-    EXPECT_GT(stats.deletes, deletes);
+    EXPECT_GT(cur_deletes, deletes);
 }
 
 void GracefulRestartTest::FireGRTimer(BgpPeerTest *peer) {

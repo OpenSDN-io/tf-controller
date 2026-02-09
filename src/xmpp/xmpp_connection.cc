@@ -988,8 +988,9 @@ void XmppConnection::SwapContents(XmppConnection *other) {
     server->SwapXmppConnectionMapEntries(this, other);
     // Swap all other connection related information.
     swap(local_endpoint_, other->local_endpoint_);
-    swap(stats_, other->stats_);
-    swap(error_stats_, other->error_stats_);
+    stats_[0].swap(other->stats_[0]);
+    stats_[1].swap(other->stats_[1]);
+    error_stats_.swap(other->error_stats_);
     swap(last_msg_, other->last_msg_);
     swap(to_, other->to_);
     swap(from_, other->from_);

@@ -5,9 +5,9 @@
 #ifndef __XMPP_CHANNEL_H__
 #define __XMPP_CHANNEL_H__
 
+#include <atomic>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <tbb/atomic.h>
 #include <tbb/spin_mutex.h>
 
 #include "base/timer.h"
@@ -36,10 +36,16 @@ public:
             keepalive = 0;
             update = 0;
         }
-        tbb::atomic<uint32_t> open;
-        tbb::atomic<uint32_t> close;
-        tbb::atomic<uint32_t> keepalive;
-        tbb::atomic<uint32_t> update;
+        void swap(ProtoStats& other) {
+            open.store(other.open.exchange(open));
+            close.store(other.close.exchange(close));
+            keepalive.store(other.keepalive.exchange(keepalive));
+            update.store(other.update.exchange(update));
+        }
+        std::atomic<uint32_t> open;
+        std::atomic<uint32_t> close;
+        std::atomic<uint32_t> keepalive;
+        std::atomic<uint32_t> update;
     };
 
     struct ErrorStats {
@@ -50,11 +56,18 @@ public:
             stream_feature_fail = 0;
             handshake_fail = 0;
         }
-        tbb::atomic<uint32_t> connect_error;
-        tbb::atomic<uint32_t> session_close;
-        tbb::atomic<uint32_t> open_fail;
-        tbb::atomic<uint32_t> stream_feature_fail;
-        tbb::atomic<uint32_t> handshake_fail;
+        void swap(ErrorStats& other) {
+            connect_error.store(other.connect_error.exchange(connect_error));
+            session_close.store(other.session_close.exchange(session_close));
+            open_fail.store(other.open_fail.exchange(open_fail));
+            stream_feature_fail.store(other.stream_feature_fail.exchange(stream_feature_fail));
+            handshake_fail.store(other.handshake_fail.exchange(handshake_fail));
+        }
+        std::atomic<uint32_t> connect_error;
+        std::atomic<uint32_t> session_close;
+        std::atomic<uint32_t> open_fail;
+        std::atomic<uint32_t> stream_feature_fail;
+        std::atomic<uint32_t> handshake_fail;
     };
 
     XmppConnection(TcpServer *server, const XmppChannelConfig *config);
@@ -249,6 +262,7 @@ private:
     XmppStanza::XmppMessage *XmppDecode(const std::string &msg);
     void LogKeepAliveSend();
     int GetTaskInstance(bool is_client) const;
+    void IncProtoStats(unsigned int type);
 
     boost::asio::ip::tcp::endpoint endpoint_;
     boost::asio::ip::tcp::endpoint local_endpoint_;
@@ -274,7 +288,6 @@ private:
     std::unique_ptr<XmppStanza::XmppMessage> last_msg_;
 
     ProtoStats stats_[2];
-    void IncProtoStats(unsigned int type);
     ErrorStats error_stats_;
 
     DISALLOW_COPY_AND_ASSIGN(XmppConnection);

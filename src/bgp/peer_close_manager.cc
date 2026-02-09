@@ -614,8 +614,7 @@ void PeerCloseManager::FillRouteCloseInfo(PeerCloseInfo *close_info) const {
         route_info.set_refreshed(stats_.route_stats[i].refreshed);
         route_info.set_fresh(stats_.route_stats[i].fresh);
         route_info.set_deleted(stats_.route_stats[i].deleted);
-        route_stats[Address::FamilyToString(static_cast<Address::Family>(i))] =
-            route_info;
+        route_stats[Address::FamilyToString(static_cast<Address::Family>(i))] = route_info;
     }
 
     if (!route_stats.empty())

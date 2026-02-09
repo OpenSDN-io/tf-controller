@@ -5,9 +5,9 @@
 #ifndef SRC_BGP_IPEER_H_
 #define SRC_BGP_IPEER_H_
 
+#include <atomic>
 #include "bgp/bgp_proto.h"
 #include "base/address.h"
-#include "tbb/atomic.h"
 
 class DBTablePartBase;
 class BgpPath;
@@ -49,12 +49,12 @@ public:
             update = 0;
             close = 0;
         }
-        tbb::atomic<uint64_t> total;
-        tbb::atomic<uint64_t> open;
-        tbb::atomic<uint64_t> keepalive;
-        tbb::atomic<uint64_t> notification;
-        tbb::atomic<uint64_t> update;
-        tbb::atomic<uint64_t> close;
+        uint64_t total;
+        uint64_t open;
+        uint64_t keepalive;
+        uint64_t notification;
+        uint64_t update;
+        uint64_t close;
     };
 
     struct ErrorStats {
@@ -65,11 +65,11 @@ public:
             open_error = 0;
             update_error = 0;
         }
-        tbb::atomic<uint64_t> connect_error;
-        tbb::atomic<uint64_t> connect_timer;
-        tbb::atomic<uint64_t> hold_timer;
-        tbb::atomic<uint64_t> open_error;
-        tbb::atomic<uint64_t> update_error;
+        uint64_t connect_error;
+        uint64_t connect_timer;
+        uint64_t hold_timer;
+        uint64_t open_error;
+        uint64_t update_error;
     };
 
     struct RxErrorStats {
@@ -79,10 +79,10 @@ public:
             inet6_bad_nexthop_count = 0;
             inet6_bad_afi_safi_count = 0;
         }
-        tbb::atomic<uint64_t> inet6_bad_xml_token_count;
-        tbb::atomic<uint64_t> inet6_bad_prefix_count;
-        tbb::atomic<uint64_t> inet6_bad_nexthop_count;
-        tbb::atomic<uint64_t> inet6_bad_afi_safi_count;
+        uint64_t inet6_bad_xml_token_count;
+        uint64_t inet6_bad_prefix_count;
+        uint64_t inet6_bad_nexthop_count;
+        uint64_t inet6_bad_afi_safi_count;
     };
 
     struct RxRouteStats {
@@ -90,8 +90,8 @@ public:
             total_path_count = 0;
             primary_path_count = 0;
         }
-        tbb::atomic<uint64_t> total_path_count;
-        tbb::atomic<uint64_t> primary_path_count;
+        uint64_t total_path_count;
+        uint64_t primary_path_count;
     };
 
     struct UpdateStats {
@@ -101,10 +101,10 @@ public:
             reach = 0;
             unreach = 0;
         }
-        tbb::atomic<uint64_t> end_of_rib;
-        tbb::atomic<uint64_t> total;
-        tbb::atomic<uint64_t> reach;
-        tbb::atomic<uint64_t> unreach;
+        uint64_t end_of_rib;
+        uint64_t total;
+        uint64_t reach;
+        uint64_t unreach;
     };
 
     struct SocketStats {

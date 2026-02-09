@@ -144,6 +144,17 @@ private:
                 return staled || llgr_staled || refreshed || fresh || deleted;
             }
 
+            RouteStats& operator=(const RouteStats& other) {
+                if (this != &other) {
+                    staled.store(other.staled);
+                    llgr_staled.store(other.llgr_staled);
+                    refreshed.store(other.refreshed);
+                    fresh.store(other.fresh);
+                    deleted.store(other.deleted);
+                }
+                return *this;
+            }
+
             void reset() {
                 staled = 0;
                 llgr_staled = 0;
@@ -152,11 +163,11 @@ private:
                 deleted = 0;
             }
 
-            tbb::atomic<uint64_t> staled;
-            tbb::atomic<uint64_t> llgr_staled;
-            tbb::atomic<uint64_t> refreshed;
-            tbb::atomic<uint64_t> fresh;
-            tbb::atomic<uint64_t> deleted;
+            std::atomic<uint64_t> staled;
+            std::atomic<uint64_t> llgr_staled;
+            std::atomic<uint64_t> refreshed;
+            std::atomic<uint64_t> fresh;
+            std::atomic<uint64_t> deleted;
         };
 
         void ResetRouteStats() {

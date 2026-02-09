@@ -193,16 +193,16 @@ public:
     }
 
     virtual void GetRxRouteUpdateStats(UpdateStats *stats)  const {
-        stats->reach = parent_->stats_[RX].reach;
-        stats->unreach = parent_->stats_[RX].unreach;
-        stats->end_of_rib = parent_->stats_[RX].end_of_rib;
+        stats->reach = parent_->stats_[RX].reach.load();
+        stats->unreach = parent_->stats_[RX].unreach.load();
+        stats->end_of_rib = parent_->stats_[RX].end_of_rib.load();
         stats->total = stats->reach + stats->unreach + stats->end_of_rib;
     }
 
     virtual void GetTxRouteUpdateStats(UpdateStats *stats)  const {
-        stats->reach = parent_->stats_[TX].reach;
-        stats->unreach = parent_->stats_[TX].unreach;
-        stats->end_of_rib = parent_->stats_[TX].end_of_rib;
+        stats->reach = parent_->stats_[TX].reach.load();
+        stats->unreach = parent_->stats_[TX].unreach.load();
+        stats->end_of_rib = parent_->stats_[TX].end_of_rib.load();
         stats->total = stats->reach + stats->unreach + stats->end_of_rib;
     }
 

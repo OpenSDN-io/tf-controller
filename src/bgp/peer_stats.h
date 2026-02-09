@@ -19,7 +19,7 @@ private:
     static void FillProtoStats(const IPeerDebugStats::ProtoStats &stats,
                                PeerProtoStats *proto_stats);
     static void FillRouteUpdateStats(const IPeerDebugStats::UpdateStats &stats,
-    PeerUpdateStats *rt_stats);
+                                     PeerUpdateStats *rt_stats);
     static void FillRxErrorStats(const IPeerDebugStats::RxErrorStats &src,
                                  PeerRxErrorStats *dest);
     static void FillRxRouteStats(const IPeerDebugStats::RxRouteStats &src,
