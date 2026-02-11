@@ -4,7 +4,7 @@
 
 #include "ifmap/ifmap_exporter.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/checked_delete.hpp>
 
 #include "db/db.h"
@@ -23,6 +23,7 @@
 
 using namespace std;
 using namespace boost::algorithm;
+using namespace boost::placeholders;
 
 class IFMapExporter::TableInfo {
 public:

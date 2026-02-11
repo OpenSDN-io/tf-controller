@@ -6,7 +6,7 @@
 #define vnsw_agent_vrf_assign_ksync_h
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <db/db_entry.h>
 #include <db/db_table.h>
@@ -16,6 +16,8 @@
 #include <ksync/ksync_object.h>
 #include <ksync/ksync_netlink.h>
 #include "oper/vrf_assign.h"
+
+using namespace boost::placeholders;
 
 class VrfAssignKSyncObject;
 

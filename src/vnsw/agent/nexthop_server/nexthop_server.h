@@ -12,13 +12,15 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/signal_set.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include "io/usock_server.h"
 #include "nexthop_client.h"
 #include "nexthop_entry.h"
+
+using namespace boost::placeholders;
 
 /*
  * The main server object for serving nexthops to connected clients.

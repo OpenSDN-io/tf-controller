@@ -2,7 +2,7 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "base/logging.h"
 #include "base/task.h"
 #include "base/util.h"
@@ -14,6 +14,7 @@
 #include "cmn/dns.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 const char *DnsConfigManager::config_types[] = {
      "virtual-DNS",

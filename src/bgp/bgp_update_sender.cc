@@ -4,7 +4,7 @@
 
 #include "bgp/bgp_update_sender.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 
 #include <map>
@@ -22,6 +22,7 @@ using std::make_pair;
 using std::map;
 using std::string;
 using std::vector;
+using namespace boost::placeholders;
 
 //
 // This struct represents RibOut specific state for a PeerState.  There's one

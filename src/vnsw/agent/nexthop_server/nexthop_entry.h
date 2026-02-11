@@ -9,11 +9,13 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/signal_set.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #include <cstdio>
 #include <iostream>
+
+using namespace boost::placeholders;
 
 class NexthopDBEntry {
 

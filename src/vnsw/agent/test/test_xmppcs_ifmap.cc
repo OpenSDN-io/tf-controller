@@ -8,7 +8,7 @@
 #include <pugixml/pugixml.hpp>
 
 #include <base/logging.h>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <base/task.h>
 #include "io/test/event_manager_test.h"
 
@@ -41,6 +41,7 @@
 
 #include "controller/controller_ifmap.h"
 
+using namespace boost::placeholders;
 using namespace pugi;
 const char *init_file_local;
 bool ksync_init_local;

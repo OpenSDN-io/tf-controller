@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <base/logging.h>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <base/task.h>
 #include "io/test/event_manager_test.h"
 #include <net/bgp_af.h>
@@ -40,6 +40,7 @@
 #include "controller/controller_vrf_export.h"
 #include "controller/controller_types.h"
 
+using namespace boost::placeholders;
 using namespace pugi;
 
 void WaitForIdle2(int wait_seconds = 30) {

@@ -3,7 +3,7 @@
  */
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <base/logging.h>
 #include <db/db_entry.h>
@@ -33,6 +33,8 @@
 #include "vr_defs.h"
 #include "vr_nexthop.h"
 #include "vr_vrf_table.h"
+
+using namespace boost::placeholders;
 
 RouteKSyncEntry::RouteKSyncEntry(RouteKSyncObject* obj,
                                  const RouteKSyncEntry *entry,

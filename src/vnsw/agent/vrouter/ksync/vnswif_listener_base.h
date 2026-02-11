@@ -6,11 +6,13 @@
 #define vnsw_agent_router_id_h
 
 #include <string>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include "interface.h"
 #include "vn.h"
+
+using namespace boost::placeholders;
 
 /****************************************************************************
  * Module responsible to keep host-os and agent in-sync

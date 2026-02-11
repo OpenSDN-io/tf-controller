@@ -8,11 +8,13 @@
 #include <string>
 #include <mutex>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include <pkt/vrouter_interface.h>
 #include <pkt/packet_buffer.h>
+
+using namespace boost::placeholders;
 
 // Tap interface used while not running with vrouter (unit test cases)
 // Send to & receive from Agent using this class

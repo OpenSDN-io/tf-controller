@@ -5,7 +5,7 @@
 #include "db/db_graph.h"
 
 #include <ostream>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 
 #include "base/logging.h"
@@ -15,6 +15,7 @@
 #include "testing/gunit.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 class TestVertex : public DBGraphVertex {
   public:

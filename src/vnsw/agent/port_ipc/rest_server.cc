@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign.hpp>
 #include <boost/foreach.hpp>
 
@@ -19,6 +19,8 @@
 #include "rest_server.h"
 #include "rest_common.h"
 #include "init/agent_param.h"
+
+using namespace boost::placeholders;
 
 using contrail::regex;
 using contrail::regex_match;

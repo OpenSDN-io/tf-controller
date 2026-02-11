@@ -5,7 +5,7 @@
 #include "ifmap/ifmap_agent_table.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/format.hpp>
 #include "base/logging.h"
 #include "db/db.h"
@@ -17,6 +17,7 @@
 #include "ifmap/ifmap_agent_types.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 SandeshTraceBufferPtr
 IFMapAgentTraceBuf(SandeshTraceBufferCreate("IFMapAgentTrace", 1000));

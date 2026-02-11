@@ -8,7 +8,7 @@
 #include <iostream>
 
 #include <boost/asio/ip/host_name.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
 
@@ -64,6 +64,7 @@ using process::ConnectionType;
 using process::ConnectionTypeName;
 using process::g_process_info_constants;
 using process::Signal;
+using namespace boost::placeholders;
 
 static EventManager evm;
 static Options options;

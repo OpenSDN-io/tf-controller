@@ -4,7 +4,7 @@
 
 #include <fstream>
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "base/test/task_test_util.h"
 #include "bgp/bgp_config_parser.h"
@@ -27,6 +27,7 @@
 using namespace boost::asio;
 using namespace boost::assign;
 using namespace std;
+using namespace boost::placeholders;
 
 #define SUB_ADDR "agent@vnsw.contrailsystems.com"
 #define PUB_ADDR "bgp@bgp-client.contrailsystems.com"

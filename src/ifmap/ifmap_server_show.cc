@@ -4,7 +4,7 @@
 
 #include <sandesh/request_pipeline.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign/list_of.hpp>
 #include "base/regex.h"
 #include "base/logging.h"
@@ -40,6 +40,7 @@
 using namespace boost::assign;
 using namespace std;
 using namespace pugi;
+using namespace boost::placeholders;
 
 using contrail::regex;
 using contrail::regex_match;

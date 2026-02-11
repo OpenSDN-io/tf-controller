@@ -4,7 +4,7 @@
 
 #include <fstream>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "base/logging.h"
 #include "base/task.h"
@@ -30,6 +30,7 @@
 #include "testing/gunit.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 static string FileRead(const string &filename) {
     ifstream file(filename.c_str());

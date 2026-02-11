@@ -2,7 +2,7 @@
 #include "testing/gunit.h"
 
 #include <boost/filesystem.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <sstream>
 #include <fstream>
 
@@ -16,6 +16,7 @@
 
 using namespace std;
 using namespace boost::filesystem;
+using namespace boost::placeholders;
 
 class InstanceTaskFdTest : public ::testing::Test {
 public:

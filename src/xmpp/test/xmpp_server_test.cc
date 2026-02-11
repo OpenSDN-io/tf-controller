@@ -4,7 +4,7 @@
 
 #include "xmpp/xmpp_server.h"
 #include "xmpp/test/xmpp_sample_peer.h"
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "base/task.h"
 #include "base/test/task_test_util.h"
 #include "control-node/control_node.h"
@@ -23,6 +23,7 @@
 
 using namespace boost::asio;
 using namespace std;
+using namespace boost::placeholders;
 
 #define PUBSUB_NODE_ADDR "bgp-node.contrai.com"
 #define SUB_ADDR "agent@vnsw.contrailsystems.com"

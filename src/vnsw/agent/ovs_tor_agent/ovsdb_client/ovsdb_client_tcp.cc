@@ -2,12 +2,14 @@
  * Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <oper/agent_sandesh.h>
 #include <ovsdb_types.h>
 #include <ovsdb_client_tcp.h>
 #include <ovsdb_client_connection_state.h>
+
+using namespace boost::placeholders;
 
 using OVSDB::OvsdbClientSession;
 using OVSDB::OvsdbClientTcp;

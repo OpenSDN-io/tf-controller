@@ -4,7 +4,7 @@
 
 #include "ifmap/ifmap_link_table.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "db/db.h"
 #include "db/db_graph.h"
@@ -14,6 +14,7 @@
 #include "ifmap/ifmap_log_types.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 IFMapLinkTable::IFMapLinkTable(DB *db, const string &name, DBGraph *graph)
         : DBGraphTable(db, name, graph) {

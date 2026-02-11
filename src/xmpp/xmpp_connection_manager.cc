@@ -4,11 +4,13 @@
 
 #include "xmpp/xmpp_connection_manager.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "base/lifetime.h"
 #include "base/task_annotations.h"
 #include "xmpp/xmpp_session.h"
+
+using namespace boost::placeholders;
 
 //
 // Constructor for XmppConnectionManager.

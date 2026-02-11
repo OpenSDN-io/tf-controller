@@ -2,7 +2,7 @@
  * Copyright (c) 2014 CodiLime, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
@@ -31,6 +31,7 @@
 #include "bfd/rest_api/bfd_client_session.h"
 
 using namespace BFD;
+using namespace boost::placeholders;
 
 class Communicator : public Connection {
 public:

@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <net/ethernet.h>
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <base/logging.h>
 #include <db/db_entry.h>
@@ -27,6 +27,8 @@
 #include "oper/ecmp_load_balance.h"
 #include "vrouter/ksync/agent_ksync_types.h"
 #include <vrouter/ksync/ksync_agent_sandesh.h>
+
+using namespace boost::placeholders;
 
 NHKSyncEntry::NHKSyncEntry(NHKSyncObject *obj, const NHKSyncEntry *entry,
                            uint32_t index) :

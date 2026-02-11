@@ -6,7 +6,7 @@
 #define __AGENT_FLOWTABLE_KSYNC_H__
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <db/db_entry.h>
 #include <db/db_table.h>
@@ -21,6 +21,8 @@
 #include <pkt/flow_table.h>
 #include <vr_types.h>
 #include <vr_flow.h>
+
+using namespace boost::placeholders;
 
 class FlowTableKSyncObject;
 class KSyncFlowIndexManager;

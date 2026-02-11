@@ -3,7 +3,7 @@
  */
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <base/logging.h>
 #include <db/db_entry.h>
@@ -25,6 +25,8 @@
 #include "vrouter/ksync/vxlan_ksync.h"
 
 #include "ksync_init.h"
+
+using namespace boost::placeholders;
 
 VxLanIdKSyncEntry::VxLanIdKSyncEntry(VxLanKSyncObject *obj,
                                      const VxLanIdKSyncEntry *entry,

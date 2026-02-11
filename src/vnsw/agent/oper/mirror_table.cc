@@ -2,7 +2,7 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <base/logging.h>
 #include <db/db.h>
 #include <db/db_entry.h>
@@ -19,6 +19,7 @@
 #include <resource_manager/mirror_index.h>
 using namespace std;
 using namespace boost::asio;
+using namespace boost::placeholders;
 MirrorTable *MirrorTable::mirror_table_;
 
 MirrorTable::~MirrorTable() {

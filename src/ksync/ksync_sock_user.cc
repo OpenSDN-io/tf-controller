@@ -11,7 +11,7 @@
 #include <linux/sockios.h>
 #endif
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <base/logging.h>
 #include <base/address_util.h>
@@ -33,6 +33,8 @@
 #include "vr_defs.h"
 #include "vr_interface.h"
 #include <vector>
+
+using namespace boost::placeholders;
 
 KSyncSockTypeMap *KSyncSockTypeMap::singleton_;
 vr_flow_entry *KSyncSockTypeMap::flow_table_;

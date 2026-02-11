@@ -11,10 +11,12 @@
 #include <mutex>
 
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "xmpp/xmpp_channel.h"
 #include "bind/bind_util.h"
+
+using namespace boost::placeholders;
 
 class XmppServer;
 class DnsAgentXmppChannelManager;

@@ -6,7 +6,7 @@
 
 #include <sstream>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign/list_of.hpp>
 
 #include "base/logging.h"
@@ -16,6 +16,7 @@
 
 using namespace std;
 using boost::assign::list_of;
+using namespace boost::placeholders;
 
 class BgpYamlConfigManagerTest : public ::testing::Test {
   protected:

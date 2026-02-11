@@ -10,7 +10,7 @@
 #include <linux/sockios.h>
 #endif
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign/list_of.hpp>
 
 #include <base/logging.h>
@@ -25,6 +25,8 @@
 #include "ksync_entry.h"
 #include "ksync_object.h"
 #include "ksync_types.h"
+
+using namespace boost::placeholders;
 
 SandeshTraceBufferPtr KSyncErrorTraceBuf(
                       SandeshTraceBufferCreate("KSync Error", 5000));

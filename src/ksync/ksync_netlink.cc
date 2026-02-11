@@ -10,7 +10,7 @@
 #include <linux/sockios.h>
 #endif
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <base/logging.h>
 #include <db/db.h>
@@ -26,6 +26,8 @@
 #include "ksync_sock.h"
 #include "ksync_types.h"
 #include "ksync_netlink.h"
+
+using namespace boost::placeholders;
 
 ///////////////////////////////////////////////////////////////////////////////
 // KSyncNetlinkEntry routines

@@ -5,12 +5,13 @@
 #include "ksync_sock.h"
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <errno.h>
 
 class AgentParam;
 
 using namespace boost::asio;
+using namespace boost::placeholders;
 
 /////////////////////////////////////////////////////////////////////////////
 // KSyncSockUds routines

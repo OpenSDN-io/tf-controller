@@ -17,7 +17,7 @@
 
 #include <sys/socket.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <base/logging.h>
 #include <db/db.h>
@@ -38,6 +38,7 @@
 #include "vr_types.h"
 
 using namespace boost::asio;
+using namespace boost::placeholders;
 
 /* Note SO_RCVBUFFORCE is supported only for linux version 2.6.14 and above */
 typedef boost::asio::detail::socket_option::integer<SOL_SOCKET,

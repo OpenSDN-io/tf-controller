@@ -6,11 +6,13 @@
 #define vnsw_agent_pkt_control_interface_hpp
 
 #include <string>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 
 #include <pkt/pkt_handler.h>
+
+using namespace boost::placeholders;
 
 class PktHandler;
 

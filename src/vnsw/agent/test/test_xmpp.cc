@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <base/logging.h>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "io/test/event_manager_test.h"
 #include <net/bgp_af.h>
 
@@ -26,6 +26,7 @@
 #include "controller/controller_types.h"
 #include "controller/controller_route_path.h"
 
+using namespace boost::placeholders;
 using namespace pugi;
 
 void RouterIdDepInit(Agent *agent) {

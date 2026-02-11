@@ -5,7 +5,7 @@
 #ifndef __IFMAP_UUID_MAPPER_H__
 #define __IFMAP_UUID_MAPPER_H__
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -14,6 +14,8 @@
 #include <map>
 #include <set>
 #include <string>
+
+using namespace boost::placeholders;
 
 class DB;
 class IFMapNode;

@@ -2,10 +2,12 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <bind/bind_util.h>
 #include <base/address_util.h>
 #include <bind/bind_resolver.h>
+
+using namespace boost::placeholders;
 
 BindResolver *BindResolver::resolver_;
 

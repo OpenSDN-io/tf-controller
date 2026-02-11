@@ -6,7 +6,7 @@
 #define vnsw_agent_route_ksync_h
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <db/db_entry.h>
 #include <db/db_table.h>
@@ -20,6 +20,8 @@
 #include "oper/agent_route_walker.h"
 #include "vrouter/ksync/agent_ksync_types.h"
 #include "vrouter/ksync/nexthop_ksync.h"
+
+using namespace boost::placeholders;
 
 class RouteKSyncObject;
 

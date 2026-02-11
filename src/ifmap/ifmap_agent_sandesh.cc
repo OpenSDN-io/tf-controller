@@ -4,7 +4,7 @@
 
 #include <sandesh/request_pipeline.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -24,6 +24,7 @@
 
 using namespace boost::assign;
 using namespace std;
+using namespace boost::placeholders;
 
 class ShowIFMapAgentTable {
 public:

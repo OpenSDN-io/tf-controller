@@ -8,7 +8,7 @@
 
 #include <boost/intrusive/avl_set.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "base/logging.h"
 #include "testing/gunit.h"
@@ -27,6 +27,8 @@
 #include "base/test/task_test_util.h"
 
 using namespace std;
+using namespace boost::placeholders;
+
 class VlanTable;
 
 VlanTable *vlan_table_;

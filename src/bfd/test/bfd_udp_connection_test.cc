@@ -12,13 +12,14 @@ typedef contrail::regex regex_t;
 #include "bfd/test/bfd_test_utils.h"
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <testing/gunit.h>
 #include "test/task_test_util.h"
 #include "base/logging.h"
 
 
 using namespace BFD;
+using namespace boost::placeholders;
 
 class BFDTest : public ::testing::Test {
  public:

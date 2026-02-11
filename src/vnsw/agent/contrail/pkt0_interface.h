@@ -6,11 +6,13 @@
 #define vnsw_agent_contrail_pkt0_interface_hpp
 
 #include <string>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 
 #include <pkt/vrouter_interface.h>
+
+using namespace boost::placeholders;
 
 // pkt0 interface implementation of VrouterControlInterface
 class Pkt0Interface: public VrouterControlInterface {

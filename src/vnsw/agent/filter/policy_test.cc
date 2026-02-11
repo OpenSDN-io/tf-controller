@@ -3,7 +3,7 @@
  */
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <db/db_entry.h>
 #include <db/db_table.h>
@@ -15,6 +15,7 @@
 #include "vnsw/agent/filter/policy.h"
 #include "vnsw/agent/filter/policy_config_spec.h"
 
+using namespace boost::placeholders;
 
 class MyTest {
   public:

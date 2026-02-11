@@ -7,7 +7,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <pugixml/pugixml.hpp>
 
 #include "base/logging.h"
@@ -22,6 +22,8 @@
 #include "ifmap/ifmap_link.h"
 #include "testing/gunit.h"
 #include "vr_types.h"
+
+using namespace boost::placeholders;
 
 class Agent;
 void RouterIdDepInit(Agent *agent) {

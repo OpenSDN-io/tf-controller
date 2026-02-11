@@ -8,7 +8,7 @@
 #include <pugixml/pugixml.hpp>
 
 #include <base/logging.h>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <base/task.h>
 #include <base/util.h>
 #include "io/test/event_manager_test.h"
@@ -42,6 +42,7 @@
 #include "controller/controller_export.h"
 #include "controller/controller_vrf_export.h"
 
+using namespace boost::placeholders;
 using namespace pugi;
 
 void RouterIdDepInit(Agent *agent) {

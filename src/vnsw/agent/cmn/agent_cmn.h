@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 #include <boost/intrusive_ptr.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/nil_generator.hpp>
@@ -45,6 +45,8 @@
 #include <execinfo.h>
 #include <dlfcn.h>
 #include <cxxabi.h>
+
+using namespace boost::placeholders;
 
 static inline bool UnregisterDBTable(DBTable *table,
                                      DBTableBase::ListenerId id) {

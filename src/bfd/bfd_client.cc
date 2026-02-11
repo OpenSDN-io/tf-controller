@@ -2,7 +2,7 @@
  * Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
  */
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/random.hpp>
@@ -19,6 +19,7 @@ using namespace BFD;
 using boost::bind;
 using std::make_pair;
 using std::pair;
+using namespace boost::placeholders;
 
 Client::Client(Connection *cm, ClientId id) : id_(id), cm_(cm) {
 }

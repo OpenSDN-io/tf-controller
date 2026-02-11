@@ -4,7 +4,7 @@
 
 #include "oper/instance_manager.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/tokenizer.hpp>
@@ -22,6 +22,8 @@
     #include "oper/libvirt_instance_adapter.h"
 #endif
 #include "base/util.h"
+
+using namespace boost::placeholders;
 
 using boost::uuids::uuid;
 SandeshTraceBufferPtr InstanceManagerTraceBuf(

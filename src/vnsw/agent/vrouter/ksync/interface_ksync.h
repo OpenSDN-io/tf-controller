@@ -8,7 +8,7 @@
 #include <net/ethernet.h>
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <db/db_entry.h>
 #include <db/db_table.h>
@@ -19,6 +19,8 @@
 #include "oper/interface_common.h"
 #include "vrouter/ksync/agent_ksync_types.h"
 #include "vr_types.h"
+
+using namespace boost::placeholders;
 
 void KSyncInterfaceCreate(Interface::Type type, const char *if_name,
                           uint32_t vrf_id, uint32_t &ifindex, uint32_t &fd,

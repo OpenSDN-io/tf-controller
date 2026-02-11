@@ -4,7 +4,7 @@
 
 #include <boost/intrusive/avl_set.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "db/db.h"
 #include "db/db_table.h"
@@ -15,6 +15,8 @@
 
 #include "base/logging.h"
 #include "testing/gunit.h"
+
+using namespace boost::placeholders;
 
 class VlanTable;
 

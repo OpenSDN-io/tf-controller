@@ -33,7 +33,7 @@
 #include "oper/multicast_policy.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "base/task.h"
 #include "base/task_trigger.h"
@@ -48,6 +48,8 @@
 
 using namespace boost::assign;
 using namespace std;
+using namespace boost::placeholders;
+
 typedef IFMapDependencyTracker::ReactionMap ReactionMap;
 typedef IFMapDependencyTracker::NodeEventPolicy NodeEventPolicy;
 typedef IFMapDependencyTracker::PropagateList PropagateList;

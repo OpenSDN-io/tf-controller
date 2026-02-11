@@ -4,7 +4,7 @@
 
 #include <sandesh/request_pipeline.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/assign/list_of.hpp>
 #include "base/logging.h"
 
@@ -16,6 +16,7 @@
 
 using namespace boost::assign;
 using namespace std;
+using namespace boost::placeholders;
 
 class ShowIFMapXmppClientInfo {
 public:

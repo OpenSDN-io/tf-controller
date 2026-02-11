@@ -8,7 +8,7 @@
 #include "xmpp_unicast_types.h"
 
 #include <base/logging.h>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <net/bgp_af.h>
 #include "xmpp/xmpp_init.h"
@@ -18,6 +18,7 @@
 using namespace std;
 using namespace pugi;
 using namespace autogen;
+using namespace boost::placeholders;
 
 namespace test {
 

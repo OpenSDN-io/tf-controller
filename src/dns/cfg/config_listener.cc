@@ -5,7 +5,7 @@
 #include "cfg/config_listener.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "bind/bind_util.h"
 #include "cfg/dns_config.h"
 #include "db/db.h"
@@ -16,6 +16,7 @@
 
 using namespace boost::assign;
 using namespace std;
+using namespace boost::placeholders;
 
 // The DependencyTracker adds elements onto the change list that must be
 // reevaluated when links are added or deleted from the graph.

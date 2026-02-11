@@ -8,7 +8,7 @@
 
 #include <list>
 #include <boost/optional.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/statechart/event.hpp>
 #include <boost/statechart/transition.hpp>
 #include <boost/statechart/state_machine.hpp>
@@ -18,6 +18,7 @@
 
 #include "base/logging.h"
 
+using namespace boost::placeholders;
 namespace mpl = boost::mpl;
 namespace sc = boost::statechart;
 

@@ -6,7 +6,7 @@
 #define vnsw_agent_nh_ksync_h
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <db/db_entry.h>
 #include <db/db_table.h>
@@ -18,6 +18,8 @@
 #include "oper/nexthop.h"
 
 #include "vr_nexthop.h"
+
+using namespace boost::placeholders;
 
 class NHKSyncObject;
 typedef std::vector<InterfaceKSyncEntry> InterfaceKSyncEntryList;

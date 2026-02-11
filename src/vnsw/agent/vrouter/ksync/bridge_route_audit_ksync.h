@@ -8,13 +8,15 @@
 #include <string>
 #include <net/mac_address.h>
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <ksync/ksync_entry.h>
 #include <ksync/ksync_object.h>
 #include <ksync/ksync_netlink.h>
 #include <vrouter/ksync/agent_ksync_types.h>
 #include <vrouter/ksync/ksync_flow_memory.h>
+
+using namespace boost::placeholders;
 
 class BridgeRouteAuditKSyncObject;
 class KSync;

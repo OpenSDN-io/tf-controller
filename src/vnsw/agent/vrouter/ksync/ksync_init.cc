@@ -3,7 +3,7 @@
  */
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #if defined(__linux__)
 #include <linux/netlink.h>
@@ -46,6 +46,8 @@
 #include "qos_queue_ksync.h"
 #include "forwarding_class_ksync.h"
 #include "qos_config_ksync.h"
+
+using namespace boost::placeholders;
 
 #define    VNSW_GENETLINK_FAMILY_NAME  "vnsw"
 

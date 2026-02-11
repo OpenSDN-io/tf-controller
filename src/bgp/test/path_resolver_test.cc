@@ -5,7 +5,7 @@
 #include "bgp/routing-instance/path_resolver.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/program_options.hpp>
 
@@ -31,6 +31,7 @@ using std::endl;
 using std::set;
 using std::string;
 using std::vector;
+using namespace boost::placeholders;
 
 class PeerMock : public IPeer {
 public:

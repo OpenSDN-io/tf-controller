@@ -6,7 +6,7 @@
 #define __DNS_CMN_H_
 
 #include <boost/intrusive_ptr.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <io/event_manager.h>
 #include <base/logging.h>
@@ -19,6 +19,8 @@
 #include <io/event_manager.h>
 #include <base/misc_utils.h>
 #include <sandesh/sandesh_trace.h>
+
+using namespace boost::placeholders;
 
 class EventManager;
 class DnsManager;

@@ -2,7 +2,7 @@
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/asio/ip/host_name.hpp>
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
@@ -39,6 +39,8 @@ extern "C" {
 #include "services/metadata_client.h"
 #include "services/metadata_client_session.h"
 #include "services/services_sandesh.h"
+
+using namespace boost::placeholders;
 
 ////////////////////////////////////////////////////////////////////////////////
 

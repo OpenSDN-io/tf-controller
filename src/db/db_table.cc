@@ -7,7 +7,7 @@
 
 #include <tbb/spin_rw_mutex.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/type_traits.hpp>
@@ -27,6 +27,7 @@ class DBEntry;
 class DBEntryBase;
 
 using namespace std;
+using namespace boost::placeholders;
 
 DBRequest::DBRequest() : oper(static_cast<DBOperation>(0)) {
 }

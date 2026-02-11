@@ -9,7 +9,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "io/event_manager.h"
 
 #include <map>
@@ -24,6 +24,8 @@
 #include "io/tcp_session.h"
 #include "base/address.h"
 #include "bgp/routing-instance/iservice_chain_mgr.h"
+
+using namespace boost::placeholders;
 
 class AsPathDB;
 class AsPath4ByteDB;

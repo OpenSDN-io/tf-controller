@@ -5,7 +5,7 @@
 #include "ifmap/ifmap_server_table.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/crc.hpp>      // for boost::crc_32_type
 
@@ -24,6 +24,7 @@
 using boost::assign::list_of;
 using boost::assign::map_list_of;
 using namespace std;
+using namespace boost::placeholders;
 
 /// datatypes to be generated from xsd ///
 

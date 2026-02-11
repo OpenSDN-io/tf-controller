@@ -4,7 +4,7 @@
 
 #include "bgp/bgp_ribout.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <algorithm>
 
@@ -24,6 +24,7 @@
 #include "db/db.h"
 
 using std::find;
+using namespace boost::placeholders;
 
 RibOutAttr::NextHop::NextHop(const BgpTable *table, IpAddress address,
     const MacAddress &mac, uint32_t label, uint32_t l3_label,

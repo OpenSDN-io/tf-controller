@@ -2,7 +2,7 @@
  * Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
  */
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <base/logging.h>
 
 #include <oper/agent_sandesh.h>
@@ -11,6 +11,8 @@
 #include <ovsdb_client_connection_state.h>
 
 #include <ovs_tor_agent/tor_agent_param.h>
+
+using namespace boost::placeholders;
 
 using OVSDB::OvsdbClientSession;
 using OVSDB::OvsdbClientSsl;

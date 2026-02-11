@@ -4,7 +4,7 @@
 
 #include "bgp/bgp_condition_listener.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 
 #include <utility>
@@ -21,6 +21,7 @@ using std::make_pair;
 using std::map;
 using std::pair;
 using std::set;
+using namespace boost::placeholders;
 
 //
 // ConditionMatchTableState

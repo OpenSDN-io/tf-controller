@@ -5,7 +5,7 @@
 #ifndef __IFMAP_STRESS_TEST_H__
 #define __IFMAP_STRESS_TEST_H__
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/function.hpp>
 #include <boost/program_options.hpp>
@@ -24,6 +24,8 @@
 #include "ifmap/ifmap_util.h"
 
 #include "testing/gunit.h"
+
+using namespace boost::placeholders;
 
 class IFMapChannelManager;
 class IFMapXmppClientMock;

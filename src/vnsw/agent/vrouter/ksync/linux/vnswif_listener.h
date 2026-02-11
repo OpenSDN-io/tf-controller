@@ -6,10 +6,12 @@
 #define linux_vnsw_agent_router_id_h
 
 #include <string>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/asio.hpp>
 #include "vrouter/ksync/vnswif_listener_base_nix.h"
+
+using namespace boost::placeholders;
 
 namespace local = boost::asio::local;
 

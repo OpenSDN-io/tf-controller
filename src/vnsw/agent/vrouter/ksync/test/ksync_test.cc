@@ -3,7 +3,7 @@
  */
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <net/if.h>
 
@@ -36,6 +36,8 @@
 #include "vrouter/ksync/vxlan_ksync.h"
 #include "vrouter/ksync/sandesh_ksync.h"
 #include "vrouter/ksync/test/ksync_test.h"
+
+using namespace boost::placeholders;
 
 KSyncTest::KSyncTest(Agent *agent)
     : KSync(agent) {

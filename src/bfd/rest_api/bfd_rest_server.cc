@@ -8,7 +8,7 @@
 #include <string>
 
 #include <boost/assign.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/random.hpp>
 
@@ -23,6 +23,8 @@
 #include "bfd/bfd_session.h"
 #include "bfd/rest_api/bfd_json_config.h"
 #include "bfd/rest_api/bfd_rest_common.h"
+
+using namespace boost::placeholders;
 
 using contrail::regex;
 using contrail::regex_match;

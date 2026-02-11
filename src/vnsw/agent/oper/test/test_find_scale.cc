@@ -5,7 +5,7 @@
 #include "base/os.h"
 #include <boost/intrusive/avl_set.hpp>
 #include <boost/functional/hash.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <atomic>
@@ -29,6 +29,8 @@
 #include <cmn/index_vector.h>
 #include <oper_db.h>
 #include "test/test_cmn_util.h"
+
+using namespace boost::placeholders;
 
 #define FIND_COUNT (40 * 1000)
 

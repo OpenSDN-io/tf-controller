@@ -7,7 +7,7 @@
 #include "oper/ifmap_dependency_manager.h"
 #include "oper/config_manager.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "base/test/task_test_util.h"
 #include "db/db.h"
@@ -21,6 +21,8 @@
 #include "testing/gunit.h"
 #include <test/test_cmn_util.h>
 #include <oper/service_instance.h>
+
+using namespace boost::placeholders;
 
 class IFMapDependencyManagerTest : public ::testing::Test {
   protected:

@@ -5,7 +5,7 @@
 #include "ifmap/ifmap_graph_walker.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "base/logging.h"
 #include "base/task_trigger.h"
@@ -26,6 +26,7 @@ using boost::assign::list_of;
 using boost::assign::map_list_of;
 using std::set;
 using std::string;
+using namespace boost::placeholders;
 
 class GraphPropagateFilter : public DBGraph::VisitorFilter {
 public:

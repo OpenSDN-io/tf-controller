@@ -4,13 +4,14 @@
 #include "bgp/bgp_config_yaml.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <yaml-cpp/yaml.h>
 #include "base/logging.h"
 #include "base/map_util.h"
 
 using namespace std;
 using boost::assign::map_list_of;
+using namespace boost::placeholders;
 
 // Container of per-instance data.
 class YamlInstanceData {

@@ -4,7 +4,7 @@
 
 #include "bgp/bgp_multicast.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 
 #include "base/string_util.h"
@@ -22,6 +22,7 @@
 
 using std::string;
 using std::vector;
+using namespace boost::placeholders;
 
 class McastTreeManager::DeleteActor : public LifetimeActor {
 public:

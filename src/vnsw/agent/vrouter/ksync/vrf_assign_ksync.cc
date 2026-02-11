@@ -3,7 +3,7 @@
  */
 
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <base/logging.h>
 #include <db/db_entry.h>
@@ -22,6 +22,8 @@
 #include "vrouter/ksync/nexthop_ksync.h"
 #include "vrouter/ksync/vrf_assign_ksync.h"
 #include "ksync_init.h"
+
+using namespace boost::placeholders;
 
 VrfAssignKSyncEntry::VrfAssignKSyncEntry(VrfAssignKSyncObject* obj,
                                          const VrfAssignKSyncEntry *entry,

@@ -4,7 +4,7 @@
 
 #include "db/db_table_walk_mgr.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/foreach.hpp>
 
 #include "base/logging.h"
@@ -14,6 +14,8 @@
 #include "db/db_partition.h"
 #include "db/db_table.h"
 #include "db/db_table_partition.h"
+
+using namespace boost::placeholders;
 
 DBTableWalkMgr::DBTableWalkMgr()
     : walk_request_trigger_(new TaskTrigger(

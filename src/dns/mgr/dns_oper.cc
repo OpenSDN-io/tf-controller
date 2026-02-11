@@ -13,7 +13,7 @@
 #include <sandesh/common/vns_types.h>
 #include <vnc_cfg_types.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include "base/logging.h"
 #include "base/task.h"
 #include "base/util.h"
@@ -26,6 +26,7 @@
 #include "xmpp/xmpp_server.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 ////////////////////////////////////////////////////////////////////////////////
 

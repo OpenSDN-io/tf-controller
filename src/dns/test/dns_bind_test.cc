@@ -4,7 +4,7 @@
 
 #include <fstream>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include "base/logging.h"
 #include "base/task.h"
@@ -28,6 +28,7 @@
 #include "bind/named_config.h"
 
 using namespace std;
+using namespace boost::placeholders;
 
 class NamedConfigTest : public NamedConfig {
 public:

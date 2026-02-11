@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -18,6 +18,8 @@
 #include "db/db_table.h"
 #include "ifmap/ifmap_object.h"
 #include "ifmap/ifmap_node_proxy.h"
+
+using namespace boost::placeholders;
 
 class DB;
 class DBGraph;
