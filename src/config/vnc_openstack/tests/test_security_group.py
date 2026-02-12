@@ -102,7 +102,7 @@ class TestSecurityGroup(test_case.NeutronBackendTestCase):
                 'remote_group_id': None,
                 'port_range_min': None,
                 'port_range_max': None,
-                'protocol': 'icmp',
+                'protocol': 'ipv6-icmp',
                 'ethertype': 'IPv6',
                 'direction': 'ingress',
             })
