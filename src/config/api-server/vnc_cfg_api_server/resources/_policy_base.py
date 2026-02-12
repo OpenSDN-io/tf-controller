@@ -32,14 +32,24 @@ def check_policy_rules(entries, network_policy_rule=False):
         # cfgm_common.protocols
         protocol = rule['protocol']
         if protocol.isdigit():
-            if int(protocol) < 0 or int(protocol) > 255:
+            protocol = int(protocol)
+            if protocol < 0 or protocol > 255:
                 return (False, (400, 'Rule with invalid protocol : %s' %
+                                protocol))
+            if (rule.get('ethertype', '') == 'IPv4' and
+                    protocol in protocols.IPV6_PROTOCOL_NUMS):
+                return (False, (400, 'IPv4 rule with IPv6 protocol : %s' %
                                 protocol))
         else:
             protocol = protocol.lower()
             if protocol not in protocols.IP_PROTOCOL_NAMES:
                 return (False, (400, 'Rule with invalid protocol : %s' %
                                 protocol))
+            if (rule.get('ethertype', '') == 'IPv4' and
+                    protocol in protocols.IPV6_PROTOCOL_NAMES):
+                return (False, (400, 'IPv4 rule with IPv6 protocol : %s' %
+                                protocol))
+
         src_sg_list = [addr.get('security_group') for addr in
                        rule.get('src_addresses') or []]
         dst_sg_list = [addr.get('security_group') for addr in
