@@ -1,3 +1,4 @@
+setuptools<81 # novaclient uses pkg_resources
 stestr
 os-testr
 lxml>=2.3.3,<=4.5.0
