@@ -571,8 +571,10 @@ void VxlanRoutingManager::RoutingVrfDeleteAllRoutes(VrfEntry* rt_vrf) {
         const IpAddress &prefix_ip = c_entry->prefix_address();
         const uint8_t plen = c_entry->prefix_length();
         const AgentPath *rt_active_path = c_entry->GetActivePath();
-        const Peer *rt_active_peer = rt_active_path->peer();
+        const Peer *rt_active_peer = nullptr;
         const auto &path_list = c_entry->GetPathList();
+        if (rt_active_path != nullptr)
+            rt_active_peer = rt_active_path->peer();
 
         // Compute next entry in advance
         if (c_entry != nullptr && c_entry->get_table_partition()) {
@@ -589,7 +591,8 @@ void VxlanRoutingManager::RoutingVrfDeleteAllRoutes(VrfEntry* rt_vrf) {
                                               vrf_name, prefix_ip, plen,
                                               nullptr);
 
-        if (rt_active_peer->GetType() != Peer::BGP_PEER) {
+        if ((rt_active_peer != nullptr) &&
+            (rt_active_peer->GetType() != Peer::BGP_PEER)) {
             // Delete routes originated from bridge networks
             EvpnAgentRouteTable::DeleteReq(rt_active_peer,
                                            vrf_name,
