@@ -385,7 +385,7 @@ bool VxlanRoutingManager::LeakRoutesIntoBridgeTables
         it = update_bridge_vn_list.begin();
     }
     while (it != update_bridge_vn_list.end()) {
-        VrfEntry *bridge_vrf =  (*it)->GetVrf();
+        VrfEntry *bridge_vrf =  VnVrf((*it), lr_vrf_info.bridge_vrf_names_list_[(*it)]);
 
         if (bridge_vrf == NULL) {
             it++;

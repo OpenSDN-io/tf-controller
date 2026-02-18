@@ -146,16 +146,16 @@ std::string VxlanRoutingManager::GetOriginVn(const VrfEntry *routing_vrf,
         VxlanRoutingVrfMapper::RoutedVrfInfo &lr_vrf_info =
             vrf_mapper_.lr_vrf_info_map_
             [routing_vrf->vn()->logical_router_uuid()];
-        VxlanRoutingVrfMapper::RoutedVrfInfo::BridgeVnListIter it =
-            lr_vrf_info.bridge_vn_list_.begin();
-        while (it != lr_vrf_info.bridge_vn_list_.end()) {
-            InetUnicastRouteEntry *rt =
-                (*it)->GetVrf()->GetUcRoute(ip_addr);
+        for (auto bridge_vn_entry : lr_vrf_info.bridge_vn_list_) {
+            VrfEntry* it_vrf = VnVrf(bridge_vn_entry, lr_vrf_info.bridge_vrf_names_list_[bridge_vn_entry]);
+            if (it_vrf == nullptr) {
+                continue;
+            }
+            InetUnicastRouteEntry *rt = it_vrf->GetUcRoute(ip_addr);
             if (rt && RoutePrefixIsEqualTo(rt, ip_addr, plen)) {
-                origin_vn = (*it)->GetName();
+                origin_vn = bridge_vn_entry->GetName();
                 break;
             }
-            it++;
         }
     }
 
@@ -217,7 +217,7 @@ bool VxlanRoutingManager::IsHostRouteFromLocalSubnet(const EvpnRouteEntry *rt) {
     }
 
     const VxlanRoutingVrfMapper::RoutedVrfInfo& vr_info =
-        vrf_mapper_.lr_vrf_info_map_.at(lr_uuid);
+        vrf_mapper_.lr_vrf_info_map_[lr_uuid];
     const VxlanRoutingVrfMapper::RoutedVrfInfo::BridgeVnList& bridge_vns =
         vr_info.bridge_vn_list_;
 
