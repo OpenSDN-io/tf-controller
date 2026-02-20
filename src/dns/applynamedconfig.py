@@ -23,7 +23,10 @@ import logging
 def setup_logger(log_file):
     log = logging.getLogger('applynamedconfig')
     # create file handler
-    fh = logging.FileHandler(log_file)
+    if log_file == '<stdout>':
+        fh = logging.StreamHandler()
+    else:
+        fh = logging.FileHandler(log_file)
     fh.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
         '[%(asctime)s %(name)s(%(lineno)s) %(levelname)s]: %(message)s',
@@ -108,7 +111,11 @@ def parse_contrail_dns_conf():
     #build logging {} stanza
     file_named_base_conf.write('logging {\n')
     file_named_base_conf.write('    channel debug_log {\n')
-    file_named_base_conf.write('        file "'+ named_defaults['named_log_file'] + '" versions 5 size 5m;\n')
+    if named_defaults['named_log_file'] == '<stdout>':
+        file_named_base_conf.write('        stderr;\n')
+    else:
+        file_named_base_conf.write('        file "'+ named_defaults['named_log_file'] +
+                                   '" versions 5 size 5m;\n')
     file_named_base_conf.write('        severity debug;\n')
     file_named_base_conf.write('        print-time yes;\n')
     file_named_base_conf.write('        print-severity yes;\n')
