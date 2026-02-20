@@ -929,6 +929,17 @@ public:
     /// @brief Prints all virtual networks attached to logical routers.
     static void ListAttachedVns();
 
+    /// @brief Finds the vrf for the given virtual network.
+    static inline VrfEntry* VnVrf(const VnEntry *vn, const std::string &vrf_name) {
+        VrfEntry* vrf = nullptr;
+        vrf = vn->GetVrf();
+        if (vrf != nullptr) {
+            return vrf;
+        }
+        vrf = Agent::GetInstance()->vrf_table()->FindVrfFromName(vrf_name);
+        return vrf;
+    }
+
     DISALLOW_COPY_AND_ASSIGN(VxlanRoutingManager);
 };
 

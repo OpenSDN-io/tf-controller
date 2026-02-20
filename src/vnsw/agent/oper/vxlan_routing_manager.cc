@@ -182,7 +182,8 @@ void VxlanRoutingVrfMapper::WalkRoutingVrf(const boost::uuids::uuid &lr_uuid,
     if (withdraw) {
         InetUnicastAgentRouteTable *inet4_table = nullptr;
         InetUnicastAgentRouteTable *inet6_table = nullptr;
-        const VrfEntry *bridge_vrf = vn->GetVrf();
+        const VrfEntry *bridge_vrf = VxlanRoutingManager::VnVrf(vn,
+            routing_vrf_info.bridge_vrf_names_list_[vn]);
         if (bridge_vrf && routing_vrf) {
             inet4_table = bridge_vrf->GetInet4UnicastRouteTable();
             inet6_table = bridge_vrf->GetInet6UnicastRouteTable();
@@ -266,7 +267,8 @@ void VxlanRoutingVrfMapper::WalkBridgeVrfs
         routed_vrf_info.bridge_vn_list_.begin();
     while (it != routed_vrf_info.bridge_vn_list_.end()) {
         const VnEntry *vn = static_cast<const VnEntry *>(*it);
-        const VrfEntry *vrf = vn->GetVrf();
+        const VrfEntry *vrf = VxlanRoutingManager::VnVrf(vn,
+            routed_vrf_info.bridge_vrf_names_list_.at(vn));
         if (vrf) {
             InetUnicastAgentRouteTable *inet4_table =
                 static_cast<InetUnicastAgentRouteTable *>
@@ -527,6 +529,9 @@ void VxlanRoutingManager::BridgeVnNotify(const VnEntry *vn,
         lr_vrf_info.bridge_vn_list_.insert(vn);
         if (vn->GetVrf())
             lr_vrf_info.bridge_vrf_names_list_[vn] = vn->GetVrf()->GetName();
+        else {
+            lr_vrf_info.bridge_vrf_names_list_[vn] = std::string{""};
+        }
         vrf_mapper_.WalkRoutingVrf(vrf_mapper_.vn_lr_set_[vn], vn, true, false);
     }
 
@@ -806,18 +811,19 @@ void VxlanRoutingManager::DeleteIpamRoutes(const VnEntry *vn,
     if (lr_vrf_info.bridge_vn_list_.size() == 0)
         return;
 
-    VxlanRoutingVrfMapper::RoutedVrfInfo::BridgeVnListIter it =
-        lr_vrf_info.bridge_vn_list_.begin();
-    while (it != lr_vrf_info.bridge_vn_list_.end()) {
-        if (vn == *it) {
-            it++;
+    for (auto bridge_vn_entry : lr_vrf_info.bridge_vn_list_) {
+        if (vn == bridge_vn_entry) {
             continue;
         }
 
-        (*it)->GetVrf()->GetInetUnicastRouteTable(ipam_prefix)->
-            Delete(agent_->evpn_routing_peer(), (*it)->GetVrf()->GetName(),
+        VrfEntry* it_vrf = VnVrf(bridge_vn_entry, lr_vrf_info.bridge_vrf_names_list_[bridge_vn_entry]);
+        if (it_vrf == nullptr) {
+            continue;
+        }
+
+        it_vrf->GetInetUnicastRouteTable(ipam_prefix)->
+            Delete(agent_->evpn_routing_peer(), it_vrf->GetName(),
                 ipam_prefix, plen, NULL);
-        it++;
     }
 }
 
@@ -841,39 +847,32 @@ void VxlanRoutingManager::DeleteSubnetRoute(const VnEntry *vn, const std::string
     if (lr_vrf_info.bridge_vn_list_.size() == 0)
         return;
 
-    VxlanRoutingVrfMapper::RoutedVrfInfo::BridgeVnListIter it =
-        lr_vrf_info.bridge_vn_list_.begin();
-    while (it != lr_vrf_info.bridge_vn_list_.end()) {
-        if (vn == *it) {
-            it++;
+    for (auto bridge_vn_entry : lr_vrf_info.bridge_vn_list_) {
+        if (vn == bridge_vn_entry) {
             continue;
         }
 
-        for (std::vector<VnIpam>::iterator ipam_itr = bridge_vn_ipam.begin();
-            ipam_itr < bridge_vn_ipam.end(); ipam_itr++) {
-                std::string it_vrf_name = "";
-                if (lr_vrf_info.bridge_vrf_names_list_.count((*it)) == 1) {
-                    it_vrf_name = lr_vrf_info.bridge_vrf_names_list_.at((*it));
-                    if (it_vrf_name != std::string("")) {
-                        InetUnicastAgentRouteTable::Delete(agent_->evpn_routing_peer(),
-                        it_vrf_name, ipam_itr->GetSubnetAddress(),
-                        ipam_itr->plen);
-                    }
-                }
+        for (auto br_ipam : bridge_vn_ipam) {
+            VrfEntry* it_vrf = VnVrf(bridge_vn_entry, lr_vrf_info.bridge_vrf_names_list_[bridge_vn_entry]);
+            if (it_vrf == nullptr) {
+                continue;
+            }
+
+            it_vrf->GetInetUnicastRouteTable(br_ipam.ip_prefix)->
+                    Delete(agent_->evpn_routing_peer(), it_vrf->GetName(),
+                        br_ipam.GetSubnetAddress(), br_ipam.plen, NULL);
         }
-        std::vector<VnIpam> vn_ipam = (*it)->GetVnIpam();
+
+        std::vector<VnIpam> vn_ipam = bridge_vn_entry->GetVnIpam();
 
         if (vn_ipam.size() == 0) {
-            it++;
             continue;
         }
-        for (std::vector<VnIpam>::iterator vn_ipam_itr = vn_ipam.begin();
-            vn_ipam_itr < vn_ipam.end(); vn_ipam_itr++) {
+        for (auto br_vn_ipam : vn_ipam) {
             InetUnicastAgentRouteTable::DeleteReq(agent_->evpn_routing_peer(),
-                vrf_name, vn_ipam_itr->GetSubnetAddress(),
-                vn_ipam_itr->plen, NULL);
+                vrf_name, br_vn_ipam.GetSubnetAddress(),
+                br_vn_ipam.plen, NULL);
         }
-        it++;
     }
 }
 
@@ -920,7 +919,11 @@ void VxlanRoutingManager::UpdateSubnetRoute(const VrfEntry *bridge_vrf,
             DBRequest nh_req(DBRequest::DB_ENTRY_ADD_CHANGE);
             nh_req.key.reset(new VrfNHKey(routing_vrf->GetName(), false, false));
             nh_req.data.reset(new VrfNHData(false, false, false));
-            (*it)->GetVrf()->GetInetUnicastRouteTable(ipam_itr->ip_prefix)->
+            VrfEntry* it_vrf = VnVrf((*it), lr_vrf_info.bridge_vrf_names_list_[(*it)]);
+            if (it_vrf == nullptr) {
+                continue;
+            }
+            it_vrf->GetInetUnicastRouteTable(ipam_itr->ip_prefix)->
             AddEvpnRoutingRoute(ipam_itr->ip_prefix, ipam_itr->plen, routing_vrf,
                         agent_->evpn_routing_peer(),
                         SecurityGroupList(),
