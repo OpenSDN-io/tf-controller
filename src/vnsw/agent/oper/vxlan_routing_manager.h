@@ -5,8 +5,6 @@
 #ifndef __AGENT_OPER_VXLAN_ROUTING_H
 #define __AGENT_OPER_VXLAN_ROUTING_H
 
-#include <mutex>
-
 #include <cmn/agent_cmn.h>
 #include <cmn/agent.h>
 #include <oper/oper_db.h>
@@ -606,10 +604,6 @@ private:
     /// @brief An always increasing counter for new paths (used to signal
     /// controoler about new routes).
     static uint32_t loc_sequence_;
-
-    /// A mutex object to prevent simultaneous update of local sequence
-    /// number property.
-    static std::mutex mutex_;
 
     /// Friends declarations
 
