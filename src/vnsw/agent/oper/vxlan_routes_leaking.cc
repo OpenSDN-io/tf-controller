@@ -1,5 +1,3 @@
-#include <mutex>
-
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cmn/agent_cmn.h>
@@ -19,8 +17,6 @@
 #include <oper/tunnel_nh.h> //for tunnel interception
 
 uint32_t VxlanRoutingManager::loc_sequence_ = 0;
-
-std::mutex VxlanRoutingManager::mutex_;
 
 /*
  *
