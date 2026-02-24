@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2022 - 2026 Matvey Kraposhin.
+ * Copyright (c) 2024 - 2026 Elena Zizganova.
+ */
+
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cmn/agent_cmn.h>

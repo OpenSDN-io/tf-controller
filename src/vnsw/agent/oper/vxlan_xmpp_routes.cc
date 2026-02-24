@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2022 - 2026 Matvey Kraposhin.
+ * Copyright (c) 2024 - 2026 Elena Zizganova.
+ */
+
 #include <oper/operdb_init.h>
 #include <oper/route_common.h>
 #include <oper/vrf.h>

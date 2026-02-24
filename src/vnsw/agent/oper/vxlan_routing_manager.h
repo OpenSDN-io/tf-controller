@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
+ * Copyright (c) 2022 - 2026 Matvey Kraposhin.
+ * Copyright (c) 2024 - 2026 Elena Zizganova.
  */
-
 #ifndef __AGENT_OPER_VXLAN_ROUTING_H
 #define __AGENT_OPER_VXLAN_ROUTING_H
 
@@ -112,10 +113,11 @@ private:
     RouteParameters();
 };
 
-/// @brief This state tracks inet and evpn table listeners.
-/// The state establishes link between Inet tables of a bridge VRF instance
-/// from where routes leak and EVPN table of a routing VRF instance
-/// to which routes leak.
+/// @brief This state tracks inet and EVPN table listeners.
+/// It establishes link between inet tables of a bridge VRF instance
+/// from where routes leak and the EVPN table of a routing VRF instance
+/// into which the routes leak, see VxlanRoutingManager and 
+/// VxlanRoutingVrfMapper classes for more information.
 struct VxlanRoutingState : public DBState {
 
     /// @brief Construct new instance using the given VxlanRoutingManager and
@@ -149,9 +151,11 @@ struct VxlanRoutingState : public DBState {
 };
 
 /// @brief This state tracks all virtual machine interfaces (VmInterface)
-/// attached to a Logical Router (LR). The state establishes link
+/// attached to a Logical Router (LR). It establishes links
 /// between VmInterfaces connected to a LR as
-/// router's ports on behalf of bridge virtual networks (VirtualNetwork).
+/// router's ports on behalf of bridge virtual networks (VnEntry),
+/// see VxlanRoutingManager and
+/// VxlanRoutingVrfMapper classes for more information.
 struct VxlanRoutingVnState : public DBState {
 
     /// A typedef for a set of pointers to VmInterface.
@@ -197,8 +201,9 @@ struct VxlanRoutingVnState : public DBState {
     VxlanRoutingManager *mgr_;
 };
 
-/// @brief Tracks movement of a VmInterface amongth LRs. This is used
-/// to associate VmInterface with a LR and a VN;
+/// @brief Tracks movement of a VmInterface among LRs. This is used
+/// to associate VmInterface with a LR and a VN, see VxlanRoutingManager and
+/// VxlanRoutingVrfMapper classes for more information.
 struct VxlanRoutingVmiState : public DBState {
 
     /// @brief Constructs new instance of VxlanRoutingVmiState
@@ -247,18 +252,17 @@ private:
 };
 
 
-/// @brief The class is used to store following information:
-/// - VN to LR uuid mapping
-/// - LR to RoutedVrfInfo mapping.
-/// RoutedVrfInfo - Contains l3vrf as routing vrf and list of all bridge vrf
-/// linked to this routing vrf.
-/// Along with these it has a walker for walking evpn tables.
-/// EVPN walk is triggered for following reasons:
-/// - detection of l3vrf, walks all bridge evpn linked to same.
-/// - bridge vrf addition - Here evpn table of this bridge vrf is walked.
-/// - deletion of vrf
-/// (If multiple walks get scheduled for evpn table then they are collapsed and
-/// only one walk is done)
+/// @brief This class is a storage for operative state of VxLAN logical
+/// routers (LRs) defined via Config logical-router element. It stores:
+/// - a map between a virtual network (VnEntry*) and an LR's UUID, vn_lr_set_;
+/// - a map between an LR's UUID and virtual networks and VRF tables
+/// associated with the LR, lr_vrf_info_map_.
+/// Along with these it has a walker for traversing EVPN tables due to
+/// modification of an LR or associated elements configurative or operative
+/// state.
+/// (If multiple walks get scheduled for an EVPN table then they are
+/// collapsed and only one walk is done).
+/// For more information, refer to VxlanRoutingManager class.
 class VxlanRoutingVrfMapper {
 public:
 
@@ -411,15 +415,133 @@ private:
     DISALLOW_COPY_AND_ASSIGN(VxlanRoutingVrfMapper);
 };
 
-/// @brief This class manages routes leaking between bridge VRF instances
-/// and the routing VRF instance. Routes are leaking is bi-directional:
-/// a) first, during the forward stage interface routes with
-/// LOCAL_VM_PORT_PEER are copied from each
-/// bridge VRF inet table into the routing VRF inet and EVPN tables; b)
-/// second, routes from the routing VRF are
-/// redistributed amongst bridge VRF tables durging the backward stage.
-/// The class extensively uses events notifications to trigger routes
-/// leaking.
+/// @brief This class manages an operative state of VxLAN logical routers (LR)
+/// defined via Config logical-router element. The operative state include
+/// bonds between LRs, virtual networks, VRFs and corresponding routes which
+/// support connectivity between networks connected to a LR.
+///
+/// Given a logical router (LR), there is precisely 1 routing virtual network
+/// (VN) and a routing VRF table associated with it and zero or more
+/// bridge VNs (and corresponding VRF tables) whose states are manipulated
+/// by VxlanRoutingManager using routes leaking process.
+/// Routes leaking is a routing tables bi-directional manipulation process
+/// during which:
+/// - new VM interface routes arising in the bridge VRF tables are being
+/// transferred into the routing VRF table associated with the LR (forward
+/// propagation of routes);
+/// - new routes arising in the routing VRF table are redistributed among
+/// the bridge VRF tables associated with the LR (backward propagation of
+/// routes);
+/// - deletion of created routes in the routing or a bridge VRF leads to
+/// the deletion of the corresponding created routes in other VRF tables
+/// associated with the LR.
+///
+/// In a nutshell, routes leaking is a kind of data synchronization process
+/// between several routing tables.
+///
+/// A bridge virtual network is a basic element in OpenSDN that manages
+/// network connectivity between several VMs within a broadcast domain.
+/// A routing virtual network is a technical virtual network associated
+/// with a LR and providing connectivity between several bridge virtual
+/// networks attached to (associated with) the LR.
+///
+/// The information about an LR is loaded into (or unloaded from) the Agent’s
+/// operative DB when the processing of a corresponding IF-MAP node changes
+/// triggers notifications for associated tables: the interfaces tables
+/// (InterfaceTable class), the virtual networks table (VnTable class) and
+/// the VRFs tables (VrfTable class).
+/// The changes to the IF-MAP nodes arise due to such events as a
+/// connection of a virtual network with an LR (or a disconnection of a VN
+/// from an LR), appearance of a first VM connected to an LR via a bridge
+/// network or a destruction of a last VM (connected to an LR) on a hypervisor.
+/// VxlanRoutingManager links these notifications with its member functions:
+/// VxlanRoutingManager::VmiNotify, VxlanRoutingManager::VnNotify
+/// and VxlanRoutingManager::VrfNotify and they are called VmiNotify,
+/// VnNotify and VrfNotify for brevity.
+///
+/// Due to concurrency mechanisms, these functions can run in various order.
+/// However, only specific order guarantees lack of inconsistencies in the
+/// VxlanRoutingManager data describing state of an LR:
+/// 1. if an LR is being created or updated (e.g., a bridge network is being
+/// attached to it), then the correct notifications processing order is
+/// VmiNotify, VnNotify and VrfNotify, in this case routes leaking functions
+/// which are called by RouteNotify member of VxlanRoutingManager will not
+/// start execution until all information from IF-MAP is not correctly
+/// transferred into the operative DB;
+/// 2. if an LR is being destroyed (or a bridge network is being detached
+/// from it), then the situation is not so obvious, because (a)
+/// on the one hand, VrfNotify should be called first to prevent unexpected
+/// routes leaking from the disconnected or destroyed bridge virtual network,
+/// however this breaks normal event-based mechanism of routes update in
+/// the LR's bridge networks due to changes in the LR's routing network
+/// (since RouteNotify handler will be disconnected) therefore, (b)
+/// the only second viable option is when VnNotify is called first.
+///
+/// The preferred order of execution for functions VrfNotify, VmiNotoify
+/// and VnNotify cannot be specified explicitly from VxlanRoutingMananger,
+/// since it is controlled by (a) arrival of IF-MAP information on a hypervisor
+/// node from a controller and (b) by policies of Agent's operative DB.
+/// For some cases, the correctness of execution is guaranteed by the order
+/// of IF-MAP nodes processing, in some cases, it is guaranteed by additonal
+/// calls inside VxlanRoutingManager.
+///
+/// VxlanRoutingManager acts as a kernel module in some sense: it has several
+/// member functions acting as an entry point and providing service to
+/// its caller: an information about the current state of the module,
+/// modification of the internal state, modifiction of external state (routes
+/// advertisement). These entry points are:
+/// - VxlanRoutingManager::VxlanRoutingManager, initializes the module,
+/// modifies only the internal state;
+/// - VxlanRoutingManager::Register: sets/resets handlers for change events in
+/// VmiTable, VrfTable and VnTable, modifies only the internal state;
+/// - VxlanRoutingManager::VmiNotify: links a VN with a VMI connecting the
+/// latter with an LR, modifies the external state (VnEntry and VmInterface
+/// states declared in VxlanRoutingManager) and is called whenever a VMI is
+/// being attached to an LR (or detached from an LR);
+/// - VxlanRoutingManager::VnNotify: establishes (updates) a mapping between
+/// an LR and VNs attached to the LR, initiates traversing of the routing
+/// and bridge VRF tables to copy (leak) routes between them, modifies the
+/// internal and external states and is called whenever a VN is modified;
+/// - VxlanRoutingManager::VrfNotify: links VxlanRoutingManager member
+/// functions with changes in a modified bridge VN and routing VN routing
+/// tables, modifies only the internal state;
+/// - VxlanRoutingManager::RouteNotify: propagates locally-originated routes
+/// (interface or interface composites) from bridge VRF Inet tables into
+///  the routing VRF Inet table associated previously with an LR;
+/// - VxlanRoutingManager::XmppAdvertiseEvpnRoute: advertises an external
+/// EVPN Type 5 route that came from controller via BGP/XMPP;
+/// - VxlanRoutingManager::IsVxlanAvailable: returns true if VxLAN is
+/// available;
+/// - VxlanRoutingManager::IsRoutingVrf: returns true if the given VRF table
+/// object is a VxLAN routing VRF table.
+///
+/// The internal state of VxlanRoutingManager is defined by a map between
+/// an LR UUID and virtual networks / VRF tables, associated with this LR.
+/// The map is defined in VxlanRoutingVrfMapper class and stored as
+/// std::map for a pair of {boost::uuids::uuid,
+/// VxlanRoutingVrfMapper::RoutedVrfInfo}, where
+/// VxlanRoutingVrfMapper::RoutedVrfInfo stores:
+/// - a pointer to a VnEntry object containing description of the routing VN
+/// associated with the LR;
+/// - a list of pointers to VnEntry objects containing description of
+/// bridge VNs associated with the LR;
+/// - an array of names of VrfEntry objects containing description of
+/// bridge and routing VRF tables linked with the corresponding VNs.
+/// In addition, VxlanRoutingVrfMapper contains a reverse map, that
+/// determines an LR UUID by a pointer to an VnEntry object, associated
+/// with an LR as a bridge or a routing VN.
+///
+/// The external state, which is modified by VxlanRoutingManager, is
+/// characterized by:
+/// - VRF tables (inet and EVPN) of bridge and routing virtual networks;
+/// - operative DB entries states (VxlanRoutingVnState, VxlanRoutingVmiState,
+/// VxlanRoutingState) which are associated with a VN, a VRF table or a VMI
+/// to store additional information needed by VxlanRoutingManager.
+///
+/// Since the aforementioned VxlanRoutingManager entry points are executed
+/// in tasks with the same task code and task data ID (see Task class), their
+/// execution is mutually exclusive, i.e., they cannot run in parallel, but
+/// the order of their execution is not predetermined.
 class VxlanRoutingManager {
 public:
 
@@ -895,17 +1017,28 @@ private:
         const RouteParameters &params,
         InetUnicastAgentRouteTable *inet_table);
 
+    /// @brief Advertises in an EVPN routing table a BGPaaS route that
+    /// came from the controller (this routes leaking occurs in the
+    /// controller).
     void XmppAdvertiseEvpnBgpaas(
     EvpnAgentRouteTable *evpn_table, const IpAddress& prefix_ip,
     const int prefix_len, uint32_t vxlan_id, const std::string vrf_name,
     const RouteParameters& params, const Peer *bgp_peer,
     const std::vector<std::string> &peer_sources);
 
+    /// @brief Advertises in an EVPN routing table a BGPaaS route
+    /// with interface path that
+    /// came from the controller (this routes leaking occurs in the
+    /// controller).
     void XmppAdvertiseEvpnBgpaasInterface(
     EvpnAgentRouteTable *evpn_table, const IpAddress& prefix_ip,
     const int prefix_len, uint32_t vxlan_id, const std::string vrf_name,
     const RouteParameters& params, const Peer *bgp_peer,  const NextHop *nh);
 
+    /// @brief Advertises in an EVPN routing table a BGPaaS route
+    /// with interface composite path that
+    /// came from the controller (this routes leaking occurs in the
+    /// controller).
     void XmppAdvertiseEvpnBgpaasComposite(
     EvpnAgentRouteTable *evpn_table, const IpAddress& prefix_ip,
     const int prefix_len, uint32_t vxlan_id, const std::string vrf_name,
@@ -923,7 +1056,9 @@ public:
     /// @brief Prints all virtual networks attached to logical routers.
     static void ListAttachedVns();
 
-    /// @brief Finds the vrf for the given virtual network.
+    /// @brief Finds a VRF table (VrfEntry) for the given virtual network (VN).
+    /// Returns nullptr if no VRF table associated with this VN or there is no
+    /// VrfEntry having the given name.
     static inline VrfEntry* VnVrf(const VnEntry *vn, const std::string &vrf_name) {
         VrfEntry* vrf = nullptr;
         vrf = vn->GetVrf();
