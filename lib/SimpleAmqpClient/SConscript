@@ -6,7 +6,7 @@ import subprocess
 
 env = DefaultEnvironment()
 
-vpath = '#third_party/SimpleAmqpClient-2.4.0' 
+vpath = '#third_party/SimpleAmqpClient-2.5.1'
 working_dir = Dir('.').abspath
 products = [File('#build/lib/' + env['LIBPREFIX'] + 'SimpleAmqpClient' + env['LIBSUFFIX'])]
 
@@ -15,6 +15,7 @@ shared_libs_mode = 'OFF'
 
 cmake_flags = [
     '-DCMAKE_INSTALL_PREFIX=' + Dir('#build').abspath,
+    '-DCMAKE_INSTALL_LIBDIR=' + Dir('#build/lib').abspath,
     '-DRabbitmqc_INCLUDE_DIR=' + Dir('#build/include').abspath,
     '-DRabbitmqc_LIBRARY=' + File('#build/lib/' + librabbitmq).abspath,
     '-DENABLE_SSL_SUPPORT=ON',
