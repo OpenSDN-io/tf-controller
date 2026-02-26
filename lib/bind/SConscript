@@ -8,7 +8,7 @@ env = DefaultEnvironment()
 build_dir = str(Dir('#/build'))
 config_opts = '--prefix=' + build_dir + ' --enable-threads' + ' --enable-fixed-rrset'
 
-cmd = ('(cd ' + Dir('.').abspath + '; ' + str(Dir(vpath)) +
+cmd = ('(cd ' + Dir('.').abspath + '; CPPFLAGS=-O2 ' + str(Dir(vpath)) +
         '/configure' + ' ' + config_opts + '; make clean; make; make install; ' +
         'cp -f ' + build_dir + '/sbin/named ' + build_dir + '/sbin/contrail-named; ' +
         'cp -f ' + build_dir + '/sbin/rndc ' + build_dir + '/sbin/contrail-rndc; ' +
