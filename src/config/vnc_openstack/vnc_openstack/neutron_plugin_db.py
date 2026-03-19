@@ -610,6 +610,22 @@ class DBInterface(object):
         self._resource_delete('security_group', sg_id)
     # end _security_group_delete
 
+    def _detach_security_group_from_ports(self, sg_obj):
+        """Detach security group from all ports before delete."""
+        vmi_back_refs = sg_obj.get_virtual_machine_interface_back_refs()
+        if not vmi_back_refs:
+            return
+        for vmi_ref in vmi_back_refs:
+            try:
+                port_obj = self._vnc_lib.virtual_machine_interface_read(
+                    id=vmi_ref['uuid'])
+                port_obj.del_security_group(sg_obj)
+                self._resource_update('virtual_machine_interface', port_obj)
+            except NoIdError:
+                # Port may have been deleted already
+                continue
+    # end _detach_security_group_from_ports
+
     def _svc_instance_create(self, si_obj):
         try:
             si_uuid = self._resource_create('service_instance', si_obj)
@@ -5495,7 +5511,9 @@ class DBInterface(object):
     @wait_for_api_server_connection
     def security_group_delete(self, context, sg_id):
         try:
-            sg_obj = self._vnc_lib.security_group_read(id=sg_id)
+            sg_obj = self._vnc_lib.security_group_read(
+                id=sg_id,
+                fields=['virtual_machine_interface_back_refs'])
             if (sg_obj.name == 'default' and str(
                     uuid.UUID(context['tenant_id'])) == sg_obj.parent_uuid):
                 # Deny delete if the security group name is default and
@@ -5504,6 +5522,8 @@ class DBInterface(object):
                     'SecurityGroupCannotRemoveDefault')
         except NoIdError:
             return
+
+        self._detach_security_group_from_ports(sg_obj)
 
         try:
             self._resource_delete('security_group', sg_id)
@@ -5577,16 +5597,16 @@ class DBInterface(object):
                 self._raise_contrail_exception('SecurityGroupInvalidPortRange')
         elif rule['protocol'] in [constants.PROTO_NAME_ICMP,
                                   str(constants.PROTO_NUM_ICMP)]:
-            for attr, field in [('port_range_min', 'type'),
-                                ('port_range_max', 'code')]:
-                if rule[attr] > 255:
-                    self._raise_contrail_exception(
-                        'SecurityGroupInvalidIcmpValue', field=field,
-                        attr=attr, value=rule[attr])
             if (rule['port_range_min'] is None and
                     rule['port_range_max']):
                 self._raise_contrail_exception('SecurityGroupMissingIcmpType',
                                                value=rule['port_range_max'])
+            for attr, field in [('port_range_min', 'type'),
+                                ('port_range_max', 'code')]:
+                if rule[attr] is not None and rule[attr] > 255:
+                    self._raise_contrail_exception(
+                        'SecurityGroupInvalidIcmpValue', field=field,
+                        attr=attr, value=rule[attr])
 
     @wait_for_api_server_connection
     def security_group_rule_create(self, sgr_q):

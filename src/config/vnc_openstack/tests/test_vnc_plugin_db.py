@@ -171,8 +171,12 @@ class TestDbInterface(unittest.TestCase):
         def _sg_delete(id):
             delete_called_for[0] = id
 
+        def vmi_refs():
+            return []
+
         dbi._vnc_lib = flexmock(operational=True,
-                                security_group_read=lambda id: sg_obj,
+                                security_group_read=lambda id,
+                                **kwargs: sg_obj,
                                 security_group_delete=_sg_delete)
 
         # sg_delete should be called when sg_name != default
@@ -180,7 +184,8 @@ class TestDbInterface(unittest.TestCase):
         sg_uuid = str(uuid.uuid4())
         sg_obj = flexmock(operational=True,
                           name="non-default",
-                          parent_uuid=tenant_uuid)
+                          parent_uuid=tenant_uuid,
+                          get_virtual_machine_interface_back_refs=vmi_refs)
         dbi._zookeeper_client.create_node(
             '%s/%s' %
             (dbi.security_group_lock_prefix, sg_uuid))
@@ -191,7 +196,8 @@ class TestDbInterface(unittest.TestCase):
         delete_called_for = [""]
         sg_obj = flexmock(operational=True,
                           name="non-default",
-                          parent_uuid=str(uuid.uuid4()))
+                          parent_uuid=str(uuid.uuid4()),
+                          get_virtual_machine_interface_back_refs=vmi_refs)
         dbi._zookeeper_client.create_node(
             '%s/%s' %
             (dbi.security_group_lock_prefix, sg_uuid))
@@ -201,7 +207,8 @@ class TestDbInterface(unittest.TestCase):
         delete_called_for = [""]
         sg_obj = flexmock(operational=True,
                           name="default",
-                          parent_uuid=str(uuid.uuid4()))
+                          parent_uuid=str(uuid.uuid4()),
+                          get_virtual_machine_interface_back_refs=vmi_refs)
         dbi._zookeeper_client.create_node(
             '%s/%s' %
             (dbi.security_group_lock_prefix, sg_uuid))
@@ -212,7 +219,8 @@ class TestDbInterface(unittest.TestCase):
             delete_called_for = [""]
             sg_obj = flexmock(operational=True,
                               name="default",
-                              parent_uuid=tenant_uuid)
+                              parent_uuid=tenant_uuid,
+                              get_virtual_machine_interface_back_refs=vmi_refs)
             dbi._zookeeper_client.create_node(
                 '%s/%s' %
                 (dbi.security_group_lock_prefix, sg_uuid))

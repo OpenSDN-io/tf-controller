@@ -1,5 +1,7 @@
+import time
 import uuid
 
+from cfgm_common.exceptions import NoIdError
 from gevent import monkey
 from mock import MagicMock
 monkey.patch_all()
@@ -270,9 +272,18 @@ class VncEndpointsTestBase(test_case.KMTestCase):
         return iip_ip
 
     def _get_vmi_uid(self, pod_uid):
-        # Assert proper creation of pod and return id of vm interface
-        vm = self._vnc_lib.virtual_machine_read(
-            id=pod_uid, fields=('virtual_machine_interface_back_refs',))
+        # Assert proper creation of pod and return id of vm interface.
+        # Retry on NoIdError: kube-manager creates VM asynchronously, so it may
+        # not exist yet when wait_for_all_tasks_done returns (queue empty).
+        for _ in range(3):
+            try:
+                vm = self._vnc_lib.virtual_machine_read(
+                    id=pod_uid, fields=('virtual_machine_interface_back_refs',))
+                break
+            except NoIdError:
+                time.sleep(1)
+        else:
+            self.fail('VM %s not created in api-server within 10s' % pod_uid)
         self.assertEqual(len(vm.virtual_machine_interface_back_refs), 1)
         vm_interface = self._vnc_lib.virtual_machine_interface_read(
             id=vm.virtual_machine_interface_back_refs[0]['uuid'])
