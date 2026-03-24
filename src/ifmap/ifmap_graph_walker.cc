@@ -4,9 +4,6 @@
 
 #include "ifmap/ifmap_graph_walker.h"
 
-#include <boost/assign/list_of.hpp>
-#include <boost/bind/bind.hpp>
-
 #include "base/logging.h"
 #include "base/task_trigger.h"
 #include "db/db_graph.h"
@@ -21,12 +18,6 @@
 #include "ifmap/ifmap_update.h"
 #include "ifmap/ifmap_util.h"
 #include "schema/vnc_cfg_types.h"
-
-using boost::assign::list_of;
-using boost::assign::map_list_of;
-using std::set;
-using std::string;
-using namespace boost::placeholders;
 
 class GraphPropagateFilter : public DBGraph::VisitorFilter {
 public:
@@ -74,7 +65,7 @@ IFMapGraphWalker::IFMapGraphWalker(DBGraph *graph, IFMapExporter *exporter)
     : graph_(graph),
       exporter_(exporter),
       link_delete_walk_trigger_(new TaskTrigger(
-          boost::bind(&IFMapGraphWalker::LinkDeleteWalk, this),
+          [this](){ return LinkDeleteWalk(); },
           TaskScheduler::GetInstance()->GetTaskId("db::IFMapTable"), 0)),
       walk_client_index_(BitSet::npos) {
     traversal_white_list_.reset(new IFMapTypenameWhiteList());
@@ -102,8 +93,8 @@ void IFMapGraphWalker::ProcessLinkAdd(IFMapNode *lnode, IFMapNode *rnode,
                                       const BitSet &bset) {
     GraphPropagateFilter filter(exporter_, traversal_white_list_.get(), bset);
     graph_->Visit(rnode,
-                  boost::bind(&IFMapGraphWalker::JoinVertex, this, _1, bset),
-                  boost::bind(&IFMapGraphWalker::NotifyEdge, this, _1, bset),
+                  [this, &bset](DBGraphVertex *v) { JoinVertex(v, bset); },
+                  [this, &bset](DBGraphEdge *e)   { NotifyEdge(e, bset); },
                   filter);
 }
 
@@ -184,7 +175,7 @@ bool IFMapGraphWalker::LinkDeleteWalk() {
         IFMapNode *node = table->FindNode(client->identifier());
         if ((node != NULL) && node->IsVertexValid()) {
             graph_->Visit(node,
-                boost::bind(&IFMapGraphWalker::RecomputeInterest, this, _1, i),
+                [this, i](DBGraphVertex *v) { RecomputeInterest(v, i); },
                 0, *traversal_white_list_.get());
         }
         done_set.set(i);
@@ -348,207 +339,239 @@ const IFMapTypenameWhiteList &IFMapGraphWalker::get_traversal_white_list()
 // IFMapGraphTraversalFilterCalculator::CreateNodeBlackList() are mutually
 // exclusive
 void IFMapGraphWalker::AddNodesToWhitelist() {
-    traversal_white_list_->include_vertex = map_list_of<std::string, std::set<std::string> >
-        ("virtual-router",
-         list_of("physical-router-virtual-router")
-                ("virtual-router-virtual-machine")
-                ("virtual-router-network-ipam")
-                ("global-system-config-virtual-router")
-                ("provider-attachment-virtual-router")
-                ("virtual-router-virtual-machine-interface")
-                ("virtual-router-sub-cluster")
-                    .convert_to_container<set<string> >())
-        ("virtual-router-network-ipam", list_of("virtual-router-network-ipam")
-            .convert_to_container<set<string> >())
-        ("virtual-machine",
-         list_of("virtual-machine-service-instance")
-                ("virtual-machine-interface-virtual-machine")
-                ("virtual-machine-tag")
-                    .convert_to_container<set<string> >())
-        ("control-node-zone", set<string>())
-        ("sub-cluster",
-         list_of("bgp-router-sub-cluster")
-                    .convert_to_container<set<string> >())
-        ("bgp-router",
-         list_of("instance-bgp-router")
-                ("physical-router-bgp-router")
-                ("bgp-router-control-node-zone")
-                    .convert_to_container<set<string> >())
-        ("bgp-as-a-service",
-         list_of("bgpaas-bgp-router")
-                ("bgpaas-health-check")
-                ("bgpaas-control-node-zone")
-                    .convert_to_container<set<string> >())
-        ("bgpaas-control-node-zone", list_of("bgpaas-control-node-zone")
-            .convert_to_container<set<string> >())
-        ("global-system-config",
-         list_of("global-system-config-global-vrouter-config")
-                ("global-system-config-global-qos-config")
-                ("global-system-config-bgp-router")
-                ("qos-config-global-system-config")
-                    .convert_to_container<set<string> >())
-        ("provider-attachment", set<string>())
-        ("service-instance", list_of("service-instance-service-template")
-                                    ("service-instance-port-tuple")
-                                        .convert_to_container<set<string> >())
-        ("global-vrouter-config",
-          list_of("application-policy-set-global-vrouter-config")
-                 ("global-vrouter-config-security-logging-object")
-                     .convert_to_container<set<string> >())
-        ("virtual-machine-interface",
-         list_of("virtual-machine-virtual-machine-interface")
-                ("virtual-machine-interface-sub-interface")
-                ("instance-ip-virtual-machine-interface")
-                ("virtual-machine-interface-virtual-network")
-                ("virtual-machine-interface-security-group")
-                ("floating-ip-virtual-machine-interface")
-                ("alias-ip-virtual-machine-interface")
-                ("customer-attachment-virtual-machine-interface")
-                ("virtual-machine-interface-routing-instance")
-                ("virtual-machine-interface-route-table")
-                ("subnet-virtual-machine-interface")
-                ("service-port-health-check")
-                ("bgpaas-virtual-machine-interface")
-                ("virtual-machine-interface-qos-config")
-                ("virtual-machine-interface-bridge-domain")
-                ("virtual-machine-interface-security-logging-object")
-                ("project-virtual-machine-interface")
-                ("port-tuple-interface")
-                ("virtual-machine-interface-tag")
-                ("virtual-machine-interface-bgp-router")
-                    .convert_to_container<set<string> >())
-        ("virtual-machine-interface-bridge-domain",
-          list_of("virtual-machine-interface-bridge-domain")
-              .convert_to_container<set<string> >())
-        ("security-group", list_of("security-group-access-control-list")
-            .convert_to_container<set<string> >())
-        ("physical-router",
-         list_of("physical-router-physical-interface")
-        ("physical-router-logical-interface")
-        ("physical-router-virtual-network")
-            .convert_to_container<set<string> >())
-        ("service-template", list_of("domain-service-template")
-            .convert_to_container<set<string> >())
-        ("instance-ip", list_of("instance-ip-virtual-network")
-            .convert_to_container<set<string> >())
-        ("virtual-network",
-         list_of("virtual-network-floating-ip-pool")
-        ("virtual-network-alias-ip-pool")
-        ("virtual-network-network-ipam")
-        ("virtual-network-access-control-list")
-        ("virtual-network-routing-instance")
-        ("virtual-network-qos-config")
-        ("virtual-network-bridge-domain")
-        ("virtual-network-security-logging-object")
-        ("virtual-network-tag")
-        ("virtual-network-provider-network")
-        ("virtual-network-multicast-policy")
-        ("vn-health-check")
-        ("host-based-service-virtual-network")
-        ("project-virtual-network")
-            .convert_to_container<set<string> >())
-        ("floating-ip", list_of("floating-ip-pool-floating-ip")
-        ("instance-ip-floating-ip").convert_to_container<set<string> >())
-        ("alias-ip", list_of("alias-ip-pool-alias-ip")
-            .convert_to_container<set<string> >())
-        ("customer-attachment", set<string>())
-        ("virtual-machine-interface-routing-instance",
-         list_of("virtual-machine-interface-routing-instance")
-             .convert_to_container<set<string> >())
-        ("physical-interface", list_of("physical-interface-logical-interface")
-                                      ("virtual-port-group-physical-interface")
-                                          .convert_to_container<set<string> >())
-        ("virtual-port-group-physical-interface",
-         list_of("virtual-port-group-physical-interface")
-             .convert_to_container<std::set<std::string> >())
-        ("virtual-port-group",
-         list_of("virtual-port-group-virtual-machine-interface")
-                ("virtual-port-group-physical-interface")
-                    .convert_to_container<std::set<std::string> >())
-        ("domain", list_of("domain-namespace")("domain-virtual-DNS")
-            .convert_to_container<set<string> >())
-        ("floating-ip-pool", list_of("virtual-network-floating-ip-pool")
-            .convert_to_container<set<string> >())
-        ("alias-ip-pool", list_of("virtual-network-alias-ip-pool")
-            .convert_to_container<set<string> >())
-        ("logical-interface", list_of("logical-interface-virtual-machine-interface")
-            .convert_to_container<set<string> >())
-        ("logical-router-virtual-network", list_of("logical-router-virtual-network")
-            .convert_to_container<set<string> >())
-        ("logical-router", list_of("logical-router-virtual-network")
-                                  ("logical-router-interface")
-                                      .convert_to_container<set<string> >())
-        ("virtual-network-network-ipam", list_of("virtual-network-network-ipam")
-            .convert_to_container<set<string> >())
-        ("access-control-list", set<string>())
-        ("routing-instance", set<string>())
-        ("namespace", set<string>())
-        ("virtual-DNS", list_of("virtual-DNS-virtual-DNS-record")
-            .convert_to_container<set<string> >())
-        ("network-ipam", list_of("network-ipam-virtual-DNS")
-            .convert_to_container<set<string> >())
-        ("virtual-DNS-record", std::set<std::string>())
-        ("interface-route-table", std::set<std::string>())
-        ("subnet", std::set<std::string>())
-        ("service-health-check", std::set<std::string>())
-        ("qos-config", std::set<std::string>())
-        ("qos-queue", std::set<std::string>())
-        ("forwarding-class", list_of("forwarding-class-qos-queue")
-            .convert_to_container<set<string> >())
-        ("global-qos-config",
-         list_of("global-qos-config-forwarding-class")
-         ("global-qos-config-qos-queue")
-         ("global-qos-config-qos-config")
-             .convert_to_container<set<string> >())
-        ("bridge-domain", std::set<std::string>())
-        ("security-logging-object",
-         list_of("virtual-network-security-logging-object")
-                ("virtual-machine-interface-security-logging-object")
-                ("global-vrouter-config-security-logging-object")
-                ("security-logging-object-network-policy")
-                ("security-logging-object-security-group")
-                    .convert_to_container<set<string> >())
-        ("tag", list_of("application-policy-set-tag")
-            .convert_to_container<std::set<std::string> >())
-        ("application-policy-set", list_of("application-policy-set-firewall-policy")
-                                          ("policy-management-application-policy-set")
-                                              .convert_to_container<std::set<std::string> >())
-        ("application-policy-set-firewall-policy",
-                                   list_of("application-policy-set-firewall-policy")
-                                       .convert_to_container<std::set<std::string> >())
-        ("firewall-policy", list_of("firewall-policy-firewall-rule")
-                                   ("firewall-policy-security-logging-object")
-                                       .convert_to_container<std::set<std::string> >())
-        ("firewall-policy-firewall-rule",
-                            list_of("firewall-policy-firewall-rule")
-                                .convert_to_container<std::set<std::string> >())
-        ("firewall-policy-security-logging-object",
-                            list_of("firewall-policy-security-logging-object")
-                                .convert_to_container<std::set<std::string> >())
-        ("firewall-rule", list_of("firewall-rule-tag")
-                                 ("firewall-rule-service-group")
-                                 ("firewall-rule-address-group")
-                                 ("firewall-rule-security-logging-object")
-                                     .convert_to_container<std::set<std::string> >())
-        ("firewall-rule-security-logging-object",
-                            list_of("firewall-rule-security-logging-object")
-                                .convert_to_container<std::set<std::string> >())
-        ("service-group", std::set<std::string>())
-        ("address-group", list_of("address-group-tag")
-            .convert_to_container<std::set<std::string> >())
-        ("host-based-service", list_of("host-based-service-virtual-network")
-            .convert_to_container<std::set<std::string> >())
-        ("host-based-service-virtual-network", list_of("virtual-network")
-            .convert_to_container<std::set<std::string> >())
-        ("project", list_of("project-tag")
-                           ("project-logical-router")
-                           ("project-host-based-service")
-                               .convert_to_container<std::set<std::string> >())
-        ("port-tuple", list_of("service-instance-port-tuple")
-                              ("port-tuple-interface")
-                                  .convert_to_container<std::set<std::string> >())
-        ("policy-management", std::set<std::string>())
-        ("multicast-policy", list_of("virtual-network-multicast-policy")
-            .convert_to_container<std::set<std::string> >())
-                .convert_to_container<VertexEdgeMap>();
+    traversal_white_list_->include_vertex = {
+        {"virtual-router", {
+            "physical-router-virtual-router",
+            "virtual-router-virtual-machine",
+            "virtual-router-network-ipam",
+            "global-system-config-virtual-router",
+            "provider-attachment-virtual-router",
+            "virtual-router-virtual-machine-interface",
+            "virtual-router-sub-cluster",
+        }},
+        {"virtual-router-network-ipam", {
+            "virtual-router-network-ipam",
+        }},
+        {"virtual-machine", {
+            "virtual-machine-service-instance",
+            "virtual-machine-interface-virtual-machine",
+            "virtual-machine-tag",
+        }},
+        {"control-node-zone", {}},
+        {"sub-cluster", {
+            "bgp-router-sub-cluster",
+        }},
+        {"bgp-router", {
+            "instance-bgp-router",
+            "physical-router-bgp-router",
+            "bgp-router-control-node-zone",
+        }},
+        {"bgp-as-a-service", {
+            "bgpaas-bgp-router",
+            "bgpaas-health-check",
+            "bgpaas-control-node-zone",
+        }},
+        {"bgpaas-control-node-zone", {
+            "bgpaas-control-node-zone",
+        }},
+        {"global-system-config", {
+            "global-system-config-global-vrouter-config",
+            "global-system-config-global-qos-config",
+            "global-system-config-bgp-router",
+            "qos-config-global-system-config",
+        }},
+        {"provider-attachment", {}},
+        {"service-instance", {
+            "service-instance-service-template",
+            "service-instance-port-tuple",
+        }},
+        {"global-vrouter-config", {
+            "application-policy-set-global-vrouter-config",
+            "global-vrouter-config-security-logging-object",
+        }},
+        {"virtual-machine-interface", {
+            "virtual-machine-virtual-machine-interface",
+            "virtual-machine-interface-sub-interface",
+            "instance-ip-virtual-machine-interface",
+            "virtual-machine-interface-virtual-network",
+            "virtual-machine-interface-security-group",
+            "floating-ip-virtual-machine-interface",
+            "alias-ip-virtual-machine-interface",
+            "customer-attachment-virtual-machine-interface",
+            "virtual-machine-interface-routing-instance",
+            "virtual-machine-interface-route-table",
+            "subnet-virtual-machine-interface",
+            "service-port-health-check",
+            "bgpaas-virtual-machine-interface",
+            "virtual-machine-interface-qos-config",
+            "virtual-machine-interface-bridge-domain",
+            "virtual-machine-interface-security-logging-object",
+            "project-virtual-machine-interface",
+            "port-tuple-interface",
+            "virtual-machine-interface-tag",
+            "virtual-machine-interface-bgp-router",
+        }},
+        {"virtual-machine-interface-bridge-domain", {
+            "virtual-machine-interface-bridge-domain",
+        }},
+        {"security-group", {
+            "security-group-access-control-list",
+        }},
+        {"physical-router", {
+            "physical-router-physical-interface",
+            "physical-router-logical-interface",
+            "physical-router-virtual-network",
+        }},
+        {"service-template", {
+            "domain-service-template",
+        }},
+        {"instance-ip", {
+            "instance-ip-virtual-network",
+        }},
+        {"virtual-network", {
+            "virtual-network-floating-ip-pool",
+            "virtual-network-alias-ip-pool",
+            "virtual-network-network-ipam",
+            "virtual-network-access-control-list",
+            "virtual-network-routing-instance",
+            "virtual-network-qos-config",
+            "virtual-network-bridge-domain",
+            "virtual-network-security-logging-object",
+            "virtual-network-tag",
+            "virtual-network-provider-network",
+            "virtual-network-multicast-policy",
+            "vn-health-check",
+            "host-based-service-virtual-network",
+            "project-virtual-network",
+        }},
+        {"floating-ip", {
+            "floating-ip-pool-floating-ip",
+            "instance-ip-floating-ip",
+        }},
+        {"alias-ip", {
+            "alias-ip-pool-alias-ip",
+        }},
+        {"customer-attachment", {}},
+        {"virtual-machine-interface-routing-instance", {
+            "virtual-machine-interface-routing-instance",
+        }},
+        {"physical-interface", {
+            "physical-interface-logical-interface",
+            "virtual-port-group-physical-interface",
+        }},
+        {"virtual-port-group-physical-interface", {
+            "virtual-port-group-physical-interface",
+        }},
+        {"virtual-port-group", {
+            "virtual-port-group-virtual-machine-interface",
+            "virtual-port-group-physical-interface",
+        }},
+        {"domain", {
+            "domain-namespace",
+            "domain-virtual-DNS",
+        }},
+        {"floating-ip-pool", {
+            "virtual-network-floating-ip-pool",
+        }},
+        {"alias-ip-pool", {
+            "virtual-network-alias-ip-pool",
+        }},
+        {"logical-interface", {
+            "logical-interface-virtual-machine-interface",
+        }},
+        {"logical-router-virtual-network", {
+            "logical-router-virtual-network",
+        }},
+        {"logical-router", {
+            "logical-router-virtual-network",
+            "logical-router-interface",
+        }},
+        {"virtual-network-network-ipam", {
+            "virtual-network-network-ipam",
+        }},
+        {"access-control-list", {}},
+        {"routing-instance", {}},
+        {"namespace", {}},
+        {"virtual-DNS", {
+            "virtual-DNS-virtual-DNS-record",
+        }},
+        {"network-ipam", {
+            "network-ipam-virtual-DNS",
+        }},
+        {"virtual-DNS-record", {}},
+        {"interface-route-table", {}},
+        {"subnet", {}},
+        {"service-health-check", {}},
+        {"qos-config", {}},
+        {"qos-queue", {}},
+        {"forwarding-class", {
+            "forwarding-class-qos-queue",
+        }},
+        {"global-qos-config", {
+            "global-qos-config-forwarding-class",
+            "global-qos-config-qos-queue",
+            "global-qos-config-qos-config",
+        }},
+        {"bridge-domain", {}},
+        {"security-logging-object", {
+            "virtual-network-security-logging-object",
+            "virtual-machine-interface-security-logging-object",
+            "global-vrouter-config-security-logging-object",
+            "security-logging-object-network-policy",
+            "security-logging-object-security-group",
+        }},
+        {"tag", {
+            "application-policy-set-tag",
+        }},
+        {"application-policy-set", {
+            "application-policy-set-firewall-policy",
+            "policy-management-application-policy-set",
+        }},
+        {"application-policy-set-firewall-policy", {
+            "application-policy-set-firewall-policy",
+        }},
+        {"firewall-policy", {
+            "firewall-policy-firewall-rule",
+            "firewall-policy-security-logging-object",
+        }},
+        {"firewall-policy-firewall-rule", {
+            "firewall-policy-firewall-rule",
+        }},
+        {"firewall-policy-security-logging-object", {
+            "firewall-policy-security-logging-object",
+        }},
+        {"firewall-rule", {
+            "firewall-rule-tag",
+            "firewall-rule-service-group",
+            "firewall-rule-address-group",
+            "firewall-rule-security-logging-object",
+        }},
+        {"firewall-rule-security-logging-object", {
+            "firewall-rule-security-logging-object",
+        }},
+        {"service-group", {}},
+        {"address-group", {
+            "address-group-tag",
+        }},
+        {"host-based-service", {
+            "host-based-service-virtual-network",
+        }},
+        {"host-based-service-virtual-network", {
+            "virtual-network",
+        }},
+        {"project", {
+            "project-tag",
+            "project-logical-router",
+            "project-host-based-service",
+        }},
+        {"port-tuple", {
+            "service-instance-port-tuple",
+            "port-tuple-interface",
+        }},
+        {"policy-management", {}},
+        {"multicast-policy", {
+            "virtual-network-multicast-policy",
+        }},
+    };
 }
+
