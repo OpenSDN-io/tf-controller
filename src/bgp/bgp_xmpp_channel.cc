@@ -1298,7 +1298,7 @@ bool BgpXmppChannel::ProcessItem(string vrf_name,
         uint16_t tag_index = 0;
         for (TagListType::const_iterator tit = nit->tag_list.begin();
             tit != nit->tag_list.end(); ++tit) {
-            if (bgp_server_->autonomous_system() <= 0xFFFF) {
+            if (bgp_server_->autonomous_system() <= AS2_MAX) {
                 Tag tag(bgp_server_->autonomous_system(), *tit);
                 ext.communities.push_back(tag.GetExtCommunityValue());
                 TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
@@ -1372,7 +1372,7 @@ bool BgpXmppChannel::ProcessItem(string vrf_name,
         const SecurityGroupListType &isg_list = item.entry.security_group_list;
         for (SecurityGroupListType::const_iterator sit = isg_list.begin();
             sit != isg_list.end(); ++sit) {
-            if (bgp_server_->autonomous_system() <= 0xFFFF) {
+            if (bgp_server_->autonomous_system() <= AS2_MAX) {
                 SecurityGroup sg(bgp_server_->autonomous_system(), *sit);
                 ext.communities.push_back(sg.GetExtCommunityValue());
             } else {
@@ -1633,7 +1633,7 @@ bool BgpXmppChannel::ProcessInet6Item(string vrf_name,
             uint16_t tag_index = 0;
             for (TagListType::const_iterator tit = nit->tag_list.begin();
                 tit != nit->tag_list.end(); ++tit) {
-                if (bgp_server_->autonomous_system() <= 0xFFFF) {
+                if (bgp_server_->autonomous_system() <= AS2_MAX) {
                     Tag tag(bgp_server_->autonomous_system(), *tit);
                     ext.communities.push_back(tag.GetExtCommunityValue());
                     TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
@@ -2009,7 +2009,7 @@ bool BgpXmppChannel::ProcessEnetItem(string vrf_name,
         uint16_t tag_index = 0;
         for (TagListType::const_iterator tit = nit->tag_list.begin();
             tit != nit->tag_list.end(); ++tit) {
-            if (bgp_server_->autonomous_system() <= 0xFFFF) {
+            if (bgp_server_->autonomous_system() <= AS2_MAX) {
                 Tag tag(bgp_server_->autonomous_system(), *tit);
                 ext.communities.push_back(tag.GetExtCommunityValue());
                 TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
