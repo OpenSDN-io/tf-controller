@@ -1265,6 +1265,7 @@ int BgpAttr::CompareTo(const BgpAttr &rhs) const {
     KEY_COMPARE(cluster_list_.get(), rhs.cluster_list_.get());
     KEY_COMPARE(community_.get(), rhs.community_.get());
     KEY_COMPARE(ext_community_.get(), rhs.ext_community_.get());
+    KEY_COMPARE(large_community_.get(), rhs.large_community_.get());
     KEY_COMPARE(origin_vn_path_.get(), rhs.origin_vn_path_.get());
     KEY_COMPARE(sub_protocol_, rhs.sub_protocol_);
     return 0;
@@ -1305,6 +1306,7 @@ std::size_t hash_value(BgpAttr const &attr) {
     if (attr.as4_path_) boost::hash_combine(hash, *attr.as4_path_);
     if (attr.community_) boost::hash_combine(hash, *attr.community_);
     if (attr.ext_community_) boost::hash_combine(hash, *attr.ext_community_);
+    if (attr.large_community_) boost::hash_combine(hash, *attr.large_community_);
     if (attr.origin_vn_path_) boost::hash_combine(hash, *attr.origin_vn_path_);
     if (!attr.sub_protocol_.empty()) {
         boost::hash_combine(hash, attr.sub_protocol_);
