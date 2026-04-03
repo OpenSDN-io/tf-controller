@@ -209,7 +209,7 @@ public:
                 xml_attribute id = item.attribute("id");
                 std::string sid = id.value();
                 if (inet_route) {
-                    unique_ptr<autogen::ItemType> rt_entry(
+	   	     unique_ptr<autogen::ItemType> rt_entry(
                             new autogen::ItemType());
                     if (!rt_entry->XmlParse(item))
                         continue;
@@ -246,7 +246,7 @@ public:
                                                      rt_entry.release());
                     }
                 } else if (enet_route) {
-                    unique_ptr<autogen::EnetItemType> rt_entry(
+    			unique_ptr<autogen::EnetItemType> rt_entry(
                             new autogen::EnetItemType());
                     if (!rt_entry->XmlParse(item))
                         continue;
@@ -505,6 +505,7 @@ pugi::xml_document *XmppDocumentMock::RouteAddDeleteXmlDoc(
             item_nexthop.tunnel_encapsulation_list.tunnel_encapsulation =
                 nh.tunnel_encapsulations_;
             item_nexthop.tag_list.tag = nh.tag_list_;
+	    item_nexthop.is_new_tags_list = true;
             rt_entry.entry.next_hops.next_hop.push_back(item_nexthop);
         }
     }

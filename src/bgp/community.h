@@ -520,9 +520,17 @@ public:
     /// flags.
     LargeCommunitySpec() : BgpAttribute(LargeCommunities, kFlags) { }
 
-    /// @brief Construct from an existing BgpAttribute.
+    /// @brief Constructs from an existing BgpAttribute.
     explicit LargeCommunitySpec(const BgpAttribute &rhs) :
         BgpAttribute(rhs) { }
+
+    /// @brief Constructs an instance from an Extened Community specification
+    /// by distributing its bits inside a new Large Community spec.
+    static LargeCommunitySpec FromTag(const ExtCommunitySpec &ex_spec);
+
+    /// @brief Removes extended communities corresponding to tags
+    /// from the given ExtCommunitySpec.
+    static ExtCommunitySpec RemoveTags(const ExtCommunitySpec& ex_spec);
 
     /// @brief Compute the encoded length of the attribute.
     virtual size_t EncodeLength() const;

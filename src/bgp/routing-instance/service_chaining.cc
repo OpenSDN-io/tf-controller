@@ -812,33 +812,33 @@ void ServiceChain<T>::UpdateServiceChainRouteInternal(const RouteT *orig_route,
 
     SiteOfOrigin soo;
     ExtCommunity::ExtCommunityList sgid_list;
-    ExtCommunity::ExtCommunityList tag_list;
+    LargeCommunity::LargeCommunityList tag_list;
     LoadBalance load_balance;
     bool load_balance_present = false;
-    const Community *orig_community = NULL;
-    const OriginVnPath *orig_ovnpath = NULL;
-    const AsPath *orig_aspath = NULL;
+    const Community *orig_community = nullptr;
+    const OriginVnPath *orig_ovnpath = nullptr;
+    const AsPath *orig_aspath = nullptr;
     RouteDistinguisher orig_rd;
     if (orig_route) {
         const BgpPath *orig_path = orig_route->BestPath();
-        const BgpAttr *orig_attr = NULL;
-        const ExtCommunity *ext_community = NULL;
-        if (orig_path)
+        const BgpAttr *orig_attr = nullptr;
+        const ExtCommunity *ext_community = nullptr;
+	const LargeCommunity *large_community = nullptr;
+        if (orig_path != nullptr)
             orig_attr = orig_path->GetAttr();
-        if (orig_attr) {
+        if (orig_attr != nullptr) {
             orig_community = orig_attr->community();
             ext_community = orig_attr->ext_community();
+	    large_community = orig_attr->large_community();
             orig_ovnpath = orig_attr->origin_vn_path();
             orig_rd = orig_attr->source_rd();
             orig_aspath = orig_attr->as_path();
         }
-        if (ext_community) {
-            BOOST_FOREACH(const ExtCommunity::ExtCommunityValue &comm,
+        if (ext_community != nullptr) {
+            for(const ExtCommunity::ExtCommunityValue &comm:
                           ext_community->communities()) {
                 if (ExtCommunity::is_security_group(comm))
                     sgid_list.push_back(comm);
-                if (ExtCommunity::is_tag(comm))
-                    tag_list.push_back(comm);
                 if (ExtCommunity::is_site_of_origin(comm) && soo.IsNull())
                     soo = SiteOfOrigin(comm);
                 if (ExtCommunity::is_load_balance(comm)) {
@@ -847,6 +847,13 @@ void ServiceChain<T>::UpdateServiceChainRouteInternal(const RouteT *orig_route,
                 }
             }
         }
+	if (large_community != nullptr) {
+	    for(const auto &comm : large_community->communities()) {
+	        if (LargeCommunity::is_tag(comm)) {
+		    tag_list.push_back(comm);
+		}
+	    }
+	}
     }
 
     BgpAttrDB *attr_db = server->attr_db();
@@ -854,6 +861,7 @@ void ServiceChain<T>::UpdateServiceChainRouteInternal(const RouteT *orig_route,
     CommunityPtr new_community = comm_db->AppendAndLocate(
         orig_community, CommunityType::AcceptOwnNexthop);
     ExtCommunityDB *extcomm_db = server->extcomm_db();
+    LargeCommunityDB *largecomm_db = server->largecomm_db();
     BgpMembershipManager *membership_mgr = server->membership_mgr();
     OriginVnPathDB *ovnpath_db = server->ovnpath_db();
     OriginVnPathPtr new_ovnpath;
@@ -891,6 +899,7 @@ void ServiceChain<T>::UpdateServiceChainRouteInternal(const RouteT *orig_route,
         const BgpAttr *attr = connected_path->GetAttr();
 
         ExtCommunityPtr new_ext_community;
+	LargeCommunityPtr new_large_community;
 
         // Strip any RouteTargets from the connected attributes.
         new_ext_community = extcomm_db->ReplaceRTargetAndLocate(
@@ -939,8 +948,8 @@ void ServiceChain<T>::UpdateServiceChainRouteInternal(const RouteT *orig_route,
             new_ext_community.get(), sgid_list);
 
         // Replace the Tag list with the list from the original route.
-        new_ext_community = extcomm_db->ReplaceTagListAndLocate(
-            new_ext_community.get(), tag_list);
+	new_large_community = largecomm_db->ReplaceTagListAndLocate(
+	    new_large_community.get(), tag_list);
 
         // Replace SiteOfOrigin with value from original route if any.
         if (soo.IsNull()) {
@@ -988,6 +997,9 @@ void ServiceChain<T>::UpdateServiceChainRouteInternal(const RouteT *orig_route,
         // Replace extended community, community and origin vn path.
         BgpAttrPtr new_attr = attr_db->ReplaceExtCommunityAndLocate(
             attr, new_ext_community);
+	new_attr =
+	    attr_db->ReplaceLargeCommunityAndLocate(new_attr.get(),
+			                            new_large_community);
         new_attr =
             attr_db->ReplaceCommunityAndLocate(new_attr.get(), new_community);
         new_attr = attr_db->ReplaceOriginVnPathAndLocate(new_attr.get(),

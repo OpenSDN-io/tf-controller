@@ -11,6 +11,8 @@
 #include "bgp/bgp_route.h"
 #include "bgp/bgp_server.h"
 #include "net/bgp_af.h"
+#include "extended-community/tag.h"
+#include "large-community/tag.h"
 
 using std::unique_ptr;
 
@@ -125,8 +127,8 @@ bool BgpMessage::StartReach(const RibOut *ribout, const RibOutAttr *roattr,
         update.path_attributes.push_back(comm);
     }
 
+    ExtCommunitySpec *ext_comm = new ExtCommunitySpec;
     if (attr->ext_community() && attr->ext_community()->communities().size()) {
-        ExtCommunitySpec *ext_comm = new ExtCommunitySpec;
         const ExtCommunity::ExtCommunityList &v =
                 attr->ext_community()->communities();
         for (ExtCommunity::ExtCommunityList::const_iterator it = v.begin();
@@ -134,21 +136,45 @@ bool BgpMessage::StartReach(const RibOut *ribout, const RibOutAttr *roattr,
             uint64_t value = get_value(it->data(), it->size());
             ext_comm->communities.push_back(value);
         }
-        update.path_attributes.push_back(ext_comm);
     }
 
+    LargeCommunitySpec *large_comm = new LargeCommunitySpec;
     if (attr->large_community() && attr->large_community()->communities().size()) {
-        LargeCommunitySpec *large_comm = new LargeCommunitySpec;
+        uint16_t tag_index = 0;
         const LargeCommunity::LargeCommunityList &v =
                 attr->large_community()->communities();
+        uint64_t tid64;
+        uint32_t asn, tid, value;
         for (LargeCommunity::LargeCommunityList::const_iterator it = v.begin();
-                it != v.end(); ++it) {
+             it != v.end(); ++it) {
+                TagLC tag_lc {*it};
+                tid64 = tag_lc.tag();
+                if ((tid64 & 0xFFFF0000) == 0) {
+                    asn = tag_lc.as_number();
+                    tid = ((tid64 & 0xFFFF00000000) >> 16) |
+                        (tid64 & 0xFFFF);
+                    if (asn <= AS2_MAX) {
+                        Tag tag {as2_t(asn), tid};
+                        ext_comm->communities.push_back(tag.GetExtCommunityValue());
+                    } else {
+                        Tag4ByteAs tag4 {asn, tag_index};
+                        Tag tag {tag_index, tid};
+                        ext_comm->communities.push_back(tag.GetExtCommunityValue());
+                        ext_comm->communities.push_back(tag4.GetExtCommunityValue());
+                        tag_index++;
+                    }
+                    continue;
+                }
+
                 for (int i = 0; i < 3; i++) {
-                    uint32_t value = get_value(it->data() + 4*i, 4);
+                    value = get_value(it->data() + 4*i, 4);
                     large_comm->communities.push_back(value);
-            }
+                }
         }
         update.path_attributes.push_back(large_comm);
+    }
+    if (ext_comm->EncodeLength()) {
+        update.path_attributes.push_back(ext_comm);
     }
 
     if (attr->origin_vn_path() && attr->origin_vn_path()->origin_vns().size()) {

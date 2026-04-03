@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/algorithm/string.hpp>
 #include <base/parse_object.h>
 #include <ifmap/ifmap_link.h>
 #include <ifmap/ifmap_table.h>
@@ -111,6 +112,11 @@ bool TagEntry::Change(TagTable *table, const DBRequest *req) {
 
     if (tag_value_ != data->tag_value_) {
         tag_value_ = data->tag_value_;
+        ret = true;
+    }
+
+    if (is_new_tag_ != data->is_new_tag_) {
+        is_new_tag_ = data->is_new_tag_;
         ret = true;
     }
 
@@ -263,15 +269,26 @@ TagData* TagTable::BuildData(Agent *agent, IFMapNode *node) {
         }
     }
 
+    std::string cfg_id = cfg->id();
+    boost::trim(cfg_id);
+    const std::string cfg_tag_id =
+        cfg_id.size() == 14 ? cfg_id :
+            (cfg_id.size() == 10 ?
+                std::string{cfg_id}.insert(6, "0000") :
+                std::string{"0x000000000000"});
+    const bool is_new_tag = cfg_id.size() == 14 ? true :
+            (cfg_id.size() == 10 ? false : true);
+
     TagData *data = new TagData(agent, node,
-                                strtol(cfg->id().c_str(), NULL, 16));
+                                stol(cfg_tag_id, nullptr, 16));
     data->policy_set_uuid_list_ = global_policy_set;
     data->policy_set_uuid_list_.insert(data->policy_set_uuid_list_.end(),
                                        prj_policy_set.begin(),
                                        prj_policy_set.end());
     data->name_ = node->name();
-    data->tag_type_ = TagEntry::GetTypeVal(cfg->type_name(), cfg->id());
+    data->tag_type_ = TagEntry::GetTypeVal(cfg->type_name(), cfg_tag_id);
     data->tag_value_ = cfg->value();
+    data->is_new_tag_ = is_new_tag;
     return data;
 }
 

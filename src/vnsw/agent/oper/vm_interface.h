@@ -1596,6 +1596,7 @@ public:
     void update_flow_count(int val) const;
     uint32_t flow_count() const { return flow_count_; }
     InterfaceList parent_list() const { return parent_list_; }
+    const bool &contains_new_tags() const { return contains_new_tags_; }
 
 
 private:
@@ -1814,6 +1815,7 @@ private:
     boost::uuids::uuid vmi_cfg_uuid_;
     std::string service_intf_type_;
     InterfaceList parent_list_;
+    bool contains_new_tags_;
     DISALLOW_COPY_AND_ASSIGN(VmInterface);
 };
 

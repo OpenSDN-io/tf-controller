@@ -41,7 +41,7 @@ struct TagKey : public AgentOperDBKey {
 struct TagData : public AgentOperDBData {
     typedef std::vector<boost::uuids::uuid> PolicySetUuidList;
     TagData(Agent *agent, IFMapNode *node, const uint64_t &tag_id):
-            AgentOperDBData(agent, node), tag_id_(tag_id){
+            AgentOperDBData(agent, node), tag_id_(tag_id) {
     }
     virtual ~TagData() {}
 
@@ -50,6 +50,7 @@ struct TagData : public AgentOperDBData {
     std::string tag_value_;
     uint64_t tag_type_;
     PolicySetUuidList policy_set_uuid_list_;
+    bool is_new_tag_;
 };
 
 class TagEntry : AgentRefCount<TagEntry>, public AgentOperDBEntry {
@@ -110,6 +111,10 @@ public:
         return tag_value_;
     }
 
+    const bool &is_new_tag() const {
+        return is_new_tag_;
+    }
+
     static const std::string& GetTypeStr(uint64_t tag_type);
     static uint64_t GetTypeVal(const std::string &str,
                                const std::string &val);
@@ -122,6 +127,7 @@ private:
     std::string tag_value_;
     std::string name_;
     PolicySetList policy_set_list_;
+    bool is_new_tag_;
     DISALLOW_COPY_AND_ASSIGN(TagEntry);
 };
 

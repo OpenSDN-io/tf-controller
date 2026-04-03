@@ -13,6 +13,7 @@
 #include "bgp/bgp_xmpp_channel.h"
 #include "bgp/l3vpn/inetvpn_table.h"
 #include "bgp/extended-community/tag.h"
+#include "bgp/large-community/tag.h"
 #include "bgp/security_group/security_group.h"
 #include "bgp/test/bgp_server_test_util.h"
 #include "bgp/xmpp_message_builder.h"
@@ -846,25 +847,25 @@ protected:
         const autogen::ItemType *rt = agent->RouteLookup(net, prefix);
         if (!rt)
             return false;
-        if (rt->entry.next_hops.next_hop[0].address != nexthop)
+	if (rt->entry.next_hops.next_hop[0].address != nexthop)
             return false;
-        if (local_pref && rt->entry.local_preference != local_pref)
+	if (local_pref && rt->entry.local_preference != local_pref)
             return false;
-        if (med && rt->entry.med != med)
+	if (med && rt->entry.med != med)
             return false;
-        if (seq && rt->entry.sequence_number != seq)
+	if (seq && rt->entry.sequence_number != seq)
             return false;
-        if (!origin_vn.empty()) {
+	if (!origin_vn.empty()) {
             if (rt->entry.virtual_network != origin_vn)
                 return false;
         }
-        if (!sgids.empty() &&
+	if (!sgids.empty() &&
             rt->entry.security_group_list.security_group != sgids)
             return false;
-        if (!communities.empty() &&
+	if (!communities.empty() &&
             rt->entry.community_tag_list.community_tag != communities)
             return false;
-        if (LoadBalance(rt->entry.load_balance) != loadBalance) {
+	if (LoadBalance(rt->entry.load_balance) != loadBalance) {
             return false;
         }
 
@@ -872,11 +873,10 @@ protected:
             rt->entry.next_hops.next_hop[0].tunnel_encapsulation_list;
         if (!encap.empty() && !CheckEncap(rt_encap, encap))
             return false;
-
         autogen::TagListType rt_tag = rt->entry.next_hops.next_hop[0].tag_list;
         if (!tag_list.empty() && !CheckTagList(rt_tag, tag_list))
             return false;
-        return true;
+	return true;
     }
 
     void VerifyRouteExists(test::NetworkAgentMockPtr agent, string net,
@@ -3932,15 +3932,15 @@ TEST_F(BgpXmppInetvpn2ControlNodeTest, TagListDifferentAsn) {
     stringstream route_a;
     route_a << "10.1.1.1/32";
     vector<uint64_t> tag_list = list_of
-        (Tag::kMinGlobalId - 1)(Tag::kMinGlobalId + 1)
-        (Tag::kMinGlobalId - 2)(Tag::kMinGlobalId + 2);
+        (TagLC::kMinGlobalId - 1)(TagLC::kMinGlobalId + 1)
+        (TagLC::kMinGlobalId - 2)(TagLC::kMinGlobalId + 2);
     test::NextHop next_hop("192.168.1.1", 0, tag_list);
     agent_a_->AddRoute("blue", route_a.str(), next_hop, 100);
     task_util::WaitForIdle();
 
     // Verify that route showed up on agents A and B with expected tags.
     vector<uint64_t> global_tags = list_of
-        (Tag::kMinGlobalId + 1)(Tag::kMinGlobalId + 2);
+        (TagLC::kMinGlobalId + 1)(TagLC::kMinGlobalId + 2);
     sort(tag_list.begin(), tag_list.end());
     sort(global_tags.begin(), global_tags.end());
 
@@ -3987,8 +3987,8 @@ TEST_F(BgpXmppInetvpn2ControlNodeTest, TagListDifferentAsnAllTagsAreGlobal) {
     stringstream route_a;
     route_a << "10.1.1.1/32";
     vector<uint64_t> tag_list = list_of
-        (Tag::kMinGlobalId - 1)(Tag::kMinGlobalId + 1)
-        (Tag::kMinGlobalId - 2)(Tag::kMinGlobalId + 2);
+        (TagLC::kMinGlobalId - 1)(TagLC::kMinGlobalId + 1)
+        (TagLC::kMinGlobalId - 2)(TagLC::kMinGlobalId + 2);
     test::NextHop next_hop("192.168.1.1", 0, tag_list);
     agent_a_->AddRoute("blue", route_a.str(), next_hop, 100);
     task_util::WaitForIdle();

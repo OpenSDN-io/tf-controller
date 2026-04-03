@@ -1294,26 +1294,15 @@ bool BgpXmppChannel::ProcessItem(string vrf_name,
             }
         }
 
-        // Process tag list.
-        uint16_t tag_index = 0;
+        // Process tags list.
+        uint64_t tag_val = 0;
         for (TagListType::const_iterator tit = nit->tag_list.begin();
             tit != nit->tag_list.end(); ++tit) {
-            if (bgp_server_->autonomous_system() <= AS2_MAX) {
-                Tag tag(bgp_server_->autonomous_system(), *tit);
-                ext.communities.push_back(tag.GetExtCommunityValue());
-                TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
-                for (auto value_data : tag_lc.GetLargeCommunityValue()) {
-                    largecomm.communities.push_back(value_data);
-                }
-            } else {
-                Tag tag(tag_index, *tit);
-                Tag4ByteAs tag4(bgp_server_->autonomous_system(), tag_index++);
-                ext.communities.push_back(tag4.GetExtCommunityValue());
-                ext.communities.push_back(tag.GetExtCommunityValue());
-                TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
-                for (auto value_data : tag_lc.GetLargeCommunityValue()) {
-                    largecomm.communities.push_back(value_data);
-                }
+            tag_val = nit->is_new_tags_list ? *tit :
+                ((0xFFFF0000 & *tit) << 16) | (0x0000FFFF & *tit);
+            TagLC tag_lc(bgp_server_->autonomous_system(), tag_val);
+            for (const auto &value_data : tag_lc.GetLargeCommunityValue()) {
+                largecomm.communities.push_back(value_data);
             }
         }
 
@@ -1629,27 +1618,16 @@ bool BgpXmppChannel::ProcessInet6Item(string vrf_name,
                 }
             }
 
-            // Process tag list.
-            uint16_t tag_index = 0;
+            // Process tags list.
+            uint64_t tag_val = 0;
             for (TagListType::const_iterator tit = nit->tag_list.begin();
                 tit != nit->tag_list.end(); ++tit) {
-                if (bgp_server_->autonomous_system() <= AS2_MAX) {
-                    Tag tag(bgp_server_->autonomous_system(), *tit);
-                    ext.communities.push_back(tag.GetExtCommunityValue());
-                    TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
-                    for (auto value_data : tag_lc.GetLargeCommunityValue()) {
-                        largecomm.communities.push_back(value_data);
-                    }
-                } else {
-                    Tag tag(tag_index, *tit);
-                    Tag4ByteAs tag4(bgp_server_->autonomous_system(),
-                                    tag_index++);
-                    ext.communities.push_back(tag.GetExtCommunityValue());
-                    ext.communities.push_back(tag4.GetExtCommunityValue());
-                    TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
-                    for (auto value_data : tag_lc.GetLargeCommunityValue()) {
-                        largecomm.communities.push_back(value_data);
-                    }
+                tag_val = nit->is_new_tags_list ? *tit :
+                    ((0xFFFF0000 & *tit) << 16) | (0x0000FFFF & *tit);
+                TagLC tag_lc(bgp_server_->autonomous_system(), tag_val);
+                for (const auto &value_data :
+                    tag_lc.GetLargeCommunityValue()) {
+                    largecomm.communities.push_back(value_data);
                 }
             }
 
@@ -2005,26 +1983,16 @@ bool BgpXmppChannel::ProcessEnetItem(string vrf_name,
             flags = BgpPath::NoTunnelEncap;
         }
 
-        // Process tag list.
-        uint16_t tag_index = 0;
+        // Process tags list.
+        uint64_t tag_val = 0;
         for (TagListType::const_iterator tit = nit->tag_list.begin();
             tit != nit->tag_list.end(); ++tit) {
-            if (bgp_server_->autonomous_system() <= AS2_MAX) {
-                Tag tag(bgp_server_->autonomous_system(), *tit);
-                ext.communities.push_back(tag.GetExtCommunityValue());
-                TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
-                for (auto value_data : tag_lc.GetLargeCommunityValue()) {
-                    largecomm.communities.push_back(value_data);
-                }
-            } else {
-                Tag tag(tag_index, *tit);
-                Tag4ByteAs tag4(bgp_server_->autonomous_system(), tag_index++);
-                ext.communities.push_back(tag.GetExtCommunityValue());
-                ext.communities.push_back(tag4.GetExtCommunityValue());
-                TagLC tag_lc(bgp_server_->autonomous_system(), *tit);
-                for (auto value_data : tag_lc.GetLargeCommunityValue()) {
-                    largecomm.communities.push_back(value_data);
-                }
+            tag_val = nit->is_new_tags_list ? *tit :
+                ((0x0000FFFF0000 & *tit) << 16) |
+                (0x00000000FFFF & *tit);
+            TagLC tag_lc(bgp_server_->autonomous_system(), tag_val);
+            for (const auto &value_data : tag_lc.GetLargeCommunityValue()) {
+                largecomm.communities.push_back(value_data);
             }
         }
 

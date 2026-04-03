@@ -966,6 +966,7 @@ private:
     CommunityPtr community_;
     ExtCommunityPtr ext_community_;
     LargeCommunityPtr large_community_;
+    std::unique_ptr<LargeCommunitySpec> deferred_large_spec_;
     OriginVnPathPtr origin_vn_path_;
     PmsiTunnelPtr pmsi_tunnel_;
     EdgeDiscoveryPtr edge_discovery_;

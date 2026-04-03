@@ -942,6 +942,7 @@ BgpAttr::BgpAttr(const BgpAttr &rhs)
       community_(rhs.community_),
       ext_community_(rhs.ext_community_),
       large_community_(rhs.large_community_),
+      deferred_large_spec_(nullptr),
       origin_vn_path_(rhs.origin_vn_path_),
       pmsi_tunnel_(rhs.pmsi_tunnel_),
       edge_discovery_(rhs.edge_discovery_),
@@ -1015,6 +1016,16 @@ void BgpAttr::set_ext_community(ExtCommunityPtr extcomm) {
 
 void BgpAttr::set_ext_community(const ExtCommunitySpec *extcomm) {
     if (extcomm) {
+        LargeCommunitySpec large_spec = LargeCommunitySpec::FromTag(*extcomm);
+	set_large_community(&large_spec);
+	
+        if (large_spec.communities.size()) {
+            ExtCommunitySpec new_comms =
+                LargeCommunitySpec::RemoveTags(*extcomm);
+            ext_community_ =
+                attr_db_->server()->extcomm_db()->Locate(new_comms);
+	    return;
+        }
         ext_community_ = attr_db_->server()->extcomm_db()->Locate(*extcomm);
     } else {
         ext_community_ = NULL;
@@ -1027,8 +1038,17 @@ void BgpAttr::set_large_community(LargeCommunityPtr largecomm) {
 
 void BgpAttr::set_large_community(const LargeCommunitySpec *largecomm) {
     if (largecomm) {
+	if (!bool(deferred_large_spec_)) {
+	    deferred_large_spec_.reset(new LargeCommunitySpec);
+	    deferred_large_spec_->communities = largecomm->communities;
+	} else {
+	    deferred_large_spec_->communities.insert(
+	        deferred_large_spec_->communities.end(),
+		largecomm->communities.begin(),
+		largecomm->communities.end());
+	}
         large_community_ =
-            attr_db_->server()->largecomm_db()->Locate(*largecomm);
+	    attr_db_->server()->largecomm_db()->Locate(*deferred_large_spec_);
     } else {
         large_community_ = NULL;
     }

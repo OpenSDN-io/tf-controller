@@ -2368,7 +2368,7 @@ bool BgpPeer::ReceiveMsg(BgpSession *session, const u_int8_t *msg,
 
     // Tracing periodic keepalive packets is not necessary.
     if (minfo->type != BgpProto::KEEPALIVE)
-        BGP_TRACE_PEER_PACKET(this, msg, size, Sandesh::LoggingUtLevel());
+        BGP_TRACE_PEER_PACKET(this, msg, size, SandeshLevel::SYS_WARN); //Sandesh::LoggingUtLevel()
 
     state_machine_->OnMessage(session, minfo, size);
     return true;
