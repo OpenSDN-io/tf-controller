@@ -100,7 +100,10 @@ class VncTags(object):
                                % (self._construct_tag_fq_name(type, value)))
         except Exception as e:
             self._logger.debug("Tag [%s] read failed. Error [%s]."
-                               % (self._construct_tag_fq_name(type, value), e.message))
+                               % (
+                                   self._construct_tag_fq_name(type, value),
+                                   str(e))
+                               )
         return None
 
     def get_tags_fq_name(self, kv_dict, create=False):

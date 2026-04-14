@@ -60,6 +60,7 @@ class TagServer(ResourceMixin, Tag):
             msg = "Tag Type reference is not setable"
             return False, (400, msg)
 
+        tag_type_newly_created = False
         # check if tag-type is already present use that.
         ok, result = cls.server.get_resource_class('tag_type').locate(
             [type_str], create_it=False)
@@ -83,13 +84,18 @@ class TagServer(ResourceMixin, Tag):
                 [type_str], **params)
             if not ok:
                 return False, result
+            tag_type_newly_created = True
 
         tag_type = result
+        if tag_type_newly_created:
+            def undo_tag_type():
+                cls.server.internal_request_delete(
+                    'tag-type',
+                    tag_type['uuid']
+                )
+                return True, ''
 
-        def undo_tag_type():
-            cls.server.internal_request_delete('tag-type', tag_type['uuid'])
-            return True, ''
-        get_context().push_undo(undo_tag_type)
+            get_context().push_undo(undo_tag_type)
 
         obj_dict['tag_type_refs'] = [
             {
@@ -169,12 +175,6 @@ class TagServer(ResourceMixin, Tag):
             old_tag_type_name,
             int(read_result['tag_id'], 0) & 0x0000ffff,
             ':'.join(fq_name),
-        )
-        cls.vnc_zk_client.free_tag_value_id(
-            old_tag_type_name,
-            int(read_result['tag_id'], 0) & 0x0000ffff,
-            ':'.join(fq_name),
-            notify=True
         )
         # alloc new one
         cls.vnc_zk_client.alloc_tag_value_id(

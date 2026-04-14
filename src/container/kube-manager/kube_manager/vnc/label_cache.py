@@ -113,9 +113,9 @@ class XLabelCache(object):
         return k + ':' + v
 
     def get_key_value(self, label):
-        kv = label.split(':')
-        kv[0], kv[1] = self._validate_key_value(kv[0], kv[1])
-        return kv[0], kv[1]
+        k, _, v = label.partition(':')
+        k, v = self._validate_key_value(k, v)
+        return k, v
 
     def _update_label_to_guid_cache(self, key, value, obj_uuid):
 
@@ -133,7 +133,7 @@ class XLabelCache(object):
 
         return label_key
 
-    def process(self, obj_uuid, curr_labels={}, list_curr_labels_dict=[]):
+    def process(self, obj_uuid, curr_labels=None, list_curr_labels_dict=None):
         """
         Process addition/update/deletion of labels on an object.
 
@@ -146,6 +146,10 @@ class XLabelCache(object):
         list_curr_labels_dict: Labels that are to be associated with the
                                object in a list format.
         """
+        if curr_labels is None:
+            curr_labels = {}
+        if list_curr_labels_dict is None:
+            list_curr_labels_dict = []
         all_labels = set()
 
         # Update label to k8s guid cache.
@@ -252,7 +256,7 @@ class XLabelCache(object):
 
     @classmethod
     def get_labels(cls, obj_uuid):
-        return XLabelCache.k8s_guid_to_label_cache.get(obj_uuid, {})
+        return XLabelCache.k8s_guid_to_label_cache.get(obj_uuid, set())
 
     @classmethod
     def get_namespace_label(cls, namespace):

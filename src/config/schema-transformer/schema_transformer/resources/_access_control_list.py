@@ -24,6 +24,7 @@ def _access_control_list_update(acl_obj, name, obj, entries):
         except Exception:
             pass
         try:
+            acl_obj.set_access_control_list_hash(hash(entries))
             ResourceBaseST._vnc_lib.access_control_list_create(acl_obj)
             return acl_obj
         except (NoIdError, BadRequest) as e:

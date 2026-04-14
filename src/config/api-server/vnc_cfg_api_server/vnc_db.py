@@ -587,15 +587,25 @@ class VncZkClient(object):
                 self._TAG_VALUE_MAX_ID,
             ) for type_name in list(constants.TagTypeNameToId.keys())}
 
-        # Initialize the user defined tag value ID allocator for pref-defined tag-type.
-        # One allocator per tag type
-        self._ud_tag_value_id_allocator = {
-            type_name: IndexAllocator(
-                self._zk_client,
-                self._tag_value_ud_id_alloc_path % type_name,
-                size=self._TAG_VALUE_UD_MAX_ID,
-                start_idx=self._TAG_VALUE_UD_MIN_ID
-            ) for type_name in list(constants.TagTypeNameToId.keys())}
+        # UD value allocator cache: populated lazily via _tag_value_id_allocator.setdefault().
+        # _tag_value_ud_id_alloc_path ("/id/tags/values/UD/") is never written to;
+        # all tag values use _tag_value_id_alloc_path ("/id/tags/values/").
+        # Kept as empty dict so free_ud_tag_type_id can safely call .pop().
+        self._ud_tag_value_id_allocator = {}
+
+        for type_name, type_id in constants.TagTypeNameToId.items():
+            existing = self._tag_type_id_allocator.read(type_id)
+            if existing is None:
+                self._zk_client.syslog(
+                    "WARNING: ZK node for predefined tag"
+                    " type '%s' (id=%d) missing, restoring"
+                    % (type_name, type_id))
+                try:
+                    self._tag_type_id_allocator.reserve(type_id, type_name)
+                except ResourceExistsError:
+                    pass
+            else:
+                self._tag_type_id_allocator.set_in_use(type_id)
 
         # Initialize the sub-cluster ID allocator
         self._sub_cluster_id_allocator = IndexAllocator(
@@ -889,7 +899,8 @@ class VncZkClient(object):
     def alloc_tag_type_id(self, type_str, tag_type_id=None,
                           internal_request=False):
         try:
-            if tag_type_id is not None and self.user_def_tag_type(tag_type_id):
+            if tag_type_id is not None and self.user_def_tag_type(
+                    tag_type_id):
                 return self.alloc_ud_tag_type_id(type_str, tag_type_id)
             elif internal_request:
                 return self.alloc_ud_tag_type_id_internal_request(type_str)
@@ -900,17 +911,23 @@ class VncZkClient(object):
 
     # Tag type functions
     def alloc_auto_tag_type_id(self, type_str, tag_type_id=None):
-        # If ID provided, it's a notify allocation, just lock allocated ID in
-        # memory
         if tag_type_id is not None:
             if self.get_tag_type_from_id(tag_type_id) is not None:
+                # Notify path: ID already in ZK, just lock in memory
                 self._tag_type_id_allocator.set_in_use(tag_type_id)
                 return tag_type_id
+            elif type_str is not None:
+                # Reserve path: explicitly allocate a specific free ID
+                try:
+                    return self._tag_type_id_allocator.reserve(
+                        tag_type_id, type_str)
+                except ResourceExistsError:
+                    raise
         elif type_str is not None:
             return self._tag_type_id_allocator.alloc(type_str)
 
     def free_auto_tag_type_id(self, tag_type_id, type_str, notify=False):
-        if tag_type_id is not None and tag_type_id < self._TAG_TYPE_MAX_ID:
+        if tag_type_id is not None and tag_type_id <= self._TAG_TYPE_MAX_ID:
             # If tag type name associated to the allocated ID does not
             # correpond to freed tag type name, keep zookeeper lock
             allocated_type_str = self.get_tag_type_from_id(tag_type_id)
@@ -929,22 +946,28 @@ class VncZkClient(object):
 
     # Common function to get tag type from id.
     def get_tag_type_from_id(self, tag_type_id):
-        if tag_type_id is not None:
-            if self.user_def_tag_type(tag_type_id) and tag_type_id < self._TAG_TYPE_UD_MAX_ID:
+        if tag_type_id is None:
+            return None
+
+        if self.user_def_tag_type(tag_type_id):
+            if tag_type_id <= self._TAG_TYPE_UD_MAX_ID:
                 return self._ud_tag_type_id_allocator.read(tag_type_id)
-            elif not self.user_def_tag_type(tag_type_id) and tag_type_id < self._TAG_TYPE_MAX_ID:
+        else:
+            if tag_type_id <= self._TAG_TYPE_MAX_ID:
                 return self._tag_type_id_allocator.read(tag_type_id)
+
+        return None
 
     # User defined tag type functions
     def alloc_ud_tag_type_id(self, type_str, tag_type_id=None):
-        if tag_type_id is not None and tag_type_id < self._TAG_TYPE_UD_MAX_ID:
+        if tag_type_id is not None and tag_type_id <= self._TAG_TYPE_UD_MAX_ID:
             id_to_fq_name = self.get_tag_type_from_id(tag_type_id)
             if id_to_fq_name is not None and id_to_fq_name == type_str:
+                self._ud_tag_type_id_allocator.set_in_use(tag_type_id)
                 return tag_type_id
             elif type_str is not None:
                 try:
-                    return self._ud_tag_type_id_allocator.reserve(
-                        tag_type_id, type_str)
+                    return self._ud_tag_type_id_allocator.reserve(tag_type_id, type_str)
                 except ResourceExistsError:
                     raise
 
@@ -955,7 +978,7 @@ class VncZkClient(object):
             raise
 
     def free_ud_tag_type_id(self, tag_type_id, type_str, notify=False):
-        if tag_type_id is not None and tag_type_id < self._TAG_TYPE_UD_MAX_ID:
+        if tag_type_id is not None and tag_type_id <= self._TAG_TYPE_UD_MAX_ID:
             # If tag type name associated to the allocated ID does not
             # correpond to freed tag type name, keep zookeeper lock
             allocated_type_str = self.get_tag_type_from_id(tag_type_id)
@@ -968,9 +991,12 @@ class VncZkClient(object):
                 self._ud_tag_type_id_allocator.reset_in_use(tag_type_id)
             else:
                 IndexAllocator.delete_all(
-                    self._zk_client, self._tag_value_ud_id_alloc_path % type_str)
+                    self._zk_client,
+                    self._tag_value_id_alloc_path % type_str
+                )
                 self._ud_tag_type_id_allocator.delete(tag_type_id)
             self._ud_tag_value_id_allocator.pop(type_str, None)
+            self._tag_value_id_allocator.pop(type_str, None)
 
     def alloc_auto_tag_value_id(self, type_str, fq_name_str, tag_value_id=None):
         tag_value_id_allocator = self._tag_value_id_allocator.setdefault(
@@ -1932,6 +1958,10 @@ class VncDbClient(object):
                                                       obj_uuid, obj_dict)
                 elif obj_type == 'logical_router':
                     self._check_and_add_fabric_refs_to_lr(obj_dict)
+                elif obj_type == 'tag_type':
+                    r_class = self.get_resource_class(obj_type)
+                    r_class.dbe_create_notification(
+                        self, obj_uuid, obj_dict)
 
                 # create new perms if upgrading
                 perms2 = obj_dict.get('perms2')

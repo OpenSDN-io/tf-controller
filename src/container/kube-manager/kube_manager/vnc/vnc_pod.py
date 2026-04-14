@@ -375,7 +375,9 @@ class VncPod(VncCommon):
         for vmi_obj in vmi_obj_list:
             self._vnc_lib.set_tags(vmi_obj, self._labels.get_labels_dict(pod_id))
 
-    def _unset_tags_on_pod_vmi(self, pod_id, vmi_id=None, labels={}):
+    def _unset_tags_on_pod_vmi(self, pod_id, vmi_id=None, labels=None):
+        if not labels:
+            labels = {}
         vmi_obj_list = []
         if not vmi_id:
             vm = VirtualMachineKM.get(pod_id)
@@ -576,7 +578,6 @@ class VncPod(VncCommon):
             self._link_vm_to_node(vm, pod_node, node_ip)
         self._update_label_to_pod_cache(labels, vm)
         self._set_tags_on_pod_vmi(pod_id)
-
         return vm
 
     def vnc_port_delete(self, vmi_id, pod_id):
@@ -736,6 +737,21 @@ class VncPod(VncCommon):
 
             # Add implicit namespace labels on this pod.
             labels.update(self._get_namespace_labels(pod_namespace))
+
+            if event['type'] == 'MODIFIED':
+                old_label_keys = set(self._labels.get_labels(pod_id))
+                new_label_keys = {
+                    self._labels.get_key(k, v)
+                    for k, v in labels.items()
+                }
+                removed_label_keys = old_label_keys - new_label_keys
+                if removed_label_keys:
+                    removed = {}
+                    for lk in removed_label_keys:
+                        k, v = self._labels.get_key_value(lk)
+                        removed[k] = v
+                    self._unset_tags_on_pod_vmi(pod_id, labels=removed)
+
             self._labels.process(pod_id, labels)
 
             if event['type'] == 'ADDED':

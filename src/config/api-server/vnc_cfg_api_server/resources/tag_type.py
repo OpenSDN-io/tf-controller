@@ -16,8 +16,8 @@ class TagTypeServer(ResourceMixin, TagType):
         type_str = obj_dict['fq_name'][-1]
         obj_dict['name'] = type_str
         obj_dict['display_name'] = type_str
-        tag_type_id = obj_dict.get('tag_type_id') or None
-        if tag_type_id:
+        tag_type_id = obj_dict.get('tag_type_id')
+        if tag_type_id is not None:
             tag_type_id = int(tag_type_id, 16)
         # if tag-type set as input and its value is less than 0x7FFF
         # return error. Tag type set is only supported for user defined
@@ -27,8 +27,15 @@ class TagTypeServer(ResourceMixin, TagType):
             msg = "Tag type can be set only with user defined id" \
                   " in range 16-65535"
             return False, (400, msg)
+        ok, result = cls.locate(fq_name=[type_str], create_it=False)
+        if ok:
+            return False, (400, "Tag type already exists")
         # Allocate ID for tag-type
         internal_request = obj_dict.get('internal_request', False)
+        if tag_type_id is None and not internal_request:
+            msg = ("Tag type must be created with an explicit id"
+                   " in user-defined range 16-65535 (0x0010-0xFFFF)")
+            return False, (400, msg)
         try:
             type_id = cls.vnc_zk_client.alloc_tag_type_id(type_str,
                                                           tag_type_id,
@@ -37,7 +44,9 @@ class TagTypeServer(ResourceMixin, TagType):
             return False, (400, "Tag Type with same Id already exists")
 
         def undo_type_id():
-            cls.vnc_zk_client.free_tag_type_id(type_id, obj_dict['fq_name'])
+            cls.vnc_zk_client.free_tag_type_id(
+                type_id, type_str
+            )
             return True, ""
         get_context().push_undo(undo_type_id)
 
@@ -45,7 +54,7 @@ class TagTypeServer(ResourceMixin, TagType):
         # case
         if type_id is None:
             return False, (400, f"Failed to allocate tag type id {tag_type_id}"
-                                f"type string {type_str}")
+                                f" type string {type_str}")
 
         obj_dict['tag_type_id'] = "0x{:04x}".format(type_id)
 
@@ -53,41 +62,60 @@ class TagTypeServer(ResourceMixin, TagType):
 
     @classmethod
     def pre_dbe_update(cls, id, fq_name, obj_dict, db_conn, **kwargs):
-        # User can't update type or value once created
+        # User display_name once created
         if obj_dict.get('display_name'):
             msg = "Tag Type value cannot be updated"
             return False, (400, msg)
-        # Free old value
+
         ok, read_result = cls.dbe_read(cls.db_conn, 'tag_type', id)
         if not ok:
             return False, (400, f"Tag type {id} not found")
+
+        old_id_int = int(read_result['tag_type_id'], 0)
+        new_tag_type_id = obj_dict.get('tag_type_id')
+
+        if new_tag_type_id is not None:
+            new_id_int = int(new_tag_type_id, 0)
+
+            if new_id_int == old_id_int:
+                return True, ""
+
+            if not cls.vnc_zk_client.user_def_tag_type(new_id_int):
+                msg = ("Tag type can be set only with"
+                       " user defined id in range 16-65535")
+                return False, (400, msg)
+        else:
+            return True, ""
+
+        try:
+            cls.vnc_zk_client.alloc_tag_type_id(
+                read_result['fq_name'][-1],
+                new_id_int,
+            )
+        except ResourceExistsError:
+            return False, (400, f"Tag Type ID {new_id_int} already in use")
+        # Free old value
         cls.vnc_zk_client.free_tag_type_id(
-            int(read_result['tag_type_id'], 0),
+            old_id_int,
             read_result['fq_name'][-1],
         )
-        cls.vnc_zk_client.free_tag_type_id(
-            int(read_result['tag_type_id'], 0),
-            read_result['fq_name'][-1],
-            notify=True
-        )
-        # alloc new one
-        cls.vnc_zk_client.alloc_tag_type_id(
-            read_result['fq_name'][-1],
-            int(obj_dict['tag_type_id'], 0),
-        )
+
         if 'tag_back_refs' in read_result:
             for tag in read_result['tag_back_refs']:
                 ok, tag_db = cls.db_conn.dbe_read("tag", tag['uuid'])
                 if not ok:
-                    return False, (400, f"Tag {tag['uuid']} not found")
+                    continue
+
                 old_tag_id = int(tag_db['tag_id'], 16)
                 old_tag_value_id = old_tag_id & 0xFFFF
-                new_tag_type_id = int(obj_dict['tag_type_id'], 16)
-                new_tag_id = (new_tag_type_id << 16) | old_tag_value_id
+                new_tag_id = (new_id_int << 16) | old_tag_value_id
                 new_tag_id_str = f"0x{new_tag_id:04X}"
+
                 tag_dict = {"tag_id": new_tag_id_str, 'force': 'yes'}
-                cls.server.internal_request_update("tag", tag_db['uuid'],
-                                                   tag_dict)
+                cls.server.internal_request_update(
+                    "tag", tag_db['uuid'], tag_dict
+                )
+
         return True, ""
 
     @classmethod

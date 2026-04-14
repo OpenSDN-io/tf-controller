@@ -244,8 +244,10 @@ class TestTag(TestTagBase):
         tag_uuid = self.api.tag_create(tag)
         tag = self.api.tag_read(id=tag_uuid)
 
-        tag_type = TagType(name='tag-type-%s' % self.id())
+        tag_type = TagType(name='tag-type-%s' % self.id(),
+                           tag_type_id='0x00A1')
         tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         tag.set_tag_type(tag_type)
         self.assertRaises(BadRequest, self.api.tag_update, tag)
@@ -257,8 +259,10 @@ class TestTag(TestTagBase):
         tag_uuid = self.api.tag_create(tag)
         tag = self.api.tag_read(id=tag_uuid)
 
-        tag_type = TagType(name='tag-type-%s' % self.id())
+        tag_type = TagType(name='tag-type-%s' % self.id(),
+                           tag_type_id='0x00A2')
         tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         tag.add_tag_type(tag_type)
         self.assertRaises(BadRequest, self.api.tag_update, tag)

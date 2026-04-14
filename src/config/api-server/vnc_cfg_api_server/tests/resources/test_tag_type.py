@@ -5,9 +5,10 @@ import logging
 
 from cfgm_common.exceptions import BadRequest
 from cfgm_common.exceptions import RefsExistError
+import gevent
 import mock
 from sandesh_common.vns import constants
-from vnc_api.vnc_api import TagType
+from vnc_api.vnc_api import Tag, TagType
 
 from vnc_cfg_api_server.tests import test_case
 
@@ -44,9 +45,10 @@ class TestTagType(TestTagBase):
 
     def test_tag_type_is_unique(self):
         name = 'tag-type-%s' % self.id()
-        tag_type = TagType(name=name)
-        self.api.tag_type_create(tag_type)
-        new_tag_type = TagType(name=name)
+        tag_type = TagType(name=name, tag_type_id='0x0050')
+        tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
+        new_tag_type = TagType(name=name, tag_type_id='0x0051')
         self.assertRaises(RefsExistError, self.api.tag_type_create,
                           new_tag_type)
 
@@ -64,8 +66,10 @@ class TestTagType(TestTagBase):
         self.api.tag_type_delete(id=tag_type_uuid)
 
     def test_tag_type_id_updated(self):
-        tag_type = TagType(name='tag-type-%s' % self.id())
+        tag_type = TagType(name='tag-type-%s' % self.id(),
+                           tag_type_id='0x0060')
         tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         tag_type.tag_type_id = '0x0015'
         self.api.tag_type_update(tag_type)
@@ -77,11 +81,12 @@ class TestTagType(TestTagBase):
         tag_type = TagType(name='tag-type-%s' % self.id(),
                            tag_type_id="0x0020")
         tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
-        tag_type.tag_type_id = '0x0011'
+        tag_type.tag_type_id = '0x00A0'
         self.api.tag_type_update(tag_type)
         tag_type_update = self.api.tag_type_read(id=tag_type_uuid)
-        self.assertEqual(tag_type.tag_type_id,
+        self.assertEqual(tag_type.tag_type_id.lower(),
                          tag_type_update.tag_type_id.lower())
 
     def test_ud_tag_type_id_cannot_be_assigned_to_multiple_tag_types(self):
@@ -97,14 +102,18 @@ class TestTagType(TestTagBase):
 
     def test_tag_type_display_name_cannot_be_set(self):
         name = 'tag-type-%s' % self.id()
-        tag_type = TagType(name=name, display_name='fake_name')
+        tag_type = TagType(name=name, display_name='fake_name',
+                           tag_type_id='0x0061')
         tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         self.assertEqual(tag_type.display_name, name)
 
     def test_tag_type_display_name_cannot_be_updated(self):
-        tag_type = TagType(name='tag-type-%s' % self.id())
+        tag_type = TagType(name='tag-type-%s' % self.id(),
+                           tag_type_id='0x0062')
         tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         tag_type.display_name = 'new_name'
         self.assertRaises(BadRequest, self.api.tag_type_update, tag_type)
@@ -112,9 +121,9 @@ class TestTagType(TestTagBase):
     def test_allocate_tag_type_id(self):
         mock_zk = self._api_server._db_conn._zk_db
         type_str = 'tag-type-%s' % self.id()
-        tag_type = TagType(name=type_str)
+        tag_type = TagType(name=type_str, tag_type_id='0x0063')
         tag_type_uuid = self.api.tag_type_create(tag_type)
-
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         zk_id = int(tag_type.tag_type_id, 0)
         self.assertEqual(type_str, mock_zk.get_tag_type_from_id(zk_id))
@@ -133,7 +142,7 @@ class TestTagType(TestTagBase):
     def test_deallocate_tag_type_id(self):
         mock_zk = self._api_server._db_conn._zk_db
         type_str = 'tag-type-%s' % self.id()
-        tag_type = TagType(name=type_str)
+        tag_type = TagType(name=type_str, tag_type_id='0x0064')
         tag_type_uuid = self.api.tag_type_create(tag_type)
 
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
@@ -156,14 +165,17 @@ class TestTagType(TestTagBase):
     def test_not_deallocate_tag_type_id_if_value_does_not_correspond(self):
         mock_zk = self._api_server._db_conn._zk_db
         type_str = 'tag-type-%s' % self.id()
-        tag_type = TagType(name=type_str)
+        tag_type = TagType(name=type_str, tag_type_id='0x0065')
         tag_type_uuid = self.api.tag_type_create(tag_type)
 
         tag_type = self.api.tag_type_read(id=tag_type_uuid)
         zk_id = int(tag_type.tag_type_id, 0)
         fake_tag_type = "fake tag type"
-        mock_zk._tag_type_id_allocator.delete(zk_id)
-        mock_zk._tag_type_id_allocator.reserve(zk_id, fake_tag_type)
+
+        mock_zk._ud_tag_type_id_allocator.delete(zk_id)
+        mock_zk._ud_tag_type_id_allocator.reserve(zk_id, fake_tag_type)
+        self.addCleanup(mock_zk._ud_tag_type_id_allocator.delete, zk_id)
+
         self.api.tag_type_delete(id=tag_type_uuid)
         self.assertIsNotNone(mock_zk.get_tag_type_from_id(zk_id))
         self.assertEqual(fake_tag_type, mock_zk.get_tag_type_from_id(zk_id))
@@ -178,7 +190,308 @@ class TestTagType(TestTagBase):
         fake_tag_type = "fake tag type"
         mock_zk._ud_tag_type_id_allocator.delete(zk_id)
         mock_zk._ud_tag_type_id_allocator.reserve(zk_id, fake_tag_type)
+        self.addCleanup(mock_zk._ud_tag_type_id_allocator.delete, zk_id)
         self.api.tag_type_delete(id=tag_type_uuid)
         self.assertIsNotNone(mock_zk.get_tag_type_from_id(zk_id))
         self.assertEqual(fake_tag_type, mock_zk.get_tag_type_from_id(zk_id))
         mock_zk._ud_tag_type_id_allocator.delete(zk_id)
+
+    def test_tag_type_duplicate_race_condition(self):
+        name = 'tag-type-%s' % self.id()
+        tag_type1 = TagType(name=name, tag_type_id='0x0080')
+        uuid1 = self.api.tag_type_create(tag_type1)
+        self.addCleanup(self.api.tag_type_delete, id=uuid1)
+
+        tag_type2 = TagType(name=name, tag_type_id='0x0081')
+        self.assertRaises(RefsExistError, self.api.tag_type_create, tag_type2)
+
+    def test_concurrent_tag_type_create_race_condition(self):
+        mock_zk = self._api_server._db_conn._zk_db
+        allocator = mock_zk._ud_tag_type_id_allocator
+        initial_alloc_count = allocator.get_alloc_count()
+
+        name = 'tag-type-race-%s' % self.id()
+
+        def create_tag_task():
+            tag_type = TagType(name=name, tag_type_id='0x0070')
+            try:
+                self.api.tag_type_create(tag_type)
+            except Exception:
+                pass
+
+        threads = [gevent.spawn(create_tag_task) for _ in range(5)]
+        gevent.joinall(threads)
+
+        tag_types = self.api.tag_types_list()
+        created_tags = [
+            t for t in tag_types.get('tag-types', [])
+            if t.get('fq_name') == [name]
+        ]
+        self.assertEqual(len(created_tags), 1,
+                         "Duplicated tag types were created")
+        if created_tags:
+            self.addCleanup(self.api.tag_type_delete,
+                            id=created_tags[0]['uuid'])
+
+        final_alloc_count = allocator.get_alloc_count()
+        self.assertEqual(final_alloc_count, initial_alloc_count + 1,
+                         "ZK have extra allocations")
+
+    def test_ud_tag_type_lower_boundary(self):
+        mock_zk = self._api_server._db_conn._zk_db
+        type_str = 'tag-type-boundary-%s' % self.id()
+
+        tag_type = TagType(name=type_str, tag_type_id="0x0041")
+        tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
+        tag_type = self.api.tag_type_read(id=tag_type_uuid)
+        zk_id = int(tag_type.tag_type_id, 0)
+
+        self.assertEqual(
+            type_str,
+            mock_zk.get_tag_type_from_id(zk_id),
+            "Failed to read UD tag type at lower boundary (0x0041)")
+
+    def test_ud_tag_type_upper_boundary(self):
+        mock_zk = self._api_server._db_conn._zk_db
+        type_str = 'tag-type-upper-%s' % self.id()
+
+        tag_type = TagType(name=type_str, tag_type_id="0xFFFF")
+        tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
+        tag_type = self.api.tag_type_read(id=tag_type_uuid)
+        zk_id = int(tag_type.tag_type_id, 0)
+
+        self.assertEqual(
+            type_str,
+            mock_zk.get_tag_type_from_id(zk_id),
+            "Failed to read UD tag type at upper boundary (0xFFFF)")
+
+    def test_boundary_between_system_and_ud(self):
+        mock_zk = self._api_server._db_conn._zk_db
+
+        system_id = 0x000F
+        system_value = mock_zk.get_tag_type_from_id(system_id)
+
+        ud_type_str = 'tag-type-boundary-%s' % self.id()
+        tag_type = TagType(name=ud_type_str, tag_type_id="0x0010")
+        tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
+
+        tag_type = self.api.tag_type_read(id=tag_type_uuid)
+        ud_id = int(tag_type.tag_type_id, 0)
+        ud_value = mock_zk.get_tag_type_from_id(ud_id)
+
+        self.assertNotEqual(system_value, ud_value)
+        self.assertEqual(ud_type_str, ud_value)
+
+    def test_ud_tag_type_no_index_shift(self):
+        mock_zk = self._api_server._db_conn._zk_db
+
+        type_str = 'tag-type-shift-%s' % self.id()
+        tag_type = TagType(name=type_str, tag_type_id="0x0016")
+        tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
+
+        tag_type = self.api.tag_type_read(id=tag_type_uuid)
+        zk_id = int(tag_type.tag_type_id, 0)
+
+        real_value = mock_zk._ud_tag_type_id_allocator.read(zk_id)
+        api_value = mock_zk.get_tag_type_from_id(zk_id)
+
+        self.assertEqual(
+            real_value,
+            api_value,
+            "Allocator and API returned different values (index shift bug)")
+
+    def test_ud_tag_type_reuse_after_delete(self):
+        mock_zk = self._api_server._db_conn._zk_db
+
+        type_str = 'tag-type-reuse-%s' % self.id()
+        tag_type = TagType(name=type_str, tag_type_id="0x0022")
+        tag_type_uuid = self.api.tag_type_create(tag_type)
+
+        tag_type = self.api.tag_type_read(id=tag_type_uuid)
+        zk_id = int(tag_type.tag_type_id, 0)
+
+        self.api.tag_type_delete(id=tag_type_uuid)
+
+        new_type_str = type_str + "-new"
+        tag_type = TagType(name=new_type_str, tag_type_id="0x0022")
+        new_tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=new_tag_type_uuid)
+
+        value = mock_zk.get_tag_type_from_id(zk_id)
+
+        self.assertEqual(new_type_str, value)
+
+    def test_tag_type_update_to_zero_id_fails(self):
+        name = 'tag-type-no-zero-%s' % self.id()
+        tag_type = TagType(name=name, tag_type_id='0x0025')
+        tag_type_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tag_type_uuid)
+        tag_type = self.api.tag_type_read(id=tag_type_uuid)
+
+        tag_type.tag_type_id = '0x0000'
+
+        self.assertRaises(BadRequest, self.api.tag_type_update, tag_type)
+
+        tag_type_check = self.api.tag_type_read(id=tag_type_uuid)
+        self.assertEqual(tag_type_check.tag_type_id, '0x0025')
+
+    def test_tag_ids_updated_when_tag_type_id_changes(self):
+        tt_name = 'tt-change-%s' % self.id()
+        tag_obj = Tag(tag_type_name=tt_name, tag_value='val1')
+        tag_uuid = self.api.tag_create(tag_obj)
+        self.addCleanup(self.api.tag_delete, id=tag_uuid)
+
+        tag_read = self.api.tag_read(id=tag_uuid)
+        tt_uuid = tag_read.tag_type_refs[0]['uuid']
+
+        initial_type_id = (int(tag_read.tag_id, 16) >> 16) & 0xFFFF
+
+        with mock.patch.object(self._api_server, 'is_admin_request',
+                               return_value=True):
+            tt_read = self.api.tag_type_read(id=tt_uuid)
+            tt_read.tag_type_id = '0x0040'
+            self.api.tag_type_update(tt_read)
+
+        gevent.sleep(0.1)
+
+        tag_final = self.api.tag_read(id=tag_uuid)
+        final_type_id = (int(tag_final.tag_id, 16) >> 16) & 0xFFFF
+        self.assertEqual(
+            final_type_id, 0x0040,
+            f"tag_id not updated: expected 0x0040, got {hex(final_type_id)}"
+        )
+        self.assertNotEqual(initial_type_id, final_type_id)
+
+    def test_ud_tag_type_below_lower_boundary_rejected(self):
+        tag_type = TagType(name='tag-type-below-%s' % self.id(),
+                           tag_type_id='0x000F')
+        self.assertRaises(BadRequest, self.api.tag_type_create, tag_type)
+
+    def test_create_notification_idempotent(self):
+        mock_zk = self._api_server._db_conn._zk_db
+        type_str = 'tt-notify-%s' % self.id()
+        tag_type = TagType(name=type_str, tag_type_id='0x0090')
+        tt_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tt_uuid)
+        tt = self.api.tag_type_read(id=tt_uuid)
+        zk_id = int(tt.tag_type_id, 0)
+
+        count_before = mock_zk._ud_tag_type_id_allocator.get_alloc_count()
+        mock_zk.alloc_tag_type_id(type_str, zk_id)
+        count_after = mock_zk._ud_tag_type_id_allocator.get_alloc_count()
+
+        self.assertEqual(count_before, count_after,
+                         "Repeated notification caused extra allocation")
+
+    def test_alloc_count_no_leak_on_failed_create(self):
+        mock_zk = self._api_server._db_conn._zk_db
+        allocator = mock_zk._ud_tag_type_id_allocator  # ← UD
+        initial_count = allocator.get_alloc_count()
+
+        with mock.patch.object(
+                self._api_server._db_conn,
+                'dbe_create',
+                side_effect=Exception("db failure")
+        ):
+            try:
+                self.api.tag_type_create(TagType(
+                    name='leak-test-%s' % self.id(),
+                    tag_type_id='0x0091')  # ← явный ID
+                )
+            except Exception:
+                pass
+
+        self.assertEqual(
+            allocator.get_alloc_count(), initial_count,
+            "ZK UD ID leaked after failed create")
+
+    def test_update_tag_type_id_no_duplicate_in_zk(self):
+        mock_zk = self._api_server._db_conn._zk_db
+
+        tag_type = TagType(name='tt-update-nodup-%s' % self.id(),
+                           tag_type_id='0x0031')
+        tt_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tt_uuid)
+        tt = self.api.tag_type_read(id=tt_uuid)
+        old_id = int(tt.tag_type_id, 0)
+
+        tt.tag_type_id = '0x0032'
+        self.api.tag_type_update(tt)
+
+        self.assertIsNone(
+            mock_zk.get_tag_type_from_id(old_id),
+            "Old tag type ID still allocated after update"
+        )
+        self.assertEqual(
+            mock_zk.get_tag_type_from_id(0x0032),
+            tt.fq_name[-1]
+        )
+
+    def test_update_tag_type_same_id_idempotent(self):
+        mock_zk = self._api_server._db_conn._zk_db
+        tag_type = TagType(name='tt-same-id-%s' % self.id(),
+                           tag_type_id='0x0033')
+        tt_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tt_uuid)
+        count_before = mock_zk._ud_tag_type_id_allocator.get_alloc_count()
+
+        tt = self.api.tag_type_read(id=tt_uuid)
+        tt.tag_type_id = '0x0033'
+        self.api.tag_type_update(tt)
+
+        count_after = mock_zk._ud_tag_type_id_allocator.get_alloc_count()
+        self.assertEqual(count_before, count_after,
+                         "Update to same ID changed allocation count")
+
+    def test_zk_values_path_cleaned_after_last_tag_delete(self):
+        mock_zk = self._api_server._db_conn._zk_db
+        type_str = 'cleanup-type-%s' % self.id().lower()
+
+        tag = Tag(tag_type_name=type_str, tag_value='val1')
+        tag_uuid = self.api.tag_create(tag)
+
+        allocator = mock_zk._tag_value_id_allocator.get(type_str)
+        self.assertIsNotNone(
+            allocator,
+            "Tag value allocator should exist after tag creation")
+        self.assertEqual(allocator.get_alloc_count(), 1,
+                         "One value should be allocated")
+
+        self.api.tag_delete(id=tag_uuid)
+
+        allocator_after = mock_zk._tag_value_id_allocator.get(type_str)
+        self.assertIsNone(
+            allocator_after,
+            "Tag value allocator should be removed after last tag deletion")
+
+    def test_zk_values_path_persists_while_other_tags_exist(self):
+        mock_zk = self._api_server._db_conn._zk_db
+        type_str = 'persist-type-%s' % self.id().lower()
+
+        tag1 = Tag(tag_type_name=type_str, tag_value='val1')
+        tag1_uuid = self.api.tag_create(tag1)
+        tag2 = Tag(tag_type_name=type_str, tag_value='val2')
+        tag2_uuid = self.api.tag_create(tag2)
+
+        allocator = mock_zk._tag_value_id_allocator.get(type_str)
+        self.assertIsNotNone(allocator)
+        self.assertEqual(allocator.get_alloc_count(), 2)
+
+        self.api.tag_delete(id=tag1_uuid)
+
+        allocator_after_first = mock_zk._tag_value_id_allocator.get(type_str)
+        self.assertIsNotNone(
+            allocator_after_first,
+            "Allocator should persist while other tags with same type exist")
+        self.assertEqual(allocator_after_first.get_alloc_count(), 1)
+
+        self.api.tag_delete(id=tag2_uuid)
+
+        allocator_final = mock_zk._tag_value_id_allocator.get(type_str)
+        self.assertIsNone(
+            allocator_final,
+            "Allocator should be removed after last tag deletion")
