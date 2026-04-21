@@ -458,7 +458,7 @@ class VncZkClient(object):
     _SG_ID_ALLOC_PATH = "/id/security-groups/id/"
     _SG_MAX_ID = 1 << 32
 
-    _TAG_VALUE_BIT_SIZE = 24
+    _TAG_VALUE_BIT_SIZE = 32
     _TAG_ID_ALLOC_ROOT_PATH = "/id/tags"
     _TAG_TYPE_ID_ALLOC_PATH = "%s/types/" % _TAG_ID_ALLOC_ROOT_PATH
     _TAG_TYPE_UD_ID_ALLOC_PATH = "%s/typesUD/" % _TAG_ID_ALLOC_ROOT_PATH
@@ -469,8 +469,8 @@ class VncZkClient(object):
     _TAG_TYPE_UD_MIN_ID = (1 << 4)
     _TAG_TYPE_UD_MAX_ID = (1 << 16) - 1
     _TAG_VALUE_MAX_ID = (1 << _TAG_VALUE_BIT_SIZE) - 1
-    _TAG_VALUE_UD_MIN_ID = (1 << 15)
-    _TAG_VALUE_UD_MAX_ID = (1 << 16) - 1
+    _TAG_VALUE_UD_MIN_ID = (1 << 31)
+    _TAG_VALUE_UD_MAX_ID = (1 << 32) - 1
 
     _AE_ID_ALLOC_PATH = "/id/aggregated-ethernet/%s/"
     _VPG_AE_ID_ZK_PATH_PREFIX = '/id/ae-id-vpg/'
@@ -1958,7 +1958,7 @@ class VncDbClient(object):
                                                       obj_uuid, obj_dict)
                 elif obj_type == 'logical_router':
                     self._check_and_add_fabric_refs_to_lr(obj_dict)
-                elif obj_type == 'tag_type':
+                elif obj_type in ('tag_type', 'tag'):
                     r_class = self.get_resource_class(obj_type)
                     r_class.dbe_create_notification(
                         self, obj_uuid, obj_dict)

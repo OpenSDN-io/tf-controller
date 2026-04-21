@@ -107,9 +107,9 @@ class TagTypeServer(ResourceMixin, TagType):
                     continue
 
                 old_tag_id = int(tag_db['tag_id'], 16)
-                old_tag_value_id = old_tag_id & 0xFFFF
-                new_tag_id = (new_id_int << 16) | old_tag_value_id
-                new_tag_id_str = f"0x{new_tag_id:04X}"
+                old_tag_value_id = old_tag_id & 0xFFFFFFFF
+                new_tag_id = (new_id_int << 32) | old_tag_value_id
+                new_tag_id_str = f"0x{new_tag_id:012X}"
 
                 tag_dict = {"tag_id": new_tag_id_str, 'force': 'yes'}
                 cls.server.internal_request_update(

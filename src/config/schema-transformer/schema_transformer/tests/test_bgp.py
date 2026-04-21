@@ -1150,6 +1150,7 @@ class TestBgp(STTestCase, VerifyBgp):
         self._vnc_lib.virtual_machine_interface_delete(id=vmi.uuid)
         self._vnc_lib.virtual_network_delete(id=vn1_obj.uuid)
         self.check_ri_is_deleted(fq_name=vn1_obj.fq_name + [vn1_obj.name])
+        self.check_vn_is_deleted(uuid=vn1_obj.uuid)
         self._vnc_lib.bgp_router_delete(id=router1.uuid)
     # end test_asn
 

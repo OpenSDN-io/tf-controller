@@ -348,7 +348,7 @@ class TestTagType(TestTagBase):
         tag_read = self.api.tag_read(id=tag_uuid)
         tt_uuid = tag_read.tag_type_refs[0]['uuid']
 
-        initial_type_id = (int(tag_read.tag_id, 16) >> 16) & 0xFFFF
+        initial_type_id = (int(tag_read.tag_id, 16) >> 32) & 0xFFFF
 
         with mock.patch.object(self._api_server, 'is_admin_request',
                                return_value=True):
@@ -359,7 +359,7 @@ class TestTagType(TestTagBase):
         gevent.sleep(0.1)
 
         tag_final = self.api.tag_read(id=tag_uuid)
-        final_type_id = (int(tag_final.tag_id, 16) >> 16) & 0xFFFF
+        final_type_id = (int(tag_final.tag_id, 16) >> 32) & 0xFFFF
         self.assertEqual(
             final_type_id, 0x0040,
             f"tag_id not updated: expected 0x0040, got {hex(final_type_id)}"
