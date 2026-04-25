@@ -989,7 +989,7 @@ void InterfaceUveTable::UveInterfaceEntry::BuildSandeshUveTagList
     TagList::const_iterator it = list.begin();
     while (it != list.end()) {
         SandeshUveTagInfo tag_entry;
-        uint32_t ttype = (uint32_t)*it >> TagEntry::kTagTypeBitShift;
+        uint64_t ttype = (uint64_t)*it >> TagEntry::kTagTypeBitShift;
         tag_entry.set_type(TagEntry::GetTypeStr(ttype));
         tag_entry.set_id(*it);
         AgentDBTable *table = static_cast<AgentDBTable *>(intf_->get_table());

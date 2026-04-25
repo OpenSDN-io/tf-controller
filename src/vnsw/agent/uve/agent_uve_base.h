@@ -121,7 +121,7 @@ protected:
     static AgentUveBase *singleton_;
 
 private:
-    std::string IntegerToHexString(uint32_t value) const;
+    std::string TagIDToHexString(uint64_t value) const;
     friend class UveTest;
     void VrouterAgentProcessState(
         const std::vector<process::ConnectionInfo> &c,

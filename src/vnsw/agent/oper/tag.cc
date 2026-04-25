@@ -21,14 +21,14 @@
 using namespace autogen;
 using namespace std;
 
-const std::map<uint32_t, std::string>
+const std::map<uint64_t, std::string>
 TagEntry::TagTypeStr = boost::assign::map_list_of
-        ((uint32_t)LABEL, "label")
-        ((uint32_t)APPLICATION, "application")
-        ((uint32_t)TIER, "tier")
-        ((uint32_t)DEPLOYMENT, "deployment")
-        ((uint32_t)SITE, "site")
-	((uint32_t)NEUTRON_FWAAS, "neutron_fwaas");
+        ((uint64_t)LABEL, "label")
+        ((uint64_t)APPLICATION, "application")
+        ((uint64_t)TIER, "tier")
+        ((uint64_t)DEPLOYMENT, "deployment")
+        ((uint64_t)SITE, "site")
+	((uint64_t)NEUTRON_FWAAS, "neutron_fwaas");
 
 bool TagEntry::IsLess(const DBEntry &rhs) const {
     const TagEntry &a = static_cast<const TagEntry &>(rhs);
@@ -71,7 +71,7 @@ bool TagEntry::Change(TagTable *table, const DBRequest *req) {
     bool ret = false;
     bool insert = false;
     TagData *data = static_cast<TagData *>(req->data.get());
-    uint32_t old_tag_id;
+    uint64_t old_tag_id;
 
     if (tag_id_ != data->tag_id_) {
         old_tag_id = tag_id_;
@@ -122,8 +122,8 @@ bool TagEntry::Change(TagTable *table, const DBRequest *req) {
     return ret;
 }
 
-const std::string& TagEntry::GetTypeStr(uint32_t type) {
-    std::map<uint32_t, std::string>::const_iterator it =
+const std::string& TagEntry::GetTypeStr(uint64_t type) {
+    std::map<uint64_t, std::string>::const_iterator it =
         TagTypeStr.find(type);
     if (it != TagTypeStr.end()) {
         return it->second;
@@ -131,9 +131,9 @@ const std::string& TagEntry::GetTypeStr(uint32_t type) {
     return Agent::NullString();
 }
 
-uint32_t TagEntry::GetTypeVal(const std::string &name,
+uint64_t TagEntry::GetTypeVal(const std::string &name,
                               const std::string &val) {
-    std::map<uint32_t, std::string>::const_iterator it =
+    std::map<uint64_t, std::string>::const_iterator it =
         TagTypeStr.begin();
     for (;it != TagTypeStr.end(); it++) {
         if (it->second == name) {
@@ -141,7 +141,7 @@ uint32_t TagEntry::GetTypeVal(const std::string &name,
         }
     }
 
-    uint32_t tag_val = 0;
+    uint64_t tag_val = 0;
     std::stringstream ss;
     ss << val;
     ss >> std::hex >> tag_val;

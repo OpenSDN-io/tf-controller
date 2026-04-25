@@ -171,7 +171,7 @@ struct MulticastPolicyLink {
 
 struct VmiTagData {
     1: string name;
-    2: i32 id;
+    2: u64 id;
     3: list<ApplicationPolicySetLink> application_policy_set_list;
 }
 
@@ -754,7 +754,7 @@ struct PathSandeshData {
    /** Layer 2 control word */
    24: bool layer2_control_word;
    /** Tags associated with route */
-   25: optional list<i32> tag_list;
+   25: optional list<u64> tag_list;
    /** path marked as inactive */
    26: bool inactive;
    /** Origin VN */
@@ -3354,7 +3354,7 @@ struct TagSandeshData {
     /** Name of the Tag instance */
     2: string name;
     /** ID of Tag */
-    3: u32 id;
+    3: u64 id;
     /** List of application policy set associated to this tag */
     4: list<ApplicationPolicySetLink> application_policy_set_list;
 }

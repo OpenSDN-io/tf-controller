@@ -40,15 +40,15 @@ struct TagKey : public AgentOperDBKey {
 
 struct TagData : public AgentOperDBData {
     typedef std::vector<boost::uuids::uuid> PolicySetUuidList;
-    TagData(Agent *agent, IFMapNode *node, const uint32_t &tag_id):
+    TagData(Agent *agent, IFMapNode *node, const uint64_t &tag_id):
             AgentOperDBData(agent, node), tag_id_(tag_id){
     }
     virtual ~TagData() {}
 
-    uint32_t tag_id_;
+    uint64_t tag_id_;
     std::string name_;
     std::string tag_value_;
-    uint32_t tag_type_;
+    uint64_t tag_type_;
     PolicySetUuidList policy_set_uuid_list_;
 };
 
@@ -61,16 +61,16 @@ public:
         DEPLOYMENT = 3,
         SITE = 4,
         NEUTRON_FWAAS = 5,
-        INVALID = 0xFFFFFFFF
+        INVALID = 0xFFFFFFFFFFFF
     };
 
-    typedef std::map<uint32_t, std::string> TagIdNameMap;
-    typedef std::pair<uint32_t, std::string> TagIdNamePair;
+    typedef std::map<uint64_t, std::string> TagIdNameMap;
+    typedef std::pair<uint64_t, std::string> TagIdNamePair;
     typedef std::vector<PolicySetRef> PolicySetList;
 
-    static const uint32_t kInvalidTagId = 0xFFFFFFFF;
-    static const uint32_t kTagTypeBitShift = 16;
-    static const std::map<uint32_t, std::string> TagTypeStr;
+    static const uint64_t kInvalidTagId = 0xFFFFFFFFFFFF;
+    static const uint32_t kTagTypeBitShift = 32;
+    static const std::map<uint64_t, std::string> TagTypeStr;
 
     TagEntry(const boost::uuids::uuid tag_uuid) :
         tag_uuid_(tag_uuid), tag_id_(kInvalidTagId) {}
@@ -88,7 +88,7 @@ public:
     bool DBEntrySandesh(Sandesh *sresp, std::string &name) const;
 
     const boost::uuids::uuid& tag_uuid() const {return tag_uuid_;}
-    const uint32_t& tag_id() const {return tag_id_;}
+    const uint64_t& tag_id() const {return tag_id_;}
 
     const PolicySetList& policy_set_list() const {
         return policy_set_list_;
@@ -102,7 +102,7 @@ public:
         return name_;
     }
 
-    uint32_t tag_type() const {
+    uint64_t tag_type() const {
         return tag_type_;
     }
 
@@ -110,15 +110,15 @@ public:
         return tag_value_;
     }
 
-    static const std::string& GetTypeStr(uint32_t tag_type);
-    static uint32_t GetTypeVal(const std::string &str,
+    static const std::string& GetTypeStr(uint64_t tag_type);
+    static uint64_t GetTypeVal(const std::string &str,
                                const std::string &val);
 
 private:
     friend class TagTable;
     boost::uuids::uuid tag_uuid_;
-    uint32_t tag_id_;
-    uint32_t tag_type_;
+    uint64_t tag_id_;
+    uint64_t tag_type_;
     std::string tag_value_;
     std::string name_;
     PolicySetList policy_set_list_;
@@ -134,11 +134,11 @@ public:
         DEPLOYMENT = 3,
         SITE = 4,
         NEUTRON_FWAAS = 5,
-        INVALID = 0xFFFFFFFF
+        INVALID = 0xFFFFFFFFFFFF
     };
 
-    typedef std::map<uint32_t, std::string> TagIdNameMap;
-    typedef std::pair<uint32_t, std::string> TagIdNamePair;
+    typedef std::map<uint64_t, std::string> TagIdNameMap;
+    typedef std::pair<uint64_t, std::string> TagIdNamePair;
 
     TagTable(DB *db, const std::string &name) : AgentOperDBTable(db, name) {}
     virtual ~TagTable() {}
@@ -159,7 +159,7 @@ public:
 
     static DBTableBase *CreateTable(DB *db, const std::string &name);
 
-    const std::string& TagName(uint32_t id) {
+    const std::string& TagName(uint64_t id) {
         TagIdNameMap::const_iterator it = id_name_map_.find(id);
         if (it != id_name_map_.end()) {
             return it->second;
@@ -168,11 +168,11 @@ public:
         return Agent::NullString();
     }
 
-    void Insert(uint32_t tag_id, const std::string &name) {
+    void Insert(uint64_t tag_id, const std::string &name) {
         id_name_map_.insert(TagIdNamePair(tag_id, name));
     }
 
-    void Erase(uint32_t tag_id) {
+    void Erase(uint64_t tag_id) {
         id_name_map_.erase(tag_id);
     }
 
