@@ -693,13 +693,13 @@ TEST_F(TagTest, MultiAps2) {
 }
 
 TEST_F(TagTest, CustomTag) {
-    AddTag("tag1", 1, 0xF0001);
+    AddTag("tag1", 1, 0xF00000001);
     client->WaitForIdle();
 
     TagKey key(MakeUuid(1));
     TagEntry* t =
         static_cast<TagEntry *>(agent->tag_table()->FindActiveEntry(&key));
-    EXPECT_TRUE(t->tag_id() == 0xF0001);
+    EXPECT_TRUE(t->tag_id() == 0xF00000001);
     EXPECT_TRUE(t->tag_type() == 0xF);
 
     DelNode("tag", "tag1");
@@ -707,8 +707,8 @@ TEST_F(TagTest, CustomTag) {
 }
 
 TEST_F(TagTest, VmiWithCustomTag) {
-    AddTag("tag1", 1, 0xF0001);
-    AddTag("tag2", 2, 0xF10001);
+    AddTag("tag1", 1, 0xF00000001);
+    AddTag("tag2", 2, 0xF100000001);
     client->WaitForIdle();
 
     const VmInterface* vm_intf =

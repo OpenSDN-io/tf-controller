@@ -2306,11 +2306,11 @@ void AddBridgeDomain(const char *name, uint32_t id, uint32_t isid,
     ApplyXmlString(buff);
 }
 
-void AddTag(const char *name, uint32_t uuid, uint32_t id,
+void AddTag(const char *name, uint32_t uuid, uint64_t id,
             const std::string type) {
     std::stringstream str;
     str << "<tag-type-name>" << type << "</tag-type-name>";
-    str << "<tag-id> 0x" << std::setfill('0') << std::setw(8) << std::hex << id << "</tag-id>";
+    str << "<tag-id> 0x" << std::setfill('0') << std::setw(12) << std::hex << id << "</tag-id>";
     str << "<display-name>" << name << "</display-name>";
 
     char buff[10240];
@@ -2784,9 +2784,9 @@ void DelOperDBAcl(int id) {
     Agent::GetInstance()->acl_table()->Enqueue(&req);
 }
 
-void AddTag(const char *name, int id) {
+void AddTag(const char *name, uint64_t id) {
     char buff[128];
-    sprintf(buff, "<tag-id>%d</tag-id>", id);
+    sprintf(buff, "<tag-id>%ld</tag-id>", id);
     AddNode("tag", name, id, buff);
 }
 
