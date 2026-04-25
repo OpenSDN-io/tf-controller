@@ -3,6 +3,7 @@
 #
 
 from cfgm_common.exceptions import HttpError, ResourceExistsError
+from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 from sandesh_common.vns.constants import TagTypeNameToId
 from vnc_api.gen.resource_common import Tag
 from vnc_api.gen.resource_xsd import IdPermsType
@@ -45,15 +46,15 @@ class TagServer(ResourceMixin, Tag):
         # in hex format.
         if tag_id is not None:
             try:
-                tag_value_id = int(tag_id, 16) & (2**16 - 1)
-                tag_type_id = int(tag_id, 16) >> 16
+                tag_value_id = int(tag_id, 16) & 0xFFFFFFFF
+                tag_type_id = int(tag_id, 16) >> 32
             except ValueError:
                 return False, (400, "Tag value must be in hexadecimal")
 
         if tag_value_id is not None and \
            not cls.vnc_zk_client.user_def_tag(tag_value_id):
             msg = f"Tag value id can be set only " \
-                  f"in range 0-65535. Current tag_value_id {tag_value_id}"
+                  f"in range 0-0xFFFFFFFF. Current tag_value_id {tag_value_id}"
             return False, (400, msg)
 
         if obj_dict.get('tag_type_refs') is not None:
@@ -129,7 +130,7 @@ class TagServer(ResourceMixin, Tag):
                                 f"fq_name_str {':'.join(obj_dict['fq_name'])}")
 
         # Compose Tag ID with the type ID and value ID
-        obj_dict['tag_id'] = "{}{:04x}".format(tag_type['tag_type_id'],
+        obj_dict['tag_id'] = "{}{:08x}".format(tag_type['tag_type_id'],
                                                value_id)
 
         return True, ""
@@ -160,8 +161,8 @@ class TagServer(ResourceMixin, Tag):
                 if obj_dict.get("tag_id") != old_tag_id:
                     old_high16_int = int(old_tag_id, 16)
                     new_high16_int = int(obj_dict.get("tag_id"), 16)
-                    old_high16 = (old_high16_int >> 16) & 0xFFFF
-                    new_high16 = (new_high16_int >> 16) & 0xFFFF
+                    old_high16 = (old_high16_int >> 32) & 0xFFFF
+                    new_high16 = (new_high16_int >> 32) & 0xFFFF
                     if old_high16 != new_high16:
                         msg = f"Cannot update tag_id. " \
                               f"Old tag_id {read_result.get('tag_id')}. " \
@@ -173,21 +174,21 @@ class TagServer(ResourceMixin, Tag):
 
         cls.vnc_zk_client.free_tag_value_id(
             old_tag_type_name,
-            int(read_result['tag_id'], 0) & 0x0000ffff,
+            int(read_result['tag_id'], 0) & 0xFFFFFFFF,
             ':'.join(fq_name),
         )
         # alloc new one
         cls.vnc_zk_client.alloc_tag_value_id(
             old_tag_type_name,
             ':'.join(fq_name),
-            int(obj_dict.get('tag_id'), 0) & 0x0000ffff,
+            int(obj_dict.get('tag_id'), 0) & 0xFFFFFFFF,
         )
         return True, ""
 
     @classmethod
     def post_dbe_delete(cls, id, obj_dict, db_conn, **kwargs):
         # Deallocate ID for tag value
-        value_id = int(obj_dict['tag_id'], 0) & 0x0000ffff
+        value_id = int(obj_dict['tag_id'], 0) & 0xFFFFFFFF
         cls.vnc_zk_client.free_tag_value_id(obj_dict['tag_type_name'],
                                             value_id,
                                             ':'.join(obj_dict['fq_name']))
@@ -211,19 +212,25 @@ class TagServer(ResourceMixin, Tag):
 
     @classmethod
     def dbe_create_notification(cls, db_conn, obj_id, obj_dict):
-        cls.vnc_zk_client.alloc_tag_value_id(
-            obj_dict['tag_type_name'],
-            ':'.join(obj_dict['fq_name']),
-            int(obj_dict['tag_id'], 0) & 0x0000ffff,
-        )
+        type_str = obj_dict['tag_type_name']
+        fq_name_str = ':'.join(obj_dict['fq_name'])
+        value_id = int(obj_dict['tag_id'], 0) & 0xFFFFFFFF
 
+        result = cls.vnc_zk_client.alloc_tag_value_id(
+            type_str, fq_name_str, value_id
+        )
+        if result is None:
+            db_conn.config_log(
+                f"WARNING: alloc_tag_value_id returned None for tag "
+                f"{fq_name_str} type={type_str} value_id={value_id}",
+                level=SandeshLevel.SYS_WARN)
         return True, ''
 
     @classmethod
     def dbe_delete_notification(cls, obj_id, obj_dict):
         cls.vnc_zk_client.free_tag_value_id(
             obj_dict['tag_type_name'],
-            int(obj_dict['tag_id'], 0) & 0x0000ffff,
+            int(obj_dict['tag_id'], 0) & 0xFFFFFFFF,
             ':'.join(obj_dict['fq_name']),
             notify=True,
         )

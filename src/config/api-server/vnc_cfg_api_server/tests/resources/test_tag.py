@@ -130,7 +130,7 @@ class TestTag(TestTagBase):
         tag_type = 'fake_type-%s' % self.id()
         tag_value = 'fake_value-%s' % self.id()
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
-                  tag_id='0xDEADBEEF')
+                  tag_id='0xDEAD0000BEEF')
         tag_uuid = self.api.tag_create(tag)
         tag_obj = self.api.tag_read(id=tag_uuid)
         tag_type_uuid = tag_obj.get_tag_type_refs()[0]['uuid']
@@ -142,13 +142,13 @@ class TestTag(TestTagBase):
         # validate if tag type id is 0xDEAD
         self.assertEqual("0xdead", tag_type_read.tag_type_id.lower())
         # validate complete tag_id
-        self.assertEqual("0xdeadbeef", tag_obj.tag_id.lower())
+        self.assertEqual("0xdead0000beef", tag_obj.tag_id.lower())
 
         # Negative test check if recreating of tag with different
         # fq-name but same ID fails
         tag_value = 'fake_value-ud%s' % self.id()
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
-                  tag_id='0xDEADBEEF')
+                  tag_id='0xDEAD0000BEEF')
         self.assertRaises(BadRequest, self.api.tag_create, tag)
 
         # Validate user defined tag delete.
@@ -162,18 +162,18 @@ class TestTag(TestTagBase):
         # IDs are reserved and freed properly
         tag_value = 'fake_value%s' % self.id()
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
-                  tag_id='0xDEADBEEF')
+                  tag_id='0xDEAD0000BEEF')
         tag_uuid = self.api.tag_create(tag)
         tag_obj = self.api.tag_read(id=tag_uuid)
         self.assertIsNotNone(tag_uuid)
-        self.assertEqual("0xdeadbeef", tag_obj.tag_id.lower())
+        self.assertEqual("0xdead0000beef", tag_obj.tag_id.lower())
 
-    def test_ud_tag_type_auto_tag_value_not_set(self):
+    def test_tag_value_id_out_of_range_rejected(self):
         tag_type = 'fake_type-%s' % self.id()
         tag_value = 'fake_value-%s' % self.id()
-        # Create auto tag and ud tag-type
+        # value_id = 0x100000000 > 0xFFFFFFFF — out of 32 bit range
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
-                  tag_id='0xDEAD0001')
+                  tag_id='0xDEAD0100000000')
         self.assertRaises(BadRequest, self.api.tag_create, tag)
 
     def test_ud_tag_type_ud_tag_invalid_value(self):
@@ -206,7 +206,7 @@ class TestTag(TestTagBase):
         with mock.patch.object(self._api_server, 'is_admin_request',
                                return_value=True):
             tag_type_read = self.api.tag_type_read(id=tag_type_uuid)
-        ud_tag_id = tag_type_read.tag_type_id + "8001"
+        ud_tag_id = tag_type_read.tag_type_id + "80000001"
         # create user defined tag with pre-def tag-type
         ud_tag_value = 'fake_value-ud-%s' % self.id()
         ud_tag = Tag(tag_type_name=tag_type, tag_value=ud_tag_value,
@@ -219,14 +219,14 @@ class TestTag(TestTagBase):
         tag_type = 'fake_type-%s' % self.id()
         tag_value = 'fake_value-%s' % self.id()
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
-        tag.tag_id = '0xdeacbeef'
         tag_uuid = self.api.tag_create(tag)
         tag = self.api.tag_read(id=tag_uuid)
-        tag.tag_id = '0xdeacbeea'
+        type_part = int(tag.tag_id, 0) & (0xFFFF << 32)
+        new_tag_id = '0x{:012x}'.format(type_part | 0x0000BEEFDEAD)
+        tag.tag_id = new_tag_id
         self.api.tag_update(tag)
         tag_update = self.api.tag_read(id=tag_uuid)
-        self.assertEqual(tag.tag_id,
-                         tag_update.tag_id.lower())
+        self.assertEqual(tag.tag_id, tag_update.tag_id.lower())
         self.api.tag_delete(id=tag_uuid)
 
     def test_tag_type_reference_cannot_be_set(self):
@@ -335,7 +335,7 @@ class TestTag(TestTagBase):
             tag = self.api.tag_read(id=tag_uuid)
 
             tag_type_uuid = tag.get_tag_type_refs()[0]['uuid']
-            zk_id = int(tag.tag_id, 0) & 0x0000ffff
+            zk_id = int(tag.tag_id, 0) & 0xFFFFFFFF
             self.assertEqual(
                 mock_zk.get_tag_value_from_id(tag.tag_type_name, zk_id),
                 tag.get_fq_name_str(),
@@ -367,7 +367,7 @@ class TestTag(TestTagBase):
         tag_uuid = self.api.tag_create(tag)
         tag = self.api.tag_read(id=tag_uuid)
 
-        zk_id = int(tag.tag_id, 0) & 0x0000ffff
+        zk_id = int(tag.tag_id, 0) & 0xFFFFFFFF
         self.assertEqual(
             tag.get_fq_name_str(),
             mock_zk.get_tag_value_from_id(tag.tag_type_name, zk_id),
@@ -381,7 +381,7 @@ class TestTag(TestTagBase):
         tag_uuid = self.api.tag_create(tag)
         tag = self.api.tag_read(id=tag_uuid)
 
-        zk_id = int(tag.tag_id, 0) & 0x0000ffff
+        zk_id = int(tag.tag_id, 0) & 0xFFFFFFFF
         self.api.tag_delete(id=tag_uuid)
         self.assertNotEqual(
             mock_zk.get_tag_value_from_id(tag.tag_type_name, zk_id),
@@ -965,3 +965,341 @@ class TestTag(TestTagBase):
         tag = self.api.tag_read(id=tag_uuid)
         tag.tag_id = '0x0ead0eec'
         self.assertRaises(BadRequest, self.api.tag_update, tag)
+
+    def test_tag_id_format_is_12_hex_chars(self):
+        tag_type = 'fake_type_fmt-%s' % self.id()
+        tag = Tag(tag_type_name=tag_type, tag_value='val1')
+        tag_uuid = self.api.tag_create(tag)
+        self.addCleanup(self.api.tag_delete, id=tag_uuid)
+        tag_read = self.api.tag_read(id=tag_uuid)
+        self.assertRegex(
+            tag_read.tag_id.lower(),
+            r'^0x[0-9a-f]{12}$',
+            f"tag_id '{tag_read.tag_id}' not in format 0xXXXXXXXXXXXX"
+        )
+
+    def test_ud_tag_value_id_full_32bit_range(self):
+        tag_type = 'fake_type_32bit-%s' % self.id().lower()
+        tag_value = 'val_32bit-%s' % self.id()
+        tt = TagType(name=tag_type, tag_type_id='0x0050')
+        self.api.tag_type_create(tt)
+
+        tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
+                  tag_id='0x0050ABCDEF01')
+        tag_uuid = self.api.tag_create(tag)
+        self.addCleanup(self.api.tag_delete, id=tag_uuid)
+        tag_read = self.api.tag_read(id=tag_uuid)
+        self.assertEqual(tag_read.tag_id.lower(), '0x0050abcdef01')
+
+    def test_ud_tag_value_id_near_max_32bit(self):
+        tag_type = 'fake_type_max32-%s' % self.id().lower()
+        tag_value = 'val_max32-%s' % self.id()
+        tt = TagType(name=tag_type, tag_type_id='0x0051')
+        self.api.tag_type_create(tt)
+        tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
+                  tag_id='0x0051FFFFFFFE')  # value_id = 0xFFFFFFFE
+        tag_uuid = self.api.tag_create(tag)
+        self.addCleanup(self.api.tag_delete, id=tag_uuid)
+        tag_read = self.api.tag_read(id=tag_uuid)
+        self.assertEqual(tag_read.tag_id.lower(), '0x0051fffffffe')
+
+    def test_tag_value_id_boundary_32bit(self):
+        tag_type = 'fake_type_boundary-%s' % self.id()
+        tag = Tag(tag_type_name=tag_type, tag_value='val_boundary')
+        tag_uuid = self.api.tag_create(tag)
+        self.addCleanup(self.api.tag_delete, id=tag_uuid)
+        tag_read = self.api.tag_read(id=tag_uuid)
+        value_id = int(tag_read.tag_id, 0) & 0xFFFFFFFF
+        self.assertLessEqual(value_id, 0xFFFFFFFF,
+                             "value_id should be <= 0xFFFFFFFF")
+        self.assertGreaterEqual(value_id, 0,
+                                "value_id should be >= 0")
+
+
+class TestTagResync(test_case.ApiServerTestCase):
+    """Test class to check tags resync.
+
+    Tests that _dbe_resync_worker correctly
+    restores ZK tag value nodes.
+    """
+
+    @classmethod
+    def setUpClass(cls, *args, **kwargs):
+        cls.console_handler = logging.StreamHandler()
+        cls.console_handler.setLevel(logging.DEBUG)
+        logger.addHandler(cls.console_handler)
+        super(TestTagResync, cls).setUpClass(*args, **kwargs)
+
+    @classmethod
+    def tearDownClass(cls, *args, **kwargs):
+        logger.removeHandler(cls.console_handler)
+        super(TestTagResync, cls).tearDownClass(*args, **kwargs)
+
+    @property
+    def api(self):
+        return self._vnc_lib
+
+    def _zk_db(self):
+        return self._api_server._db_conn._zk_db
+
+    def _simulate_zk_value_loss(self, tag_obj):
+        """Simulate zk value loss.
+
+        Delete ZK value node to
+        simulate ZK data loss for a tag.
+        """
+        mock_zk = self._zk_db()
+        value_id = int(tag_obj.tag_id, 0) & 0xFFFFFFFF
+        allocator = mock_zk._tag_value_id_allocator.get(tag_obj.tag_type_name)
+        if allocator is not None:
+            allocator.delete(value_id)
+
+    def _run_tag_resync(self, tag_uuid):
+        """Run tag resync.
+
+        Run _dbe_resync for a single tag UUID
+        (goes through the full path).
+        """
+        self._api_server._db_conn._dbe_resync('tag', [tag_uuid])
+
+    def test_tag_zk_value_restored_after_resync(self):
+        """Test tag zk value restored after resync.
+
+        After ZK value loss, _dbe_resync restores
+        the node for a global tag.
+        """
+        mock_zk = self._zk_db()
+        tag_type = 'fake_type_resync-%s' % self.id().lower()
+        tag_value = 'fake_value_resync-%s' % self.id()
+
+        tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
+        tag_uuid = self.api.tag_create(tag)
+        self.addCleanup(self.api.tag_delete, id=tag_uuid)
+        tag = self.api.tag_read(id=tag_uuid)
+
+        value_id = int(tag.tag_id, 0) & 0xFFFFFFFF
+        fq_name_str = tag.get_fq_name_str()
+
+        # Sanity: ZK node exists after creation
+        self.assertEqual(
+            mock_zk.get_tag_value_from_id(tag_type, value_id),
+            fq_name_str,
+        )
+
+        # Simulate ZK loss
+        self._simulate_zk_value_loss(tag)
+        self.assertIsNone(
+            mock_zk.get_tag_value_from_id(tag_type, value_id),
+            "ZK node should be absent after simulated loss",
+        )
+
+        # Resync should restore it
+        self._run_tag_resync(tag_uuid)
+
+        self.assertEqual(
+            mock_zk.get_tag_value_from_id(tag_type, value_id),
+            fq_name_str,
+            "ZK node should be restored after resync",
+        )
+
+    def test_ud_tag_zk_value_restored_after_resync(self):
+        """Test user defined ZK value restore after resync.
+
+        ZK value node is restored for a user-defined
+        tag type (kubernetes labels scenario).
+        """
+        mock_zk = self._zk_db()
+        # Simulate a kubernetes-style label like 'run',
+        # 'kubernetes.io__slash__metadata.name'
+        tag_type = 'k8s__slash__label-%s' % self.id().lower()
+        tag_value = 'my-service-%s' % self.id()
+
+        tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
+        tag_uuid = self.api.tag_create(tag)
+        self.addCleanup(self.api.tag_delete, id=tag_uuid)
+        tag = self.api.tag_read(id=tag_uuid)
+
+        value_id = int(tag.tag_id, 0) & 0xFFFFFFFF
+        fq_name_str = tag.get_fq_name_str()
+
+        self._simulate_zk_value_loss(tag)
+        self.assertIsNone(mock_zk.get_tag_value_from_id(tag_type, value_id))
+
+        self._run_tag_resync(tag_uuid)
+
+        self.assertEqual(
+            mock_zk.get_tag_value_from_id(tag_type, value_id),
+            fq_name_str,
+        )
+
+    def test_resync_is_idempotent_when_zk_node_already_exists(self):
+        """Test resync is idempotent.
+
+        Running resync on a tag whose ZK
+        node is intact does not change allocation count.
+        """
+        mock_zk = self._zk_db()
+        tag_type = 'fake_type_idem-%s' % self.id().lower()
+        tag_value = 'fake_value_idem-%s' % self.id()
+
+        tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
+        tag_uuid = self.api.tag_create(tag)
+        self.addCleanup(self.api.tag_delete, id=tag_uuid)
+
+        allocator = mock_zk._tag_value_id_allocator[tag.tag_type_name]
+        count_before = allocator.get_alloc_count()
+
+        # Resync when ZK is intact — should not create duplicates
+        self._run_tag_resync(tag_uuid)
+
+        count_after = mock_zk._tag_value_id_allocator[
+            tag.tag_type_name
+        ].get_alloc_count()
+        self.assertEqual(
+            count_before, count_after,
+            "Idempotent resync must not change allocation count",
+        )
+
+    def test_zk_loss_without_resync_causes_id_collision(self):
+        """Test zk loss without resync_causes_id_collision.
+
+        Demonstrates the bug: after ZK value loss, a second tag of the same
+        type gets value_id=0 (same as the first), creating a collision.
+        This test verifies the collision scenario exists so that
+        test_resync_prevents_id_collision_after_zk_loss proves the fix works.
+        """
+        self._zk_db()
+        tag_type = 'collision_type-%s' % self.id().lower()
+
+        tag1 = Tag(tag_type_name=tag_type, tag_value='value1')
+        tag1_uuid = self.api.tag_create(tag1)
+        self.addCleanup(self.api.tag_delete, id=tag1_uuid)
+        tag1 = self.api.tag_read(id=tag1_uuid)
+        value_id_1 = int(tag1.tag_id, 0) & 0xFFFFFFFF
+
+        # Simulate ZK loss for tag1's value node only (not the type)
+        self._simulate_zk_value_loss(tag1)
+
+        # Now create tag2 of same type — without resync, allocator sees
+        # value_id_1 as free and will assign it again
+        tag2 = Tag(tag_type_name=tag_type, tag_value='value2')
+        tag2_uuid = self.api.tag_create(tag2)
+        self.addCleanup(self.api.tag_delete, id=tag2_uuid)
+        tag2 = self.api.tag_read(id=tag2_uuid)
+        value_id_2 = int(tag2.tag_id, 0) & 0xFFFFFFFF
+
+        # Collision: both tags got the same value_id
+        self.assertEqual(
+            value_id_1, value_id_2,
+            "Without resync, ZK loss causes ID collision — this is the bug",
+        )
+
+    def test_resync_prevents_id_collision_after_zk_loss(self):
+        """Test resync prevent id collision after zk loss.
+
+        After ZK loss for tag1, running resync before creating tag2
+        restores tag1's ZK node, so tag2 gets a distinct value_id.
+        This is the fix verification.
+        """
+        mock_zk = self._zk_db()
+        tag_type = 'no_collision_type-%s' % self.id().lower()
+
+        tag1 = Tag(tag_type_name=tag_type, tag_value='value1')
+        tag1_uuid = self.api.tag_create(tag1)
+        self.addCleanup(self.api.tag_delete, id=tag1_uuid)
+        tag1 = self.api.tag_read(id=tag1_uuid)
+        value_id_1 = int(tag1.tag_id, 0) & 0xFFFFFFFF
+
+        # Simulate ZK loss
+        self._simulate_zk_value_loss(tag1)
+        self.assertIsNone(mock_zk.get_tag_value_from_id(tag_type, value_id_1))
+
+        # Apply resync — this is what the fix enables
+        self._run_tag_resync(tag1_uuid)
+
+        # ZK node restored
+        self.assertEqual(
+            mock_zk.get_tag_value_from_id(tag_type, value_id_1),
+            tag1.get_fq_name_str(),
+        )
+
+        # Now create tag2: must get a different value_id
+        tag2 = Tag(tag_type_name=tag_type, tag_value='value2')
+        tag2_uuid = self.api.tag_create(tag2)
+        self.addCleanup(self.api.tag_delete, id=tag2_uuid)
+        tag2 = self.api.tag_read(id=tag2_uuid)
+        value_id_2 = int(tag2.tag_id, 0) & 0xFFFFFFFF
+
+        self.assertNotEqual(
+            value_id_1, value_id_2,
+            "After resync, tag2 must get a distinct value_id - no collision",
+        )
+
+    def test_resync_restores_multiple_tags_of_same_type(self):
+        """Test resync restore.
+
+        All ZK value nodes for multiple
+         tags of the same type are restored.
+        """
+        mock_zk = self._zk_db()
+        tag_type = 'multi_resync_type-%s' % self.id().lower()
+        n = 3
+        tag_uuids = []
+        tag_value_ids = []
+
+        for i in range(n):
+            tag = Tag(tag_type_name=tag_type, tag_value='value%d' % i)
+            uuid = self.api.tag_create(tag)
+            self.addCleanup(self.api.tag_delete, id=uuid)
+            tag = self.api.tag_read(id=uuid)
+            tag_uuids.append(uuid)
+            tag_value_ids.append((tag, int(tag.tag_id, 0) & 0xFFFFFFFF))
+
+        # Lose all ZK nodes
+        for tag, vid in tag_value_ids:
+            self._simulate_zk_value_loss(tag)
+            self.assertIsNone(mock_zk.get_tag_value_from_id(tag_type, vid))
+
+        # Resync all
+        for tag, _ in tag_value_ids:
+            self._run_tag_resync(
+                self._api_server._db_conn._object_db.fq_name_to_uuid(
+                    'tag', tag.fq_name))
+
+        # Verify all restored with correct fq_name
+        for tag, vid in tag_value_ids:
+            self.assertEqual(
+                mock_zk.get_tag_value_from_id(tag_type, vid),
+                tag.get_fq_name_str(),
+                "ZK node for tag %s not restored" % tag.get_fq_name_str(),
+            )
+
+    def test_tag_type_resync_still_works_after_fix(self):
+        """Test tag type resync.
+
+        Verify tag_type resync is unaffected by the fix
+        (regression guard).
+        """
+        mock_zk = self._zk_db()
+        tt = TagType(name='tt-resync-guard-%s' % self.id(),
+                     tag_type_id='0x0070')
+        tt_uuid = self.api.tag_type_create(tt)
+        self.addCleanup(self.api.tag_type_delete, id=tt_uuid)
+        tt = self.api.tag_type_read(id=tt_uuid)
+        zk_id = int(tt.tag_type_id, 0)
+
+        # Verify allocated
+        self.assertEqual(mock_zk.get_tag_type_from_id(zk_id), tt.fq_name[-1])
+
+        # Free in ZK to simulate loss
+        mock_zk._ud_tag_type_id_allocator.delete(zk_id)
+        self.assertIsNone(mock_zk.get_tag_type_from_id(zk_id))
+
+        # Resync tag_type
+        self._api_server._db_conn._dbe_resync('tag_type', [tt_uuid])
+
+        self.assertEqual(
+            mock_zk.get_tag_type_from_id(zk_id),
+            tt.fq_name[-1],
+            "tag_type ZK node must be restored by resync",
+        )
