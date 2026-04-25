@@ -1401,7 +1401,7 @@ protected:
     }
 
     bool VerifyRouteUpdateTagList(string instance_name, string route,
-            vector<int> &tag_list, test::NetworkAgentMock *agent) {
+            vector<uint64_t> &tag_list, test::NetworkAgentMock *agent) {
         const autogen::ItemType *rt =
             agent->Inet6RouteLookup(instance_name, route);
         if (rt) {
@@ -4345,7 +4345,7 @@ TEST_F(BgpXmppInet6Test2Peers, RouteWithTagList) {
     // Add route from agent A to blue instance.
     stringstream route_a;
     route_a << "2001:db8:85a3::8a2e:370:aaaa/128";
-    vector<int> tag_list = list_of (1)(2);
+    vector<uint64_t> tag_list = list_of (1)(2);
     test::NextHop nexthop_a("192.168.1.1", 0, tag_list);
 
     agent_a_->AddInet6Route("blue", route_a.str(), nexthop_a);
