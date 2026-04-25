@@ -50,7 +50,8 @@ public:
         public:
             NextHop(const BgpTable *table, IpAddress address,
                 const MacAddress &mac, uint32_t label, uint32_t l3_label,
-                const ExtCommunity *ext_community, bool vrf_originated);
+                const ExtCommunity *ext_community,
+                const LargeCommunity *large_community, bool vrf_originated);
 
             const IpAddress address() const { return address_; }
             const MacAddress &mac() const { return mac_; }
@@ -59,7 +60,7 @@ public:
             const Ip4Address &source_address() const { return source_address_; }
             int origin_vn_index() const { return origin_vn_index_; }
             std::vector<std::string> encap() const { return encap_; }
-            std::vector<int> tag_list() const { return tag_list_; }
+            std::vector<uint64_t> tag_list() const { return tag_list_; }
 
             int CompareTo(const NextHop &rhs) const;
             bool operator==(const NextHop &rhs) const;
@@ -74,7 +75,7 @@ public:
             Ip4Address source_address_;
             int origin_vn_index_;
             std::vector<std::string> encap_;
-            std::vector<int> tag_list_;
+            std::vector<uint64_t> tag_list_;
     };
 
     typedef std::vector<NextHop> NextHopList;

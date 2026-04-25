@@ -28,18 +28,27 @@ using namespace boost::placeholders;
 
 RibOutAttr::NextHop::NextHop(const BgpTable *table, IpAddress address,
     const MacAddress &mac, uint32_t label, uint32_t l3_label,
-    const ExtCommunity *ext_community, bool vrf_originated)
+    const ExtCommunity *ext_community, const LargeCommunity *large_community,
+    bool vrf_originated)
     : address_(address),
       mac_(mac),
       label_(label),
       l3_label_(l3_label),
       origin_vn_index_(-1) {
-    if (ext_community) {
+    if ((ext_community != nullptr) || (large_community != nullptr)) {
         as_t asn = table ? table->server()->autonomous_system() : 0;
         bool all = table ? table->server()->global_config()->all_tags_are_global() : false;
         encap_ = ext_community->GetTunnelEncap();
-        tag_list_ = ext_community->GetTag4List(all ? 0 : asn);
         origin_vn_index_ = ext_community->GetOriginVnIndex();
+        if (large_community != nullptr) {
+            tag_list_ = large_community->GetTagList(all ? 0 : asn);
+        } else if (ext_community != nullptr) {
+            std::vector<int> ext_tag_list =
+                ext_community->GetTag4List(all ? 0 : asn);
+            for (auto ext_tag : ext_tag_list) {
+                tag_list_.push_back(ext_tag);
+            }
+        }
     }
     if (origin_vn_index_ < 0 && vrf_originated) {
         origin_vn_index_ =
@@ -108,7 +117,7 @@ RibOutAttr::RibOutAttr(const BgpTable *table, const BgpAttr *attr,
     if (attr && is_xmpp) {
         nexthop_list_.push_back(NextHop(table, attr->nexthop(),
             attr->mac_address(), label, l3_label, attr->ext_community(),
-            false));
+            attr->large_community(), false));
     }
 }
 
@@ -123,7 +132,7 @@ RibOutAttr::RibOutAttr(const BgpTable *table, const BgpRoute *route,
         if (is_xmpp) {
             nexthop_list_.push_back(NextHop(table, attr->nexthop(),
                 attr->mac_address(), label, 0, attr->ext_community(),
-                vrf_originated_));
+                attr->large_community(), vrf_originated_));
         } else {
             label_ = label;
             l3_label_ = 0;
@@ -172,7 +181,7 @@ RibOutAttr::RibOutAttr(const BgpRoute *route, const BgpAttr *attr,
         NextHop nexthop(table, path->GetAttr()->nexthop(),
             path->GetAttr()->mac_address(), path->GetLabel(),
             path->GetL3Label(), path->GetAttr()->ext_community(),
-            path->IsVrfOriginated());
+            path->GetAttr()->large_community(), path->IsVrfOriginated());
 
         // Skip if we have already encoded this next-hop
         if (find(nexthop_list_.begin(), nexthop_list_.end(), nexthop) !=
@@ -223,7 +232,8 @@ void RibOutAttr::set_attr(const BgpTable *table, const BgpAttrPtr &attrp,
         assert(nexthop_list_.empty());
         if (is_xmpp) {
             NextHop nexthop(table, attrp->nexthop(), attrp->mac_address(),
-                label, l3_label, attrp->ext_community(), vrf_originated);
+                label, l3_label, attrp->ext_community(),
+                attrp->large_community(), vrf_originated);
             nexthop_list_.push_back(nexthop);
         } else {
             label_ = label;
