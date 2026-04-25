@@ -839,8 +839,8 @@ bool TagsMatch::Match(const PacketHeader *packet_header,
            src_tag_it != packet_header->src_tags_.end() &&
            dst_tag_it != packet_header->dst_tags_.end()) {
 
-        int src_tag_type = *src_tag_it >> TagEntry::kTagTypeBitShift;
-        int dst_tag_type = *dst_tag_it >> TagEntry::kTagTypeBitShift;
+        uint64_t src_tag_type = *src_tag_it >> TagEntry::kTagTypeBitShift;
+        uint64_t dst_tag_type = *dst_tag_it >> TagEntry::kTagTypeBitShift;
 
         //Either source or destination doesnt have given tag type
         if (*tag_type_it < src_tag_type || *tag_type_it < dst_tag_type) {
