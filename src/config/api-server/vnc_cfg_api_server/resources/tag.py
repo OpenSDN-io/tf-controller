@@ -156,6 +156,8 @@ class TagServer(ResourceMixin, Tag):
                 msg = "Tag type name cannot be updated"
                 return False, (400, msg)
         old_tag_id = read_result.get('tag_id')
+        if not obj_dict.get('tag_id'):
+            return True, ""
         if obj_dict.get("force") != "yes":
             if obj_dict.get("tag_id") and old_tag_id:
                 if obj_dict.get("tag_id") != old_tag_id:
@@ -172,17 +174,19 @@ class TagServer(ResourceMixin, Tag):
                               f"New High 16 bit {new_high16}. "
                         return False, (400, msg)
 
+        old_vid = int(read_result['tag_id'], 0) & 0xFFFFFFFF
+        new_vid = int(obj_dict.get('tag_id'), 0) & 0xFFFFFFFF
+        fq_name_str = ':'.join(fq_name)
         cls.vnc_zk_client.free_tag_value_id(
-            old_tag_type_name,
-            int(read_result['tag_id'], 0) & 0xFFFFFFFF,
-            ':'.join(fq_name),
-        )
+            old_tag_type_name, old_vid, fq_name_str)
         # alloc new one
-        cls.vnc_zk_client.alloc_tag_value_id(
-            old_tag_type_name,
-            ':'.join(fq_name),
-            int(obj_dict.get('tag_id'), 0) & 0xFFFFFFFF,
-        )
+        try:
+            cls.vnc_zk_client.alloc_tag_value_id(
+                old_tag_type_name, fq_name_str, new_vid)
+        except Exception:
+            cls.vnc_zk_client.alloc_tag_value_id(
+                old_tag_type_name, fq_name_str, old_vid)
+            raise
         return True, ""
 
     @classmethod

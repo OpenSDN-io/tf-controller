@@ -5,6 +5,7 @@ import logging
 
 from cfgm_common.exceptions import BadRequest
 from cfgm_common.exceptions import RefsExistError
+from cfgm_common.exceptions import ResourceExistsError
 import gevent
 import mock
 from sandesh_common.vns import constants
@@ -495,3 +496,169 @@ class TestTagType(TestTagBase):
         self.assertIsNone(
             allocator_final,
             "Allocator should be removed after last tag deletion")
+
+
+class TestTagTypeNotificationIdempotency(TestTagBase):
+    """Tests for dbe_create_notification() behaviour.
+
+    when called more than once for the same tag-type.
+
+    In a multi-node cluster two api-server instances can process the same
+    create-notification concurrently.  The second call hits a ZK node that
+    already exists and alloc_tag_type_id() raises ResourceExistsError.
+    Because there is no try/except around the call, the exception propagates
+    out of _dbe_create_notification() and is logged as SYS_ERR.
+    """
+
+    @property
+    def _zk(self):
+        return self._api_server._db_conn._zk_db
+
+    def test_duplicate_notification_raises_resource_exists_error(self):
+        from vnc_cfg_api_server.resources.tag_type import TagTypeServer
+
+        type_str = 'tt-notify-dup-%s' % self.id()
+        tag_type = TagType(name=type_str, tag_type_id='0x0090')
+        tt_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tt_uuid)
+        tt = self.api.tag_type_read(id=tt_uuid)
+        obj_dict = {'fq_name': [type_str], 'tag_type_id': tt.tag_type_id}
+
+        with mock.patch.object(
+                self._zk, 'alloc_tag_type_id',
+                side_effect=ResourceExistsError('tag_type', type_str),
+        ):
+            ok, result = TagTypeServer.dbe_create_notification(
+                self._api_server._db_conn, tt_uuid, obj_dict)
+
+        self.assertTrue(ok)
+        self.assertEqual(result, '')
+
+    def test_notification_is_idempotent_when_type_already_registered(self):
+        # Calling alloc_tag_type_id for a type that already has a ZK node
+        # must not raise and must not change the allocation count.
+        mock_zk = self._api_server._db_conn._zk_db
+        type_str = 'tt-notify-idem-%s' % self.id()
+        tag_type = TagType(name=type_str, tag_type_id='0x0091')
+        tt_uuid = self.api.tag_type_create(tag_type)
+        self.addCleanup(self.api.tag_type_delete, id=tt_uuid)
+        tt = self.api.tag_type_read(id=tt_uuid)
+        zk_id = int(tt.tag_type_id, 0)
+
+        count_before = mock_zk._ud_tag_type_id_allocator.get_alloc_count()
+        # Second registration of the same type — must be a no-op
+        mock_zk.alloc_tag_type_id(type_str, zk_id)
+        count_after = mock_zk._ud_tag_type_id_allocator.get_alloc_count()
+
+        self.assertEqual(
+            count_before, count_after,
+            "Duplicate notification must not create an extra ZK node"
+        )
+
+
+class TestTagTypeIdCascadeUpdate(TestTagBase):
+    """Tests for pre_dbe_update().
+
+    Two problems in the cascade path:
+    1. If internal_request_update() fails for any back-referenced tag, the
+    ZK state is already mutated (new_id allocated, old_id freed) with no
+    rollback.
+    2. The tag_id strings written to the back-referenced tags use uppercase
+    hex (f"0x{...:012X}") while every other code path uses lowercase,
+    causing silent string-comparison mismatches in logs and client code.
+    """
+
+    def _make_ud_tag_type(self, name, type_id_hex):
+        tt = TagType(name=name, tag_type_id=type_id_hex)
+        uuid = self.api.tag_type_create(tt)
+        self.addCleanup(self._try_delete_tt, uuid)
+        return uuid
+
+    def _try_delete_tt(self, uuid):
+        try:
+            self.api.tag_type_delete(id=uuid)
+        except Exception:
+            pass
+
+    def test_zk_state_rolled_back_when_cascade_tag_update_fails(self):
+        from vnc_cfg_api_server.resources.tag_type import TagTypeServer
+
+        mock_zk = self._api_server._db_conn._zk_db
+        type_str = 'tt-cascade-fail-%s' % self.id()
+        tt_uuid = self._make_ud_tag_type(type_str, '0x00C0')
+        old_id = 0x00C0
+        new_id = 0x00C1
+
+        fake_tag_uuid = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+        fake_read_result = {
+            'fq_name': [type_str],
+            'tag_type_id': '0x00c0',
+            'tag_back_refs': [{'uuid': fake_tag_uuid}],
+        }
+        fake_tag_db = {
+            'tag_id': '0x00c080000001',
+            'fq_name': [type_str + '=v1'],
+            'uuid': fake_tag_uuid,
+        }
+
+        original_server = TagTypeServer.server
+
+        class FailingServer:
+            def __getattr__(self, name):
+                return getattr(original_server, name)
+
+            def internal_request_update(
+                    self, resource_type, obj_uuid, obj_json
+            ):
+                raise Exception("simulated cascade failure")
+
+        TagTypeServer.server = FailingServer()
+        try:
+            with mock.patch.object(TagTypeServer, 'dbe_read',
+                                   return_value=(True, fake_read_result)):
+                with mock.patch.object(
+                        TagTypeServer.db_conn, 'dbe_read',
+                        side_effect=lambda rt, uuid: (True, fake_tag_db)):
+                    try:
+                        TagTypeServer.pre_dbe_update(
+                            tt_uuid, [type_str],
+                            {'tag_type_id': '0x00c1'},
+                            TagTypeServer.db_conn,
+                        )
+                    except Exception:
+                        pass
+        finally:
+            TagTypeServer.server = original_server
+
+        self.assertIsNone(
+            mock_zk.get_tag_type_from_id(new_id),
+            "New type-ID must not remain in ZK after a failed cascade update",
+        )
+        self.assertIsNotNone(
+            mock_zk.get_tag_type_from_id(old_id),
+            "Old type-ID must be restored in ZK after a failed cascade update",
+        )
+
+    def test_linked_tag_ids_use_lowercase_hex_after_type_update(self):
+        # The cascade update writes tag_id strings via f"0x{...:012X}" which
+        # produces uppercase.  All other paths use lowercase.  After the fix
+        # the tag_id must be all-lowercase so that string comparisons are
+        # consistent across the codebase.
+        type_str = 'tt-hex-case-%s' % self.id()
+        tt_uuid = self._make_ud_tag_type(type_str, '0x00D0')
+
+        tag = Tag(tag_type_name=type_str, tag_value='v1')
+        tag_uuid = self.api.tag_create(tag)
+        self.addCleanup(lambda: self.api.tag_delete(id=tag_uuid))
+
+        tt_obj = self.api.tag_type_read(id=tt_uuid)
+        tt_obj.tag_type_id = '0x00D1'
+        self.api.tag_type_update(tt_obj)
+
+        updated_tag = self.api.tag_read(id=tag_uuid)
+        self.assertEqual(
+            updated_tag.tag_id,
+            updated_tag.tag_id.lower(),
+            "tag_id '%s' must be all-lowercase after a tag_type_id cascade "
+            "update" % updated_tag.tag_id,
+        )

@@ -99,23 +99,28 @@ class TagTypeServer(ResourceMixin, TagType):
             old_id_int,
             read_result['fq_name'][-1],
         )
+        try:
+            if 'tag_back_refs' in read_result:
+                for tag in read_result['tag_back_refs']:
+                    ok, tag_db = cls.db_conn.dbe_read("tag", tag['uuid'])
+                    if not ok:
+                        continue
 
-        if 'tag_back_refs' in read_result:
-            for tag in read_result['tag_back_refs']:
-                ok, tag_db = cls.db_conn.dbe_read("tag", tag['uuid'])
-                if not ok:
-                    continue
+                    old_tag_id = int(tag_db['tag_id'], 16)
+                    old_tag_value_id = old_tag_id & 0xFFFFFFFF
+                    new_tag_id = (new_id_int << 32) | old_tag_value_id
+                    new_tag_id_str = f"0x{new_tag_id:012x}"
 
-                old_tag_id = int(tag_db['tag_id'], 16)
-                old_tag_value_id = old_tag_id & 0xFFFFFFFF
-                new_tag_id = (new_id_int << 32) | old_tag_value_id
-                new_tag_id_str = f"0x{new_tag_id:012X}"
-
-                tag_dict = {"tag_id": new_tag_id_str, 'force': 'yes'}
-                cls.server.internal_request_update(
-                    "tag", tag_db['uuid'], tag_dict
-                )
-
+                    tag_dict = {"tag_id": new_tag_id_str, 'force': 'yes'}
+                    cls.server.internal_request_update(
+                        "tag", tag_db['uuid'], tag_dict
+                    )
+        except Exception:
+            cls.vnc_zk_client.alloc_tag_type_id(
+                read_result['fq_name'][-1], old_id_int)
+            cls.vnc_zk_client.free_tag_type_id(
+                new_id_int, read_result['fq_name'][-1])
+            raise
         return True, ""
 
     @classmethod
@@ -127,9 +132,11 @@ class TagTypeServer(ResourceMixin, TagType):
 
     @classmethod
     def dbe_create_notification(cls, db_conn, obj_id, obj_dict):
-        cls.vnc_zk_client.alloc_tag_type_id(
-            ':'.join(obj_dict['fq_name']), int(obj_dict['tag_type_id'], 0))
-
+        try:
+            cls.vnc_zk_client.alloc_tag_type_id(
+                ':'.join(obj_dict['fq_name']), int(obj_dict['tag_type_id'], 0))
+        except ResourceExistsError:
+            pass  # already registered by another node — idempotent
         return True, ''
 
     @classmethod

@@ -880,11 +880,11 @@ class VncZkClient(object):
 
     # User defined tags have MSB set as 1
     def user_def_tag(self, tag_id):
-        return (tag_id >> self._TAG_VALUE_BIT_SIZE) == 0
+        return tag_id >= self._TAG_VALUE_UD_MIN_ID
 
-    @staticmethod
-    def user_def_tag_type(tag_type_id):
-        return 0x0010 <= tag_type_id <= 0xFFFF
+    @classmethod
+    def user_def_tag_type(cls, tag_type_id):
+        return cls._TAG_TYPE_UD_MIN_ID <= tag_type_id <= cls._TAG_TYPE_UD_MAX_ID
 
     # Common function to free tag type id for both auto and user defined
     # tags.
@@ -1012,6 +1012,8 @@ class VncZkClient(object):
             if tag_value_id_allocator.read(tag_value_id) is not None:
                 tag_value_id_allocator.set_in_use(tag_value_id)
                 return tag_value_id
+            elif fq_name_str is not None:
+                return tag_value_id_allocator.reserve(tag_value_id, fq_name_str)
         elif fq_name_str is not None:
             return tag_value_id_allocator.alloc(fq_name_str)
 

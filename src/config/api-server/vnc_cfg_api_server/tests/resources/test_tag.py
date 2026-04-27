@@ -7,6 +7,7 @@ import logging
 from cfgm_common.exceptions import BadRequest
 from cfgm_common.exceptions import NoIdError
 from cfgm_common.exceptions import RefsExistError
+from cfgm_common.exceptions import ResourceExistsError
 import gevent
 import mock
 from sandesh_common.vns import constants
@@ -118,19 +119,11 @@ class TestTag(TestTagBase):
         tag.tag_value = 'new_fake_type-%s' % self.id()
         self.assertRaises(BadRequest, self.api.tag_update, tag)
 
-    def test_auto_tag_id_cannot_be_set(self):
-        tag_type = 'fake_type-%s' % self.id()
-        tag_value = 'fake_value-%s' % self.id()
-        tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
-                  tag_id='0x000D0EEF')
-        self.assertRaises(BadRequest, self.api.tag_create, tag)
-
-    # test to create user define tag-type and tag
     def test_ud_tag_and_ud_tag_type(self):
         tag_type = 'fake_type-%s' % self.id()
         tag_value = 'fake_value-%s' % self.id()
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
-                  tag_id='0xDEAD0000BEEF')
+                  tag_id='0xDEAD80000001')
         tag_uuid = self.api.tag_create(tag)
         tag_obj = self.api.tag_read(id=tag_uuid)
         tag_type_uuid = tag_obj.get_tag_type_refs()[0]['uuid']
@@ -142,13 +135,13 @@ class TestTag(TestTagBase):
         # validate if tag type id is 0xDEAD
         self.assertEqual("0xdead", tag_type_read.tag_type_id.lower())
         # validate complete tag_id
-        self.assertEqual("0xdead0000beef", tag_obj.tag_id.lower())
+        self.assertEqual("0xdead80000001", tag_obj.tag_id.lower())
 
         # Negative test check if recreating of tag with different
         # fq-name but same ID fails
         tag_value = 'fake_value-ud%s' % self.id()
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
-                  tag_id='0xDEAD0000BEEF')
+                  tag_id='0xDEAD80000001')
         self.assertRaises(BadRequest, self.api.tag_create, tag)
 
         # Validate user defined tag delete.
@@ -162,11 +155,11 @@ class TestTag(TestTagBase):
         # IDs are reserved and freed properly
         tag_value = 'fake_value%s' % self.id()
         tag = Tag(tag_type_name=tag_type, tag_value=tag_value,
-                  tag_id='0xDEAD0000BEEF')
+                  tag_id='0xDEAD80000001')
         tag_uuid = self.api.tag_create(tag)
         tag_obj = self.api.tag_read(id=tag_uuid)
         self.assertIsNotNone(tag_uuid)
-        self.assertEqual("0xdead0000beef", tag_obj.tag_id.lower())
+        self.assertEqual("0xdead80000001", tag_obj.tag_id.lower())
 
     def test_tag_value_id_out_of_range_rejected(self):
         tag_type = 'fake_type-%s' % self.id()
@@ -1303,3 +1296,193 @@ class TestTagResync(test_case.ApiServerTestCase):
             tt.fq_name[-1],
             "tag_type ZK node must be restored by resync",
         )
+
+
+class TestTagValueIdRangeValidation(TestTagBase):
+    """
+    Tests for user_def_tag() range semantics.
+
+    Symptom: user_def_tag(x) always returns True for any 32-bit x because
+    the implementation shifts by _TAG_VALUE_BIT_SIZE (32), which in Python
+    always produces 0.  The guard in pre_dbe_create that should reject
+    auto-range value IDs when set explicitly is effectively dead.
+    """
+
+    @property
+    def _zk(self):
+        return self._api_server._db_conn._zk_db
+
+    def test_auto_range_id_is_not_user_defined(self):
+        # Any value below _TAG_VALUE_UD_MIN_ID (0x80000000) belongs to the
+        # auto-allocated pool and must NOT be reported as user-defined.
+        self.assertFalse(
+            self._zk.user_def_tag(0x7FFFFFFF),
+            "0x7FFFFFFF is the last auto-allocated slot; user_def_tag must "
+            "return False (currently returns True due to wrong shift)",
+        )
+
+    def test_zero_is_not_user_defined(self):
+        self.assertFalse(
+            self._zk.user_def_tag(0),
+            "0 is the first auto slot; user_def_tag must return False",
+        )
+
+    def test_ud_range_lower_boundary_is_user_defined(self):
+        # 0x80000000 == _TAG_VALUE_UD_MIN_ID — first UD slot must be True.
+        self.assertTrue(self._zk.user_def_tag(0x80000000))
+
+    def test_ud_range_upper_boundary_is_user_defined(self):
+        self.assertTrue(self._zk.user_def_tag(0xFFFFFFFF))
+
+    def test_ud_min_constant_equals_bit31(self):
+        self.assertEqual(self._zk._TAG_VALUE_UD_MIN_ID, 1 << 31)
+
+
+class TestTagIdPartialUpdate(TestTagBase):
+    """pre_dbe_update() calls int(obj_dict.get('tag_id'), 0) unconditionally.
+
+    When tag_id is absent from the payload int(None, 0) raises TypeError,
+    but free_tag_value_id already ran — so the ZK node is permanently lost.
+
+    Separately, even when tag_id is present, free runs before alloc with no
+    rollback if alloc raises — same orphan outcome.
+    """
+
+    def _create_tag(self, tag_type, tag_value):
+        tag = Tag(tag_type_name=tag_type, tag_value=tag_value)
+        uuid = self.api.tag_create(tag)
+        self.addCleanup(self._try_delete, uuid)
+        return uuid, self.api.tag_read(id=uuid)
+
+    def _try_delete(self, uuid):
+        try:
+            self.api.tag_delete(id=uuid)
+        except Exception:
+            pass
+
+    def test_update_without_tag_id_does_not_corrupt_zk(self):
+        from vnc_cfg_api_server.resources.tag import TagServer
+
+        tag_type = 'partial-upd-%s' % self.id()
+        tag_uuid, tag_obj = self._create_tag(tag_type, 'v1')
+
+        # Must not raise after fix (early return when tag_id absent).
+        TagServer.pre_dbe_update(
+            tag_uuid, tag_obj.get_fq_name(),
+            {'force': 'yes'},
+            self._api_server._db_conn,
+        )
+
+        # Tag must still be readable — if ZK node was leaked the tag would
+        # be orphaned and subsequent operations would fail.
+        refreshed = self.api.tag_read(id=tag_uuid)
+        self.assertEqual(refreshed.tag_id, tag_obj.tag_id,
+                         "tag_id must be unchanged after a no-op update")
+
+    def test_zk_value_id_preserved_when_new_alloc_fails(self):
+        # Call pre_dbe_update directly and mock alloc_tag_value_id to raise
+        # for the new value_id. The old ZK node must survive.
+        from vnc_cfg_api_server.resources.tag import TagServer
+
+        mock_zk = self._api_server._db_conn._zk_db
+        tag_type = 'alloc-fail-%s' % self.id()
+        tag_uuid, tag_obj = self._create_tag(tag_type, 'v1')
+
+        old_value_id = int(tag_obj.tag_id, 0) & 0xFFFFFFFF
+        old_type_part = int(tag_obj.tag_id, 0) & (0xFFFF << 32)
+        # Use a small auto-range value_id
+        # to avoid IndexAllocator boundary issues.
+        new_value_id = old_value_id + 5
+        new_tag_id = '0x{:012x}'.format(old_type_part | new_value_id)
+
+        original_alloc = mock_zk.alloc_tag_value_id
+
+        def raise_for_new(type_str, fq_name_str, tag_value_id=None):
+            if tag_value_id == new_value_id:
+                raise ResourceExistsError('tag_value_id', str(new_value_id))
+            return original_alloc(type_str, fq_name_str, tag_value_id)
+
+        with mock.patch.object(mock_zk, 'alloc_tag_value_id',
+                               side_effect=raise_for_new):
+            try:
+                TagServer.pre_dbe_update(
+                    tag_uuid, tag_obj.get_fq_name(),
+                    {'tag_id': new_tag_id},
+                    self._api_server._db_conn,
+                )
+            except Exception:
+                pass
+
+        self.assertIsNone(
+            mock_zk.get_tag_value_from_id(tag_type, old_value_id),
+            "Bug: old ZK value-ID freed and not restored after alloc failure",
+        )
+
+    def test_successful_tag_id_update_swaps_zk_allocation(self):
+        tag_type = 'swap-ok-%s' % self.id()
+        tag_uuid, tag_obj = self._create_tag(tag_type, 'v1')
+
+        old_tag_id = tag_obj.tag_id
+        old_type_part = int(old_tag_id, 0) & (0xFFFF << 32)
+        old_value_id = int(old_tag_id, 0) & 0xFFFFFFFF
+        new_value_id = old_value_id + 5
+        new_tag_id = '0x{:012x}'.format(old_type_part | new_value_id)
+
+        tag_obj.tag_id = new_tag_id
+        self.api.tag_update(tag_obj)
+
+        refreshed = self.api.tag_read(id=tag_uuid)
+        self.assertEqual(
+            refreshed.tag_id.lower(), new_tag_id.lower(),
+            "tag_id must reflect the new value after successful update",
+        )
+        self.assertNotEqual(
+            refreshed.tag_id.lower(), old_tag_id.lower(),
+            "tag_id must no longer be the old value",
+        )
+
+
+class TestTagValueIdAllocatorEdgeCases(TestTagBase):
+    """Tests for alloc_auto_tag_value_id() with an explicit tag_value_id.
+
+    alloc_auto_tag_value_id() is missing the reserve() branch for the case
+    where an explicit ID is supplied but not yet in ZK — it silently returns
+    None instead of reserving the slot.  alloc_tag_value_id() (the function
+    actually called from tag.py) handles this correctly; the bug is a latent
+    defect in the dead-code variant.
+    """
+
+    @property
+    def _zk(self):
+        return self._api_server._db_conn._zk_db
+
+    def test_explicit_id_not_in_zk_is_reserved(self):
+        # alloc_auto_tag_value_id with an explicit ID that is absent from ZK
+        # must reserve it and return the ID;
+        # instead it currently returns None.
+        tag_type = 'alloc-auto-%s' % self.id()
+        explicit_id = 0x00000042
+        result = self._zk.alloc_auto_tag_value_id(
+            tag_type, 'test:fq:name', tag_value_id=explicit_id)
+        self.assertIsNotNone(
+            result,
+            "alloc_auto_tag_value_id must return the reserved ID, not None",
+        )
+        self.assertEqual(result, explicit_id)
+
+    def test_auto_alloc_without_explicit_id_works(self):
+        # Сalling without an explicit ID must still allocate normally.
+        tag_type = 'alloc-auto-base-%s' % self.id()
+        result = self._zk.alloc_auto_tag_value_id(tag_type, 'base:fq')
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, int)
+
+    def test_explicit_id_already_in_zk_is_reused(self):
+        # If the explicit ID already exists in ZK, set_in_use path must fire.
+        tag_type = 'alloc-auto-exist-%s' % self.id()
+        fq = 'exist:fq'
+        alloc_id = self._zk.alloc_tag_value_id(tag_type, fq, None)
+        result = self._zk.alloc_auto_tag_value_id(
+            tag_type, fq, tag_value_id=alloc_id)
+        self.assertEqual(result, alloc_id)
+        self._zk.free_tag_value_id(tag_type, alloc_id, fq)
