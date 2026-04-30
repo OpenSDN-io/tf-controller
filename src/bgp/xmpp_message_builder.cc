@@ -185,6 +185,7 @@ void BgpXmppMessage::EncodeNextHop(const BgpRoute *route,
     item_nexthop.label = nexthop.label();
     item_nexthop.virtual_network = GetVirtualNetwork(nexthop);
     item_nexthop.tag_list.tag = nexthop.tag_list();
+    item_nexthop.is_new_tags_list = true;
 
     // If there's a non-zero label and encap list is empty use mpls over gre
     // as default encap.
@@ -307,6 +308,7 @@ void BgpXmppMessage::EncodeEnetNextHop(const BgpRoute *route,
         encap_list = nexthop.encap();
     }
     item_nexthop.tag_list.tag = nexthop.tag_list();
+    item_nexthop.is_new_tags_list = true;
     item->entry.next_hops.next_hop.push_back(item_nexthop);
 }
 

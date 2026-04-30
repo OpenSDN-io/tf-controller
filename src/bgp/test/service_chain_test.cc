@@ -24,7 +24,7 @@
 #include "bgp/evpn/evpn_table.h"
 #include "bgp/extended-community/load_balance.h"
 #include "bgp/extended-community/site_of_origin.h"
-#include "bgp/extended-community/tag.h"
+#include "bgp/large-community/tag.h"
 #include "bgp/l3vpn/inetvpn_table.h"
 #include "bgp/origin-vn/origin_vn.h"
 #include "bgp/routing-instance/iservice_chain_mgr.h"
@@ -374,7 +374,7 @@ protected:
                       string nexthop_str = "", uint32_t flags = 0,
                       int label = 0, const LoadBalance &lb = LoadBalance(),
                       const RouteDistinguisher &rd = RouteDistinguisher(),
-                      vector<int> tag_list = vector<int>()) {
+                      vector<uint64_t> tag_list = vector<uint64_t>()) {
         boost::system::error_code error;
         DBRequest request;
         request.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
@@ -418,6 +418,7 @@ protected:
         }
 
         ExtCommunitySpec ext_comm;
+	LargeCommunitySpec largecomm;
         for (vector<uint32_t>::iterator it = sglist.begin();
             it != sglist.end(); it++) {
             SecurityGroup sgid(0, *it);
@@ -428,10 +429,13 @@ protected:
             TunnelEncap tunnel_encap(*it);
             ext_comm.communities.push_back(tunnel_encap.GetExtCommunityValue());
         }
-        for (vector<int>::iterator it = tag_list.begin();
+        for (vector<uint64_t>::iterator it = tag_list.begin();
             it != tag_list.end(); it++) {
-            Tag tag(0, *it);
-            ext_comm.communities.push_back(tag.GetExtCommunityValue());
+            TagLC tag(0, *it);
+	    for (const auto &value_data :
+	        tag.GetLargeCommunityValue()) {
+		largecomm.communities.push_back(value_data);
+            }
         }
         if (!soo.IsNull())
             ext_comm.communities.push_back(soo.GetExtCommunityValue());
@@ -440,6 +444,9 @@ protected:
             ext_comm.communities.push_back(lb.GetExtCommunityValue());
 
         attr_spec.push_back(&ext_comm);
+	if (largecomm.communities.size()) {
+	    attr_spec.push_back(&largecomm);
+	}
 
         BgpAttrPtr attr = bgp_server_->attr_db()->Locate(attr_spec);
 
@@ -497,7 +504,7 @@ protected:
                          uint32_t flags = 0, int label = 0,
                          const LoadBalance &lb = LoadBalance(),
                          const RouteDistinguisher &rd = RouteDistinguisher(),
-                         vector<int> tag_list = vector<int>()) {
+                         vector<uint64_t> tag_list = vector<uint64_t>()) {
         BgpTable *table = GetTable(instance_name);
         ASSERT_TRUE(table != NULL);
         const RoutingInstance *rtinstance = table->routing_instance();
@@ -536,6 +543,7 @@ protected:
         RouteTarget target = *(rtinstance->GetExportList().begin());
         uint64_t extcomm_value = get_value(target.GetExtCommunity().begin(), 8);
         ExtCommunitySpec extcomm_spec;
+	LargeCommunitySpec largecomm;
         extcomm_spec.communities.push_back(extcomm_value);
         for (vector<uint32_t>::iterator it = sglist.begin();
             it != sglist.end(); it++) {
@@ -543,11 +551,14 @@ protected:
             extcomm_spec.communities.push_back(sgid.GetExtCommunityValue());
         }
 
-        for (vector<int>::iterator it = tag_list.begin();
+        for (vector<uint64_t>::iterator it = tag_list.begin();
             it != tag_list.end(); it++) {
-            Tag tag(0, *it);
-            extcomm_spec.communities.push_back(tag.GetExtCommunityValue());
-        }
+            TagLC tag(0, *it);
+            for (const auto &value_data:
+	         tag.GetLargeCommunityValue()) {
+	         largecomm.communities.push_back(value_data);
+	    }
+	}
 
         for (set<string>::iterator it = encap.begin();
             it != encap.end(); it++) {
@@ -564,6 +575,9 @@ protected:
         OriginVn origin_vn(0, rti->virtual_network_index());
         extcomm_spec.communities.push_back(origin_vn.GetExtCommunityValue());
         attr_spec.push_back(&extcomm_spec);
+	if (largecomm.communities.size()) {
+	    attr_spec.push_back(&largecomm);
+	}
 
         AsPathSpec path_spec;
         AsPathSpec::PathSegment *path_seg = new AsPathSpec::PathSegment;
@@ -702,7 +716,7 @@ protected:
                    set<string> encap = set<string>(),
                    const LoadBalance &lb = LoadBalance(),
                    const RouteDistinguisher &rd = RouteDistinguisher(),
-                   vector<int> tag_list = vector<int>()) {
+                   vector<uint64_t> tag_list = vector<uint64_t>()) {
         AddConnectedRoute(1, peer, prefix, localpref, nexthop, flags, label,
                 sglist, encap, lb, rd, tag_list);
     }
@@ -714,7 +728,7 @@ protected:
                    set<string> encap = set<string>(),
                    const LoadBalance &lb = LoadBalance(),
                    const RouteDistinguisher &rd = RouteDistinguisher(),
-                   vector<int> tag_list = vector<int>()) {
+                   vector<uint64_t> tag_list = vector<uint64_t>()) {
         assert(1 <= chain_idx && chain_idx <= 3);
         string connected_table;
         if (chain_idx == 1) {
@@ -750,7 +764,7 @@ protected:
         AddRoute(NULL, connected_table, prefix, localpref,
             vector<uint32_t>(), vector<uint32_t>(), set<string>(),
             SiteOfOrigin(), nexthop,
-            0, 0, LoadBalance(), RouteDistinguisher(), vector<int>());
+            0, 0, LoadBalance(), RouteDistinguisher(), vector<uint64_t>());
         set_evpn_connected_rt_processing(false);
     }
 
@@ -919,7 +933,7 @@ protected:
         const vector<uint32_t> sg_ids, const set<string> tunnel_encaps,
         const SiteOfOrigin &soo, const vector<uint32_t> &commlist,
         const vector<string> &origin_vn_path, const LoadBalance &lb,
-        const vector<int> tag_list, bool retain_as_path=false) {
+        const vector<uint64_t> tag_list, bool retain_as_path=false) {
         BgpAttrPtr attr = path->GetAttr();
         if (attr->nexthop().to_v4().to_string() != path_id)
             return false;
@@ -955,9 +969,10 @@ protected:
             }
         }
         if (tag_list.size()) {
-            vector<int> path_tag_list = GetTagListFromRoute(path);
-            if (path_tag_list != tag_list)
+            vector<uint64_t> path_tag_list = GetTagListFromRoute(path);
+            if (path_tag_list != tag_list) {
                 return false;
+	    }
         }
         if (!soo.IsNull()) {
             SiteOfOrigin path_soo = GetSiteOfOriginFromRoute(path);
@@ -991,7 +1006,7 @@ protected:
         const SiteOfOrigin &soo, const vector<uint32_t> &commlist,
         const vector<string> &origin_vn_path,
         const LoadBalance &lb,
-        const vector<int> tag_list, bool replication=false) {
+        const vector<uint64_t> tag_list, bool replication=false) {
         task_util::TaskSchedulerLock lock;
         BgpRoute *route = RouteLookup(instance, prefix, replication);
         if (!route)
@@ -1020,7 +1035,7 @@ protected:
         TASK_UTIL_EXPECT_TRUE(CheckPathAttributes(instance, prefix,
             path_id, origin_vn, 0, vector<uint32_t>(), tunnel_encaps,
             SiteOfOrigin(), commlist, vector<string>(), LoadBalance(),
-            vector<int>(), replication));
+            vector<uint64_t>(), replication));
     }
 
     bool CheckRouteAttributes(const string &instance, const string &prefix,
@@ -1028,7 +1043,7 @@ protected:
         const vector<uint32_t> sg_ids, const set<string> tunnel_encap,
         const SiteOfOrigin &soo, const vector<uint32_t> &commlist,
         const vector<string> &origin_vn_path,
-        const LoadBalance &lb, const vector<int> tag_list,
+        const LoadBalance &lb, const vector<uint64_t> tag_list,
         bool replication=false, bool retain_as_path=false) {
         task_util::TaskSchedulerLock lock;
         BgpRoute *route = RouteLookup(instance, prefix, replication);
@@ -1068,7 +1083,7 @@ protected:
         TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
             instance, prefix, path_ids, origin_vn, 0, vector<uint32_t>(),
             set<string>(), SiteOfOrigin(), commlist, vector<string>(), lb,
-            vector<int>(), replication));
+            vector<uint64_t>(), replication));
     }
 
     void VerifyRouteAttributes(const string &instance,
@@ -1080,7 +1095,7 @@ protected:
         TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
             instance, prefix, path_ids, origin_vn, label, vector<uint32_t>(),
             set<string>(), SiteOfOrigin(), commlist, vector<string>(),
-            LoadBalance(), vector<int>(), replication, retain_as_path));
+            LoadBalance(), vector<uint64_t>(), replication, retain_as_path));
     }
 
     void VerifyRouteAttributes(const string &instance, const string &prefix,
@@ -1091,7 +1106,7 @@ protected:
         TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
             instance, prefix, path_ids, origin_vn, 0, vector<uint32_t>(),
             set<string>(), SiteOfOrigin(), commlist, vector<string>(),
-            LoadBalance(), vector<int>(), replication));
+            LoadBalance(), vector<uint64_t>(), replication));
     }
 
     void VerifyRouteAttributes(const string &instance,
@@ -1103,7 +1118,7 @@ protected:
         TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
             instance, prefix, path_ids, origin_vn, 0, sg_ids, set<string>(),
             SiteOfOrigin(), commlist, vector<string>(),
-            LoadBalance(), vector<int>(), replication));
+            LoadBalance(), vector<uint64_t>(), replication));
     }
 
     void VerifyRouteAttributes(const string &instance,
@@ -1115,7 +1130,7 @@ protected:
         TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
             instance, prefix, path_ids, origin_vn, 0, vector<uint32_t>(),
             tunnel_encaps, SiteOfOrigin(), commlist, vector<string>(),
-            LoadBalance(), vector<int>(), replication));
+            LoadBalance(), vector<uint64_t>(), replication));
     }
 
     void VerifyRouteAttributes(const string &instance,
@@ -1127,7 +1142,7 @@ protected:
         TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
             instance, prefix, path_ids, origin_vn, 0, vector<uint32_t>(),
             set<string>(), soo, commlist, vector<string>(),
-            LoadBalance(), vector<int>(), replication));
+            LoadBalance(), vector<uint64_t>(), replication));
     }
 
     void VerifyRouteAttributes(const string &instance,
@@ -1138,7 +1153,7 @@ protected:
         TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
             instance, prefix, path_ids, origin_vn, 0, vector<uint32_t>(),
             set<string>(), SiteOfOrigin(), commspec.communities,
-            vector<string>(), LoadBalance(), vector<int>(), replication));
+            vector<string>(), LoadBalance(), vector<uint64_t>(), replication));
     }
 
     void VerifyRouteAttributes(const string &instance,
@@ -1150,19 +1165,19 @@ protected:
         TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
             instance, prefix, path_ids, origin_vn, 0, vector<uint32_t>(),
             set<string>(), SiteOfOrigin(), commlist, origin_vn_path,
-            LoadBalance(), vector<int>(), replication));
+            LoadBalance(), vector<uint64_t>(), replication));
     }
 
     void VerifyRouteAttributes(const string &instance,
         const string &prefix, const string &path_id, const string &origin_vn,
-        const vector<int> tag_list, bool replication=false) {
+        const vector<uint64_t> tag_list, bool replication=false) {
         task_util::WaitForIdle();
         vector<string> path_ids = list_of(path_id);
-        vector<uint32_t> commlist = list_of(CommunityType::AcceptOwnNexthop);
-        TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
-            instance, prefix, path_ids, origin_vn, 0, vector<uint32_t>(),
-            set<string>(), SiteOfOrigin(), commlist, vector<string>(),
-            LoadBalance(), tag_list, replication));
+	vector<uint32_t> commlist = list_of(CommunityType::AcceptOwnNexthop);
+	TASK_UTIL_EXPECT_TRUE(CheckRouteAttributes(
+	    instance, prefix, path_ids, origin_vn, 0, vector<uint32_t>(),
+	    set<string>(), SiteOfOrigin(), commlist, vector<string>(),
+	    LoadBalance(), tag_list, replication));
     }
 
 
@@ -1316,15 +1331,15 @@ protected:
     }
 
 
-    vector<int> GetTagListFromRoute(const BgpPath *path) {
-        const ExtCommunity *ext_comm = path->GetAttr()->ext_community();
-        assert(ext_comm);
-        vector<int> list;
-        BOOST_FOREACH(const ExtCommunity::ExtCommunityValue &comm,
-                      ext_comm->communities()) {
-            if (!ExtCommunity::is_tag(comm))
+    vector<uint64_t> GetTagListFromRoute(const BgpPath *path) {
+        const LargeCommunity *large_comm = path->GetAttr()->large_community();
+        assert(large_comm);
+        vector<uint64_t> list;
+        BOOST_FOREACH(const LargeCommunity::LargeCommunityValue &comm,
+                      large_comm->communities()) {
+            if (!LargeCommunity::is_tag(comm))
                 continue;
-            Tag tag(comm);
+            TagLC tag(comm);
             list.push_back(tag.tag());
         }
         return list;
@@ -2275,13 +2290,13 @@ TYPED_TEST(ServiceChainTest, TagList) {
         "controller/src/bgp/testdata/service_chain_1.xml");
 
     // Add More specific & connected
-    vector<int> tag_list_o = list_of(101)(202);
+    vector<uint64_t> tag_list_o = list_of(101)(202);
     this->AddRoute(NULL, "red", this->BuildPrefix("192.168.1.1", 32), 100,
                    vector<uint32_t>(), vector<uint32_t>(), set<string>(),
                    SiteOfOrigin(), "", 0, 0, LoadBalance(),
                    RouteDistinguisher(), tag_list_o);
 
-    vector<int> tag_list_c = list_of(100)(200);
+    vector<uint64_t> tag_list_c = list_of(100)(200);
     // Add Tag list attribute to connected route and verify
     this->AddConnectedRoute(NULL, this->BuildConnPrefix("1.1.2.3", 32), 100,
                             this->BuildNextHopAddress("3.4.5.6"),
@@ -6659,6 +6674,7 @@ static void process_command_line_args(int argc, const char **argv) {
             (vm["address-family"].as<string>() == "vpn");
     }
 }
+
 
 int service_chain_test_main(int argc, const char **argv) {
     bgp_log_test::init();

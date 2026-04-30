@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <string>
+#include <map>
 
 #include "base/string_util.h"
 #include "bgp/bgp_proto.h"
@@ -193,6 +194,73 @@ string ExtCommunitySpec::ToString() const {
     snprintf(repr, sizeof(repr), "ExtCommunity <code: %d, flags: %02x>:%d",
              code, flags, (uint32_t)communities.size());
     return string(repr);
+}
+
+LargeCommunitySpec LargeCommunitySpec::FromTag(
+    const ExtCommunitySpec &ex_spec) {
+    LargeCommunitySpec large_spec;
+    using extcomm_iterator = decltype(large_spec.communities)::iterator;
+    std::map<uint16_t, extcomm_iterator> tno_vs_tspec;
+    std::vector<std::pair<uint32_t,uint16_t> > asn4_vs_tno;
+    const uint64_t ExtCommTag = uint64_t(
+        (BgpExtendedCommunityType::Experimental << 8) |
+        (BgpExtendedCommunityExperimentalSubType::Tag)) << 48;
+    const uint64_t ExtCommTag4 = uint64_t(
+        (BgpExtendedCommunityType::Experimental4ByteAs << 8) |
+        (BgpExtendedCommunityExperimentalSubType::Tag)) << 48;
+    uint16_t asn_or_tno;
+    uint32_t asn4;
+    uint16_t tno;
+    for (const auto &val64 : ex_spec.communities) {
+        if ((0xFFFF000000000000 & val64) == ExtCommTag) {
+            asn_or_tno = (0x0000FFFF00000000 & val64) >> 32;
+            std::vector<uint32_t> large_comm = {
+                asn_or_tno,
+                0x01000000 | uint32_t((val64 & 0x00000000FFFF0000) >> 16),
+                uint32_t(val64 & 0x000000000000FFFF)
+            };
+            extcomm_iterator it_tspec =  large_spec.communities.insert(
+                large_spec.communities.end(),
+                large_comm.begin(),
+                large_comm.end());
+            tno_vs_tspec.insert({asn_or_tno,
+                                it_tspec});
+            continue;
+        }
+
+        if ((0xFFFF000000000000 & val64) == ExtCommTag4) {
+            asn4 = (0x0000FFFFFFFF0000 & val64) >> 16;
+            tno  = (0x000000000000FFFF & val64);
+            asn4_vs_tno.push_back({asn4, tno});
+        }
+    }
+    // loop over all 4-byte ASNs and modify their value in large_spec
+    for(const auto &[asn4, tno] : asn4_vs_tno) {
+        auto &large_comm_asn = tno_vs_tspec[tno];
+        if (large_comm_asn == large_spec.communities.end()) {
+            continue;
+        }
+        *large_comm_asn = asn4;
+    }
+    return large_spec;
+}
+
+ExtCommunitySpec LargeCommunitySpec::RemoveTags(
+    const ExtCommunitySpec& ex_spec) {
+    const uint64_t ExtCommTag = uint64_t(
+        (BgpExtendedCommunityType::Experimental << 8) |
+        (BgpExtendedCommunityExperimentalSubType::Tag)) << 48;
+    const uint64_t ExtCommTag4 = uint64_t(
+        (BgpExtendedCommunityType::Experimental4ByteAs << 8) |
+        (BgpExtendedCommunityExperimentalSubType::Tag)) << 48;
+    ExtCommunitySpec new_ex_spec;
+    for (const auto &val64 : ex_spec.communities) {
+        if ((0xFFFF000000000000 & val64) != ExtCommTag &&
+            (0xFFFF000000000000 & val64) != ExtCommTag4) {
+            new_ex_spec.communities.push_back(val64);
+        }
+    }
+    return new_ex_spec;
 }
 
 size_t ExtCommunitySpec::EncodeLength() const {

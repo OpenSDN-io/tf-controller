@@ -38,7 +38,6 @@
 #include <xmpp_multicast_types.h>
 #include <xmpp_mvpn_types.h>
 #include <assert.h>
-#include <oper/nexthop.h>
 
 using namespace boost::asio;
 using namespace autogen;
@@ -1016,7 +1015,7 @@ ControllerEcmpRoute *AgentXmppChannel::BuildEcmpData(TYPE *item,
                               const AgentRouteTable *rt_table,
                               const std::string &prefix_str) {
    TagList tag_list;
-   BuildTagList(item, &tag_list);
+   BuildTagList(item, tag_list);
 
    ControllerEcmpRoute *data = new ControllerEcmpRoute(bgp_peer_id(),
                                 vn_list, ecmp_load_balance, tag_list,
@@ -1211,7 +1210,7 @@ void AgentXmppChannel::AddEvpnRoute(const std::string &vrf_name,
                                    false, false);
 
     TagList tag_list;
-    BuildTagList(item, &tag_list);
+    BuildTagList(item, tag_list);
 
     CONTROLLER_INFO_TRACE(RouteImport, GetBgpPeerName(), vrf_name,
                      mac.ToString(), 0, nexthop_addr, label, "");
@@ -1464,7 +1463,7 @@ void AgentXmppChannel::AddRemoteRoute(string vrf_name, IpAddress prefix_addr,
                                    false, false);
 
     TagList tag_list;
-    BuildTagList(item, &tag_list);
+    BuildTagList(item, tag_list);
 
     std::string vn_string;
     for (VnListType::const_iterator vnit = vn_list.begin();
@@ -1725,7 +1724,7 @@ void AgentXmppChannel::AddRemoteMplsRoute(string vrf_name, IpAddress prefix_addr
                                    false, false);
 
     TagList tag_list;
-    BuildTagList(item, &tag_list);
+    BuildTagList(item, tag_list);
 
     std::string vn_string;
     for (VnListType::const_iterator vnit = vn_list.begin();
@@ -2454,6 +2453,22 @@ bool AgentXmppChannel::ControllerSendV4V6UnicastRouteCommon(AgentRoute *route,
 
     if (tag_list && tag_list->size()) {
         nh.tag_list.tag = *tag_list;
+        nh.is_new_tags_list = true;
+        const AgentPath *loc_vm_path = route->FindLocalVmPortPath();
+        const InterfaceNH *interface_nh = loc_vm_path != nullptr ?
+            dynamic_cast<const InterfaceNH*>(loc_vm_path->nexthop()) :
+            nullptr;
+        const VmInterface *vm_interface = interface_nh != nullptr ?
+            dynamic_cast<const VmInterface*>(interface_nh->GetInterface()) :
+            nullptr;
+        if (vm_interface != nullptr &&
+            !vm_interface->contains_new_tags()) {
+            nh.is_new_tags_list = false;
+            for (auto &tag : nh.tag_list.tag) {
+                tag =  (0x00000000FFFF & tag) |
+                      ((0xFFFF00000000 & tag) >> 16);
+            }
+        }
     }
 
     if (path_preference.loc_sequence()) {
@@ -2836,6 +2851,22 @@ bool AgentXmppChannel::BuildEvpnUnicastMessage(EnetItemType &item,
 
         if (tag_list && tag_list->size()) {
             nh.tag_list.tag = *tag_list;
+            nh.is_new_tags_list = true;
+            const InterfaceNH *interface_nh = active_path != nullptr ?
+                dynamic_cast<const InterfaceNH*>(active_path->nexthop()) :
+                nullptr;
+            const VmInterface *vm_interface = interface_nh != nullptr ?
+                dynamic_cast<const VmInterface*>(
+                    interface_nh->GetInterface()) :
+                nullptr;
+            if (vm_interface != nullptr &&
+                !vm_interface->contains_new_tags()) {
+                nh.is_new_tags_list = false;
+                for (auto &tag : nh.tag_list.tag) {
+                    tag =  (0x00000000FFFF & tag) |
+                        ((0xFFFF00000000 & tag) >> 16);
+                }
+            }
         }
 
         if (path_preference.loc_sequence()) {
@@ -3453,7 +3484,14 @@ void AgentXmppChannel::StopEndOfRibTxWalker() {
 
 template <typename TYPE>
 void AgentXmppChannel::BuildTagList(const TYPE *item,
-                                    TagList *tag_list) {
-    *tag_list = item->entry.next_hops.next_hop[0].tag_list.tag;
-    std::sort(tag_list->begin(), tag_list->end());
+                                    TagList &tag_list) {
+    bool new_tags = item->entry.next_hops.next_hop[0].is_new_tags_list;
+    tag_list = item->entry.next_hops.next_hop[0].tag_list.tag;
+    std::sort(tag_list.begin(), tag_list.end());
+    if (new_tags) {
+        return;
+    }
+    for (auto &tag : tag_list) {
+        tag = (0x0000FFFF & tag) | ((0xFFFF0000 & tag) << 16);
+    }
 }

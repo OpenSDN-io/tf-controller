@@ -35,21 +35,17 @@ RibOutAttr::NextHop::NextHop(const BgpTable *table, IpAddress address,
       label_(label),
       l3_label_(l3_label),
       origin_vn_index_(-1) {
-    if ((ext_community != nullptr) || (large_community != nullptr)) {
-        as_t asn = table ? table->server()->autonomous_system() : 0;
-        bool all = table ? table->server()->global_config()->all_tags_are_global() : false;
+      as_t asn = table ? table->server()->autonomous_system() : 0;
+      bool all = table ?
+          table->server()->global_config()->all_tags_are_global() : false;
+    if (large_community != nullptr) {
+        tag_list_ = large_community->GetTagList(all ? 0 : asn);
+    }
+    if (ext_community != nullptr) {
         encap_ = ext_community->GetTunnelEncap();
         origin_vn_index_ = ext_community->GetOriginVnIndex();
-        if (large_community != nullptr) {
-            tag_list_ = large_community->GetTagList(all ? 0 : asn);
-        } else if (ext_community != nullptr) {
-            std::vector<int> ext_tag_list =
-                ext_community->GetTag4List(all ? 0 : asn);
-            for (auto ext_tag : ext_tag_list) {
-                tag_list_.push_back(ext_tag);
-            }
-        }
     }
+
     if (origin_vn_index_ < 0 && vrf_originated) {
         origin_vn_index_ =
             table ? table->routing_instance()->virtual_network_index() : 0;

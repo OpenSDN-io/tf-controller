@@ -200,7 +200,7 @@ public:
                           autogen::EnetItemType *item,
                           const VnListType &vn_list);
     template <typename TYPE>
-    void BuildTagList(const TYPE *item, TagList *tag_list);
+    void BuildTagList(const TYPE *item, TagList &tag_list);
     uint64_t route_published_time() const {return route_published_time_;}
     EndOfRibTxTimer *end_of_rib_tx_timer();
     EndOfRibRxTimer *end_of_rib_rx_timer();

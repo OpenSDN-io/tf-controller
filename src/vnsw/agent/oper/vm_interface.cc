@@ -3406,11 +3406,13 @@ bool VmInterface::UpdatePolicySet(const Agent *agent) {
         new_firewall_policy_list = gps->fw_policy_list();
     }
 
+    contains_new_tags_ = false;
     TagEntrySet::const_iterator it = tag_list_.list_.begin();
     for(; it != tag_list_.list_.end(); it++) {
         if (it->tag_ == NULL) {
             continue;
         }
+        contains_new_tags_ |= it->tag_->is_new_tag();
 
         ::TagEntry::PolicySetList::const_iterator ps_it =
             it->tag_->policy_set_list().begin();
