@@ -7,3 +7,4 @@ fabric-ansible==0.1.dev0
 junitxml==0.7
 timeout-decorator==0.4.1
 requests==2.23.0
+idna>=3.7 # not directly required, pinned by Snyk to avoid a vulnerability
