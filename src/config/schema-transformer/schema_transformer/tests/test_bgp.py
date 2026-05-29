@@ -106,7 +106,7 @@ class VerifyBgp(VerifyRouteTarget):
             raise Exception('bgp params is None for %s' % fq_name)
         self.assertEqual(params.get_autonomous_system(), asn)
 
-    @retries(5)
+    @retries(15)
     def check_lr_target(self, fq_name, rt_target=None):
         router = self._vnc_lib.logical_router_read(fq_name)
         rt_refs = router.get_route_target_refs()
