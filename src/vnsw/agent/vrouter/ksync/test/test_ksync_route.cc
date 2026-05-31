@@ -10,6 +10,11 @@
 #include "test/test_cmn_util.h"
 #include "oper/path_preference.h"
 #include "vrouter/ksync/route_ksync.h"
+#include "oper/nexthop.h"
+#include "ksync/ksync_sock_user.h"
+#include "vrouter/ksync/interface_ksync.h"
+#include "vrouter/ksync/nexthop_ksync.h"
+
 
 struct PortInfo input[] = {
     {"vnet1", 1, "1.1.1.1", "00:00:00:01:01:01", 1, 1},
@@ -560,6 +565,104 @@ TEST_F(TestKSyncRoute, ksync_intf_pbb_mac) {
     // Verify pbb_mac for is set to interface mac as pbb_interface flag is set
     EXPECT_EQ(ksync->pbb_mac().ToString(), vnet1_->vm_mac().ToString());
 }
+
+TEST_F(TestKSyncRoute, nh_defers_until_vif_in_sync) {
+    InetUnicastRouteEntry *rt = vrf1_uc_table_->FindLPM(vnet1_->primary_ip_addr());
+    ASSERT_TRUE(rt != NULL);
+    const NextHop *onh = rt->GetActiveNextHop();
+    ASSERT_TRUE(onh != NULL);
+    ASSERT_EQ(onh->GetType(), NextHop::INTERFACE);
+
+    // Live InterfaceKSyncEntry for the VM port.
+    InterfaceKSyncEntry vif_key(interface_obj, vnet1_);
+    KSyncEntry *vif = interface_obj->Find(&vif_key);
+    ASSERT_TRUE(vif != NULL);
+    WAIT_FOR(1000, 100, (vif->GetState() == KSyncEntry::IN_SYNC));
+
+    // Live INTERFACE NHKSyncEntry that references that VIF.
+    NHKSyncObject *nh_obj = agent_->ksync()->nh_ksync_obj();
+    NHKSyncEntry nh_key(nh_obj, onh);
+    NHKSyncEntry *nh = static_cast<NHKSyncEntry *>(nh_obj->Find(&nh_key));
+    ASSERT_TRUE(nh != NULL);
+    WAIT_FOR(1000, 100, (nh->GetState() == KSyncEntry::IN_SYNC));
+
+    KSyncSockTypeMap *sock = KSyncSockTypeMap::GetKSyncSockTypeMap();
+    ASSERT_TRUE(sock != NULL);
+
+    // Hard-reboot window: VIF re-sent (CHANGE), kernel ACK held -> SYNC_WAIT.
+    sock->SetBlockMsgProcessing(true);
+    interface_obj->Change(vif);
+    EXPECT_EQ(vif->GetState(), KSyncEntry::SYNC_WAIT);
+
+    // Root cause: IsResolved() is true for SYNC_WAIT; IsInSync() is the gate.
+    EXPECT_TRUE(vif->IsResolved());
+    EXPECT_FALSE(vif->IsInSync());
+
+    // Production behaviour under test.
+    KSyncEntry *dep = nh->UnresolvedReference();
+    EXPECT_TRUE(dep != NULL)
+        << "REGRESSION: NHKSyncEntry::UnresolvedReference() did NOT defer while "
+           "the interface is in SYNC_WAIT. The !IsInSync() gate in "
+           "nexthop_ksync.cc was likely removed -> /32 route goes stuck after "
+           "VM hard reboot.";
+    EXPECT_EQ(dep, vif);
+
+    // Deliver the held ACK: VIF -> IN_SYNC, NH no longer needs to defer.
+    sock->SetBlockMsgProcessing(false);
+    client->WaitForIdle();
+    WAIT_FOR(1000, 100, (vif->GetState() == KSyncEntry::IN_SYNC));
+    EXPECT_TRUE(vif->IsInSync());
+    EXPECT_TRUE(nh->UnresolvedReference() == NULL);
+}
+
+// RouteKSyncEntry::UnresolvedReference() must defer a route while its nexthop is
+// only SYNC_WAIT. Reverting the !nexthop->IsInSync() gate in route_ksync.cc
+// makes this return NULL and the route is programmed before the NH exists in
+// vRouter -> "Entry not present" -> stuck /32 route.
+TEST_F(TestKSyncRoute, route_defers_until_nh_in_sync) {
+    InetUnicastRouteEntry *rt = vrf1_uc_table_->FindLPM(vnet1_->primary_ip_addr());
+    ASSERT_TRUE(rt != NULL);
+    const NextHop *onh = rt->GetActiveNextHop();
+    ASSERT_TRUE(onh != NULL);
+
+    NHKSyncObject *nh_obj = agent_->ksync()->nh_ksync_obj();
+    NHKSyncEntry nh_key(nh_obj, onh);
+    KSyncEntry *nh = nh_obj->Find(&nh_key);
+    ASSERT_TRUE(nh != NULL);
+    WAIT_FOR(1000, 100, (nh->GetState() == KSyncEntry::IN_SYNC));
+
+    // Live RouteKSyncEntry for the /32 (Find uses prefix/vrf, not nh_, as key).
+    RouteKSyncEntry rt_key(vrf1_rt_obj_, rt);
+    RouteKSyncEntry *rt_ksync =
+        static_cast<RouteKSyncEntry *>(vrf1_rt_obj_->Find(&rt_key));
+    ASSERT_TRUE(rt_ksync != NULL);
+    WAIT_FOR(1000, 100, (rt_ksync->GetState() == KSyncEntry::IN_SYNC));
+
+    KSyncSockTypeMap *sock = KSyncSockTypeMap::GetKSyncSockTypeMap();
+    ASSERT_TRUE(sock != NULL);
+
+    // Hold the NH ACK -> NH stuck in SYNC_WAIT.
+    sock->SetBlockMsgProcessing(true);
+    nh_obj->Change(nh);
+    EXPECT_EQ(nh->GetState(), KSyncEntry::SYNC_WAIT);
+    EXPECT_TRUE(nh->IsResolved());
+    EXPECT_FALSE(nh->IsInSync());
+
+    // Production behaviour under test.
+    KSyncEntry *dep = rt_ksync->UnresolvedReference();
+    EXPECT_EQ(dep, nh)
+        << "REGRESSION: RouteKSyncEntry::UnresolvedReference() did NOT defer "
+           "while the nexthop is in SYNC_WAIT. The !IsInSync() gate in "
+           "route_ksync.cc was likely removed -> /32 route goes stuck after "
+           "VM hard reboot.";
+
+    // Deliver the held ACK: NH -> IN_SYNC, route no longer needs to defer.
+    sock->SetBlockMsgProcessing(false);
+    client->WaitForIdle();
+    WAIT_FOR(1000, 100, (nh->GetState() == KSyncEntry::IN_SYNC));
+    EXPECT_TRUE(rt_ksync->UnresolvedReference() == NULL);
+}
+
 
 int main(int argc, char **argv) {
     GETUSERARGS();

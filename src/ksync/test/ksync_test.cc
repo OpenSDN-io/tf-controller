@@ -41,16 +41,16 @@ public:
 
     Vlan(uint16_t tag, uint16_t dep_tag, size_t index) :
         KSyncEntry(index), tag_(tag), dep_tag_(dep_tag), dep_vlan_(NULL),
-        op_(INIT), all_delete_state_comp_(true) { };
+        op_(INIT), all_delete_state_comp_(true), strict_dep_(false) { };
 
     Vlan(uint16_t tag) :
         KSyncEntry(), tag_(tag), dep_tag_(0), dep_vlan_(NULL), op_(TEMP),
-        all_delete_state_comp_(true) { };
+        all_delete_state_comp_(true), strict_dep_(false) { };
 
     Vlan(uint16_t tag, uint16_t dep_tag) :
         KSyncEntry(kInvalidIndex), tag_(tag), dep_tag_(dep_tag),
         dep_vlan_(NULL), op_(TEMP),
-        all_delete_state_comp_(true) { };
+        all_delete_state_comp_(true), strict_dep_(false) { };
 
     virtual ~Vlan() {
         if (GetState() == KSyncEntry::FREE_WAIT) {
@@ -86,7 +86,10 @@ public:
         if (dep_tag_ == 0)
             return NULL;
 
-        if (dep_vlan_->IsResolved())
+        bool ready = strict_dep_
+                   ? (dep_vlan_->IsResolved() && dep_vlan_->IsInSync())
+                   : dep_vlan_->IsResolved();
+        if (ready)
             return NULL;
 
         return dep_vlan_.get();
@@ -94,6 +97,7 @@ public:
 
     uint16_t GetTag() const { return tag_;};
     uint16_t GetDepTag() const { return dep_tag_;};
+    bool GetStrictDep() const { return strict_dep_;};
     const Vlan *GetDepVlan() const { return static_cast<Vlan *>(dep_vlan_.get());};
     LastOp GetOp() const { return op_;};
 
@@ -107,6 +111,7 @@ public:
     KSyncEntryPtr dep_vlan_;
     LastOp op_;
     bool all_delete_state_comp_;
+    bool strict_dep_;
     DISALLOW_COPY_AND_ASSIGN(Vlan);
 };
 uint32_t Vlan::add_count_;
@@ -129,6 +134,7 @@ public:
     virtual KSyncEntry *Alloc(const KSyncEntry *key, uint32_t index) {
         const Vlan *vlan  = static_cast<const Vlan *>(key);
         Vlan *v = new Vlan(vlan->GetTag(), vlan->GetDepTag(), index);
+        v->strict_dep_ = vlan->GetStrictDep();
         if (vlan->GetDepTag() != 0) {
             Vlan key(vlan->GetDepTag());
             v->dep_vlan_ = static_cast<Vlan *>(vlan_table_->GetReference(&key));
@@ -202,6 +208,18 @@ Vlan *AddStaleVlan(uint16_t tag, uint16_t dep_tag, KSyncEntry::KSyncState state,
 Vlan *AddVlan(uint16_t tag, uint16_t dep_tag, KSyncEntry::KSyncState state,
               Vlan::LastOp op, uint32_t index) {
     Vlan v(tag, dep_tag);
+    Vlan *vlan = static_cast<Vlan *>(vlan_table_->Create(&v));
+
+    EXPECT_EQ(vlan->GetState(), state);
+    EXPECT_EQ(vlan->GetOp(), op);
+    EXPECT_EQ(vlan->GetIndex(), index);
+    return vlan;
+}
+
+Vlan *AddVlanStrict(uint16_t tag, uint16_t dep_tag, KSyncEntry::KSyncState state,
+                    Vlan::LastOp op, uint32_t index) {
+    Vlan v(tag, dep_tag);
+    v.strict_dep_ = true;
     Vlan *vlan = static_cast<Vlan *>(vlan_table_->Create(&v));
 
     EXPECT_EQ(vlan->GetState(), state);
@@ -1133,6 +1151,100 @@ TEST_F(TestUT, CreateExistingEntryWithoutFind) {
     EXPECT_EQ(Vlan::add_count_, 1);
     EXPECT_EQ(Vlan::change_count_, 1);
     EXPECT_EQ(Vlan::delete_count_, 1);
+}
+/*
+ * Bug: Missing /32 route after VM hard reboot in vxlan-routing topology.
+ *
+ * Root cause: NHKSyncEntry::UnresolvedReference() and RouteKSyncEntry::UnresolvedReference()
+ * use IsResolved() to check VIF/NH dependency. IsResolved() returns true for SYNC_WAIT,
+ * so NH is sent to vRouter while VIF CHANGE kernel ACK is still pending.
+ * vRouter returns EINVAL/ENOENT. ErrorHandler only logs. KSync enters stuck state:
+ * NH and Route are IN_SYNC in KSync but do not exist in vRouter.
+ * BackRefReEval cannot recover - NH was never added to back_ref_tree_.
+ */
+TEST_F(TestUT, nh_must_defer_while_vif_in_sync_wait) {
+    object_manager->Delete(vlan_table_);
+    task_util::WaitForIdle();
+    delete vlan_table_;
+    vlan_table_ = new VlanTable(200);
+    TestInit();
+
+    // VIF added async then ACKed -> IN_SYNC (steady state before the reboot)
+    Vlan *vif = AddVlan(0x001, 0, KSyncEntry::SYNC_WAIT, Vlan::ADD, 0);
+    vlan_table_->NotifyEvent(vif, KSyncEntry::ADD_ACK);
+    EXPECT_EQ(vif->GetState(), KSyncEntry::IN_SYNC);
+
+    // Hard reboot: tap recreated -> VMI CHANGE (new os_index). tag < 0xF00 makes
+    // Change() async -> VIF re-enters SYNC_WAIT, kernel ACK pending. SAME key, no
+    // in-place tag_ mutation (which would corrupt the intrusive-set ordering).
+    vlan_table_->Change(vif);
+    EXPECT_EQ(vif->GetState(), KSyncEntry::SYNC_WAIT);
+
+    // This is the root cause: IsResolved() is true for SYNC_WAIT; IsInSync() is
+    // the correct "kernel acknowledged" gate and is false here.
+    EXPECT_TRUE(vif->IsResolved());
+    EXPECT_FALSE(vif->IsInSync())
+        << "VIF must not be treated as ready while kernel ACK is pending";
+
+    // NH created while VIF is in SYNC_WAIT. With the strict (IsInSync) gate the
+    // NH must defer. With the buggy IsResolved gate it would be sent and race.
+    Vlan *nh = AddVlanStrict(0x002, 0x001, KSyncEntry::ADD_DEFER, Vlan::INIT, 1);
+    EXPECT_EQ(nh->GetState(), KSyncEntry::ADD_DEFER)
+        << "NH must defer until VIF kernel ACK; otherwise vRouter EINVAL -> "
+           "stuck /32 that only recovers on explicit VIF reconnect";
+    EXPECT_EQ(Vlan::add_count_, 1) << "NH must NOT be sent to kernel yet";
+
+    // VIF kernel ACK -> IN_SYNC -> BackRefReEval -> NH leaves ADD_DEFER and is
+    // sent to the kernel now (after the dependency is confirmed).
+    vlan_table_->NotifyEvent(vif, KSyncEntry::CHANGE_ACK);
+    EXPECT_EQ(vif->GetState(), KSyncEntry::IN_SYNC);
+    EXPECT_TRUE(vif->IsInSync());
+    EXPECT_NE(nh->GetState(), KSyncEntry::ADD_DEFER)
+        << "NH should leave ADD_DEFER after BackRefReEval fires on VIF IN_SYNC";
+    EXPECT_EQ(Vlan::add_count_, 2)
+        << "NH must be sent to vRouter only after VIF kernel ACK";
+
+    // Cleanup (ACK the NH add first so deletes complete cleanly)
+    vlan_table_->NotifyEvent(nh, KSyncEntry::ADD_ACK);
+    vlan_table_->Delete(nh);
+    vlan_table_->NotifyEvent(nh, KSyncEntry::DEL_ACK);
+    vlan_table_->Delete(vif);
+    vlan_table_->NotifyEvent(vif, KSyncEntry::DEL_ACK);
+}
+
+// Verifies end-to-end ordering: NH is sent to vRouter only after VIF kernel ACK.
+TEST_F(TestUT, nh_sent_to_kernel_after_vif_ack) {
+    // Hermetic start (see nh_must_defer_while_vif_in_sync_wait): deterministic
+    // index pool -> VIF gets 0, NH gets 1.
+    object_manager->Delete(vlan_table_);
+    task_util::WaitForIdle();
+    delete vlan_table_;
+    vlan_table_ = new VlanTable(200);
+    TestInit();
+
+    // VIF created async (tag < 0xF00 -> Add returns false -> SYNC_WAIT)
+    Vlan *vif = AddVlan(0x001, 0, KSyncEntry::SYNC_WAIT, Vlan::ADD, 0);
+    EXPECT_EQ(vif->GetState(), KSyncEntry::SYNC_WAIT);
+    EXPECT_EQ(Vlan::add_count_, 1);  // VIF sent to kernel
+
+    // NH created while VIF is in SYNC_WAIT -> must defer with the strict gate.
+    Vlan *nh = AddVlanStrict(0x002, 0x001, KSyncEntry::ADD_DEFER, Vlan::INIT, 1);
+    EXPECT_EQ(nh->GetState(), KSyncEntry::ADD_DEFER);
+    EXPECT_EQ(Vlan::add_count_, 1);  // NH has NOT been sent to kernel yet
+
+    // VIF kernel ACK -> IN_SYNC -> BackRefReEval -> NH exits ADD_DEFER -> sent.
+    vlan_table_->NotifyEvent(vif, KSyncEntry::ADD_ACK);
+    EXPECT_EQ(vif->GetState(), KSyncEntry::IN_SYNC);
+    EXPECT_NE(nh->GetState(), KSyncEntry::ADD_DEFER);
+    EXPECT_EQ(Vlan::add_count_, 2)
+        << "NH must be sent to vRouter only after VIF kernel ACK is received";
+
+    // Cleanup
+    vlan_table_->NotifyEvent(nh, KSyncEntry::ADD_ACK);
+    vlan_table_->Delete(nh);
+    vlan_table_->NotifyEvent(nh, KSyncEntry::DEL_ACK);
+    vlan_table_->Delete(vif);
+    vlan_table_->NotifyEvent(vif, KSyncEntry::DEL_ACK);
 }
 
 int main(int argc, char **argv) {

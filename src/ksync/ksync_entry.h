@@ -127,6 +127,8 @@ public:
     // Returns true if entry is resolved and referring entry can be written
     bool IsResolved();
 
+    bool IsInSync() const { return (state_ == IN_SYNC); }
+
     // Returns true if the entry data is resolved
     virtual bool IsDataResolved() {return true;}
 

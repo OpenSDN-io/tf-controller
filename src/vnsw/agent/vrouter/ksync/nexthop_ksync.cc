@@ -1496,7 +1496,7 @@ KSyncEntry *NHKSyncEntry::UnresolvedReference() {
     case NextHop::VLAN:
     case NextHop::INTERFACE: {
         assert(if_ksync);
-        if (!if_ksync->IsResolved()) {
+        if (!if_ksync->IsResolved() || !if_ksync->IsInSync()) {
             entry = if_ksync;
         }
         break;
