@@ -531,8 +531,12 @@ class LogicalRouterServer(ResourceMixin, LogicalRouter):
         if logical_router_type == 'vxlan-routing':
             vn_int_fqname = (obj_dict['fq_name'][:-1] +
                              [get_lr_internal_vn_name(obj_dict['uuid'])])
-            vn_int_uuid = db_conn.fq_name_to_uuid('virtual_network',
-                                                  vn_int_fqname)
+            try:
+                vn_int_uuid = db_conn.fq_name_to_uuid('virtual_network',
+                                                      vn_int_fqname)
+            except NoIdError:
+                # Internal VN was already deleted manually, nothing to clean up
+                return True, '', None
 
             api_server = cls.server
             try:

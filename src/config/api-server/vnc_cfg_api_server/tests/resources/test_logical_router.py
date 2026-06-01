@@ -6,6 +6,7 @@
 import logging
 import uuid
 
+import bottle
 from cfgm_common import get_lr_internal_vn_name
 from netaddr import IPNetwork
 from testtools import ExpectedException
@@ -29,8 +30,8 @@ from vnc_api.gen.resource_xsd import RouteType
 from vnc_api.gen.resource_xsd import SubnetType
 from vnc_api.gen.resource_xsd import VnSubnetsType
 
+from vnc_cfg_api_server import context as api_context
 from vnc_cfg_api_server.tests import test_case
-
 
 logger = logging.getLogger(__name__)
 
@@ -652,6 +653,71 @@ class TestLogicalRouter(test_case.ApiServerTestCase):
             self._vnc_lib.logical_router_update(lr)
 
         logger.debug('PASS: Could not update LR from SNAT to VXLAN')
+
+    def test_delete_vxlan_lr_after_internal_vn_manually_deleted(self):
+        """Verify delete vxlan logical router after internal vn.
+
+        Verify that a vxlan-routing LR can be deleted even if its internal
+        VN was manually removed beforehand (regression test for NoIdError
+        escaping pre_dbe_delete when fq_name_to_uuid finds no internal VN).
+        """
+        project = self._vnc_lib.project_read(
+            fq_name=['default-domain', 'default-project'])
+        project.set_vxlan_routing(True)
+        self._vnc_lib.project_update(project)
+
+        # Create a vxlan-routing LR (this also creates the internal VN)
+        lr = LogicalRouter(
+            'router-test-del-intvn-%s' % self.id(), project)
+        lr.set_logical_router_type('vxlan-routing')
+        lr_uuid = self._vnc_lib.logical_router_create(lr)
+        lr = self._vnc_lib.logical_router_read(id=lr_uuid)
+
+        # Locate the internal VN that was auto-created
+        int_vn_name = get_lr_internal_vn_name(lr_uuid)
+        int_vn_fqname = ['default-domain', 'default-project', int_vn_name]
+        int_vn_uuid = None
+        for vn_ref in lr.get_virtual_network_refs() or []:
+            attr = vn_ref.get('attr')
+            vn_type = (attr.logical_router_virtual_network_type
+                       if attr is not None else None)
+            if vn_type == 'InternalVirtualNetwork':
+                int_vn_uuid = vn_ref['uuid']
+                break
+
+        if int_vn_uuid:
+            b_req = bottle.BaseRequest(
+                {'PATH_INFO': '/ref-update',
+                 'bottle.app': self._api_server.api_bottle})
+            i_req = api_context.ApiInternalRequest(
+                b_req.url, b_req.urlparts, b_req.environ,
+                b_req.headers, {}, None)
+            ctx = api_context.ApiContext(internal_req=i_req)
+            api_context.set_context(ctx)
+            try:
+                self._api_server.internal_request_ref_update(
+                    'logical-router', lr_uuid, 'DELETE',
+                    'virtual-network', int_vn_uuid, int_vn_fqname)
+                self._api_server.internal_request_delete(
+                    'virtual-network', int_vn_uuid)
+            finally:
+                api_context.clear_context()
+
+        # The internal VN is gone – the LR delete must succeed, not raise
+        try:
+            self._vnc_lib.logical_router_delete(id=lr_uuid)
+        except Exception as e:
+            self.fail(
+                "logical_router_delete raised unexpectedly after internal "
+                "VN was removed: %s" % e)
+
+        # Confirm the LR itself is gone
+        with ExpectedException(NoIdError):
+            self._vnc_lib.logical_router_read(id=lr_uuid)
+
+        # Confirm the internal VN is still absent (not re-created by undo)
+        with ExpectedException(NoIdError):
+            self._vnc_lib.virtual_network_read(fq_name=int_vn_fqname)
 
     def test_delete_lr_missing_vn_refs(self):
         # Get Project Ref
