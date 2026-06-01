@@ -146,7 +146,8 @@
         ],
         "scons_test_targets" : [
             "controller/src/agent:test",
-            "controller/src/cat:test"
+            "controller/src/cat:test",
+            "controller/src/ksync:test"
         ],
         "misc_test_targets" : [ ]
     },
