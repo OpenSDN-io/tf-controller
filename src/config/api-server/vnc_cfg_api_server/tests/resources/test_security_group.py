@@ -195,3 +195,35 @@ class TestSecurityGroup(test_case.ApiServerTestCase):
                       ':'.join(SG_NO_RULE_FQ_NAME))
         self.assertEqual(no_rule_sg.security_group_id,
                          no_rule_sg_2.security_group_id)
+
+    def test_delete_security_group_with_vmi_back_ref(self):
+        no_rule_sg = self.api.security_group_read(SG_NO_RULE_FQ_NAME)
+
+        sg_obj = SecurityGroup('%s-sg' % self.id())
+        self.api.security_group_create(sg_obj)
+        sg_uuid = sg_obj.uuid
+
+        _, _, _, vmi_objs = self._create_vn_ri_vmi(1)
+        vmi_obj = self.api.virtual_machine_interface_read(id=vmi_objs[0].uuid)
+        sg_obj = self.api.security_group_read(id=sg_uuid)
+        vmi_obj.add_security_group(sg_obj)
+        self.api.virtual_machine_interface_update(vmi_obj)
+
+        sg_obj = self.api.security_group_read(
+            id=sg_uuid,
+            fields=['virtual_machine_interface_back_refs'])
+        self.assertEqual(
+            len(sg_obj.get_virtual_machine_interface_back_refs()), 1)
+
+        self.api.security_group_delete(id=sg_uuid)
+
+        with ExpectedException(NoIdError):
+            self.api.security_group_read(id=sg_uuid)
+
+        vmi_obj = self.api.virtual_machine_interface_read(
+            id=vmi_objs[0].uuid,
+            fields=['security_group_refs'])
+        sg_refs = vmi_obj.get_security_group_refs() or []
+        self.assertFalse(any(ref['uuid'] == sg_uuid for ref in sg_refs))
+        self.assertTrue(
+            any(ref['uuid'] == no_rule_sg.uuid for ref in sg_refs))

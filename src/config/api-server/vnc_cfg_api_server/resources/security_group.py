@@ -2,6 +2,9 @@
 # Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
 #
 
+from cfgm_common import SG_NO_RULE_FQ_NAME
+from cfgm_common.exceptions import HttpError
+from cfgm_common.exceptions import NoIdError
 from cfgm_common.utils import _DEFAULT_ZK_COUNTER_PATH_PREFIX
 from vnc_api.gen.resource_common import SecurityGroup
 
@@ -172,6 +175,66 @@ class SecurityGroupServer(ResourceMixin, SecurityGroup):
         return True, {
             'deallocated_security_group_id': deallocated_security_group_id,
         }
+
+    @classmethod
+    def _ensure_no_rule_sg_on_vmi(cls, vmi_uuid, db_conn):
+        """Attach singleton __no_rule__ SG when port has no SGs (OpenStack)."""
+        ok, vmi_dict = cls.dbe_read(
+            db_conn, 'virtual_machine_interface', vmi_uuid,
+            obj_fields=['security_group_refs', 'port_security_enabled'])
+        if not ok:
+            return
+
+        if vmi_dict.get('security_group_refs'):
+            return
+
+        if not vmi_dict.get('port_security_enabled', True):
+            return
+
+        try:
+            no_rule_uuid = db_conn.fq_name_to_uuid(
+                'security_group', SG_NO_RULE_FQ_NAME)
+        except NoIdError:
+            return
+
+        api_server = cls.server
+        try:
+            api_server.internal_request_ref_update(
+                'virtual-machine-interface',
+                vmi_uuid,
+                'ADD',
+                'security-group',
+                no_rule_uuid,
+                SG_NO_RULE_FQ_NAME)
+        except HttpError:
+            pass
+
+    @classmethod
+    def _detach_security_group_from_ports(cls, obj_dict):
+        """Detach SG from VM ports before delete (OpenStack semantics)."""
+        vmi_back_refs = (
+            obj_dict.get('virtual_machine_interface_back_refs') or [])
+        if not vmi_back_refs:
+            return
+
+        sg_uuid = obj_dict['uuid']
+        db_conn = cls.db_conn
+        api_server = cls.server
+        for vmi_ref in vmi_back_refs:
+            vmi_uuid = vmi_ref['uuid']
+            try:
+                api_server.internal_request_ref_update(
+                    'virtual-machine-interface',
+                    vmi_uuid,
+                    'DELETE',
+                    'security-group',
+                    sg_uuid)
+            except HttpError:
+                # Port may have been deleted already
+                continue
+            cls._ensure_no_rule_sg_on_vmi(vmi_uuid, db_conn)
+
+        obj_dict['virtual_machine_interface_back_refs'] = []
 
     @classmethod
     def pre_dbe_delete(cls, id, obj_dict, db_conn):

@@ -1513,6 +1513,9 @@ class VncApiServer(object):
                     id, fq_name_str, obj_type, 'http_delete', err_msg)
                 raise cfgm_common.exceptions.HttpError(409, err_msg)
 
+        if obj_type == 'security_group':
+            r_class._detach_security_group_from_ports(read_result)
+
         relaxed_refs = set(db_conn.dbe_get_relaxed_refs(id))
         for backref_field in r_class.backref_fields:
             backref_type, _, is_derived = \
