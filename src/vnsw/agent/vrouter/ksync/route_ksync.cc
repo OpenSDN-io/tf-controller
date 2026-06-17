@@ -759,7 +759,7 @@ int RouteKSyncEntry::DeleteInternal(NHKSyncEntry *nexthop,
 
 KSyncEntry *RouteKSyncEntry::UnresolvedReference() {
     NHKSyncEntry *nexthop = nh();
-    if (!nexthop->IsResolved() || !nexthop->IsInSync()) {
+    if (!nexthop->IsResolvedAndInSync()) {
         return nexthop;
     }
 

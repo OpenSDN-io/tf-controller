@@ -43,6 +43,9 @@ public:
     NHKSyncObject *nh_ksync_obj() const {
         return nh_ksync_obj_.get();
     }
+    MplsKSyncObject *mpls_ksync_obj() const {
+        return mpls_ksync_obj_.get();
+    }
     InterfaceKSyncObject *interface_ksync_obj() const {
         return interface_ksync_obj_.get();
     }

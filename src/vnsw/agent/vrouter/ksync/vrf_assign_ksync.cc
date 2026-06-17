@@ -169,11 +169,11 @@ int VrfAssignKSyncEntry::DeleteMsg(char *buf, int buf_len) {
 
 KSyncEntry *VrfAssignKSyncEntry::UnresolvedReference() {
     InterfaceKSyncEntry *intf = interface();
-    if (!intf->IsResolved()) {
+    if (!intf->IsResolvedAndInSync()) {
         return intf;
     }
     NHKSyncEntry *ksync_nh = nh();
-    if (!ksync_nh->IsResolved()) {
+    if (!ksync_nh->IsResolvedAndInSync()) {
         return ksync_nh;
     }
     return NULL;

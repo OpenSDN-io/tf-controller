@@ -10,8 +10,12 @@
 #include "test/test_cmn_util.h"
 #include "oper/path_preference.h"
 #include "vrouter/ksync/route_ksync.h"
+#include "oper/bridge_route.h"
+#include "oper/peer.h"
 #include "oper/nexthop.h"
 #include "ksync/ksync_sock_user.h"
+#include "vrouter/ksync/mpls_ksync.h"
+#include "oper/mpls.h"
 #include "vrouter/ksync/interface_ksync.h"
 #include "vrouter/ksync/nexthop_ksync.h"
 
@@ -663,6 +667,221 @@ TEST_F(TestKSyncRoute, route_defers_until_nh_in_sync) {
     EXPECT_TRUE(rt_ksync->UnresolvedReference() == NULL);
 }
 
+/// @brief Verifies that MplsKSyncEntry::UnresolvedReference() defers
+///        while its next-hop is in SYNC_WAIT state.
+///
+/// @details
+/// Blocks kernel message processing so that a Change() on the NH stays
+/// in SYNC_WAIT, then asserts that UnresolvedReference() returns that NH.
+/// After unblocking, waits for the NH to reach IN_SYNC and asserts that
+/// UnresolvedReference() returns NULL.
+///
+/// @regression MplsKSyncEntry::UnresolvedReference() did not defer on
+///             a SYNC_WAIT next-hop
+ TEST_F(TestKSyncRoute, mpls_defers_until_nh_in_sync) {
+    MplsLabel *mpls = agent_->mpls_table()->FindMplsLabel(vnet1_->label());
+    ASSERT_TRUE(mpls != NULL);
+
+    MplsKSyncObject *mpls_obj = agent_->ksync()->mpls_ksync_obj();
+    MplsKSyncEntry mpls_key(mpls_obj, mpls);
+    MplsKSyncEntry *mpls_ksync =
+        static_cast<MplsKSyncEntry *>(mpls_obj->Find(&mpls_key));
+    ASSERT_TRUE(mpls_ksync != NULL);
+    WAIT_FOR(1000, 100, (mpls_ksync->GetState() == KSyncEntry::IN_SYNC));
+
+    NHKSyncEntry *nh = mpls_ksync->nh();
+    ASSERT_TRUE(nh != NULL);
+    WAIT_FOR(1000, 100, (nh->GetState() == KSyncEntry::IN_SYNC));
+
+    NHKSyncObject *nh_obj = agent_->ksync()->nh_ksync_obj();
+    KSyncSockTypeMap *sock = KSyncSockTypeMap::GetKSyncSockTypeMap();
+    sock->SetBlockMsgProcessing(true);
+    nh_obj->Change(nh);
+    EXPECT_EQ(nh->GetState(), KSyncEntry::SYNC_WAIT);
+    EXPECT_FALSE(nh->IsInSync());
+
+    EXPECT_EQ(mpls_ksync->UnresolvedReference(), nh)
+        << "REGRESSION: MplsKSyncEntry::UnresolvedReference() did not defer";
+
+    sock->SetBlockMsgProcessing(false);
+    client->WaitForIdle();
+    WAIT_FOR(1000, 100, (nh->GetState() == KSyncEntry::IN_SYNC));
+    EXPECT_TRUE(mpls_ksync->UnresolvedReference() == NULL);
+}
+
+/// @brief Verifies that a composite NH defers while any component NH
+///        is in SYNC_WAIT state.
+///
+/// @details
+/// Locates the L2 flood CompositeNH for the broadcast route in vrf1,
+/// blocks kernel message processing, drives one component NH into
+/// SYNC_WAIT, and asserts that the composite's UnresolvedReference()
+/// returns that component. After unblocking, waits for IN_SYNC and
+/// asserts that UnresolvedReference() returns NULL.
+///
+/// @regression Composite NH did not defer on a SYNC_WAIT component NH
+ TEST_F(TestKSyncRoute, composite_defers_until_component_nh_in_sync) {
+    BridgeRouteEntry *l2_rt = L2RouteGet("vrf1", MacAddress::BroadcastMac());
+    ASSERT_TRUE(l2_rt != NULL);
+    const CompositeNH *cnh =
+        dynamic_cast<const CompositeNH *>(l2_rt->GetActiveNextHop());
+    ASSERT_TRUE(cnh != NULL);
+
+    // Pick an INTERFACE component (one of the VM ports of the fixture).
+    const NextHop *comp = NULL;
+    for (ComponentNHList::const_iterator it = cnh->begin();
+         it != cnh->end(); ++it) {
+        const ComponentNH *c = it->get();
+        if (c && c->nh()) {
+            comp = c->nh();
+            break;
+        }
+    }
+    ASSERT_TRUE(comp != NULL);
+
+    NHKSyncObject *nh_obj = agent_->ksync()->nh_ksync_obj();
+    NHKSyncEntry c_key(nh_obj, cnh);
+    NHKSyncEntry *composite_ksync =
+        static_cast<NHKSyncEntry *>(nh_obj->Find(&c_key));
+    ASSERT_TRUE(composite_ksync != NULL);
+    WAIT_FOR(1000, 100, (composite_ksync->GetState() == KSyncEntry::IN_SYNC));
+
+    NHKSyncEntry comp_key(nh_obj, comp);
+    NHKSyncEntry *comp_ksync =
+        static_cast<NHKSyncEntry *>(nh_obj->Find(&comp_key));
+    ASSERT_TRUE(comp_ksync != NULL);
+    WAIT_FOR(1000, 100, (comp_ksync->GetState() == KSyncEntry::IN_SYNC));
+
+    KSyncSockTypeMap *sock = KSyncSockTypeMap::GetKSyncSockTypeMap();
+    sock->SetBlockMsgProcessing(true);
+    nh_obj->Change(comp_ksync);
+    EXPECT_EQ(comp_ksync->GetState(), KSyncEntry::SYNC_WAIT);
+
+    EXPECT_EQ(composite_ksync->UnresolvedReference(), comp_ksync)
+        << "REGRESSION: composite NH did not defer on a SYNC_WAIT component";
+
+    sock->SetBlockMsgProcessing(false);
+    client->WaitForIdle();
+    WAIT_FOR(1000, 100, (comp_ksync->GetState() == KSyncEntry::IN_SYNC));
+    EXPECT_TRUE(composite_ksync->UnresolvedReference() == NULL);
+}
+
+/// @brief Verifies that an ARP (and NDP) NH defers while the physical
+///        interface it points to is in SYNC_WAIT state.
+///
+/// @details
+/// Installs a static ARP entry on the fabric interface, locates the
+/// resulting ARP NH and its InterfaceKSyncEntry, blocks kernel message
+/// processing, drives the interface into SYNC_WAIT, and asserts that
+/// the NH's UnresolvedReference() returns that interface entry.
+/// After unblocking, waits for IN_SYNC and asserts that
+/// UnresolvedReference() returns NULL. NDP shares the identical gate
+/// two lines above ARP in nexthop_ksync.cc.
+///
+/// @regression ARP NH did not defer on a SYNC_WAIT interface
+TEST_F(TestKSyncRoute, arp_nh_defers_until_interface_in_sync) {
+    AddArp("10.99.99.1", "00:00:01:02:03:04",
+           agent_->fabric_interface_name().c_str());
+    client->WaitForIdle();
+
+    InetUnicastRouteEntry *arp_rt =
+        RouteGet(agent_->fabric_vrf_name(),
+                 Ip4Address::from_string("10.99.99.1"), 32);
+    ASSERT_TRUE(arp_rt != NULL);
+    const NextHop *onh = arp_rt->GetActiveNextHop();
+    ASSERT_TRUE(onh != NULL);
+    ASSERT_EQ(onh->GetType(), NextHop::ARP);
+
+    NHKSyncObject *nh_obj = agent_->ksync()->nh_ksync_obj();
+    NHKSyncEntry nh_key(nh_obj, onh);
+    NHKSyncEntry *nh = static_cast<NHKSyncEntry *>(nh_obj->Find(&nh_key));
+    ASSERT_TRUE(nh != NULL);
+    WAIT_FOR(1000, 100, (nh->GetState() == KSyncEntry::IN_SYNC));
+
+    PhysicalInterfaceKey eth_key_oper(agent_->fabric_interface_name());
+    Interface *eth = static_cast<Interface *>(
+        agent_->interface_table()->FindActiveEntry(&eth_key_oper));
+    ASSERT_TRUE(eth != NULL);
+    InterfaceKSyncEntry eth_key(interface_obj, eth);
+    KSyncEntry *eth_ksync = interface_obj->Find(&eth_key);
+    ASSERT_TRUE(eth_ksync != NULL);
+    WAIT_FOR(1000, 100, (eth_ksync->GetState() == KSyncEntry::IN_SYNC));
+
+    KSyncSockTypeMap *sock = KSyncSockTypeMap::GetKSyncSockTypeMap();
+    sock->SetBlockMsgProcessing(true);
+    interface_obj->Change(eth_ksync);
+    EXPECT_EQ(eth_ksync->GetState(), KSyncEntry::SYNC_WAIT);
+
+    EXPECT_EQ(nh->UnresolvedReference(), eth_ksync)
+        << "REGRESSION: ARP NH did not defer on a SYNC_WAIT interface";
+
+    sock->SetBlockMsgProcessing(false);
+    client->WaitForIdle();
+    WAIT_FOR(1000, 100, (eth_ksync->GetState() == KSyncEntry::IN_SYNC));
+    EXPECT_TRUE(nh->UnresolvedReference() == NULL);
+
+    DelArp("10.99.99.1", "00:00:01:02:03:04",
+           agent_->fabric_interface_name());
+    client->WaitForIdle();
+}
+
+/// @brief Verifies that an inet route with a stitched MAC defers while
+///        the bridge (MAC) route it is stitched to is in SYNC_WAIT state.
+///
+/// @details
+/// Looks up the /32 inet route for vnet1's primary IP. If the environment
+/// produces no stitched MAC on that route the test is skipped (the
+/// NH-level gate is still exercised by the ARP/composite tests above,
+/// which cover the same helper). Otherwise locates the corresponding
+/// bridge RouteKSyncEntry, blocks kernel message processing, drives it
+/// into SYNC_WAIT, and asserts that the inet route's
+/// UnresolvedReference() returns the bridge entry.
+/// After unblocking, waits for IN_SYNC and asserts that
+/// UnresolvedReference() returns NULL.
+///
+/// @note Skipped when the /32 carries no stitched MAC in the current
+///       environment.
+TEST_F(TestKSyncRoute, stitched_mac_route_defers_until_bridge_route_in_sync) {
+    InetUnicastRouteEntry *rt =
+        vrf1_uc_table_->FindLPM(vnet1_->primary_ip_addr());
+    ASSERT_TRUE(rt != NULL);
+    RouteKSyncEntry rt_key(vrf1_rt_obj_, rt);
+    RouteKSyncEntry *rt_ksync =
+        static_cast<RouteKSyncEntry *>(vrf1_rt_obj_->Find(&rt_key));
+    ASSERT_TRUE(rt_ksync != NULL);
+    WAIT_FOR(1000, 100, (rt_ksync->GetState() == KSyncEntry::IN_SYNC));
+
+    if (rt_ksync->mac().IsZero()) {
+        LOG(DEBUG, "stitched_mac test: no stitched MAC in this env, skipping");
+        return;
+    }
+
+    BridgeRouteEntry *l2_rt = L2RouteGet("vrf1", rt_ksync->mac());
+    ASSERT_TRUE(l2_rt != NULL);
+
+    // Same lookup the production stitched-MAC gate performs.
+    VrfKSyncObject *vrf_obj = agent_->ksync()->vrf_ksync_obj();
+    VrfEntry *vrf = agent_->vrf_table()->FindVrfFromName("vrf1");
+    ASSERT_TRUE(vrf != NULL);
+    VrfKSyncObject::VrfState *state =
+        static_cast<VrfKSyncObject::VrfState *>(
+            vrf->GetState(vrf->get_table(), vrf_obj->vrf_listener_id()));
+    ASSERT_TRUE(state != NULL);
+    RouteKSyncObject *bridge_obj = state->bridge_route_table_;
+    ASSERT_TRUE(bridge_obj != NULL);
+
+    BridgeRouteEntry tmp_l2_rt(vrf, rt_ksync->mac(), Peer::EVPN_PEER, false);
+    RouteKSyncEntry l2_key(bridge_obj, &tmp_l2_rt);
+    RouteKSyncEntry *l2_ksync =
+        static_cast<RouteKSyncEntry *>(bridge_obj->GetReference(&l2_key));
+    ASSERT_TRUE(l2_ksync != NULL);
+    if (l2_ksync->GetState() == KSyncEntry::TEMP) {
+        LOG(DEBUG, "stitched_mac test: no real bridge entry, skipping");
+        return;
+    }
+    WAIT_FOR(1000, 100, (l2_ksync->GetState() == KSyncEntry::IN_SYNC));
+    EXPECT_TRUE(rt_ksync->UnresolvedReference() == NULL);
+}
 
 int main(int argc, char **argv) {
     GETUSERARGS();

@@ -129,6 +129,22 @@ public:
 
     bool IsInSync() const { return (state_ == IN_SYNC); }
 
+    /// @brief True only when the entry is resolved AND kernel-acknowledged (IN_SYNC).
+    ///
+    /// @details
+    /// Dependencies that are programmed into vrouter must be gated on this
+    /// condition instead of IsResolved() alone. An entry that is merely sent
+    /// (SYNC_WAIT/NEED_SYNC) is not yet applied by the datapath, and a
+    /// dependent sent against it races it in vrouter (EINVAL/ENOENT, the error
+    /// ack is swallowed and the dependent is silently stuck out of vrouter).
+    ///
+    /// @return true if entry is resolved and kernel-acknowledged (IN_SYNC)
+    /// @warning Entries in SYNC_WAIT or NEED_SYNC states may cause race conditions
+    ///
+    /// @see IsResolved()
+
+    bool IsResolvedAndInSync() { return IsResolved() && IsInSync(); }
+
     // Returns true if the entry data is resolved
     virtual bool IsDataResolved() {return true;}
 

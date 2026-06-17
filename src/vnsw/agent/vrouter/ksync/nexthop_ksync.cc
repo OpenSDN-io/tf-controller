@@ -1479,7 +1479,7 @@ KSyncEntry *NHKSyncEntry::UnresolvedReference() {
     switch (type_) {
     case NextHop::ARP: {
         assert(if_ksync);
-        if (!if_ksync->IsResolved()) {
+        if (!if_ksync->IsResolvedAndInSync()) {
             entry = if_ksync;
         }
         break;
@@ -1487,7 +1487,7 @@ KSyncEntry *NHKSyncEntry::UnresolvedReference() {
 
     case NextHop::NDP: {
         assert(if_ksync);
-        if (!if_ksync->IsResolved()) {
+        if (!if_ksync->IsResolvedAndInSync()) {
             entry = if_ksync;
         }
         break;
@@ -1496,7 +1496,7 @@ KSyncEntry *NHKSyncEntry::UnresolvedReference() {
     case NextHop::VLAN:
     case NextHop::INTERFACE: {
         assert(if_ksync);
-        if (!if_ksync->IsResolved() || !if_ksync->IsInSync()) {
+        if (!if_ksync->IsResolvedAndInSync()) {
             entry = if_ksync;
         }
         break;
@@ -1516,7 +1516,7 @@ KSyncEntry *NHKSyncEntry::UnresolvedReference() {
         if (crypt_path_available_) {
             InterfaceKSyncEntry *crypt_if_ksync = crypt_interface();
             assert(crypt_if_ksync);
-            if (!crypt_if_ksync->IsResolved()) {
+            if (!crypt_if_ksync->IsResolvedAndInSync()) {
                 entry = crypt_if_ksync;
             }
         }
@@ -1529,7 +1529,7 @@ KSyncEntry *NHKSyncEntry::UnresolvedReference() {
 
     case NextHop::RECEIVE: {
         assert(if_ksync);
-        if (!if_ksync->IsResolved()) {
+        if (!if_ksync->IsResolvedAndInSync()) {
             entry = if_ksync;
         }
         break;
@@ -1544,7 +1544,7 @@ KSyncEntry *NHKSyncEntry::UnresolvedReference() {
     }
 
     case NextHop::PBB: {
-        if (pbb_child_nh_ && pbb_child_nh_->IsResolved() == false) {
+        if (pbb_child_nh_ && !pbb_child_nh_->IsResolvedAndInSync()) {
              entry = pbb_child_nh_.get();
         }
         break;
@@ -1555,7 +1555,7 @@ KSyncEntry *NHKSyncEntry::UnresolvedReference() {
                                 component_nh_list_.begin();
              it != component_nh_list_.end(); it++) {
             KSyncComponentNH component_nh = *it;
-            if (component_nh.nh() && !(component_nh.nh()->IsResolved())) {
+            if (component_nh.nh() && !(component_nh.nh()->IsResolvedAndInSync())) {
                 entry = component_nh.nh();
                 break;
             }
