@@ -261,6 +261,35 @@ void VxlanRoutingVrfMapper::BridgeInet6RouteWalkDone(DBTable::DBTableWalkRef wal
     inet6_table_walker_.erase(it);
 }
 
+void VxlanRoutingVrfMapper::WalkRoutingVrfRemoveExternalRoutes(
+     const boost::uuids::uuid &lr_uuid, const VnEntry *vn,
+     std::string bridge_vrf_name) {
+    if (lr_uuid == boost::uuids::nil_uuid())
+        return;
+    VxlanRoutingVrfMapper::RoutedVrfInfo &routing_vrf_info =
+            lr_vrf_info_map_[lr_uuid];
+    const VrfEntry *routing_vrf = routing_vrf_info.routing_vrf_;
+    DBTable::DBTableWalkRef walk_ref;
+
+    EvpnAgentRouteTable *evpn_table = nullptr;
+    if (routing_vrf != nullptr) {
+        evpn_table =
+        static_cast<EvpnAgentRouteTable *>(
+            routing_vrf->GetEvpnRouteTable());
+    }
+    if (evpn_table == nullptr) {
+        return;
+    }
+
+    walk_ref = evpn_table->
+    AllocWalker(boost::bind(
+        &VxlanRoutingManager::RemoveRoutesFromRoutingToBridgeVrf,
+        mgr_, _1, _2, vn, bridge_vrf_name),
+        boost::bind(&VxlanRoutingVrfMapper::RoutingVrfRouteWalkDone,
+        this, _1, _2));
+    evpn_table->WalkAgain(walk_ref);
+}
+
 void VxlanRoutingVrfMapper::WalkBridgeVrfs
 (const VxlanRoutingVrfMapper::RoutedVrfInfo &routed_vrf_info)
 {
@@ -513,6 +542,8 @@ void VxlanRoutingManager::BridgeVnNotify(const VnEntry *vn,
                 vrf_mapper_.WalkRoutingVrf(it->second, vn, false, true);
                 routing_info_it->second.bridge_vn_list_.erase(br_it);
                 routing_info_it->second.bridge_vrf_names_list_.erase(vn);
+                vrf_mapper_.WalkRoutingVrfRemoveExternalRoutes(it->second, vn,
+                                                               vrf_name);
             }
             // Trigger delete of logical router
             vrf_mapper_.TryDeleteLogicalRouter(routing_info_it);

@@ -377,6 +377,12 @@ private:
     void WalkRoutingVrf(const boost::uuids::uuid &lr_uuid,
         const VnEntry *vn, bool update, bool withdraw);
 
+    /// @brief Walks the EVPN table of the routing VRF instance of a given
+    /// LR to find and remove external routes from bridge tables.
+    void WalkRoutingVrfRemoveExternalRoutes(
+        const boost::uuids::uuid &lr_uuid, const VnEntry *vn,
+        std::string bridge_vrf_name);
+
     /// @brief Walks given Inet tables (IPv4 and IPv6).
     void WalkBridgeInetTables(InetUnicastAgentRouteTable *inet4,
         InetUnicastAgentRouteTable *inet6);
@@ -630,6 +636,13 @@ public:
                                     const boost::uuids::uuid &uuid,
                                     const VnEntry *vn,
                                     bool update = false);
+
+    /// @brief Performs deletion of external routing routes
+    /// (with VrfNH) in bridge VRF instances.
+    bool RemoveRoutesFromRoutingToBridgeVrf(DBTablePartBase *partition,
+                                               DBEntryBase *e,
+                                               const VnEntry *vn,
+                                               std::string bridge_vrf_name);
 
     /// @brief Handles routing routes (with VrfNH) update in the routing VRF
     /// instance.

@@ -437,6 +437,37 @@ bool VxlanRoutingManager::LeakRoutesIntoBridgeTables
     return true;
 }
 
+bool VxlanRoutingManager::RemoveRoutesFromRoutingToBridgeVrf
+    (DBTablePartBase *partition, DBEntryBase *e,
+    const VnEntry *vn, std::string bridge_vrf_name) {
+
+    EvpnRouteEntry *evpn_rt = dynamic_cast<EvpnRouteEntry *>(e);
+    if (!evpn_rt || (evpn_rt->vrf()->vn() == nullptr) ||
+        (!evpn_rt->IsType5()))
+        return true;
+    VrfEntry *bridge_vrf = VnVrf(vn, bridge_vrf_name);
+    if (bridge_vrf == nullptr) {
+        return true;
+    }
+    InetUnicastAgentRouteTable *inet_table =
+        bridge_vrf->GetInetUnicastRouteTable(evpn_rt->prefix_address());
+    InetUnicastRouteEntry rt_key(inet_table->vrf_entry(),
+       evpn_rt->prefix_address(), evpn_rt->prefix_length(), false);
+    InetUnicastRouteEntry *inet_rt = inet_table->FindRouteUsingKey(rt_key);
+
+    if ((inet_rt != nullptr) && (inet_rt->GetActivePath() != nullptr) &&
+        (inet_rt->GetActivePath()->peer() != nullptr) &&
+        (inet_rt->GetActivePath()->peer()->GetType() ==
+            Peer::EVPN_ROUTING_PEER)) {
+        InetUnicastAgentRouteTable::DeleteReq(agent_->evpn_routing_peer(),
+                                              bridge_vrf->GetName(),
+                                              evpn_rt->prefix_address(),
+                                              evpn_rt->prefix_length(),
+                                              NULL);
+    }
+    return true;
+}
+
 //
 //END-OF-FILE
 //

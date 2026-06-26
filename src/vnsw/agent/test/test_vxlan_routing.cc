@@ -4833,6 +4833,163 @@ TEST_F(VxlanRoutingTest, Deleting_last_route) {
     client->WaitForIdle();
 }
 
+TEST_F(VxlanRoutingTest, ExternalRouteInRoutingVrf) {
+    bgp_peer_ = CreateBgpPeer("127.0.0.1", "remote");
+    using boost::uuids::nil_uuid;
+    struct PortInfo input1[] = {
+        {"vnet1", 1, "1.1.1.10", "00:00:01:01:01:10", 1, 1},
+    };
+    IpamInfo ipam_info_1[] = {
+        {"1.1.1.0", 24, "1.1.1.254", true},
+    };
+
+    struct PortInfo input2[] = {
+        {"vnet2", 2, "2.2.2.20", "00:00:02:02:02:20", 2, 2},
+    };
+    IpamInfo ipam_info_2[] = {
+        {"2.2.2.0", 24, "2.2.2.200", true},
+    };
+
+    // Bridge vrf
+    AddIPAM("vn1", ipam_info_1, 1);
+    AddIPAM("vn2", ipam_info_2, 1);
+
+    CreateVmportEnv(input1, INPUT_SIZE(input1));
+    CreateVmportEnv(input2, INPUT_SIZE(input2));
+
+    AddLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+            "instance_ip_1", 1);
+    AddLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+            "instance_ip_2", 2);
+
+    const char *routing_vrf_name = "l3evpn_1";
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    AddLrBridgeVrf("vn2", 1);
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmInterfaceGet(1)->logical_router_uuid() == nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(2)->logical_router_uuid() == nil_uuid());
+
+    EXPECT_TRUE(VmInterfaceGet(91)->logical_router_uuid() != nil_uuid());
+    EXPECT_TRUE(VmInterfaceGet(92)->logical_router_uuid() != nil_uuid());
+
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+            "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+            "vnet2", true, "vn2");
+
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+            Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+            Ip4Address::from_string("2.2.2.20"), 32, false);
+
+    // checking routing vrf have valid VXLAN ID
+    VrfEntry *routing_vrf= VrfGet(routing_vrf_name);
+    EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
+
+    ValidateBridge("vrf1", routing_vrf_name,
+            Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+            Ip4Address::from_string("1.1.1.0"), 24, true);
+    client->WaitForIdle();
+
+    stringstream ss_node;
+    autogen::EnetItemType item;
+    SecurityGroupList sg;
+    item.entry.nlri.af = BgpAf::L2Vpn;
+    item.entry.nlri.safi = BgpAf::Enet;
+    item.entry.nlri.address = "10.10.10.10/32";
+    item.entry.nlri.ethernet_tag = 0;
+    autogen::EnetNextHopType nh;
+    nh.af = Address::INET;
+    nh.address = "10.10.10.11";
+    nh.label = routing_vrf->vxlan_id();
+    nh.tunnel_encapsulation_list.tunnel_encapsulation.push_back("vxlan");
+    item.entry.next_hops.next_hop.push_back(nh);
+    item.entry.med = 0;
+
+    bgp_peer_->GetAgentXmppChannel()->AddEvpnRoute(routing_vrf_name,
+            "00:00:00:00:00:00",
+            Ip4Address::from_string("10.10.10.10"),
+            32, &item);
+    client->WaitForIdle();
+
+    // Verify type5 route added to Lr evpn table is copied to inet table
+    InetUnicastRouteEntry *rt_l3evpn_1 =
+        RouteGet("l3evpn_1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_l3evpn_1 != nullptr);
+
+    client->WaitForIdle();
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, true);
+
+    DelVnConnectionToLr("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+            "instance_ip_2", 2);
+    client->WaitForIdle();
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("1.1.1.10"), 32,
+            "vnet1", true, "vn1");
+    ValidateRouting(routing_vrf_name, Ip4Address::from_string("2.2.2.20"), 32,
+            "vnet2", false);
+    // check to see if the local port route added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+            Ip4Address::from_string("1.1.1.10"), 32, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+            Ip4Address::from_string("2.2.2.20"), 32, false);
+
+    // check to see if the subnet route for vn added to the bridge vrf inet
+    ValidateBridge("vrf1", routing_vrf_name,
+            Ip4Address::from_string("2.2.2.0"), 24, false);
+    ValidateBridge("vrf2", routing_vrf_name,
+            Ip4Address::from_string("1.1.1.0"), 24, false);
+
+    ValidateBridge("vrf1", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, true);
+    ValidateBridge("vrf2", routing_vrf_name,
+                   Ip4Address::from_string("10.10.10.10"), 32, false);
+
+    InetUnicastRouteEntry *rt_del_1 =
+        RouteGet("vrf1", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del_1 != nullptr);
+    InetUnicastRouteEntry *rt_del_2 =
+        RouteGet("vrf2", Ip4Address::from_string("10.10.10.10"), 32);
+    EXPECT_TRUE(rt_del_2 == nullptr);
+
+    // Bridge VN1 & VN2
+    DelLrBridgeVrf("vn1", 1);
+    DelLrBridgeVrf("vn2", 1);
+    DelLrRoutingVrf(1);
+    DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+            "instance_ip_1", 1);
+    DelLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+            "instance_ip_2", 2);
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
+    DelIPAM("vn1");
+    DelIPAM("vn2");
+    client->WaitForIdle();
+
+    // Project
+    DelNode("project", "admin");
+    client->WaitForIdle();
+
+    // Peer
+    DeleteBgpPeer(bgp_peer_);
+    client->WaitForIdle(5);
+
+    // Checks
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+            IsEmpty());
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+            IsEmpty());
+    client->WaitForIdle();
+}
+
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     GETUSERARGS();
