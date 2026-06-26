@@ -474,12 +474,13 @@ void VxlanRoutingManager::BridgeVnNotify(const VnEntry *vn,
     VxlanRoutingVrfMapper::VnLrSetIter it = vrf_mapper_.vn_lr_set_.find(vn);
     VxlanRoutingVrfMapper::LrVrfInfoMapIter routing_info_it =
         vrf_mapper_.lr_vrf_info_map_.end();
+    VrfEntry *vn_vrf = vn->GetVrf();
     bool withdraw = false;
     bool update = true;
 
     // Update lr uuid in case some vmi is deleted or added.
     UpdateLogicalRouterUuid(vn, vn_state);
-    if (vn->IsDeleted() || (vn->GetVrf() == NULL)) {
+    if (vn->IsDeleted() || (vn_vrf == nullptr)) {
         withdraw = true;
         update = false;
     }
@@ -491,7 +492,7 @@ void VxlanRoutingManager::BridgeVnNotify(const VnEntry *vn,
     }
 
     if (vn_state->logical_router_uuid_ == nil_uuid()) {
-        withdraw = true;
+    	withdraw = true;
         update = false;
     }
 
@@ -861,7 +862,7 @@ void VxlanRoutingManager::DeleteSubnetRoute(const VnEntry *vn, const std::string
             }
 
             it_vrf->GetInetUnicastRouteTable(br_ipam.ip_prefix)->
-                    Delete(agent_->evpn_routing_peer(), it_vrf->GetName(),
+                    DeleteReq(agent_->evpn_routing_peer(), it_vrf->GetName(),
                         br_ipam.GetSubnetAddress(), br_ipam.plen, NULL);
         }
 
@@ -926,7 +927,7 @@ void VxlanRoutingManager::UpdateSubnetRoute(const VrfEntry *bridge_vrf,
                 continue;
             }
             it_vrf->GetInetUnicastRouteTable(ipam_itr->ip_prefix)->
-            AddEvpnRoutingRoute(ipam_itr->ip_prefix, ipam_itr->plen, routing_vrf,
+            AddEvpnRoutingRouteReq(ipam_itr->ip_prefix, ipam_itr->plen, routing_vrf,
                         agent_->evpn_routing_peer(),
                         SecurityGroupList(),
                         CommunityList(),
