@@ -210,9 +210,9 @@ bool KSyncSockTcp::Run() {
         }
 
         while (offset < bytes_transferred) {
-            if ((unsigned int)(bytes_transferred - offset) > (sizeof(struct nlmsghdr))) {
+            if ((unsigned int)(bytes_transferred - offset) >= (sizeof(struct nlmsghdr))) {
                 nlh =  (struct nlmsghdr *)(rx_buff_ + offset);
-                if ((unsigned int)(bytes_transferred - offset) > nlh->nlmsg_len) {
+                if ((unsigned int)(bytes_transferred - offset) >= nlh->nlmsg_len) {
                     ctxt->SetErrno(0);
                     ProcessDataInline(rx_buff_ + offset);
                     offset += nlh->nlmsg_len;

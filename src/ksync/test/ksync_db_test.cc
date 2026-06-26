@@ -961,6 +961,13 @@ TEST_F(DBKSyncTest, DBFilterDelAddDupToDup) {
     EXPECT_EQ(VlanKSyncEntry::GetDelCount(), 2);
 }
 
+TEST_F(DBKSyncTest, register_unregister_db) {
+    DBTableBase::ListenerId id =
+        VlanKSyncObject::GetKSyncObject()->GetListenerId(itbl);
+    EXPECT_TRUE(id != DBTableBase::kInvalidId);
+    VlanKSyncObject::GetKSyncObject()->UnregisterDb(itbl);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     LoggingInit();

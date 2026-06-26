@@ -1152,16 +1152,7 @@ TEST_F(TestUT, CreateExistingEntryWithoutFind) {
     EXPECT_EQ(Vlan::change_count_, 1);
     EXPECT_EQ(Vlan::delete_count_, 1);
 }
-/*
- * Bug: Missing /32 route after VM hard reboot in vxlan-routing topology.
- *
- * Root cause: NHKSyncEntry::UnresolvedReference() and RouteKSyncEntry::UnresolvedReference()
- * use IsResolved() to check VIF/NH dependency. IsResolved() returns true for SYNC_WAIT,
- * so NH is sent to vRouter while VIF CHANGE kernel ACK is still pending.
- * vRouter returns EINVAL/ENOENT. ErrorHandler only logs. KSync enters stuck state:
- * NH and Route are IN_SYNC in KSync but do not exist in vRouter.
- * BackRefReEval cannot recover - NH was never added to back_ref_tree_.
- */
+
 TEST_F(TestUT, nh_must_defer_while_vif_in_sync_wait) {
     object_manager->Delete(vlan_table_);
     task_util::WaitForIdle();
@@ -1245,6 +1236,37 @@ TEST_F(TestUT, nh_sent_to_kernel_after_vif_ack) {
     vlan_table_->NotifyEvent(nh, KSyncEntry::DEL_ACK);
     vlan_table_->Delete(vif);
     vlan_table_->NotifyEvent(vif, KSyncEntry::DEL_ACK);
+}
+
+TEST_F(TestUT, vrouter_error_to_string) {
+    EXPECT_EQ(KSyncEntry::VrouterErrorToString(ENOENT), "Entry not present");
+    EXPECT_EQ(KSyncEntry::VrouterErrorToString(EINVAL), "Invalid object parameters");
+    EXPECT_EQ(KSyncEntry::VrouterErrorToString(ENOSPC), "Object table full");
+    EXPECT_EQ(KSyncEntry::VrouterErrorToString(EPERM), std::string(strerror(EPERM)));
+}
+
+TEST_F(TestUT, error_handler_logs_and_is_noop_on_zero) {
+    Vlan *v = AddVlan(0xF01, 0, KSyncEntry::IN_SYNC, Vlan::ADD, 0);
+    v->ErrorHandler(0, 1, KSyncEntry::ADD_ACK);
+    v->ErrorHandler(EINVAL, 42, KSyncEntry::CHANGE_ACK);
+    v->ErrorHandler(ENOENT, 43, KSyncEntry::DEL_ACK);
+    v->ErrorHandler(EBUSY,  44, KSyncEntry::RE_EVAL);
+    vlan_table_->Delete(v);
+}
+
+TEST_F(TestUT, object_manager_unregister_empty) {
+    VlanTable *t = new VlanTable(50);
+    KSyncObjectManager::Unregister(t);
+    task_util::WaitForIdle();
+}
+
+TEST_F(TestUT, default_defer_entry_is_unresolved) {
+    KSyncEntry *d = KSyncObjectManager::default_defer_entry();
+    ASSERT_TRUE(d != NULL);
+    EXPECT_EQ(d, KSyncObjectManager::default_defer_entry());
+    EXPECT_EQ(d->ToString(), "Dummy");
+    EXPECT_FALSE(d->IsDataResolved());
+    EXPECT_TRUE(d->GetObject() == NULL);
 }
 
 int main(int argc, char **argv) {

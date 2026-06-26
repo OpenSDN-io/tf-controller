@@ -120,9 +120,9 @@ retry:;
             offset = nlh->nlmsg_len - remain_;
         }
         while (offset < bytes_transferred) {
-            if ((bytes_transferred - offset) > (sizeof(struct nlmsghdr))) {
+            if ((bytes_transferred - offset) >= (sizeof(struct nlmsghdr))) {
                 nlh =  (struct nlmsghdr *)(rx_buff_ + offset);
-                if ((bytes_transferred - offset) > nlh->nlmsg_len) {
+                if ((bytes_transferred - offset) >= nlh->nlmsg_len) {
                     memcpy(ret_buff, rx_buff_ + offset, nlh->nlmsg_len);
                     ctxt->SetErrno(0);
                     ProcessDataInline(ret_buff);
@@ -142,10 +142,10 @@ retry:;
 
 void KSyncSockUds::Init(io_service &ios, const std::string &cpu_pin_policy,
     const std::string &sockpathvr) {
+    sockpath_ = sockpathvr;
     KSyncSock::SetSockTableEntry(new KSyncSockUds(ios));
     SetNetlinkFamilyId(10);
     KSyncSock::Init(false, cpu_pin_policy);
-    sockpath_ = sockpathvr;
 }
 
 uint32_t KSyncSockUds::GetSeqno(char *data) {
