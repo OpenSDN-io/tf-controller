@@ -199,6 +199,7 @@ struct VxlanRoutingVnState : public DBState {
 
     /// @brief A pointer to the instance of VxlanRoutingManager
     VxlanRoutingManager *mgr_;
+
 };
 
 /// @brief Tracks movement of a VmInterface among LRs. This is used
