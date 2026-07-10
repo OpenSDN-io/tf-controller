@@ -6,11 +6,13 @@ from cfgm_common import svc_info
 from cfgm_common import PERMS_RWX, PERMS_RX
 import traceback
 
+import gevent
+
 from .agent import Agent
 from .config_db import ServiceApplianceSM, ServiceApplianceSetSM, \
     LoadbalancerPoolSM, InstanceIpSM, VirtualMachineInterfaceSM, \
     VirtualIpSM, LoadbalancerSM, LoadbalancerListenerSM, LoadbalancerMemberSM, \
-    HealthMonitorSM
+    HealthMonitorSM, FloatingIpSM, VirtualMachineSM, VirtualNetworkSM
 
 from .sandesh.loadbalancer.ttypes import \
     LoadbalancerConfig, UveLoadbalancerConfig, UveLoadbalancerConfigTrace
@@ -28,6 +30,14 @@ class LoadbalancerAgent(Agent):
         self._pool_driver = {}
         self._args = config_section
         self._loadbalancer_driver = {}
+        # Octavia service project; gates amphora FIP legs
+        # (AAP-hijack guard). Spec: gate ladder.
+        self._octavia_project_id = (
+            getattr(self._args, 'octavia_project_id', '') or ''
+        ).replace('-', '').lower()
+        self._octavia_filter_warned = False
+        # uuid -> pending reconcile greenlet; coalesce event storms.
+        self._fip_reconcile_timers = {}
         # create default service appliance set
         self._create_default_service_appliance_set(
             "opencontrail",
@@ -161,6 +171,253 @@ class LoadbalancerAgent(Agent):
                 driver.delete_pool(config_data)
             self._object_db.pool_remove(pool_id)
             self._delete_driver_for_pool(pool_id)
+
+    # Octavia FIP failover reconciler. Spec: svc-monitor lane.
+    FIP_RECONCILE_DELAY = 3
+
+    def audit_octavia_fips(self):
+        # Periodic backstop for missed/reordered events; trust_cache=False (a
+        # dropped-event cache looks steady but is stale).
+        for fip_sm in list(FloatingIpSM.values()):
+            if fip_sm.is_virtual_ip:
+                self.schedule_fip_reconcile(fip_sm, trust_cache=False)
+    # end audit_octavia_fips
+
+    def schedule_fip_reconcile(self, fip_sm, trust_cache=True):
+        # Defer + coalesce per-uuid: strip races neutron's in-flight
+        # port_delete; immediate reconcile 409s Octavia. Spec: handle.
+        uuid = fip_sm.uuid
+        old = self._fip_reconcile_timers.get(uuid)
+        if old is not None:
+            old.kill(block=False)
+        self._fip_reconcile_timers[uuid] = gevent.spawn_later(
+            self.FIP_RECONCILE_DELAY, self._run_scheduled_reconcile,
+            fip_sm, trust_cache)
+    # end schedule_fip_reconcile
+
+    def _run_scheduled_reconcile(self, fip_sm, trust_cache):
+        self._fip_reconcile_timers.pop(fip_sm.uuid, None)
+        self.reconcile_fip_safe(fip_sm, trust_cache)
+    # end _run_scheduled_reconcile
+
+    def reconcile_fip_safe(self, fip_sm, trust_cache=True):
+        # evaluate_dependency() does not swallow raises; all entry points
+        # funnel here.
+        try:
+            self.reconcile_fip(fip_sm, trust_cache)
+        except vnc_exc.NoIdError:
+            pass  # FIP or ref target deleted mid-reconcile: benign race
+        except Exception:
+            self._svc_mon.logger.error(
+                'reconcile failed for floating-ip %s: %s' %
+                (fip_sm.uuid, traceback.format_exc()))
+    # end reconcile_fip_safe
+
+    def reconcile_amphora_vmi(self, vmi):
+        # New-amphora fast path: strip broke the ref-graph, so match by (VIP
+        # network, VIP address). Ownership pre-filter before the scan.
+        if not self._vmi_in_octavia_project(vmi):
+            return
+        for fip_sm in list(FloatingIpSM.values()):
+            if not fip_sm.is_virtual_ip or not fip_sm.vip_port_id:
+                continue
+            vip_port = VirtualMachineInterfaceSM.get(fip_sm.vip_port_id)
+            if vip_port is None:
+                continue
+            if vip_port.virtual_network != vmi.virtual_network:
+                continue
+            vip = self._vip_address(fip_sm, vip_port)
+            if not vip or not self._vmi_has_vip_aap(vmi, vip):
+                continue
+            self.schedule_fip_reconcile(fip_sm)
+    # end reconcile_amphora_vmi
+
+    def reconcile_fip(self, fip_sm, trust_cache=True):
+        # Rebuild an Octavia VIP FIP's refs from the durable markers (failover
+        # cascade-strips vmi_refs + fixed_ip). Never touch floating_ip_address.
+        # Spec: svc-monitor lane.
+        if not fip_sm.is_virtual_ip:
+            return
+        vpid = fip_sm.vip_port_id
+        if not vpid:
+            return  # not a reconciler-managed FIP (no durable pointer)
+        vip_port = VirtualMachineInterfaceSM.get(vpid)
+        if vip_port is None:
+            # Cache miss: fresh-read to tell transient (retry) from deleted LB
+            # (clear markers, orphan cleanup).
+            try:
+                self._vnc_lib.virtual_machine_interface_read(id=vpid)
+                return
+            except vnc_exc.NoIdError:
+                self._clear_octavia_markers(fip_sm.uuid)
+                return
+        vip = self._vip_address(fip_sm, vip_port)
+        if not vip:
+            return
+        vn = VirtualNetworkSM.get(vip_port.virtual_network)
+        if vn is None:
+            return
+        amphora = self._live_amphora_vmis(vn, vip, vpid)
+        if not amphora:
+            return  # mid-failover gap: nothing healthy yet, retry next tick
+        desired = {vpid} | amphora
+        current = set(fip_sm.virtual_machine_interfaces)
+        to_add = desired - current
+        to_del = set()
+        for vmi_id in current - desired:
+            if vmi_id == vpid:
+                continue  # never delete the VIP port ref
+            vmi = VirtualMachineInterfaceSM.get(vmi_id)
+            if vmi is None:
+                continue  # in-flight create/delete; skipping is always safe
+            if vmi.virtual_ip or vmi.loadbalancer:
+                continue  # svc-monitor native LBaaS ref, not ours to prune
+            if self._vmi_backed_by_live_vm(vmi):
+                continue  # still-live VMI we just did not select; keep it
+            to_del.add(vmi_id)
+        if (trust_cache and not to_add and not to_del and
+                fip_sm.fixed_ip == vip):
+            return  # event fast path: cache fresh + clean diff = steady state
+        # Fresh read gates every write: a concurrent (re)associate may have
+        # re-pointed the markers; stale writes would leave an unrepairable
+        # mixed state. Narrow TOCTOU; A-lane anchor closes it. Spec: known
+        # residuals.
+        fip_obj = self._vnc_lib.floating_ip_read(id=fip_sm.uuid)
+        if not fip_obj.get_floating_ip_is_virtual_ip():
+            return
+        if self._fip_ann(fip_obj, 'vip_port_id') != vpid:
+            return  # re-associated to another LB mid-reconcile
+        if self._fip_ann(fip_obj, 'vip_address') not in (None, vip):
+            return  # re-pointed to another VIP on the port (additional_vips)
+        # Restore fixed_ip BEFORE the ADDs: a crash between would leave refs
+        # but no fixed_ip, tripping _check_port_fip_assoc on the next
+        # associate.
+        restored = ''
+        if fip_obj.get_floating_ip_fixed_ip_address() != vip:
+            fip_obj.set_floating_ip_fixed_ip_address(vip)
+            self._vnc_lib.floating_ip_update(fip_obj)
+            restored = ', fixed_ip restored to %s' % vip
+        # ADD the VIP port ref FIRST so a read never sees an amphora-only FIP
+        # (would project a foreign port as port_id).
+        add_order = ([vpid] if vpid in to_add else [])
+        add_order += sorted(to_add - {vpid})
+        for vmi_id in add_order:
+            self._vnc_lib.ref_update(
+                'floating-ip', fip_sm.uuid,
+                'virtual-machine-interface', vmi_id, None, 'ADD')
+        for vmi_id in to_del:
+            self._vnc_lib.ref_update(
+                'floating-ip', fip_sm.uuid,
+                'virtual-machine-interface', vmi_id, None, 'DELETE')
+        self._svc_mon.logger.info(
+            'reconciled floating-ip %s: add %s del %s%s' %
+            (fip_sm.uuid, sorted(to_add), sorted(to_del), restored))
+    # end reconcile_fip
+
+    @staticmethod
+    def _fip_ann(fip_obj, key):
+        # read one bare annotation off a vnc FloatingIp object
+        kvps = fip_obj.get_annotations()
+        for kvp in (kvps.get_key_value_pair() if kvps else None) or []:
+            if kvp.get_key() == key:
+                return kvp.get_value()
+        return None
+    # end _fip_ann
+
+    def _clear_octavia_markers(self, fip_id):
+        # LB gone (VIP port confirmed deleted): drop is_virtual_ip + vip
+        # annotations so the FIP is not an is_virtual_ip=True orphan forever.
+        # Reconciler-only (plugin can't: cascade already dropped the back-ref).
+        fip_obj = self._vnc_lib.floating_ip_read(id=fip_id)
+        if not fip_obj.get_floating_ip_is_virtual_ip():
+            return
+        fip_obj.set_floating_ip_is_virtual_ip(False)
+        kvps = fip_obj.get_annotations()
+        if kvps:
+            pairs = [p for p in kvps.get_key_value_pair() or []
+                     if p.get_key() not in ('vip_port_id', 'vip_address')]
+            fip_obj.set_annotations(KeyValuePairs(key_value_pair=pairs))
+        self._vnc_lib.floating_ip_update(fip_obj)
+        self._svc_mon.logger.info(
+            'cleared orphan Octavia markers on floating-ip %s '
+            '(VIP port gone, LB deleted)' % fip_id)
+    # end _clear_octavia_markers
+
+    def _vip_address(self, fip_sm, vip_port):
+        # Prefer the vip_address annotation (disambiguates
+        # dual-stack/additional_vips, which the strip nulls); else the
+        # family-matched VIP-port iip; ambiguous -> fail closed.
+        if fip_sm.vip_address:
+            return fip_sm.vip_address
+        want_v6 = ':' in (fip_sm.address or '')
+        cands = []
+        for iip_id in vip_port.instance_ips:
+            iip = InstanceIpSM.get(iip_id)
+            if iip and iip.address and (':' in iip.address) == want_v6:
+                cands.append(iip.address)
+        if len(cands) == 1:
+            return cands[0]
+        return None  # 0 = nothing to wire; >1 = ambiguous, never guess
+    # end _vip_address
+
+    def _live_amphora_vmis(self, vn, vip, vip_port_id):
+        # Live amphora VRRP VMIs whose active-standby AAP carries the VIP.
+        # O(ports on VIP net); revisit for big shared nets. Spec: gate ladder.
+        if not self._octavia_project_id and not self._octavia_filter_warned:
+            # ownership filter OFF: a tenant could alias the VIP via AAP. Warn
+            # once, don't be silent.
+            self._octavia_filter_warned = True
+            self._svc_mon.logger.warning(
+                'octavia_project_id is not set; the Octavia VIP '
+                'AAP-hijack guard is DISABLED. Set it to the Octavia service '
+                'project uuid to enable the ownership filter.')
+        out = set()
+        for vmi_id in vn.virtual_machine_interfaces:
+            if vmi_id == vip_port_id:
+                continue
+            vmi = VirtualMachineInterfaceSM.get(vmi_id)
+            if vmi is None or not self._vmi_has_vip_aap(vmi, vip):
+                continue
+            if not self._vmi_in_octavia_project(vmi):
+                continue
+            if not self._vmi_backed_by_live_vm(vmi):
+                continue
+            out.add(vmi.uuid)
+        return out
+    # end _live_amphora_vmis
+
+    def _vmi_in_octavia_project(self, vmi):
+        # AAP-hijack guard: only Octavia-project ports may be amphora
+        # legs. Enforced when octavia_project_id set. Spec: gate ladder (gate
+        # 3).
+        if not self._octavia_project_id:
+            return True
+        parent = (getattr(vmi, 'parent_key', '')
+                  or '').replace('-', '').lower()
+        return parent == self._octavia_project_id
+    # end _vmi_in_octavia_project
+
+    @staticmethod
+    def _vmi_has_vip_aap(vmi, vip):
+        # aap['ip'] is a SubnetType dict {ip_prefix, ip_prefix_len}.
+        for aap in vmi.aaps or []:
+            if (aap.get('ip') or {}).get('ip_prefix') == vip:
+                return True
+        return False
+    # end _vmi_has_vip_aap
+
+    def _vmi_backed_by_live_vm(self, vmi):
+        # Live-VM check via fresh api-server read, NOT the SM cache (a
+        # not-yet-drained deleted VM reads as a live ghost). Spec: gate ladder
+        # (gate 4).
+        if not vmi.virtual_machine:
+            return False
+        try:
+            self._vnc_lib.virtual_machine_read(id=vmi.virtual_machine)
+            return True
+        except vnc_exc.NoIdError:
+            return False
+    # end _vmi_backed_by_live_vm
 
     def load_driver(self, sas):
         if sas.name in self._loadbalancer_driver:

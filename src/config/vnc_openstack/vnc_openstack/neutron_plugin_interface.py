@@ -57,6 +57,14 @@ class NeutronPluginInterface(object):
             strict = False
         self._strict_compliance = strict
 
+        # Octavia service project; gates amphora FIP legs
+        # (AAP-hijack guard). Spec: config.
+        try:
+            self._octavia_project_id = conf_sections.get(
+                'NEUTRON', 'octavia_project_id')
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            self._octavia_project_id = ''
+
         try:
             _vnc_connection_cache_size = int(
                 conf_sections.get("DEFAULTS", "vnc_connection_cache_size"))
@@ -111,7 +119,8 @@ class NeutronPluginInterface(object):
                 contrail_extensions_enabled=exts_enabled,
                 list_optimization_enabled=self._list_optimization_enabled,
                 apply_subnet_host_routes=apply_sn_route,
-                strict_compliance=self._strict_compliance)
+                strict_compliance=self._strict_compliance,
+                octavia_project_id=self._octavia_project_id)
 
     # end _connect_to_db
 

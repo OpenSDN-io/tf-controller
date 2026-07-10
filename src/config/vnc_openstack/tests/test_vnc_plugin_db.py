@@ -148,6 +148,7 @@ class TestDbInterface(unittest.TestCase):
             get_project_refs=lambda: [{'uuid': str(uuid.uuid4())}],
             get_floating_ip_address=lambda: 'fip_ip',
             get_floating_ip_fixed_ip_address=lambda: 'fip_port_ip',
+            get_floating_ip_is_virtual_ip=lambda: False,
             get_id_perms=lambda: id_perms_obj,
             get_perms2=lambda: flexmock(get_owner=lambda: str(uuid.uuid4())),
             get_tag_refs=lambda: None)
@@ -297,6 +298,7 @@ class TestDbInterface(unittest.TestCase):
             get_project_refs=lambda: [{'uuid': str(uuid.uuid4())}],
             get_floating_ip_address=lambda: '1.2.3.4',
             get_floating_ip_fixed_ip_address=lambda: fixed_ip,
+            get_floating_ip_is_virtual_ip=lambda: False,
             get_id_perms=lambda: id_perms_obj,
             get_perms2=lambda: flexmock(get_owner=lambda: str(uuid.uuid4())),
             get_tag_refs=lambda: None,
