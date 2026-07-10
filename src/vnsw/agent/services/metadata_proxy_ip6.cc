@@ -200,21 +200,29 @@ void MetadataProxy::OnAVrfChange(DBTablePartBase *, DBEntryBase * entry) {
 
     VrfEntry *vrf_entry = dynamic_cast<VrfEntry*>(entry);
 
-    // a new entry or a changed entry
-    if (vrf_entry && !vrf_entry->IsDeleted()) {
-        if (fabric_notify_id_ < 0) {
-            if (vrf_entry == services_->agent()->fabric_vrf()) {
-                InetUnicastAgentRouteTable *fabric_inet6_table =
-                    vrf_entry->GetInet6UnicastRouteTable();
-                if (fabric_inet6_table) {
-                    fabric_notify_id_ =
-                        fabric_inet6_table->Register(
-                            boost::bind(
-                                &MetadataProxy::OnAFabricRouteChange,
-                                this, _1, _2));
-                }
-            }
-        }
+    if (vrf_entry == nullptr ||
+        vrf_entry != services_->agent()->fabric_vrf()) {
+        return;
+    }
+
+    InetUnicastAgentRouteTable *fabric_inet6_table =
+        vrf_entry->GetInet6UnicastRouteTable();
+    if (fabric_inet6_table == nullptr) {
+        return;
+    }
+
+    if (vrf_entry->IsDeleted() &&
+        fabric_notify_id_ >= 0) {
+            fabric_inet6_table->Unregister(fabric_notify_id_);
+            fabric_notify_id_ = -1;
+    }
+
+    if (!vrf_entry->IsDeleted() &&
+        fabric_notify_id_ < 0) {
+        fabric_notify_id_ =
+            fabric_inet6_table->Register(
+                boost::bind(&MetadataProxy::OnAFabricRouteChange,
+                            this, _1, _2));
     }
 }
 
@@ -305,12 +313,6 @@ void MetadataProxy::UnregisterListeners() {
         services_->agent()->interface_table()->
             Unregister(intf_table_notify_id_);
         intf_table_notify_id_ = -1;
-    }
-    if (fabric_notify_id_ > -1) {
-        services_->agent()->fabric_vrf()->
-            GetInet6UnicastRouteTable()->
-            Unregister(fabric_notify_id_);
-        fabric_notify_id_ = -1;
     }
 }
 

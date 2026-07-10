@@ -11,7 +11,6 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <pugixml/pugixml.hpp>
-#include <tbb/compat/condition_variable>
 
 #include "base/queue_task.h"
 #include "bgp/extended-community/load_balance.h"

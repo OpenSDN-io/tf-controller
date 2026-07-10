@@ -10,7 +10,6 @@
 #include <boost/any.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
-#include <tbb/compat/condition_variable>
 
 #include "base/task_annotations.h"
 #include "base/test/task_test_util.h"

@@ -8,7 +8,6 @@
 #include "db/db_table.h"
 #include "db/db_table_walker.h"
 #include "db/db_table_walk_mgr.h"
-#include "tbb/task_scheduler_init.h"
 
 using namespace std;
 
