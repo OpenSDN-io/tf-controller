@@ -6,6 +6,7 @@ import uuid
 
 from cfgm_common.exceptions import BadRequest
 from cfgm_common.tests import test_common
+from cfgm_common.utils import acl_entries_hash
 import gevent
 from vnc_api.vnc_api import ActionListType, AddressType
 from vnc_api.vnc_api import NoIdError, PolicyEntriesType
@@ -1145,8 +1146,10 @@ class TestPolicy(STTestCase, VerifyPolicy):
         acl_hash = acl.access_control_list_hash
         acl_hash2 = acl2.access_control_list_hash
 
-        self.assertEqual(acl_hash, hash(acl.access_control_list_entries))
-        self.assertEqual(acl_hash2, hash(acl2.access_control_list_entries))
+        self.assertEqual(acl_hash,
+                         acl_entries_hash(acl.access_control_list_entries))
+        self.assertEqual(acl_hash2,
+                         acl_entries_hash(acl2.access_control_list_entries))
 
         self.schema_transformer_restart()
 

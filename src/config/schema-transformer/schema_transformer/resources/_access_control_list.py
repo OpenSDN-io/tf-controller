@@ -4,6 +4,7 @@
 
 from cfgm_common.exceptions import BadRequest, NoIdError
 from cfgm_common.exceptions import HttpError, RequestSizeError
+from cfgm_common.utils import acl_entries_hash
 from vnc_api.gen.resource_client import AccessControlList
 
 from schema_transformer.resources._resource_base import ResourceBaseST
@@ -24,7 +25,7 @@ def _access_control_list_update(acl_obj, name, obj, entries):
         except Exception:
             pass
         try:
-            acl_obj.set_access_control_list_hash(hash(entries))
+            acl_obj.set_access_control_list_hash(acl_entries_hash(entries))
             ResourceBaseST._vnc_lib.access_control_list_create(acl_obj)
             return acl_obj
         except (NoIdError, BadRequest) as e:
@@ -49,7 +50,7 @@ def _access_control_list_update(acl_obj, name, obj, entries):
                 pass
             return None
 
-        entries_hash = hash(entries)
+        entries_hash = acl_entries_hash(entries)
         # if entries did not change, just return the object
         if acl_obj.get_access_control_list_hash() == entries_hash:
             return acl_obj

@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
+import os
+import subprocess
+import sys
 import unittest
 
+from vnc_api.gen.resource_xsd import AclEntriesType
+from vnc_api.gen.resource_xsd import AclRuleType
+from vnc_api.gen.resource_xsd import ActionListType
+from vnc_api.gen.resource_xsd import MatchConditionType
+
+from cfgm_common.utils import acl_entries_hash
 from cfgm_common.utils import CacheContainer
 from cfgm_common.utils import decode_string
 from cfgm_common.utils import encode_string
@@ -66,3 +75,43 @@ class TestFqNameEncode(unittest.TestCase):
             else:
                 self.assertEqual(expected_result, encode_string(string))
                 self.assertEqual(decode_string(expected_result), string)
+
+
+def _acl_entries():
+    return AclEntriesType(dynamic=True, acl_rule=[AclRuleType(
+        match_condition=MatchConditionType(protocol='udp', ethertype='IPv4'),
+        action_list=ActionListType(simple_action='deny'),
+        rule_uuid='ba0e0e1c-0000-0000-0000-000000000001')])
+
+
+class TestAclEntriesHash(unittest.TestCase):
+    def test_stable_across_processes(self):
+        # the value is persisted and compared by a later process, so it must
+        # not depend on PYTHONHASHSEED the way built-in hash() does
+        script = (
+            'from cfgm_common.tests.unit.test_utils import _acl_entries;'
+            'from cfgm_common.utils import acl_entries_hash;'
+            'print(acl_entries_hash(_acl_entries()))')
+        env = dict(os.environ, PYTHONHASHSEED='1')
+        out = subprocess.check_output([sys.executable, '-c', script], env=env)
+        self.assertEqual(acl_entries_hash(_acl_entries()), int(out))
+
+    def test_survives_dict_roundtrip(self):
+        # api-server hashes an object rebuilt from the persisted dict, the
+        # schema-transformer hashes the one it built - both must agree
+        entries = _acl_entries()
+        stored = entries.exportDict()['AclEntriesType']
+        self.assertEqual(acl_entries_hash(entries),
+                         acl_entries_hash(AclEntriesType(params_dict=stored)))
+
+    def test_content_change_changes_hash(self):
+        entries = _acl_entries()
+        before = acl_entries_hash(entries)
+        entries.acl_rule[0].action_list.simple_action = 'pass'
+        self.assertNotEqual(before, acl_entries_hash(entries))
+
+    def test_fits_unsigned_long(self):
+        # the schema type of access-control-list-hash is xsd:unsignedLong
+        value = acl_entries_hash(_acl_entries())
+        self.assertGreaterEqual(value, 0)
+        self.assertLess(value, 2 ** 64)

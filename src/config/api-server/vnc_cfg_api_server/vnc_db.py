@@ -29,6 +29,7 @@ from cfgm_common.exceptions import ResourceOutOfRangeError
 from cfgm_common.vnc_cassandra import VncCassandraClient
 from cfgm_common.datastore import api as datastore_api
 from cfgm_common.vnc_kombu import VncKombuClient
+from cfgm_common.utils import acl_entries_hash
 from cfgm_common.utils import cgitb_hook
 from cfgm_common.utils import shareinfo_from_perms2
 from cfgm_common.utils import _DEFAULT_ZK_DB_RESYNC_PATH_PREFIX
@@ -1900,7 +1901,8 @@ class VncDbClient(object):
                         rules = obj_dict.get('access_control_list_entries')
                         if rules:
                             rules_obj = AclEntriesType(params_dict=rules)
-                            obj_dict['access_control_list_hash'] = hash(rules_obj)
+                            obj_dict['access_control_list_hash'] = \
+                                acl_entries_hash(rules_obj)
                             self._object_db.object_update('access_control_list',
                                                           obj_uuid, obj_dict)
                 elif obj_type == 'global_system_config':

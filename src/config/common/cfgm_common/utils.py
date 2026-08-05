@@ -22,6 +22,8 @@
 
 import urllib.request, urllib.parse, urllib.error
 from collections import OrderedDict
+import hashlib
+import json
 import sys
 from io import StringIO
 from configparser import NoOptionError
@@ -40,6 +42,23 @@ _DEFAULT_ZK_FABRIC_ENTERPRISE_PATH_PREFIX = '/validation/fabric/enterprise'
 
 _DEFAULT_ZK_DB_RESYNC_PATH_PREFIX = '/vnc_api_server_locks/dbe_resync'
 _DEFAULT_ZK_DB_SYNC_COMPLETE_ZNODE_PATH_PREFIX = '/vnc_api_server_locks/dbe-resync-complete'
+
+def acl_entries_hash(entries):
+    """Content fingerprint of an AclEntriesType, stable across processes.
+
+    Built-in hash() cannot be used here: the value is persisted and compared
+    by a later process, and hash() of a str is salted per process.
+
+    64 bits of a sha256 over the sorted json, to keep the collision odds of
+    the "entries changed" check at what the 64-bit hash() gave. A collision
+    means an acl update is silently skipped.
+    """
+    payload = json.dumps(entries.exportDict(), sort_keys=True,
+                         default=str).encode()
+    # schema type is unsignedLong, so 8 bytes is what fits
+    return int.from_bytes(hashlib.sha256(payload).digest()[:8], 'big')
+# end acl_entries_hash
+
 
 def cgitb_hook(info=None, **kwargs):
     vnc_cgitb.Hook(**kwargs).handle(info or sys.exc_info())
