@@ -2,6 +2,7 @@
 import os
 import subprocess
 import sys
+import time
 import unittest
 
 from vnc_api.gen.resource_xsd import AclEntriesType
@@ -13,6 +14,7 @@ from cfgm_common.utils import acl_entries_hash
 from cfgm_common.utils import CacheContainer
 from cfgm_common.utils import decode_string
 from cfgm_common.utils import encode_string
+from cfgm_common.utils import progress_msg
 
 
 class TestCacheContainer(unittest.TestCase):
@@ -115,3 +117,16 @@ class TestAclEntriesHash(unittest.TestCase):
         value = acl_entries_hash(_acl_entries())
         self.assertGreaterEqual(value, 0)
         self.assertLess(value, 2 ** 64)
+
+
+class TestProgressMsg(unittest.TestCase):
+    def test_progress_msg(self):
+        # 10s in, 100 of 500 done -> 10/s, 400 left, eta 40s
+        self.assertEqual(
+            progress_msg(100, 500, time.time() - 10),
+            '100/500 (20%), 10.0s elapsed, 10/s, eta 40s')
+
+    def test_progress_msg_no_progress_yet(self):
+        # must not divide by zero on the first call or on an empty list
+        progress_msg(0, 500, time.time())
+        progress_msg(0, 0, time.time())

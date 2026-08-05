@@ -25,6 +25,7 @@ from collections import OrderedDict
 import hashlib
 import json
 import sys
+import time
 from io import StringIO
 from configparser import NoOptionError
 
@@ -58,6 +59,22 @@ def acl_entries_hash(entries):
     # schema type is unsignedLong, so 8 bytes is what fits
     return int.from_bytes(hashlib.sha256(payload).digest()[:8], 'big')
 # end acl_entries_hash
+
+
+PROGRESS_INTERVAL = 1000
+
+
+def progress_msg(done, total, start_time):
+    """Format a "how far along, how much longer" suffix for progress logs.
+
+    Log one line per PROGRESS_INTERVAL items, a full loop is too chatty.
+    """
+    elapsed = time.time() - start_time
+    rate = done / elapsed if elapsed else 0
+    eta = (total - done) / rate if rate else 0
+    return '%d/%d (%.0f%%), %.1fs elapsed, %.0f/s, eta %.0fs' % (
+        done, total, 100 * done / total if total else 100, elapsed, rate, eta)
+# end progress_msg
 
 
 def cgitb_hook(info=None, **kwargs):

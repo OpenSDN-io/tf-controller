@@ -51,9 +51,20 @@ def _access_control_list_update(acl_obj, name, obj, entries):
             return None
 
         entries_hash = acl_entries_hash(entries)
+        stored_hash = acl_obj.get_access_control_list_hash()
         # if entries did not change, just return the object
-        if acl_obj.get_access_control_list_hash() == entries_hash:
+        if stored_hash == entries_hash:
+            ResourceBaseST._logger.debug(
+                "ACL %s for %s: unchanged (hash %s), skipping update" %
+                (name, obj.get_fq_name_str(), entries_hash))
             return acl_obj
+
+        # an update is a config write, so it ends up in rabbitmq - log before
+        # issuing it: a reinit rewriting every acl, or a write that never
+        # returns, both show up here and nowhere else
+        ResourceBaseST._logger.info(
+            "ACL %s for %s: entries changed (hash %s -> %s), updating" %
+            (name, obj.get_fq_name_str(), stored_hash, entries_hash))
 
         # Set new value of entries on the ACL
         acl_obj.set_access_control_list_entries(entries)
