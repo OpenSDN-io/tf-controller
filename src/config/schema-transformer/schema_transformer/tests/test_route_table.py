@@ -2,12 +2,14 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
+import gevent
 from vnc_api.vnc_api import CommunityAttributes, IpamSubnetType, LogicalRouter
 from vnc_api.vnc_api import NetworkIpam, RouteTableType, RouteTargetList
 from vnc_api.vnc_api import RouteTable, RouteType, SubnetType
 from vnc_api.vnc_api import VirtualMachineInterface, VirtualNetwork
 from vnc_api.vnc_api import VnSubnetsType
 
+from schema_transformer.resources.virtual_network import VirtualNetworkST
 from .test_case import retries, STTestCase
 from .test_policy import VerifyPolicy
 
@@ -236,6 +238,112 @@ class TestRouteTable(STTestCase, VerifyRouteTable):
         self._vnc_lib.virtual_network_delete(fq_name=vn_private.get_fq_name())
         _wait_to_delete_ip(vn_public.get_fq_name())
         self._vnc_lib.virtual_network_delete(fq_name=vn_public.get_fq_name())
+    # end
+
+    def test_ip_next_hop_is_not_resolved_as_service_instance(self):
+        # A route whose next hop is an ip-address is the ordinary case for a
+        # static route. It must not be handed to
+        # _get_routing_instance_from_route(), which resolves a service instance
+        # and logs an error when the lookup misses - naming the operator's own
+        # gateway address in an ERROR line.
+        #
+        # The loop that does this lives in set_route_target_list(), which
+        # returns early unless the route-target list actually changed, so the
+        # route table alone is not enough to reach it - the test has to change
+        # the list as well.
+        vn_name = self.id() + 'vn1'
+        vn = self.create_virtual_network(vn_name, "1.0.0.0/24")
+
+        rt = RouteTable(self.id() + 'rt')
+        self._vnc_lib.route_table_create(rt)
+        routes = RouteTableType()
+        routes.add_route(RouteType(prefix="20.20.20.0/24",
+                                   next_hop="10.10.10.10",
+                                   next_hop_type="ip-address"))
+        rt.set_routes(routes)
+        self._vnc_lib.route_table_update(rt)
+        vn.add_route_table(rt)
+        self._vnc_lib.virtual_network_update(vn)
+        gevent.sleep(3)
+
+        original_resolve = VirtualNetworkST._get_routing_instance_from_route
+        resolved = []
+
+        def record_resolve(vn_st, next_hop):
+            resolved.append(next_hop)
+            return original_resolve(vn_st, next_hop)
+        VirtualNetworkST._get_routing_instance_from_route = record_resolve
+
+        try:
+            # changing the route-target list is what drives
+            # set_route_target_list() into the loop over the routes
+            vn.set_route_target_list(RouteTargetList(['target:1:1']))
+            self._vnc_lib.virtual_network_update(vn)
+            gevent.sleep(3)
+
+            self.assertNotIn(
+                "10.10.10.10", resolved,
+                "an ip-address next hop was passed to "
+                "_get_routing_instance_from_route")
+        finally:
+            VirtualNetworkST._get_routing_instance_from_route = \
+                original_resolve
+
+        # cleanup
+        vn.del_route_table(rt)
+        self._vnc_lib.virtual_network_update(vn)
+        self._vnc_lib.route_table_delete(fq_name=rt.get_fq_name())
+        self._vnc_lib.virtual_network_delete(fq_name=vn.get_fq_name())
+    # end
+
+    def test_service_instance_next_hop_is_still_resolved(self):
+        # The other half of the guard: a next hop of type service-instance
+        # must still reach _get_routing_instance_from_route(), so a genuinely
+        # missing service instance is still reported. Without this, someone
+        # could "fix" the noisy log by skipping the lookup altogether and the
+        # real condition would go silent.
+        vn_name = self.id() + 'vn1'
+        vn = self.create_virtual_network(vn_name, "1.0.0.0/24")
+
+        rt = RouteTable(self.id() + 'rt')
+        self._vnc_lib.route_table_create(rt)
+        routes = RouteTableType()
+        routes.add_route(RouteType(prefix="20.20.20.0/24",
+                                   next_hop="default-domain:default-project:"
+                                            "no-such-service-instance",
+                                   next_hop_type="service-instance"))
+        rt.set_routes(routes)
+        self._vnc_lib.route_table_update(rt)
+        vn.add_route_table(rt)
+        self._vnc_lib.virtual_network_update(vn)
+        gevent.sleep(3)
+
+        original_resolve = VirtualNetworkST._get_routing_instance_from_route
+        resolved = []
+
+        def record_resolve(vn_st, next_hop):
+            resolved.append(next_hop)
+            return original_resolve(vn_st, next_hop)
+        VirtualNetworkST._get_routing_instance_from_route = record_resolve
+
+        try:
+            vn.set_route_target_list(RouteTargetList(['target:1:1']))
+            self._vnc_lib.virtual_network_update(vn)
+            gevent.sleep(3)
+
+            self.assertIn(
+                "default-domain:default-project:no-such-service-instance",
+                resolved,
+                "a service-instance next hop was not resolved")
+        finally:
+            VirtualNetworkST._get_routing_instance_from_route = \
+                original_resolve
+
+        # cleanup
+        vn.del_route_table(rt)
+        self._vnc_lib.virtual_network_update(vn)
+        self._vnc_lib.route_table_delete(fq_name=rt.get_fq_name())
+        self._vnc_lib.virtual_network_delete(fq_name=vn.get_fq_name())
     # end
 
 # end class TestRouteTable
