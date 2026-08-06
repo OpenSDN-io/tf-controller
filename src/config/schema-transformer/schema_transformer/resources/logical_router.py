@@ -62,14 +62,46 @@ class LogicalRouterST(ResourceBaseST):
     # end evaluate
 
     def delete_obj(self):
-        self.update_multiple_refs('virtual_machine_interface', {})
-        self.update_multiple_refs('route_table', {})
-        self.update_multiple_refs('bgpvpn', {})
-        self.update_virtual_networks()
-        self.delete_route_targets([self.route_target])
+        # Releasing the route-target ID is the only step here that cannot be
+        # recovered if it is skipped. Nothing reads a zookeeper index that has
+        # no row in the schema DB, so a skipped release holds the ID until the
+        # cluster is rebuilt; everything above it is redone by the next reinit.
+        # Read the ASN before the steps that can raise, so the release cannot
+        # be lost to a failure in the lookup itself.
         asn = ResourceBaseST.get_obj_type_map().get(
             'global_system_config').get_autonomous_system()
-        self._object_db.free_route_target(self.name, asn)
+        try:
+            # Attempt each teardown step independently. A failure in one is
+            # logged and the rest still run, so the log names the step that
+            # failed rather than only the first one.
+            #
+            # None of these leaves unrecoverable state on its own:
+            # RouteTargetST.reinit() drops route-target objects with no
+            # back-refs and frees any _RT_CF row whose object is gone, and the
+            # ref sets are rebuilt from the DB on the next reinit. Only the ID
+            # release below has no such collector, which is why it sits in
+            # finally.
+            #
+            # update_virtual_networks() reads the ref sets the earlier steps
+            # clear, so after an earlier failure it works from stale
+            # membership. That is logged and recomputed at reinit; it does not
+            # justify skipping the remaining steps.
+            for step in (
+                    lambda: self.update_multiple_refs(
+                        'virtual_machine_interface', {}),
+                    lambda: self.update_multiple_refs('route_table', {}),
+                    lambda: self.update_multiple_refs('bgpvpn', {}),
+                    self.update_virtual_networks,
+                    lambda: self.delete_route_targets([self.route_target]),
+            ):
+                try:
+                    step()
+                except Exception:
+                    self._logger.error(
+                        "LogicalRouterST.delete_obj: teardown step failed "
+                        "for %s, continuing" % self.name, exc_info=True)
+        finally:
+            self._object_db.free_route_target(self.name, asn)
     # end delete_obj
 
     def update_virtual_networks(self):
