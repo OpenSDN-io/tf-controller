@@ -1301,7 +1301,7 @@ const string AgentUtXmlAclValidate::ToString() {
 /////////////////////////////////////////////////////////////////////////////
 AgentUtXmlFlowValidate::AgentUtXmlFlowValidate(const string &name,
                                                const xml_node &node) :
-    AgentUtXmlValidationNode(name, node) {
+    AgentUtXmlValidationNode(name, node), attempt_(0), nh_auto_(false) {
 }
 
 AgentUtXmlFlowValidate::~AgentUtXmlFlowValidate() {
@@ -1309,8 +1309,10 @@ AgentUtXmlFlowValidate::~AgentUtXmlFlowValidate() {
 
 bool AgentUtXmlFlowValidate::ReadXml() {
     if (GetUintAttribute(node(), "nh", &nh_id_) == false) {
-        cout << "Attribute \"nh\" not specified for Flow. Skipping" << endl;
-        return false;
+        nh_id_ = 0;
+        nh_auto_ = true;
+    } else {
+        nh_auto_ = false;
     }
 
     if (GetStringAttribute(node(), "sip", &sip_) == false) {
@@ -1376,9 +1378,78 @@ static bool MatchFlowAction(FlowEntry *flow, const string &str) {
     return false;
 }
 
+void AgentUtXmlFlowValidate::SuggestNhId() {
+    Agent *agent = Agent::GetInstance();
+    if (agent == NULL || agent->nexthop_table() == NULL) {
+        return;
+    }
+
+    cout << "  flow <" << name() << "> not found with nh=" << nh_id_
+         << " (key: vrf=" << vrf_ << " " << sip_ << " -> " << dip_
+         << " proto=" << proto_id_ << " " << sport_ << "/" << dport_ << ")"
+         << endl;
+
+    bool found = false;
+    DBTablePartition *part = static_cast<DBTablePartition *>
+        (agent->nexthop_table()->GetTablePartition(0));
+    for (DBEntry *e = part->GetFirst(); e != NULL; e = part->GetNext(e)) {
+        NextHop *nh = static_cast<NextHop *>(e);
+        FlowEntry *f = FlowGet(0, sip_, dip_, proto_id_, sport_, dport_,
+                               nh->id());
+        if (f != NULL) {
+            found = true;
+            cout << "  ==> MATCHES with nh=\"" << nh->id() << "\""
+                 << "  (nh type=" << nh->GetType()
+                 << ", " << nh->ToString() << ")" << endl;
+        }
+    }
+    if (found == false) {
+        cout << "  ==> no nexthop index yields this flow; the flow itself was"
+                " not created (check the packet, not the nh)" << endl;
+    }
+}
+
+FlowEntry *AgentUtXmlFlowValidate::FindFlowAnyNh(uint16_t *found_nh) {
+    Agent *agent = Agent::GetInstance();
+    if (agent == NULL || agent->nexthop_table() == NULL) {
+        return NULL;
+    }
+
+    FlowEntry *result = NULL;
+    uint32_t matches = 0;
+    DBTablePartition *part = static_cast<DBTablePartition *>
+        (agent->nexthop_table()->GetTablePartition(0));
+    for (DBEntry *e = part->GetFirst(); e != NULL; e = part->GetNext(e)) {
+        NextHop *nh = static_cast<NextHop *>(e);
+        FlowEntry *f = FlowGet(0, sip_, dip_, proto_id_, sport_, dport_,
+                               nh->id());
+        if (f != NULL) {
+            matches++;
+            if (result == NULL) {
+                result = f;
+                *found_nh = nh->id();
+            }
+        }
+    }
+
+    if (matches > 1) {
+        cout << "  flow <" << name() << "> matches " << matches
+             << " nexthops; the key is ambiguous -- specify nh= explicitly"
+             << endl;
+        return NULL;
+    }
+    return result;
+}
+
 bool AgentUtXmlFlowValidate::Validate() {
-    FlowEntry *flow = FlowGet(0, sip_, dip_, proto_id_, sport_, dport_,
-                               nh_id_);
+    FlowEntry *flow = NULL;
+    uint16_t used_nh = nh_id_;
+    if (nh_auto_) {
+        flow = FindFlowAnyNh(&used_nh);
+    } else {
+        flow = FlowGet(0, sip_, dip_, proto_id_, sport_, dport_, nh_id_);
+    }
+
     if (deleted_ == "true" && flow == NULL) {
         return true;
     }
@@ -1387,7 +1458,14 @@ bool AgentUtXmlFlowValidate::Validate() {
         return (flow == NULL);
 
     if (flow == NULL) {
+        if (nh_auto_ == false && ++attempt_ >= wait_count()) {
+            SuggestNhId();
+        }
         return false;
+    }
+
+    if (nh_auto_) {
+        cout << "  flow <" << name() << "> resolved to nh=" << used_nh << endl;
     }
 
     if (svn_ != "" && !VnMatch(flow->data().source_vn_list, svn_))

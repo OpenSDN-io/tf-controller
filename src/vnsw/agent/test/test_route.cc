@@ -3442,7 +3442,7 @@ TEST_F(RouteTest, evpn_ecmp_type5_add_remote_route24) {
         routing_vrf_name,
         MacAddress::FromString("00:00:00:00:00:00"),
         Ip4Address::from_string("3.3.3.0"),
-        32, 0,
+        24, 0,
         new ControllerVmRoute(bgp_peer_->GetAgentXmppChannel()->bgp_peer_id()));
     client->WaitForIdle();
     DelIPAM("vn1");

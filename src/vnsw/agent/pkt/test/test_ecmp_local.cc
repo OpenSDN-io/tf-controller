@@ -192,27 +192,29 @@ TEST_F(LocalEcmpTest, NonEcmpToLocalEcmp_EcmpDel_1) {
 
     FlowEntry *flow = FlowGet(GetVrfId("vrf1"), "1.1.1.1", "1.1.1.10",
                               1, 0, 0, GetFlowKeyNH(1));
-    EXPECT_TRUE(flow != NULL);
+    ASSERT_TRUE(flow != NULL);
     EXPECT_TRUE(flow->data().component_nh_idx
                 != CompositeNH::kInvalidComponentNHIdx);
     EXPECT_TRUE(flow->rpf_nh() == vmi_[1]->flow_key_nh());
 
     FlowEntry *rflow = flow->reverse_flow_entry();
+    ASSERT_TRUE(rflow != NULL);
     EXPECT_TRUE(rflow->data().component_nh_idx ==
                 CompositeNH::kInvalidComponentNHIdx);
     const VmInterface *out_vmi = GetOutVmi(flow);
+    ASSERT_TRUE(out_vmi != NULL) << "ECMP member is not an InterfaceNH";
     EXPECT_TRUE(rflow->rpf_nh() == out_vmi->flow_key_nh());
 
     // Delete interface other than one being used
     if (out_vmi->name() == "vif11")
         DeleteVmportEnv(input10_1, 1, false);
-
-    if (out_vmi->name() == "vif12")
+    else if (out_vmi->name() == "vif12")
         DeleteVmportEnv(input10_2, 1, false);
-
-    if (out_vmi->name() == "vif13")
+    else if (out_vmi->name() == "vif13")
         DeleteVmportEnv(input10_3, 1, false);
-
+    else
+        FAIL() << "unexpected ECMP member: " << out_vmi->name();
+    client->WaitForIdle();
     WAIT_FOR(1000, 1000, (0 == flow_proto_->FlowCount()));
 }
 
@@ -312,6 +314,7 @@ TEST_F(LocalEcmpTest, NonEcmpToLocalEcmp_EcmpDel_2) {
 
     if (out_vmi->name() == "vif13")
         DeleteVmportEnv(input10_1, 1, false);
+    client->WaitForIdle();
 
     flow = FlowGet(GetVrfId("vrf1"), "1.1.1.1", "1.1.1.10", 1, 0, 0,
                    GetFlowKeyNH(1));
