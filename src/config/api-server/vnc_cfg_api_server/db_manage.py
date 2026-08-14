@@ -2241,7 +2241,7 @@ class DatabaseCleaner(DatabaseManager):
             iterator = ((type, None) for type in set(res_type))
         else:
             iterator = self._cassandra_driver.get_range(
-                "obj_uuid_table", column_count=1)
+                "obj_fq_name_table", column_count=1)
         for obj_type, _ in iterator:
             stale_cols = []
             for fq_name_str_uuid, _ in self._cassandra_driver.xget(

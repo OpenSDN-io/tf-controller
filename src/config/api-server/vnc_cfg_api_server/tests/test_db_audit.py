@@ -138,6 +138,32 @@ class TestDBAudit(test_case.ApiServerTestCase):
                 self.assertIn(db_manage.FQNStaleIndexError, error_types)
     # test_checker_fq_name_mismatch_stale
 
+    def test_cleaner_fq_name_index_stale(self):
+        # obj_uuid_table row is gone, the fq_name index entry is left behind:
+        # clean_stale_fq_names has to remove it. Guards against the cleaner
+        # iterating obj_uuid_table, whose keys are uuids, instead of
+        # obj_fq_name_table, whose keys are type names - every lookup then
+        # misses, nothing is removed, and the run still reports success.
+        with self.audit_mocks():
+            from vnc_cfg_api_server import db_manage
+            test_obj = self._create_test_object()
+            uuid_cf = self.get_cf('config_db_uuid', 'obj_uuid_table')
+            fq_name_cf = self.get_cf('config_db_uuid', 'obj_fq_name_table')
+            stale_col = '%s:%s' % (':'.join(test_obj.get_fq_name()),
+                                   test_obj.uuid)
+            with uuid_cf.patch_row(test_obj.uuid, new_columns=None):
+                self.assertIn(stale_col,
+                              fq_name_cf.get('virtual_network'),
+                              'test setup: the index entry should be there')
+                db_cleaner = db_manage.DatabaseCleaner(
+                    *db_manage._parse_args(
+                        '--execute clean --cluster_id %s' % self._cluster_id))
+                db_cleaner.clean_stale_fq_names()
+                self.assertNotIn(stale_col,
+                                 fq_name_cf.get('virtual_network'),
+                                 'stale fq_name index entry was not removed')
+    # end test_cleaner_fq_name_index_stale
+
     def test_checker_fq_name_index_missing(self):
         # obj_uuid table has entry but fq_name table in cassandra doesn't
         with self.audit_mocks():
