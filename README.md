@@ -31,6 +31,8 @@ The OpenSDN (Tungsten Fabric formerly) Virtual Network Controller repository con
 
 * The source code of the aforementioned components is being documented using doxygen to produce online manual [https://opensdn-io.github.io/doxygen-docs/index.html](https://opensdn-io.github.io/doxygen-docs/index.html).
 
+* Recent code coverage is available at: [http://nexus.gz1.opensdn.io:8082/jenkins_logs/nightly/coverage/coverage-html/index.html](http://nexus.gz1.opensdn.io:8082/jenkins_logs/nightly/coverage/coverage-html/index.html).
+
 ## Contributing code
 
 * For technical questions about contributions, as well as to communicate developers and community, visit [https://docs.opensdn.io/contributing-to-opensdn/getting-started/getting-started-with-opensdn-development.html](https://docs.opensdn.io/contributing-to-opensdn/getting-started/getting-started-with-opensdn-development.html)
@@ -45,6 +47,7 @@ based on a mini-DSL. Each of these languages has a distinct coding style.
 
 The C++ code should follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
 with the next main distinctions:
+
     * the 4-space indentation is used rather than 2-space;
     * for declaration comments (auto-documenting)
      [doxygen conventions](https://www.doxygen.nl/manual/docblocks.html)
