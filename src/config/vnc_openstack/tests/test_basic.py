@@ -3549,6 +3549,31 @@ class TestBasic(test_case.NeutronBackendTestCase):
             self.fail('Value out of bound, range is 0-9216')
         self._vnc_lib.project_delete(id=new_proj_obj.uuid)
         # end test_network_mtu_out_of_range
+
+    def test_no_filter_list_does_not_scan_every_project_for_non_admin(self):
+        proj_obj = self._vnc_lib.project_read(
+            fq_name=['default-domain', 'default-project'])
+
+        domain_scans = []
+
+        def spy(orig_method, *args, **kwargs):
+            domain_scans.append(True)
+            return orig_method(*args, **kwargs)
+
+        resources = ['ipam', 'policy', 'route_table', 'nat_instance']
+        with test_common.patch(
+                self.neutron_db_obj, '_project_list_domain', spy):
+            for res in resources:
+                del domain_scans[:]
+                self.list_resource(
+                    res, proj_uuid=proj_obj.uuid, is_admin=False)
+                self.assertEqual([], domain_scans)
+
+            # admin behaviour is unchanged
+            del domain_scans[:]
+            self.list_resource('ipam', proj_uuid=proj_obj.uuid,
+                               is_admin=True)
+            self.assertEqual([True], domain_scans)
 # end class TestBasic
 
 
