@@ -7,9 +7,13 @@ This file contains implementation of database model for contrail config daemons
 """
 from collections import OrderedDict
 from io import StringIO
+import time
+
 from vnc_api.gen.resource_client import *
 
 from cfgm_common.utils import cgitb_hook
+from cfgm_common.utils import PROGRESS_INTERVAL
+from cfgm_common.utils import progress_msg
 from .exceptions import NoIdError
 from vnc_api.utils import obj_type_to_vnc_class
 from .utils import compare_refs
@@ -368,6 +372,8 @@ class DBBase(metaclass=DBBaseMeta):
         obj_type = obj_type or cls.obj_type
         ok, result, _ = cls._object_db.object_list(obj_type)
         if not ok:
+            cls._logger.error('DBLIST %s: object_list failed: %s'
+                              % (obj_type, result))
             return []
         uuids = [uuid for _, uuid in result]
         # if there are more objects, one list to retrieve
@@ -377,14 +383,29 @@ class DBBase(metaclass=DBBaseMeta):
         uuid_chunks = [uuids[i:i + chunk_count] for i in range(
             0, len(uuids), chunk_count)]
         objs = []
+        total = len(uuids)
+        cls._logger.info('DBLIST %s: reading %d objects from db'
+                         % (obj_type, total))
+        start_time = time.time()
         try:
             for uuid_chunk in uuid_chunks:
                 ok, objs_chunk = cls._object_db.object_read(
                     obj_type, uuid_chunk, field_names=fields)
                 if not ok:
+                    cls._logger.error(
+                        'DBLIST %s: object_read failed at %s: %s'
+                        % (obj_type,
+                           progress_msg(len(objs), total, start_time),
+                           objs_chunk))
                     return objs
                 objs += objs_chunk
+                cls._logger.info('DBLIST %s: read %s' % (
+                    obj_type, progress_msg(len(objs), total, start_time)))
         except NoIdError:
+            cls._logger.info('DBLIST %s: object deleted while reading, '
+                             'returning %s'
+                             % (obj_type,
+                                progress_msg(len(objs), total, start_time)))
             return objs
         return objs
 
@@ -393,9 +414,20 @@ class DBBase(metaclass=DBBaseMeta):
         obj_type = obj_type or cls.obj_type
         vnc_cls = obj_type_to_vnc_class(obj_type, __name__)
         obj_dicts = cls.list_obj(obj_type, fields)
-        for obj_dict in obj_dicts:
+        total = len(obj_dicts)
+        start_time = time.time()
+        for index, obj_dict in enumerate(obj_dicts, 1):
             obj = vnc_cls.from_dict(**obj_dict)
             obj.clear_pending_updates()
+            # progress for the caller's loop, which is what actually takes
+            # minutes on a large db - without it the init looks hung
+            if index % PROGRESS_INTERVAL == 0 or index == total:
+                cls._logger.info('DBLIST %s: processed %s' % (
+                    obj_type, progress_msg(index, total, start_time)))
+            else:
+                cls._logger.debug('DBLIST %s: processing %d/%d %s'
+                                  % (obj_type, index, total,
+                                     obj_dict.get('fq_name')))
             yield obj
 
     def get_parent_uuid(self, obj):

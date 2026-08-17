@@ -31,6 +31,7 @@ from cfgm_common.datastore import api as datastore_api
 from cfgm_common.vnc_kombu import VncKombuClient
 from cfgm_common.utils import acl_entries_hash
 from cfgm_common.utils import cgitb_hook
+from cfgm_common.utils import progress_msg
 from cfgm_common.utils import shareinfo_from_perms2
 from cfgm_common.utils import _DEFAULT_ZK_DB_RESYNC_PATH_PREFIX
 from cfgm_common.utils import _DEFAULT_ZK_DB_SYNC_COMPLETE_ZNODE_PATH_PREFIX
@@ -1628,7 +1629,9 @@ class VncDbClient(object):
         uve_trace_list = []
         self._workers = []
         worker_count = 0
-        for obj_dict in obj_dicts:
+        total = len(obj_dicts)
+        start_time = time.time()
+        for done, obj_dict in enumerate(obj_dicts, 1):
             uve_trace_list.append(("RESYNC", obj_type, obj_dict['uuid'], obj_dict))
             self._workers.append(gevent.spawn(
                 self._dbe_resync_worker, obj_type, obj_dict, **kwargs))
@@ -1637,6 +1640,10 @@ class VncDbClient(object):
                 gevent.joinall(self._workers)
                 self._workers = []
                 worker_count = 0
+                self.config_log(
+                    "DBERESYNC: %s %s"
+                    % (obj_type, progress_msg(done, total, start_time)),
+                    level=SandeshLevel.SYS_INFO)
 
         # wait for all task to complete
         gevent.joinall(self._workers)
@@ -1647,8 +1654,9 @@ class VncDbClient(object):
             return self.dbe_uve_trace(*args)
         uve_workers.map(format_args_for_dbe_uve_trace, uve_trace_list)
 
-        msg = "Finished DB Resync for %s" % obj_type
-        self.config_log(msg, level=SandeshLevel.SYS_DEBUG)
+        msg = "Finished DB Resync for %s (%d objects, %.1fs)" % (
+            obj_type, total, time.time() - start_time)
+        self.config_log(msg, level=SandeshLevel.SYS_INFO)
     # end _dbe_resync
 
     def _dbe_resync_worker(self, obj_type, obj_dict, **kwargs):
@@ -1905,6 +1913,11 @@ class VncDbClient(object):
                                 acl_entries_hash(rules_obj)
                             self._object_db.object_update('access_control_list',
                                                           obj_uuid, obj_dict)
+                            self.config_log(
+                                "DBERESYNC: backfilled hash %s for acl %s"
+                                % (obj_dict['access_control_list_hash'],
+                                   obj_uuid),
+                                level=SandeshLevel.SYS_DEBUG)
                 elif obj_type == 'global_system_config':
                     if (obj_dict['fq_name'][0] == 'default-global-system-config' and
                          'enable_4byte_as' not in obj_dict):

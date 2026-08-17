@@ -29,6 +29,8 @@ import time
 
 from cfgm_common import vnc_cgitb
 from cfgm_common.exceptions import NoIdError, ResourceExhaustionError
+from cfgm_common.utils import PROGRESS_INTERVAL
+from cfgm_common.utils import progress_msg
 from cfgm_common.vnc_db import DBBase
 from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
@@ -269,6 +271,8 @@ class SchemaTransformer(object):
 
     # Clean up stale objects
     def reinit(self):
+        reinit_start_time = time.time()
+        self.logger.info('REINIT Start - loading config from db')
         self.logger.info('GlobalSystemConfigST - REINIT Start')
         GlobalSystemConfigST.reinit()
         self.logger.info('GlobalSystemConfigST - REINIT Complete')
@@ -489,28 +493,42 @@ class SchemaTransformer(object):
         evaluate_kwargs = {}
         if self.timer_obj.yield_in_evaluate:
             evaluate_kwargs['timer'] = self.timer_obj
-        for vn_obj in list(VirtualNetworkST.values()):
-            try:
-                vn_obj.evaluate(**evaluate_kwargs)
-                self.timer_obj.timed_yield()
-            except Exception as e:
-                self.logger.error(
-                    "Error in reinit evaluate virtual network %s: %s" %
-                    (vn_obj.name, str(e)))
+        self._reinit_evaluate(VirtualNetworkST, evaluate_kwargs)
         for cls in list(ResourceBaseST.get_obj_type_map().values()):
             if cls is VirtualNetworkST:
                 continue
-            for obj in list(cls.values()):
-                try:
-                    self.logger.debug('obj.evaluate - REINIT Start')
-                    obj.evaluate(**evaluate_kwargs)
-                    self.logger.debug('obj.evaluate - REINIT Complete')
-                    self.timer_obj.timed_yield()
-                except Exception as e:
-                    self.logger.error("Error in reinit evaluate %s %s: %s" %
-                                      (cls.obj_type, obj.name, str(e)))
+            self._reinit_evaluate(cls, evaluate_kwargs)
         self.process_stale_objects()
+        self.logger.info('REINIT Complete in %.1fs'
+                         % (time.time() - reinit_start_time))
     # end reinit
+
+    def _reinit_evaluate(self, cls, evaluate_kwargs):
+        # evaluate() is what issues the config writes that end up in rabbitmq,
+        # so this phase is the one worth watching when init looks stuck
+        objs = list(cls.values())
+        total = len(objs)
+        if not total:
+            return
+        errors = 0
+        start_time = time.time()
+        self.logger.info('REINIT evaluate %s - Start (%d objects)'
+                         % (cls.obj_type, total))
+        for index, obj in enumerate(objs, 1):
+            try:
+                obj.evaluate(**evaluate_kwargs)
+                self.timer_obj.timed_yield()
+            except Exception as e:
+                errors += 1
+                self.logger.error("Error in reinit evaluate %s %s: %s" %
+                                  (cls.obj_type, obj.name, str(e)))
+            if index % PROGRESS_INTERVAL == 0:
+                self.logger.info('REINIT evaluate %s: %s' % (
+                    cls.obj_type, progress_msg(index, total, start_time)))
+        self.logger.info(
+            'REINIT evaluate %s - Complete (%d objects, %d errors, %.1fs)'
+            % (cls.obj_type, total, errors, time.time() - start_time))
+    # end _reinit_evaluate
 
     def cleanup(self):
         # TODO cleanup sandesh context

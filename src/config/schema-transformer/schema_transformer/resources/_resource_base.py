@@ -32,16 +32,23 @@ class ResourceBaseST(DBBase):
     def reinit(cls, **kwargs):
         zk_timeout = kwargs.get('zk_timeout')
         start_time = time.time()
+        reinit_start_time = start_time
+        count = 0
+        errors = 0
         for obj in cls.list_vnc_obj():
+            count += 1
             try:
                 cls.locate(obj.get_fq_name_str(), obj)
             except Exception as e:
+                errors += 1
                 cls._logger.error("Error in reinit for %s %s: %s" % (
                     cls.obj_type, obj.get_fq_name_str(), str(e)))
             if (zk_timeout and
                     time.time() - start_time > int(zk_timeout / 8)):
                 gevent.sleep(0.1)
                 start_time = time.time()
+        cls._logger.info("REINIT %s: loaded %d objects, %d errors, %.1fs" % (
+            cls.obj_type, count, errors, time.time() - reinit_start_time))
     # end reinit
 
     @classmethod
