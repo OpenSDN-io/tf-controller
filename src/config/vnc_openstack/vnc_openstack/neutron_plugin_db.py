@@ -80,6 +80,13 @@ _NEUTRON_TAG_TO_SUBNETS = 'neutron_tag_to_subnets'
 _NEUTRON_DEFAULT_SECURITY_GROUP_NAME = 'default'
 
 NEUTRON_LOADBALANCER_DEVICE_OWNER = 'neutron:LOADBALANCER'
+# device_owner Octavia stamps on the no-datapath VIP placeholder
+# port.
+OCTAVIA_VIP_DEVICE_OWNER = 'Octavia'
+# durable FIP pointers that survive the failover cascade-strip.
+# Spec: data model.
+FIP_VIP_PORT_ANNOTATION = 'vip_port_id'
+FIP_VIP_ADDRESS_ANNOTATION = 'vip_address'
 
 
 class FakeVncLibResource(namedtuple('FakeVncLibResource', 'object_type uuid')):
@@ -287,7 +294,8 @@ class DBInterface(object):
                  contrail_extensions_enabled=True,
                  list_optimization_enabled=False,
                  apply_subnet_host_routes=False,
-                 strict_compliance=False):
+                 strict_compliance=False,
+                 octavia_project_id=''):
         """Establish database connection."""
         self._manager = manager
         self.logger = manager.logger
@@ -296,6 +304,11 @@ class DBInterface(object):
         self._api_server_obj = api_server_obj
         self._apply_subnet_host_routes = apply_subnet_host_routes
         self._strict_compliance = strict_compliance
+        # Octavia service project; gates amphora FIP legs
+        # (AAP-hijack guard). Normalized dashless+lower. Spec: gate ladder.
+        self._octavia_project_id = (
+            octavia_project_id or '').replace('-', '').lower()
+        self._octavia_filter_warned = False
 
         self._contrail_extensions_enabled = contrail_extensions_enabled
         self._list_optimization_enabled = list_optimization_enabled
@@ -2403,7 +2416,9 @@ class DBInterface(object):
                 detail=False)
             fip_list = fip_dict.get('floating-ips')
             for fip in fip_list:
-                if fip['floating_ip_fixed_ip_address'] == fixed_ip_address:
+                # a mid-failover Octavia FIP has fixed_ip stripped;
+                # .get() avoids KeyError->500.
+                if fip.get('floating_ip_fixed_ip_address') == fixed_ip_address:
                     pool_obj = self._vnc_lib.floating_ip_pool_read(
                         id=fip['parent_uuid'])
                     self._raise_contrail_exception(
@@ -2449,6 +2464,8 @@ class DBInterface(object):
 
         port_id = fip_q.get('port_id')
         fixed_ip_address = fip_q.get('fixed_ip_address')
+        octavia_vmis = None
+        octavia_vip = None
         if port_id:
             try:
                 port_obj = self._virtual_machine_interface_read(
@@ -2474,7 +2491,27 @@ class DBInterface(object):
                 self._raise_contrail_exception('PortNotFound',
                                                resource='floatingip',
                                                port_id=port_id)
-            fip_obj.set_virtual_machine_interface(port_obj)
+            # KEEP the no-datapath VIP port ref + ADD
+            # live amphora VRRP legs. Spec: Plugin lane / associate decision
+            # tree.
+            octavia_vmis, octavia_vip = self._octavia_vip_amphora_vmis(
+                port_obj, fixed_ip_address)
+            fip_obj.set_virtual_machine_interface(port_obj)  # keep vip_port
+            owner = port_obj.get_virtual_machine_interface_device_owner()
+            if owner == OCTAVIA_VIP_DEVICE_OWNER:
+                # Stamp markers even with no amphora yet (booting/failover):
+                # reconciler finishes wiring. Also overwrites a stale prior-LB
+                # pointer.
+                for amphora_vmi in octavia_vmis or []:
+                    fip_obj.add_virtual_machine_interface(amphora_vmi)
+                fip_obj.set_floating_ip_is_virtual_ip(True)
+                self._fip_set_vip_port_ann(fip_obj, port_obj.uuid,
+                                           octavia_vip)
+            else:
+                # (re)associated to a normal port: clear stale markers (FIP
+                # reuse).
+                fip_obj.set_floating_ip_is_virtual_ip(False)
+                self._fip_clear_vip_port_ann(fip_obj)
             # check for strict_compliance
             if self._strict_compliance:
                 port_net_id = port_obj.get_virtual_network_refs()[0]['uuid']
@@ -2535,8 +2572,19 @@ class DBInterface(object):
         elif 'port_id' in fip_q or (len(fip_q.keys()) == 1 and 'id' in fip_q):
             # port_id is empty or update called with empty body
             fip_obj.set_virtual_machine_interface_list([])
+            # cascade (delete_port, context=None) KEEPS markers so
+            # the reconciler rebuilds; user unset (real context) CLEARS them.
+            # Spec: disassociate context gate.
+            if context is not None:
+                fip_obj.set_floating_ip_is_virtual_ip(False)
+                self._fip_clear_vip_port_ann(fip_obj)
 
-        if fixed_ip_address and port_id:
+        if octavia_vip:
+            # pin fixed_ip to the VIP (keeps one-FIP-per-fixed-ip on
+            # the VIP port).
+            self._check_port_fip_assoc(port_obj, octavia_vip, fip_obj)
+            fip_obj.set_floating_ip_fixed_ip_address(octavia_vip)
+        elif fixed_ip_address and port_id:
             self._check_port_fip_assoc(port_obj, fixed_ip_address, fip_obj)
             fip_obj.set_floating_ip_fixed_ip_address(fip_q['fixed_ip_address'])
         elif fixed_ip_address and not port_id:
@@ -2549,6 +2597,11 @@ class DBInterface(object):
             port_refs = fip_obj.get_virtual_machine_interface_refs()
             if not port_refs:
                 fip_obj.set_floating_ip_fixed_ip_address(None)
+            elif fip_obj.get_floating_ip_is_virtual_ip():
+                # don't recompute fixed_ip from port_refs[0] on a
+                # metadata update - would clobber the pinned VIP with an
+                # amphora unicast addr.
+                pass
             else:
                 port_obj = self._virtual_machine_interface_read(
                     port_id=port_refs[0]['uuid'],
@@ -2583,6 +2636,144 @@ class DBInterface(object):
         return fip_obj
     # end _floatingip_neutron_to_vnc
 
+    def _octavia_vip_amphora_vmis(self, port_obj, fixed_ip_address):
+        # resolve the live amphora VRRP VMIs carrying the VIP via
+        # active-standby AAP. Returns (vmis, vip_address); ([], vip) when VIP
+        # known but no amphora yet (caller still stamps markers). Spec: gate
+        # ladder.
+        owner = port_obj.get_virtual_machine_interface_device_owner()
+        if owner != OCTAVIA_VIP_DEVICE_OWNER:
+            return None, None
+
+        if not self._octavia_project_id and not self._octavia_filter_warned:
+            # ownership filter OFF: a tenant could alias the VIP via AAP. Warn
+            # once, don't be silent.
+            self._octavia_filter_warned = True
+            self.logger.warning(
+                '[NEUTRON] octavia_project_id is not set; the '
+                'Octavia VIP AAP-hijack guard is DISABLED. Set it to the '
+                'Octavia service project uuid to enable the ownership filter.')
+
+        # VIP address: request fixed_ip, else the VIP-port v4 iip (FIP is
+        # v4-only); multiple v4 (additional_vips) -> ambiguous, need explicit
+        # fixed_ip.
+        vip = fixed_ip_address
+        if not vip:
+            v4_vips = []
+            for iip_ref in port_obj.get_instance_ip_back_refs() or []:
+                try:
+                    iip_obj = self._instance_ip_read(
+                        instance_ip_id=iip_ref['uuid'])
+                except NoIdError:
+                    continue
+                iip_addr = iip_obj.get_instance_ip_address()
+                if iip_addr and ':' not in iip_addr:
+                    v4_vips.append(iip_addr)
+            if len(v4_vips) > 1:
+                msg = ('Port %s has multiple fixed IP addresses.  Must '
+                       'provide a specific IP address when assigning a '
+                       'floating IP' % port_obj.uuid)
+                self._raise_contrail_exception(
+                    'BadRequest', resource='floatingip', msg=msg)
+            if v4_vips:
+                vip = v4_vips[0]
+        if not vip:
+            return None, None
+
+        vn_refs = port_obj.get_virtual_network_refs()
+        if not vn_refs:
+            return None, None
+        net_id = vn_refs[0]['uuid']
+
+        amphora_vmis = []
+        # one list call per associate, O(ports on the VIP net); revisit for big
+        # shared nets.
+        cand_list = self._virtual_machine_interface_list(
+            back_ref_id=net_id,
+            fields=['virtual_machine_interface_allowed_address_pairs',
+                    'virtual_machine_refs'])
+        rejected_by_project = 0
+        for cand in cand_list:
+            if cand.uuid == port_obj.uuid:
+                continue
+            aaps = cand.get_virtual_machine_interface_allowed_address_pairs()
+            if not (aaps and aaps.allowed_address_pair):
+                continue
+            if not any(aap.ip and aap.ip.get_ip_prefix() == vip
+                       for aap in aaps.allowed_address_pair):
+                continue
+            # AAP first, then project filter (only for real VIP-carriers);
+            # count rejects to surface a bad octavia_project_id.
+            if not self._vmi_in_octavia_project(cand):
+                rejected_by_project += 1
+                continue
+            # skip stale failover VRRP ports (dangling VM ref = no datapath).
+            if not self._vmi_backed_by_live_vm(cand):
+                continue
+            amphora_vmis.append(cand)
+        if not amphora_vmis and rejected_by_project:
+            # all VIP-carriers rejected by ownership filter = almost always a
+            # wrong octavia_project_id; would silently leave no datapath.
+            self.logger.warning(
+                '%d amphora candidate(s) for VIP %s rejected by '
+                'octavia_project_id=%s; FIP will have no datapath - check the '
+                'configured project uuid' %
+                (rejected_by_project, vip, self._octavia_project_id))
+        return amphora_vmis, vip
+    # end _octavia_vip_amphora_vmis
+
+    def _vmi_in_octavia_project(self, vmi):
+        # AAP-hijack guard: only Octavia-project ports may be amphora
+        # legs. Enforced when octavia_project_id set. Spec: gate ladder (gate
+        # 3).
+        if not self._octavia_project_id:
+            return True
+        parent = (getattr(vmi, 'parent_uuid', None) or
+                  '').replace('-', '').lower()
+        return parent == self._octavia_project_id
+    # end _vmi_in_octavia_project
+
+    def _vmi_backed_by_live_vm(self, vmi):
+        # True iff the VMI's VM still exists (excludes stale
+        # failover VRRP ports). Spec: gate ladder (gate 4).
+        for vm_ref in vmi.get_virtual_machine_refs() or []:
+            if vm_ref.get('to') == ['ERROR']:
+                continue
+            try:
+                self._vnc_lib.virtual_machine_read(id=vm_ref['uuid'])
+                return True
+            except NoIdError:
+                continue
+        return False
+    # end _vmi_backed_by_live_vm
+
+    def _fip_set_vip_port_ann(self, fip_obj, vip_port_id, vip_address=None):
+        # stamp durable VIP pointers the reconciler rebuilds from.
+        # Overwrites a stale prior-LB value. Idempotent.
+        kvps = fip_obj.get_annotations()
+        pairs = [p for p in (kvps.get_key_value_pair() if kvps else []) or []
+                 if p.get_key() not in (FIP_VIP_PORT_ANNOTATION,
+                                        FIP_VIP_ADDRESS_ANNOTATION)]
+        pairs.append(KeyValuePair(key=FIP_VIP_PORT_ANNOTATION,
+                                  value=str(vip_port_id)))
+        if vip_address:
+            pairs.append(KeyValuePair(key=FIP_VIP_ADDRESS_ANNOTATION,
+                                      value=str(vip_address)))
+        fip_obj.set_annotations(KeyValuePairs(key_value_pair=pairs))
+    # end _fip_set_vip_port_ann
+
+    def _fip_clear_vip_port_ann(self, fip_obj):
+        # drop VIP pointers when a FIP leaves Octavia (reuse).
+        # Idempotent.
+        kvps = fip_obj.get_annotations()
+        if not kvps:
+            return
+        pairs = [p for p in kvps.get_key_value_pair() or []
+                 if p.get_key() not in (FIP_VIP_PORT_ANNOTATION,
+                                        FIP_VIP_ADDRESS_ANNOTATION)]
+        fip_obj.set_annotations(KeyValuePairs(key_value_pair=pairs))
+    # end _fip_clear_vip_port_ann
+
     @catch_convert_exception
     def _floatingip_vnc_to_neutron(self, fip_obj, memo_req=None, oper=READ):
         fip_q_dict = {}
@@ -2608,23 +2799,37 @@ class DBInterface(object):
         port_obj = None
         port_refs = fip_obj.get_virtual_machine_interface_refs()
 
+        # VIP FIP refs are unordered; port_id must be the VIP
+        # port. Only the is_vip_fip branch is new; vanilla FIPs run the
+        # original loop byte-for-byte. Spec: Plugin lane / read view.
+        is_vip_fip = fip_obj.get_floating_ip_is_virtual_ip()
         for port_ref in port_refs or []:
             if memo_req:
                 try:
-                    port_obj = memo_req['ports'][port_ref['uuid']]
+                    cand_obj = memo_req['ports'][port_ref['uuid']]
                 except KeyError:
                     continue
             else:
                 try:
-                    port_obj = self._virtual_machine_interface_read(
+                    cand_obj = self._virtual_machine_interface_read(
                         port_id=port_ref['uuid'])
                 except NoIdError:
                     continue
 
-            # In case of floating ip on the Virtual-ip, svc-monitor will
-            # link floating ip to "right" interface of service VMs
-            # launched by ha-proxy service instance. Skip them
-            props = port_obj.get_virtual_machine_interface_properties()
+            if is_vip_fip:
+                # VIP port is the ONLY valid port_id; never project an amphora
+                # leg (foreign port), report DOWN instead.
+                owner = cand_obj.get_virtual_machine_interface_device_owner()
+                if owner == OCTAVIA_VIP_DEVICE_OWNER:
+                    port_id = port_ref['uuid']
+                    port_obj = cand_obj
+                    break
+                continue
+
+            # legacy virtual-ip FIP: svc-monitor links the FIP to the "right"
+            # ha-proxy SI interface; skip (port_obj retains it, as always).
+            port_obj = cand_obj
+            props = cand_obj.get_virtual_machine_interface_properties()
             if props:
                 interface_type = props.get_service_interface_type()
                 if interface_type == "right":
@@ -4931,9 +5136,16 @@ class DBInterface(object):
                         port_found = True
                         break
                     p = memo_req['ports'].get(ref['uuid'])
+                    if p is None:
+                        # ref'd VMI deleted mid-failover; routine
+                        # now that FIPs carry amphora refs
+                        continue
                     device_owner = \
                         p.get_virtual_machine_interface_device_owner()
-                    if device_owner == NEUTRON_LOADBALANCER_DEVICE_OWNER:
+                    # match the VIP port too (Octavia owner) - a
+                    # VIP FIP also refs amphora VMIs.
+                    if device_owner in (NEUTRON_LOADBALANCER_DEVICE_OWNER,
+                                        OCTAVIA_VIP_DEVICE_OWNER):
                         port_found = True
                         break
                 if not port_found:

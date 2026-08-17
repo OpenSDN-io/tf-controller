@@ -592,6 +592,10 @@ def timer_callback(monitor):
     if len(vmi_delete_list):
         monitor.vm_manager.cleanup_svc_vm_ports(vmi_delete_list)
 
+    # audit backstop for Octavia FIP failover (event hooks
+    # converge first). Spec: handle.
+    monitor.loadbalancer_agent.audit_octavia_fips()
+
     # check vrouter agent status
     monitor.vrouter_scheduler.vrouters_running()
 
@@ -705,6 +709,9 @@ def parse_args(args_str):
         'logging_conf': '',
         'logger_class': None,
         'check_service_interval': '60',
+        # Octavia service project; gates amphora legs (AAP-hijack
+        # guard). Spec: config.
+        'octavia_project_id': '',
         'nova_endpoint_type': 'internalURL',
         'rabbit_use_ssl': False,
         'kombu_ssl_version': '',

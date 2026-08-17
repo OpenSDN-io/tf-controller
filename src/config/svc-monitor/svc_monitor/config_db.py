@@ -583,6 +583,11 @@ class VirtualMachineInterfaceSM(DBBaseSM):
 
         self._manager.port_tuple_agent.update_vmi_port_tuples(self)
 
+        # new amphora AAP port; strip broke the ref-graph, match by
+        # VIP. Spec: handle.
+        if self.aaps:
+            self._manager.loadbalancer_agent.reconcile_amphora_vmi(self)
+
 # end VirtualMachineInterfaceSM
 
 
@@ -804,6 +809,10 @@ class FloatingIpSM(DBBaseSM):
     def __init__(self, uuid, obj_dict=None):
         self.uuid = uuid
         self.address = None
+        self.fixed_ip = None
+        self.is_virtual_ip = False
+        self.vip_port_id = None
+        self.vip_address = None
         self.virtual_machine_interfaces = set()
         self.virtual_ip = None
         self.update(obj_dict)
@@ -815,6 +824,17 @@ class FloatingIpSM(DBBaseSM):
         self.name = obj['fq_name'][-1]
         self.fq_name = obj['fq_name']
         self.address = obj['floating_ip_address']
+        # durable markers the failover reconciler rebuilds from
+        # (survive the cascade-strip). Spec: data model.
+        self.fixed_ip = obj.get('floating_ip_fixed_ip_address')
+        self.is_virtual_ip = obj.get('floating_ip_is_virtual_ip', False)
+        self.vip_port_id = None
+        self.vip_address = None
+        for kvp in (obj.get('annotations') or {}).get('key_value_pair') or []:
+            if kvp['key'] == 'vip_port_id':
+                self.vip_port_id = kvp['value']
+            elif kvp['key'] == 'vip_address':
+                self.vip_address = kvp['value']
         self.update_multiple_refs('virtual_machine_interface', obj)
     # end update
 
@@ -827,6 +847,11 @@ class FloatingIpSM(DBBaseSM):
 
     def evaluate(self):
         self._manager.netns_manager.add_fip_to_vip_vmi(self)
+
+        # cascade-strip arrives as a FIP update; re-wire now
+        # (deferred) instead of waiting for the audit. Spec: handle.
+        if self.is_virtual_ip:
+            self._manager.loadbalancer_agent.schedule_fip_reconcile(self)
 
 # end class FloatingIpSM
 
