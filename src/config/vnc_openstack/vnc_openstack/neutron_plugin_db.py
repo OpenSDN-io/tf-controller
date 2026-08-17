@@ -4171,6 +4171,13 @@ class DBInterface(object):
 
         all_net_objs = []
 
+        # collect phase
+        memo_req = {
+            _SUBNET_TO_NEUTRON_TAGS: self._load_kv_json(
+                _SUBNET_TO_NEUTRON_TAGS
+            ),
+        }
+
         proj_id = None
         if not context['is_admin']:
             proj_id = context['tenant']
@@ -4216,10 +4223,9 @@ class DBInterface(object):
                 for ipam_ref in ipam_refs:
                     subnet_vncs = ipam_ref['attr'].get_ipam_subnets()
                     for subnet_vnc in subnet_vncs:
-                        sn_info = self._subnet_vnc_to_neutron(subnet_vnc,
-                                                              net_obj,
-                                                              ipam_ref['to'],
-                                                              oper=LIST)
+                        sn_info = self._subnet_vnc_to_neutron(
+                            subnet_vnc, net_obj, ipam_ref['to'],
+                            oper=LIST, memo_req=memo_req)
                         if sn_info is None:
                             continue
                         sn_id = sn_info['id']
