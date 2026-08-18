@@ -4518,7 +4518,11 @@ class DBInterface(object):
             for p_id in self._validate_project_ids(context, filters) or []:
                 project_ipams = self._ipam_list_project(p_id)
                 all_ipams.append(project_ipams)
-        else:  # no filters
+        elif context and not context['is_admin']:
+            for p_id in self._validate_project_ids(context, filters) or []:
+                project_ipams = self._ipam_list_project(p_id)
+                all_ipams.append(project_ipams)
+        else:  # no filters, admin
             dom_projects = self._project_list_domain(None)
             for project in dom_projects:
                 proj_id = project['uuid']
@@ -4603,7 +4607,11 @@ class DBInterface(object):
             for p_id in self._validate_project_ids(context, filters) or []:
                 project_policys = self._policy_list_project(p_id)
                 all_policys.append(project_policys)
-        else:  # no filters
+        elif context and not context['is_admin']:
+            for p_id in self._validate_project_ids(context, filters) or []:
+                project_policys = self._policy_list_project(p_id)
+                all_policys.append(project_policys)
+        else:  # no filters, admin
             dom_projects = self._project_list_domain(None)
             for project in dom_projects:
                 proj_id = project['uuid']
@@ -5963,7 +5971,11 @@ class DBInterface(object):
             p_id = str(uuid.UUID(context['tenant']))
             project_rts = self._route_table_list_project(p_id)
             all_rts.append(project_rts)
-        else:  # no filters
+        elif context and not context['is_admin']:
+            for p_id in self._validate_project_ids(context, filters) or []:
+                project_rts = self._route_table_list_project(p_id)
+                all_rts.append(project_rts)
+        else:  # no filters, admin
             dom_projects = self._project_list_domain(None)
             for project in dom_projects:
                 proj_id = project['uuid']
@@ -6026,7 +6038,11 @@ class DBInterface(object):
             p_id = str(uuid.UUID(context['tenant']))
             project_sis = self._svc_instance_list_project(p_id)
             all_sis.append(project_sis)
-        else:  # no filters
+        elif context and not context['is_admin']:
+            for p_id in self._validate_project_ids(context, filters) or []:
+                project_sis = self._svc_instance_list_project(p_id)
+                all_sis.append(project_sis)
+        else:  # no filters, admin
             dom_projects = self._project_list_domain(None)
             for project in dom_projects:
                 proj_id = project['uuid']
