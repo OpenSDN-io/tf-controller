@@ -246,9 +246,16 @@ class SchemaTransformerDB(VncObjectDBClient):
 
         if (alloc_new):
             rtgt_num = self.current_rt_allocator.alloc(ri_fq_name)
-            self._cassandra_driver.insert(
-                ri_fq_name,
-                {'rtgt_num': str(rtgt_num)}, cf_name=self._RT_CF)
+            # A zookeeper index with no row in _RT_CF is unrecoverable: the
+            # only reader of the index is the lookup above, which starts from
+            # the row. Release it rather than leak it.
+            try:
+                self._cassandra_driver.insert(
+                    ri_fq_name,
+                    {'rtgt_num': str(rtgt_num)}, cf_name=self._RT_CF)
+            except Exception:
+                self.current_rt_allocator.delete(rtgt_num)
+                raise
 
         return rtgt_num
     # end alloc_route_target
@@ -257,10 +264,16 @@ class SchemaTransformerDB(VncObjectDBClient):
         if ri_fq_name is None or ri_fq_name == '':
             return
         rtgt = self.get_route_target(ri_fq_name)
-        self.delete(self._RT_CF, ri_fq_name)
 
+        # Release the zookeeper index before deleting the row, not after. A
+        # stale row whose index is gone self-corrects on the next allocation
+        # (read() returns None, which fails the fq_name comparison in
+        # alloc_route_target and forces a fresh alloc). A stale index whose row
+        # is gone has no reader and is held until the cluster is rebuilt.
         self.current_rt_allocator = self.get_zk_route_target_allocator(asn)
         self.current_rt_allocator.delete(rtgt)
+
+        self.delete(self._RT_CF, ri_fq_name)
     # end free_route_target
 
     def get_ri_from_route_target(self, rtgt_num, asn):
