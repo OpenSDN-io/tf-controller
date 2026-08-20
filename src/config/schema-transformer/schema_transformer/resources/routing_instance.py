@@ -249,6 +249,17 @@ class RoutingInstanceST(ResourceBaseST):
             self._logger.error("Parent VN not found for RI: " + self.name)
             return
 
+        # Record the target before the update below, which returns early on
+        # every path that changed the RI. Leaving these until after it meant
+        # introspect reported route_target=None for an RI that has one, and
+        # left VirtualNetworkST._route_target holding whatever it had cached -
+        # 0 for an RI whose allocation had previously failed, since
+        # ObjectDB.get_route_target returns 0 when the row is absent and
+        # get_route_target() never re-reads once the value is not None.
+        self.route_target = rt_key
+        if self.is_default:
+            vn.set_route_target(rt_key)
+
         try:
             if self.obj.parent_uuid != vn.obj.uuid:
                 # Stale object. Delete it.
@@ -324,10 +335,6 @@ class RoutingInstanceST(ResourceBaseST):
             self._logger.error(
                 "Error while updating routing instance: " + str(e))
             raise
-
-        self.route_target = rt_key
-        if self.is_default:
-            vn.set_route_target(rt_key)
 
         asn = ResourceBaseST.get_obj_type_map().get(
             'global_system_config').get_autonomous_system()
