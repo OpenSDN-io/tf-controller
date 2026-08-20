@@ -657,6 +657,12 @@ class VirtualNetworkST(ResourceBaseST):
                 service_ri.update_route_target_list(rt_add_export=rt_add,
                                                     rt_del=rt_del)
         for route in self.get_routes():
+            # _get_routing_instance_from_route resolves a service instance, so
+            # only a next hop that names one may be passed to it. The other two
+            # callers filter on next_hop_type already - route_table.py and
+            # routing_instance.py.
+            if route.next_hop_type == 'ip-address':
+                continue
             prefix = route.prefix
             nexthop = route.next_hop
             (left_ri, _) = self._get_routing_instance_from_route(nexthop)
