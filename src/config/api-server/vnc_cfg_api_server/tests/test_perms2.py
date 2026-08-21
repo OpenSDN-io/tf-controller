@@ -1319,6 +1319,36 @@ class TestPermissions(test_case.ApiServerTestCase):
             self.alice.vnc_lib.virtual_network_update(vn)
         # self.admin.vnc_lib.virtual_network_delete(fq_name = vn_fq_name)
 
+    def test_router_external_network_global_access(self):
+        # pre_dbe_create must set global_access for
+        # router_external=True the same way pre_dbe_update already does,
+        # so a VN created directly via vnc_api (not through the neutron
+        # plugin) is visible in the shared index too.
+        alice = self.alice
+        vn_name = 'alice-router-external-vn-%s' % self.id()
+        vn_fq_name = [self.domain_name, alice.project, vn_name]
+
+        vn = VirtualNetwork(vn_name, alice.project_obj)
+        vn.set_router_external(True)
+        alice.vnc_lib.virtual_network_create(vn)
+        vn = vnc_read_obj(self.admin.vnc_lib, 'virtual-network',
+            name=vn_fq_name)
+        self.assertEquals(vn.get_perms2().global_access, PERMS_RX)
+        self.assertEquals(vn.get_is_shared(), False)
+        self.admin.vnc_lib.virtual_network_delete(fq_name=vn_fq_name)
+
+        # is_shared still wins over router_external, same as pre_dbe_update
+        vn = VirtualNetwork(vn_name, alice.project_obj)
+        vn.set_router_external(True)
+        vn.set_is_shared(True)
+        alice.vnc_lib.virtual_network_create(vn)
+        vn = vnc_read_obj(self.admin.vnc_lib, 'virtual-network',
+            name=vn_fq_name)
+        self.assertEquals(vn.get_perms2().global_access, PERMS_RWX)
+        self.assertEquals(vn.get_is_shared(), True)
+        self.admin.vnc_lib.virtual_network_delete(fq_name=vn_fq_name)
+    # end test_router_external_network_global_access
+
     def test_doc_auth(self):
         alice = self.alice
 

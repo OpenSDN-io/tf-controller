@@ -448,11 +448,18 @@ class VirtualNetworkServer(ResourceMixin, VirtualNetwork):
             return (ok, response)
 
         is_shared = obj_dict.get('is_shared')
-        # neutron <-> vnc sharing
+        router_external = obj_dict.get('router_external')
+        # neutron <-> vnc sharing; same is_shared > router_external priority
+        # pre_dbe_update already uses, so a router_external=True VN created
+        # directly via vnc_api gets global_access populated too, instead of
+        # only being visible to the shared index after a subsequent update.
         if obj_dict['perms2'].get('global_access', 0) == PERMS_RWX:
             obj_dict['is_shared'] = True
         elif is_shared:
             obj_dict['perms2']['global_access'] = PERMS_RWX
+        elif router_external:
+            obj_dict['perms2']['global_access'] = PERMS_RX
+            obj_dict['is_shared'] = False
         else:
             obj_dict['is_shared'] = False
 
