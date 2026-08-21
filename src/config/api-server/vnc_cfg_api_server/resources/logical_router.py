@@ -23,6 +23,15 @@ from vnc_cfg_api_server.resources._resource_base import ResourceMixin
 
 
 class LogicalRouterServer(ResourceMixin, LogicalRouter):
+
+    @staticmethod
+    def _is_gateway_vn_ref(vn_ref):
+        attr = vn_ref.get('attr')
+        if not attr:
+            return True
+        return attr.get('logical_router_virtual_network_type') in (
+            None, 'ExternalGateway')
+
     @classmethod
     def is_port_in_use_by_vm(cls, obj_dict, db_conn):
         for vmi_ref in obj_dict.get('virtual_machine_interface_refs') or []:
@@ -50,7 +59,7 @@ class LogicalRouterServer(ResourceMixin, LogicalRouter):
             if vmi_result.get('virtual_network_refs'):
                 interface_vn_uuids.append(
                     vmi_result['virtual_network_refs'][0]['uuid'])
-            for vn_ref in vn_refs:
+            for vn_ref in filter(cls._is_gateway_vn_ref, vn_refs):
                 if vn_ref['uuid'] in interface_vn_uuids:
                     msg = ("Logical router interface and gateway cannot be in"
                            "VN(%s)" % vn_ref['uuid'])
@@ -392,6 +401,10 @@ class LogicalRouterServer(ResourceMixin, LogicalRouter):
     def post_dbe_update(cls, uuid, fq_name, obj_dict, db_conn,
                         prop_collection_updates=None, **kwargs):
 
+        ok, result = cls._sync_connected_virtual_network_refs(uuid, db_conn)
+        if not ok:
+            return ok, result
+
         ok, result = db_conn.dbe_read(
             'logical_router',
             obj_dict['uuid'],
@@ -472,6 +485,52 @@ class LogicalRouterServer(ResourceMixin, LogicalRouter):
                     'virtual-network',
                     vn_dict['uuid'],
                     json.loads(vn_int_dict))
+        return True, ''
+
+    @classmethod
+    def _sync_connected_virtual_network_refs(cls, lr_uuid, db_conn):
+        """Mirror LR interface membership as attributed LR-to-VN refs."""
+        ok, lr_dict = db_conn.dbe_read(
+            'logical_router', lr_uuid,
+            obj_fields=['logical_router_type',
+                        'virtual_machine_interface_refs',
+                        'virtual_network_refs'])
+        if not ok:
+            return ok, lr_dict
+
+        if cls.check_lr_type(lr_dict) != 'vxlan-routing':
+            return True, ''
+
+        desired = {}
+        for vmi_ref in lr_dict.get('virtual_machine_interface_refs') or []:
+            ok, vmi_dict = db_conn.dbe_read(
+                'virtual_machine_interface', vmi_ref['uuid'],
+                obj_fields=['virtual_network_refs'])
+            if not ok:
+                return ok, vmi_dict
+            for vn_ref in vmi_dict.get('virtual_network_refs') or []:
+                desired[vn_ref['uuid']] = vn_ref.get('to')
+
+        current = {}
+        for vn_ref in lr_dict.get('virtual_network_refs') or []:
+            if (vn_ref.get('attr', {}).get(
+                    'logical_router_virtual_network_type') ==
+                    'ConnectedVirtualNetwork'):
+                current[vn_ref['uuid']] = vn_ref.get('to')
+
+        attr = LogicalRouterVirtualNetworkType(
+            'ConnectedVirtualNetwork').__dict__
+        try:
+            for vn_uuid in sorted(set(desired) - set(current)):
+                cls.server.internal_request_ref_update(
+                    'logical-router', lr_uuid, 'ADD', 'virtual-network',
+                    vn_uuid, desired[vn_uuid], attr=attr)
+            for vn_uuid in sorted(set(current) - set(desired)):
+                cls.server.internal_request_ref_update(
+                    'logical-router', lr_uuid, 'DELETE', 'virtual-network',
+                    vn_uuid, current[vn_uuid])
+        except HttpError as e:
+            return False, (e.status_code, e.content)
         return True, ''
 
     @classmethod
