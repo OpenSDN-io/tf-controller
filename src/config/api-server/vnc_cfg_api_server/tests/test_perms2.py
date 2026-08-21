@@ -6,6 +6,7 @@ import sys
 import uuid
 import logging
 
+import mock
 from testtools.matchers import Equals
 from testtools import ExpectedException
 import json
@@ -395,6 +396,51 @@ class TestPermissions(test_case.ApiServerTestCase):
         except PermissionDenied as e:
             self.assertTrue(False, 'Error deleting VN ... test failed!')
     # end
+
+    def test_non_admin_list_batches_perms2_read(self):
+        # BUG-023: a non-admin list must resolve perms2 through the same
+        # batched object_read() the objects themselves come from, not one
+        # uuid_to_obj_perms2() Cassandra call per listed object.
+        alice = self.alice
+        vn_names = ['bug-023-vn-a-%s' % self.id(),
+                    'bug-023-vn-b-%s' % self.id()]
+        vn_uuids = []
+        for name in vn_names:
+            vn = VirtualNetwork(name, alice.project_obj)
+            alice.vnc_lib.virtual_network_create(vn)
+            vn_uuids.append(vn.get_uuid())
+
+        db_conn = self._api_server._db_conn
+        with mock.patch.object(
+                db_conn, 'uuid_to_obj_perms2',
+                wraps=db_conn.uuid_to_obj_perms2) as list_spy:
+            result = alice.vnc_lib.virtual_networks_list(
+                parent_id=alice.project_uuid)['virtual-networks']
+
+        received = set(item['fq_name'][-1] for item in result)
+        self.assertEquals(set(vn_names), received)
+        # http_resource_list() separately checks perms on parent_id itself
+        # via _get_common() -> check_perms_read(request, uuid) with no
+        # obj_dict, which always falls back to uuid_to_obj_perms2() -- one
+        # call, independent of how many children are listed, and out of
+        # BUG-023's scope (there is only one parent, nothing to batch it
+        # with). What must NOT happen is a fallback call per *listed* VN.
+        checked_uuids = set(c[0][0] for c in list_spy.call_args_list)
+        self.assertEqual(set(), checked_uuids & set(vn_uuids),
+            'listed VN(s) fell back to per-object uuid_to_obj_perms2(): %r'
+            % (checked_uuids & set(vn_uuids)))
+
+        # control: a single-object GET resolves perms2 via
+        # uuid_to_obj_perms2() unconditionally (check_perms_read() is called
+        # with obj_dict=None there) -- proves the spy above would have
+        # caught a real fallback, not just that auth is bypassed in tests.
+        with mock.patch.object(
+                db_conn, 'uuid_to_obj_perms2',
+                wraps=db_conn.uuid_to_obj_perms2) as read_spy:
+            alice.vnc_lib.virtual_network_read(id=vn_uuids[0])
+        self.assertTrue(read_spy.call_count > 0,
+            'expected uuid_to_obj_perms2() on single-object read')
+    # end test_non_admin_list_batches_perms2_read
 
     # delete api-access-list for alice and bob and disallow api access to their projects
     # then try to create VN in the project. This should fail
