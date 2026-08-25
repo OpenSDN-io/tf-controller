@@ -1629,10 +1629,9 @@ class DBInterface(object):
         sg_q_dict['created_at'] = sg_obj.get_id_perms().get_created()
         sg_q_dict['updated_at'] = sg_obj.get_id_perms().get_last_modified()
 
-        tags = sg_obj.get_tag_refs()
-        if tags:
-            sg_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
-                                 if 'neutron_tag' in t['to'][0]]
+        tags = sg_obj.get_tag_refs() or []
+        sg_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
+                             if 'neutron_tag' in t['to'][0]]
 
         if self._contrail_extensions_enabled:
             sg_q_dict.update(extra_dict)
@@ -2019,10 +2018,9 @@ class DBInterface(object):
                 extra_dict['policys'] = [np_ref['to']
                                          for np_ref in sorted_refs]
 
-        tags = net_obj.get_tag_refs()
-        if tags:
-            net_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
-                                  if 'neutron_tag' in t['to'][0]]
+        tags = net_obj.get_tag_refs() or []
+        net_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
+                              if 'neutron_tag' in t['to'][0]]
 
         rt_refs = net_obj.get_route_table_refs()
         if rt_refs:
@@ -2314,10 +2312,9 @@ class DBInterface(object):
                 net_fq_name = net_back_ref['to']
                 policy_q_dict['nets_using'].append(net_fq_name)
 
-        tags = policy_obj.get_tag_refs()
-        if tags:
-            policy_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
-                                     if 'neutron_tag' in t['to'][0]]
+        tags = policy_obj.get_tag_refs() or []
+        policy_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
+                                 if 'neutron_tag' in t['to'][0]]
 
         return policy_q_dict
     # end _policy_vnc_to_neutron
@@ -2384,10 +2381,9 @@ class DBInterface(object):
             rtr_q_dict['external_gateway_info'] = {'network_id': ext_net_uuid,
                                                    'enable_snat': True}
 
-        tags = rtr_obj.get_tag_refs()
-        if tags:
-            rtr_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
-                                  if 'neutron_tag' in t['to'][0]]
+        tags = rtr_obj.get_tag_refs() or []
+        rtr_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
+                              if 'neutron_tag' in t['to'][0]]
 
         if self._contrail_extensions_enabled:
             rtr_q_dict.update(extra_dict)
@@ -2890,10 +2886,9 @@ class DBInterface(object):
             fip_q_dict['description'] = \
                 fip_obj.get_id_perms().get_description()
 
-        tags = fip_obj.get_tag_refs()
-        if tags:
-            fip_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
-                                  if 'neutron_tag' in t['to'][0]]
+        tags = fip_obj.get_tag_refs() or []
+        fip_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
+                              if 'neutron_tag' in t['to'][0]]
         if not (fip_q_dict.get('port_id') and port_obj):
             return fip_q_dict
 
@@ -3601,10 +3596,9 @@ class DBInterface(object):
             port_q_dict['status'] = constants.PORT_STATUS_ACTIVE
         else:
             port_q_dict['status'] = self._port_get_interface_status(port_obj)
-        tags = port_obj.get_tag_refs()
-        if tags:
-            port_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
-                                   if 'neutron_tag' in t['to'][0]]
+        tags = port_obj.get_tag_refs() or []
+        port_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags
+                               if 'neutron_tag' in t['to'][0]]
         if self._contrail_extensions_enabled:
             port_q_dict.update(extra_dict)
         port_q_dict[
@@ -7443,9 +7437,8 @@ class DBInterface(object):
             'name': trunk_obj.display_name
         }
 
-        tags = trunk_obj.get_tag_refs()
-        if tags:
-            trunk_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags]
+        tags = trunk_obj.get_tag_refs() or []
+        trunk_q_dict['tags'] = [t['to'][0].split('=')[1] for t in tags]
 
         return filter_fields(trunk_q_dict, fields)
 
