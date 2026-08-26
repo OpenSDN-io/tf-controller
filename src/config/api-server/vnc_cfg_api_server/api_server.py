@@ -4093,7 +4093,10 @@ class VncApiServer(object):
         if is_admin:
             field_names = req_fields
         else:
-            field_names = [u'id_perms'] + (req_fields or [])
+            # perms2 is fetched here too so check_perms_read() finds it
+            # already on obj_result and skips the uncached per-object
+            # uuid_to_obj_perms2() fallback (BUG-023).
+            field_names = [u'id_perms', u'perms2'] + (req_fields or [])
 
         if is_count and is_admin:
             ret_result = 0
