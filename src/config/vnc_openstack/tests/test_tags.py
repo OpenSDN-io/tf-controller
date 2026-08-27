@@ -4,6 +4,7 @@ import json
 import time
 from unittest import skip
 
+from flexmock import flexmock
 import gevent
 from tests import test_case
 from vnc_api.exceptions import RefsExistError
@@ -2159,6 +2160,23 @@ class TestSubnetNeutronTags(NeutronTagsTestCase):
         # cleanup
         self.api.virtual_network_delete(id=vn.uuid)
         self.api.tag_delete(fq_name=['neutron_tag=orange'])
+
+    def test_subnets_list_memoizes_the_tag_kv_blob(self):
+        # _load_kv_json must run once per request, not once per subnet.
+        real_load_kv_json = self.neutron_db_obj._load_kv_json
+        calls = []
+
+        def _spy(key):
+            calls.append(key)
+            return real_load_kv_json(key)
+
+        flexmock(self.neutron_db_obj).should_receive(
+            '_load_kv_json').replace_with(_spy)
+
+        result = self.list_resource('subnet', proj_uuid=self.project.uuid)
+
+        self.assertEqual(4, len(result))
+        self.assertEqual([_SUBNET_TO_NEUTRON_TAGS], calls)
 
     @skip('Long-lasting performance test. If necessary, turn it on manually.')
     def test_query_subnet_by_one_tags_performance(self):
