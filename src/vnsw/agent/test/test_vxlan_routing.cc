@@ -153,16 +153,21 @@ protected:
                         const Ip4Address &addr,
                         uint8_t plen,
                         bool participate) {
+        SCOPED_TRACE(testing::Message() << "ValidateBridge " << bridge_vrf
+                     << " " << addr.to_string() << "/" << int(plen)
+                     << " participate=" << participate);
         InetUnicastRouteEntry *rt =
             RouteGet(bridge_vrf, addr, plen);
         if (participate) {
             InetUnicastRouteEntry *default_rt =
             RouteGet(bridge_vrf, Ip4Address::from_string("0.0.0.0"), 0);
             EXPECT_TRUE(default_rt == nullptr);
+            ASSERT_TRUE(rt != nullptr);
             EXPECT_TRUE(rt->GetActivePath()->peer()->GetType() ==
                         Peer::EVPN_ROUTING_PEER);
             const VrfNH *nh = dynamic_cast<const VrfNH *>
                 (rt->GetActiveNextHop());
+            ASSERT_TRUE(nh != nullptr);
             EXPECT_TRUE(nh->GetVrf()->GetName() == routing_vrf);
         } else {
             if (rt == nullptr)
@@ -184,10 +189,12 @@ protected:
         InetUnicastRouteEntry *rt =
             RouteGet(bridge_vrf, addr, plen);
         if (participate) {
+            ASSERT_TRUE(rt != nullptr);
             EXPECT_TRUE(rt->GetActivePath()->peer()->GetType() ==
                         Peer::BGP_PEER);
             const VrfNH *nh = dynamic_cast<const VrfNH *>
                 (rt->GetActiveNextHop());
+            ASSERT_TRUE(nh != nullptr);
             EXPECT_TRUE(nh->GetVrf()->GetName() == routing_vrf);
         } else {
             if (rt == nullptr)
@@ -207,6 +214,9 @@ protected:
                          const std::string &dest_name,
                          bool present,
                          const std::string &origin_vn = "") {
+        SCOPED_TRACE(testing::Message() << "ValidateRouting " << routing_vrf
+                     << " " << addr.to_string() << "/" << int(plen)
+                     << " present=" << present);
         InetUnicastRouteEntry *rt =
             RouteGet(routing_vrf, addr, plen);
         if (present) {
@@ -4985,6 +4995,158 @@ TEST_F(VxlanRoutingTest, ExternalRouteInRoutingVrf) {
     EXPECT_TRUE(VrfGet("vrf2") == nullptr);
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
             IsEmpty());
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+            IsEmpty());
+    client->WaitForIdle();
+}
+
+TEST_F(VxlanRoutingTest, BridgeVnDeletedWhileAttachedToLr) {
+    SetupEnvironment();
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    AddLrBridgeVrf("vn2", 1);
+    client->WaitForIdle();
+
+    WAIT_FOR(1000, 1000, (RouteGet("l3evpn_1",
+             Ip4Address::from_string("1.1.1.10"), 32) != NULL));
+    WAIT_FOR(1000, 1000, (RouteGet("l3evpn_1",
+             Ip4Address::from_string("1.1.1.11"), 32) != NULL));
+    WAIT_FOR(1000, 1000, (RouteGet("l3evpn_1",
+             Ip4Address::from_string("2.2.2.20"), 32) != NULL));
+    WAIT_FOR(1000, 1000, (RouteGet("vrf1",
+             Ip4Address::from_string("2.2.2.0"), 24) != NULL));
+    WAIT_FOR(1000, 1000, (RouteGet("vrf2",
+             Ip4Address::from_string("1.1.1.0"), 24) != NULL));
+
+    ValidateRouting("l3evpn_1", Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet10", true, "vn1");
+    ValidateRouting("l3evpn_1", Ip4Address::from_string("1.1.1.11"), 32,
+                    "vnet11", true, "vn1");
+    ValidateRouting("l3evpn_1", Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet20", true, "vn2");
+    ValidateBridge("vrf1", "l3evpn_1",
+                    Ip4Address::from_string("2.2.2.0"), 24, true);
+    ValidateBridge("vrf2", "l3evpn_1",
+                    Ip4Address::from_string("1.1.1.0"), 24, true);
+
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    client->WaitForIdle(5);
+
+    WAIT_FOR(1000, 1000, (VrfGet("vrf1") == NULL));
+    WAIT_FOR(1000, 1000, (RouteGet("l3evpn_1",
+             Ip4Address::from_string("1.1.1.10"), 32) == NULL));
+    WAIT_FOR(1000, 1000, (RouteGet("l3evpn_1",
+             Ip4Address::from_string("1.1.1.11"), 32) == NULL));
+    WAIT_FOR(1000, 1000, (RouteGet("vrf2",
+             Ip4Address::from_string("1.1.1.0"), 24) == NULL));
+
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    ValidateRouting("l3evpn_1", Ip4Address::from_string("1.1.1.10"), 32,
+                    "vnet10", false);
+    ValidateRouting("l3evpn_1", Ip4Address::from_string("1.1.1.11"), 32,
+                    "vnet11", false);
+
+    EXPECT_TRUE(VrfGet("vrf2") != nullptr);
+    ValidateRouting("l3evpn_1", Ip4Address::from_string("2.2.2.20"), 32,
+                    "vnet20", true, "vn2");
+    ValidateBridge("vrf2", "l3evpn_1",
+                    Ip4Address::from_string("1.1.1.0"), 24, false);
+
+    DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                "instance_ip_1", 1);
+    DelLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                "instance_ip_2", 2);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
+    DelIPAM("vn2");
+    DelLrBridgeVrf("vn1", 1);
+    DelLrBridgeVrf("vn2", 1);
+    DelLrRoutingVrf(1);
+    DeleteBgpPeer(bgp_peer_);
+    DelNode("project", "admin");
+    client->WaitForIdle(5);
+
+    WAIT_FOR(1000, 1000, (VrfGet("vrf2") == NULL));
+    WAIT_FOR(1000, 1000, (VrfGet("l3evpn_1") == NULL));
+    WAIT_FOR(1000, 1000, (agent_->oper_db()->vxlan_routing_manager()->
+             vrf_mapper().IsEmpty()));
+
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(VrfGet("l3evpn_1") == nullptr);
+    EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
+            IsEmpty());
+    client->WaitForIdle();
+}
+
+TEST_F(VxlanRoutingTest, BridgeVnDeletedBeforeLrVmiPort) {
+    SetupEnvironment();
+    AddLrRoutingVrf(1);
+    AddLrBridgeVrf("vn1", 1);
+    client->WaitForIdle();
+
+    const char *routing_vrf_name = "l3evpn_1";
+    VrfEntry *routing_vrf = VrfGet(routing_vrf_name);
+    EXPECT_TRUE(routing_vrf != nullptr);
+    if (routing_vrf == nullptr) {
+        return;
+    }
+    EXPECT_TRUE(routing_vrf->vxlan_id() != VxLanTable::kInvalidvxlan_id);
+
+    const uint32_t kRemoteRouteCount = 512;
+    const Ip4Address base_prefix = Ip4Address::from_string("30.0.0.0");
+    VnListType vn_list;
+    vn_list.insert("vn3");
+
+    for (uint32_t i = 0; i < kRemoteRouteCount; i++) {
+        Ip4Address prefix_addr(base_prefix.to_ulong() + (i << 8));
+        autogen::EnetItemType item;
+        item.entry.nlri.af = BgpAf::L2Vpn;
+        item.entry.nlri.safi = BgpAf::Enet;
+        item.entry.nlri.address = prefix_addr.to_string() + "/24";
+        item.entry.nlri.ethernet_tag = 0;
+        autogen::EnetNextHopType nh, nh2;
+        nh.af = Address::INET;
+        nh.address = "3.3.3.3";
+        nh.label = routing_vrf->vxlan_id();
+        nh.tunnel_encapsulation_list.tunnel_encapsulation.push_back("vxlan");
+        item.entry.next_hops.next_hop.push_back(nh);
+        nh2.af = Address::INET;
+        nh2.address = "2.2.2.2";
+        nh2.label = routing_vrf->vxlan_id();
+        nh2.tunnel_encapsulation_list.tunnel_encapsulation.push_back("vxlan");
+        item.entry.next_hops.next_hop.push_back(nh2);
+        item.entry.med = 0;
+        item.entry.virtual_network = "vn3";
+
+        bgp_peer_->GetAgentXmppChannel()->AddEvpnEcmpRoute(
+            routing_vrf_name, MacAddress::FromString("00:00:00:00:00:00"),
+            prefix_addr, 24, &item, vn_list);
+    }
+    client->WaitForIdle();
+
+    const Ip4Address last_prefix(base_prefix.to_ulong() +
+            ((kRemoteRouteCount - 1) << 8));
+    EXPECT_TRUE(RouteGet(routing_vrf_name, base_prefix, 24) != nullptr);
+    EXPECT_TRUE(RouteGet(routing_vrf_name, last_prefix, 24) != nullptr);
+    EXPECT_TRUE(RouteGet("vrf1", base_prefix, 24) != nullptr);
+    EXPECT_TRUE(RouteGet("vrf1", last_prefix, 24) != nullptr);
+
+    DelIPAM("vn1");
+    DelIPAM("vn2");
+    DeleteVmportEnv(input1, INPUT_SIZE(input1), true);
+    DeleteVmportEnv(input2, INPUT_SIZE(input2), true);
+    DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
+                "instance_ip_1", 1);
+    DelLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
+                "instance_ip_2", 2);
+    DelLrBridgeVrf("vn1", 1);
+    DelLrRoutingVrf(1);
+    DeleteBgpPeer(bgp_peer_);
+    DelNode("project", "admin");
+    client->WaitForIdle(5);
+
+    EXPECT_TRUE(VrfGet("vrf1") == nullptr);
+    EXPECT_TRUE(VrfGet("vrf2") == nullptr);
+    EXPECT_TRUE(VrfGet(routing_vrf_name) == nullptr);
     EXPECT_TRUE(agent_->oper_db()->vxlan_routing_manager()->vrf_mapper().
             IsEmpty());
     client->WaitForIdle();

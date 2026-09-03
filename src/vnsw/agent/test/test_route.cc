@@ -3122,7 +3122,7 @@ TEST_F(RouteTest, si_evpn_type5_route_add_local) {
             "instance_ip_1", 1);
     DelLrVmiPort("lr-vmi-vn2", 92, "2.2.2.99", "vrf2", "vn2",
             "instance_ip_2", 2);
-    DeleteVmportEnv(input1, 2, true);
+    DeleteVmportEnv(input1, 1, true);
     DeleteVmportEnv(input2, 1, true);
     DelIPAM("vn1");
     DelIPAM("vn2");
@@ -3340,7 +3340,7 @@ TEST_F(RouteTest, evpn_ecmp_type5_add_remote_route) {
     client->WaitForIdle();
     DelIPAM("vn1");
     DelNode("project", "admin");
-    DeleteVmportEnv(input1, 2, true);
+    DeleteVmportEnv(input1, 1, true);
     DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
             "instance_ip_1", 1);
     DelLrBridgeVrf("vn1", 1);
@@ -3447,7 +3447,7 @@ TEST_F(RouteTest, evpn_ecmp_type5_add_remote_route24) {
     client->WaitForIdle();
     DelIPAM("vn1");
     DelNode("project", "admin");
-    DeleteVmportEnv(input1, 2, true);
+    DeleteVmportEnv(input1, 1, true);
     DelLrVmiPort("lr-vmi-vn1", 91, "1.1.1.99", "vrf1", "vn1",
             "instance_ip_1", 1);
     DelLrBridgeVrf("vn1", 1);

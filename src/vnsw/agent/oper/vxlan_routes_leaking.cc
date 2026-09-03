@@ -451,6 +451,9 @@ bool VxlanRoutingManager::RemoveRoutesFromRoutingToBridgeVrf
     }
     InetUnicastAgentRouteTable *inet_table =
         bridge_vrf->GetInetUnicastRouteTable(evpn_rt->prefix_address());
+    if (inet_table == NULL) {
+        return true;
+    }
     InetUnicastRouteEntry rt_key(inet_table->vrf_entry(),
        evpn_rt->prefix_address(), evpn_rt->prefix_length(), false);
     InetUnicastRouteEntry *inet_rt = inet_table->FindRouteUsingKey(rt_key);
