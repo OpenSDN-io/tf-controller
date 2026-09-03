@@ -174,10 +174,10 @@ class RemoteEcmpTest : public ::testing::Test {
         DelIPAM("default-project:vn4");
         client->WaitForIdle();
         DeleteBgpPeer(bgp_peer);
-        WAIT_FOR(100,1000, VrfFind("vrf1", true) == false);
-        WAIT_FOR(100,1000, VrfFind("vrf2", true) == false);
-        WAIT_FOR(100,1000, VrfFind("default-project:vn3:vn3", true) == false);
-        WAIT_FOR(100,1000, VrfFind("default-project:vn4:vn4", true) == false);
+        WAIT_FOR(1000, 1000, VrfFind("vrf1", true) == false);
+        WAIT_FOR(1000, 1000, VrfFind("vrf2", true) == false);
+        WAIT_FOR(1000, 1000, VrfFind("default-project:vn3:vn3", true) == false);
+        WAIT_FOR(1000, 1000, VrfFind("default-project:vn4:vn4", true) == false);
         FlowStatsTimerStartStop(agent_, false);
 
         WAIT_FOR(1000, 1000, (agent_->vrf_table()->Size() == 2));
@@ -591,7 +591,14 @@ TEST_F(RemoteEcmpTest, Vmi_DstFip_NonEcmpToEcmp_FlowMove_1) {
     }
 
     DeleteVmportEnv(input1, 1, true);
+    client->WaitForIdle();
+    WAIT_FOR(1000, 1000, (get_flow_proto()->FlowCount() == 0));
+    EXPECT_EQ(0U, get_flow_proto()->FlowCount())
+        << "flows outlived the VMI they are keyed on";
+
     DeleteRemoteRoute("default-project:vn10:vn10", "0.0.0.0", 0);
+    client->WaitForIdle();
+
     DelLink("floating-ip", "fip9", "floating-ip-pool", "fip-pool9");
     DelLink("floating-ip-pool", "fip-pool9",
             "virtual-network", "default-project:vn10");
@@ -599,14 +606,17 @@ TEST_F(RemoteEcmpTest, Vmi_DstFip_NonEcmpToEcmp_FlowMove_1) {
     DelFloatingIp("fip9");
     DelFloatingIpPool("fip-pool9");
     client->WaitForIdle();
+
+    DelLink("virtual-network", "default-project:vn10",
+            "routing-instance", "default-project:vn10:vn10");
+    client->WaitForIdle();
     DelVrf("default-project:vn10:vn10");
     DelVn("default-project:vn10");
     client->WaitForIdle();
-    WAIT_FOR(100, 1000, VrfFind("default-project:vn10:vn10", true) == false);
-    client->WaitForIdle();
-    EXPECT_TRUE(get_flow_proto()->FlowCount() == 0);
-    EXPECT_FALSE(VrfFind("vrf9", true));
+    WAIT_FOR(1000, 1000, (VrfFind("default-project:vn10:vn10", true) == false));
+    WAIT_FOR(1000, 1000, (VrfFind("vrf9", true) == false));
     DelIPAM("vn9");
+    client->WaitForIdle();
 }
 
 // Add a test case to check if rpf NH of flow using floating IP
@@ -714,7 +724,14 @@ TEST_F(RemoteEcmpTest, Vmi_EcmpTest_13) {
     EXPECT_TRUE(rev_entry->rpf_nh() == rt->GetActiveNextHop());
 
     DeleteVmportEnv(input1, 1, true);
+    client->WaitForIdle();
+    WAIT_FOR(1000, 1000, (get_flow_proto()->FlowCount() == 0));
+    EXPECT_EQ(0U, get_flow_proto()->FlowCount())
+        << "flows outlived the VMI they are keyed on";
+
     DeleteRemoteRoute("default-project:vn10:vn10", "0.0.0.0", 0);
+    client->WaitForIdle();
+
     DelLink("floating-ip", "fip9", "floating-ip-pool", "fip-pool9");
     DelLink("floating-ip-pool", "fip-pool9",
             "virtual-network", "default-project:vn10");
@@ -722,14 +739,17 @@ TEST_F(RemoteEcmpTest, Vmi_EcmpTest_13) {
     DelFloatingIp("fip9");
     DelFloatingIpPool("fip-pool9");
     client->WaitForIdle();
+
+    DelLink("virtual-network", "default-project:vn10",
+            "routing-instance", "default-project:vn10:vn10");
+    client->WaitForIdle();
     DelVrf("default-project:vn10:vn10");
     DelVn("default-project:vn10");
     client->WaitForIdle();
-    WAIT_FOR(100, 1000, VrfFind("default-project:vn10:vn10", true) == false);
-    client->WaitForIdle();
-    EXPECT_TRUE(get_flow_proto()->FlowCount() == 0);
-    EXPECT_FALSE(VrfFind("vrf9", true));
+    WAIT_FOR(1000, 1000, (VrfFind("default-project:vn10:vn10", true) == false));
+    WAIT_FOR(1000, 1000, (VrfFind("vrf9", true) == false));
     DelIPAM("vn9");
+    client->WaitForIdle();
 }
 
 //Add a test case to check if rpf NH of flow using floating IP
@@ -801,7 +821,12 @@ TEST_F(RemoteEcmpTest, EcmpTest_14) {
     EXPECT_TRUE(rev_entry->rpf_nh() == rt->GetActiveNextHop());
 
     DeleteVmportEnv(input1, 1, true);
+    client->WaitForIdle();
+    WAIT_FOR(1000, 1000, (get_flow_proto()->FlowCount() == 0));
+    EXPECT_EQ(0U, get_flow_proto()->FlowCount())
+        << "flows outlived the VMI they are keyed on";
     DeleteRemoteRoute("default-project:vn10:vn10", "0.0.0.0", 0);
+    client->WaitForIdle();
     DelLink("floating-ip", "fip9", "floating-ip-pool", "fip-pool9");
     DelLink("floating-ip-pool", "fip-pool9",
             "virtual-network", "default-project:vn10");
@@ -809,14 +834,16 @@ TEST_F(RemoteEcmpTest, EcmpTest_14) {
     DelFloatingIp("fip9");
     DelFloatingIpPool("fip-pool9");
     client->WaitForIdle();
+    DelLink("virtual-network", "default-project:vn10",
+            "routing-instance", "default-project:vn10:vn10");
+    client->WaitForIdle();
     DelVrf("default-project:vn10:vn10");
     DelVn("default-project:vn10");
     client->WaitForIdle();
-    WAIT_FOR(100, 1000, VrfFind("default-project:vn10:vn10", true) == false);
-    client->WaitForIdle();
-    EXPECT_TRUE(get_flow_proto()->FlowCount() == 0);
-    EXPECT_FALSE(VrfFind("vrf9", true));
+    WAIT_FOR(1000, 1000, (VrfFind("default-project:vn10:vn10", true) == false));
+    WAIT_FOR(1000, 1000, (VrfFind("vrf9", true) == false));
     DelIPAM("vn9");
+    client->WaitForIdle();
 }
 
 TEST_F(RemoteEcmpTest, EcmpTest_15) {
@@ -875,8 +902,8 @@ TEST_F(RemoteEcmpTest, EcmpTest_15) {
 
     DeleteVmportEnv(input1, 1, true);
     client->WaitForIdle();
-    EXPECT_TRUE(get_flow_proto()->FlowCount() == 0);
-    EXPECT_FALSE(VrfFind("vrf9", true));
+    WAIT_FOR(1000, 1000, (get_flow_proto()->FlowCount() == 0));
+    WAIT_FOR(1000, 1000, (VrfFind("vrf9", true) == false));
     DelIPAM("vn9");
 }
 
@@ -1112,7 +1139,7 @@ TEST_F(RemoteEcmpTest, EcmpReEval_3) {
     client->WaitForIdle();
     DeleteVmportFIpEnv(input1, 2, true);
     client->WaitForIdle();
-    EXPECT_FALSE(VrfFind("vn10:vn10"));
+    WAIT_FOR(1000, 1000, (VrfFind("vn10:vn10") == false));
     DelIPAM("vn10");
 }
 

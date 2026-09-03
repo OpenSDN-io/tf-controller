@@ -386,7 +386,11 @@ public:
     virtual bool Validate();
     virtual const std::string ToString();
     virtual uint32_t wait_count() const;
+    void SuggestNhId();
+    FlowEntry *FindFlowAnyNh(uint16_t *found_nh);
 private:
+    uint32_t attempt_;
+    bool nh_auto_;
     uint16_t nh_id_;
     std::string sip_;
     std::string dip_;

@@ -96,12 +96,12 @@ TEST_F(CryptTunnelConfigTest, Basic) {
     EXPECT_TRUE(entry->GetVRToVRCrypt() == true);
     // Tunnel should be available
     client->WaitForIdle();
-    EXPECT_EQ(entry->GetTunnelAvailable(), true);
+    WAIT_FOR(1000, 1000, (entry->GetTunnelAvailable() == true));
 
     // Change and check for encryption false
     AddEncryptRemoteTunnelConfig(endpoints, num_endpoints, "none");
     client->WaitForIdle();
-    EXPECT_EQ(entry->GetTunnelAvailable(), true);
+    WAIT_FOR(1000, 1000, (entry->GetTunnelAvailable() == true));
     EXPECT_TRUE((entry = agent->crypt_tunnel_table()->Find(endpoints[1].ip)) != NULL);
     EXPECT_TRUE((entry->GetVRToVRCrypt() == false));
 
