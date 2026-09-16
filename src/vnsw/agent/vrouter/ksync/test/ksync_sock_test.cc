@@ -157,7 +157,7 @@ public:
         return tag_ < static_cast<const VlanKSyncEntry &>(rhs).tag_;
     }
     virtual string ToString() const { return "VlanKSync"; }
-    virtual KSyncEntry *UnresolvedReference() { return NULL; }
+    virtual KSyncEntry *UnresolvedReference() { return nullptr; }
     virtual bool Sync(DBEntry *e) { return true; }
     // vr_interface_req is a wide sandesh struct (100+ fields incl. lists): its
     // binary encoding does not fit the base-class default MsgLen() of
@@ -178,7 +178,7 @@ public:
     }
     virtual int DeleteMsg(char *buf, int len) {
         del_count_++;
-        return EncodeIf(tag_, sandesh_op::DEL, buf, len, NULL);
+        return EncodeIf(tag_, sandesh_op::DEL, buf, len, nullptr);
     }
     KSyncDBObject *GetObject() const;
     uint16_t GetTag() const { return tag_; }
@@ -211,9 +211,9 @@ public:
         return static_cast<KSyncEntry *>(
             new VlanKSyncEntry(static_cast<const Vlan *>(e)));
     }
-    static void Init(VlanTable *t) { assert(singleton_ == NULL);
+    static void Init(VlanTable *t) { assert(singleton_ == nullptr);
                                      singleton_ = new VlanKSyncObject(t); }
-    static void Shutdown() { delete singleton_; singleton_ = NULL; last_ = NULL; }
+    static void Shutdown() { delete singleton_; singleton_ = nullptr; last_ = nullptr; }
     static VlanKSyncObject *Get() { return singleton_; }
     static VlanKSyncEntry *last() { return last_; }
 private:
@@ -241,7 +241,7 @@ public:
         return tag_ < static_cast<const RawKSyncEntry &>(rhs).tag_;
     }
     virtual string ToString() const { return "RawKSync"; }
-    virtual KSyncEntry *UnresolvedReference() { return NULL; }
+    virtual KSyncEntry *UnresolvedReference() { return nullptr; }
     virtual bool Sync() { return true; }
     // vr_interface_req is a wide sandesh struct (100+ fields incl. lists): its
     // binary encoding does not fit the base-class default MsgLen() of
@@ -254,15 +254,15 @@ public:
     virtual int MsgLen() { return KSYNC_DEFAULT_MSG_SIZE; }
     virtual int AddMsg(char *buf, int len) {
         if (no_send_) return 0;     // exercise the "msg_len==0" no-send branch
-        return EncodeIf(tag_, sandesh_op::ADD, buf, len, NULL);
+        return EncodeIf(tag_, sandesh_op::ADD, buf, len, nullptr);
     }
     virtual int ChangeMsg(char *buf, int len) {
         if (no_send_) return 0;
-        return EncodeIf(tag_, sandesh_op::ADD, buf, len, NULL);
+        return EncodeIf(tag_, sandesh_op::ADD, buf, len, nullptr);
     }
     virtual int DeleteMsg(char *buf, int len) {
         if (no_send_) return 0;
-        return EncodeIf(tag_, sandesh_op::DEL, buf, len, NULL);
+        return EncodeIf(tag_, sandesh_op::DEL, buf, len, nullptr);
     }
     KSyncObject *GetObject() const;
     uint16_t GetTag() const { return tag_; }
@@ -281,8 +281,8 @@ public:
         return static_cast<KSyncEntry *>(
             new RawKSyncEntry(static_cast<const RawKSyncEntry *>(entry)));
     }
-    static void Init() { assert(singleton_ == NULL); singleton_ = new RawKSyncObject(); }
-    static void Shutdown() { delete singleton_; singleton_ = NULL; }
+    static void Init() { assert(singleton_ == nullptr); singleton_ = new RawKSyncObject(); }
+    static void Shutdown() { delete singleton_; singleton_ = nullptr; }
     static RawKSyncObject *Get() { return singleton_; }
 private:
     static RawKSyncObject *singleton_;
@@ -309,7 +309,7 @@ static void EnqueueVlan(VlanTable *t, uint16_t tag, DBRequest::DBOperation op) {
     DBRequest req;
     req.oper = op;
     req.key.reset(new Vlan::VlanKey(tag));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     t->Enqueue(&req);
 }
 
@@ -343,7 +343,7 @@ TEST_F(SockTest, RoundTripAddDelete) {
     ASSERT_TRUE(WaitFor(2000, [] { return MockHasIf(10); }))
         << "interface add never reached the mock vrouter";
     EXPECT_EQ(VlanKSyncEntry::AddCount(), 1);
-    ASSERT_TRUE(VlanKSyncObject::last() != NULL);
+    ASSERT_TRUE(VlanKSyncObject::last() != nullptr);
     ASSERT_TRUE(WaitFor(2000, [] {
         return VlanKSyncObject::last()->GetState() == KSyncEntry::IN_SYNC;
     })) << "entry stuck in SYNC_WAIT (vr_response not processed)";
@@ -398,7 +398,7 @@ TEST_F(SockTest, RawNetlinkEntryRoundTrip) {
     RawKSyncObject *obj = RawKSyncObject::Get();
     RawKSyncEntry key(40);
     KSyncEntry *e = obj->Create(&key);
-    ASSERT_TRUE(e != NULL);
+    ASSERT_TRUE(e != nullptr);
     ASSERT_TRUE(WaitFor(2000, [] { return MockHasIf(40); }));
     EXPECT_TRUE(WaitFor(2000, [e] { return e->GetState() == KSyncEntry::IN_SYNC; }));
 
@@ -416,7 +416,7 @@ TEST_F(SockTest, SyncNoSend) {
 
     RawKSyncEntry key(50);
     KSyncEntry *e = obj->Create(&key);
-    ASSERT_TRUE(e != NULL);
+    ASSERT_TRUE(e != nullptr);
     task_util::WaitForIdle();
     EXPECT_EQ(e->GetState(), KSyncEntry::IN_SYNC);   // synchronous success
     EXPECT_FALSE(MockHasIf(50));                      // nothing was sent
@@ -428,7 +428,7 @@ TEST_F(SockTest, SyncNoSend) {
 }
 
 // ---------------------------------------------------------------------------
-static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return NULL; }
+static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return nullptr; }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
@@ -447,7 +447,7 @@ int main(int argc, char **argv) {
     DB::RegisterFactory("db.test.vlan.0", &VlanTable::CreateTable);
 
     pthread_t asio_thread;
-    assert(pthread_create(&asio_thread, NULL, &AsioRun, &evm) == 0);
+    assert(pthread_create(&asio_thread, nullptr, &AsioRun, &evm) == 0);
 
     int ret = RUN_ALL_TESTS();
 
@@ -455,10 +455,10 @@ int main(int argc, char **argv) {
     KSyncObjectManager::Shutdown();
     for (int i = 0; i < KSyncSock::kRxWorkQueueCount; i++) {
         delete KSyncSock::GetAgentSandeshContext(i);
-        KSyncSock::SetAgentSandeshContext(NULL, i);
+        KSyncSock::SetAgentSandeshContext(nullptr, i);
     }
     KSyncSockTypeMap::Shutdown();
     evm.Shutdown();
-    assert(pthread_join(asio_thread, NULL) == 0);
+    assert(pthread_join(asio_thread, nullptr) == 0);
     return ret;
 }

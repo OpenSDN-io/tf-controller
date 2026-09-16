@@ -93,7 +93,7 @@ public:
 class LocalVrouter {
 public:
     explicit LocalVrouter(io_context &io)
-        : io_(io), acceptor_(NULL), socket_(NULL), stop_(false) {}
+        : io_(io), acceptor_(nullptr), socket_(nullptr), stop_(false) {}
 
     void Bind() {
         acceptor_ = new tcp::acceptor(io_, tcp::endpoint(tcp::v4(), 0));
@@ -101,9 +101,9 @@ public:
         server_port = acceptor_->local_endpoint(e).port();
         assert(!e);
     }
-    void Start() { assert(pthread_create(&tid_, NULL, &Run, this) == 0); }
+    void Start() { assert(pthread_create(&tid_, nullptr, &Run, this) == 0); }
     void Stop()  { stop_ = true; }
-    void Join()  { pthread_join(tid_, NULL); }
+    void Join()  { pthread_join(tid_, nullptr); }
 
 private:
     bool ReadN(char *buf, size_t n) {
@@ -143,10 +143,10 @@ private:
     }
     void Cleanup() {
         boost::system::error_code e;
-        if (socket_)   { socket_->close(e);   delete socket_;   socket_ = NULL; }
-        if (acceptor_) { acceptor_->close(e); delete acceptor_; acceptor_ = NULL; }
+        if (socket_)   { socket_->close(e);   delete socket_;   socket_ = nullptr; }
+        if (acceptor_) { acceptor_->close(e); delete acceptor_; acceptor_ = nullptr; }
     }
-    static void *Run(void *o) { static_cast<LocalVrouter *>(o)->Serve(); return NULL; }
+    static void *Run(void *o) { static_cast<LocalVrouter *>(o)->Serve(); return nullptr; }
 
     io_context &io_;
     tcp::acceptor *acceptor_;
@@ -209,7 +209,7 @@ public:
         return tag_ < static_cast<const VlanKSyncEntry &>(rhs).tag_;
     }
     virtual string ToString() const { return "VlanKSync"; }
-    virtual KSyncEntry *UnresolvedReference() { return NULL; }
+    virtual KSyncEntry *UnresolvedReference() { return nullptr; }
     virtual bool Sync(DBEntry *e) { return true; }
     virtual int MsgLen() { return KSYNC_DEFAULT_MSG_SIZE; }
     virtual int AddMsg(char *b, int l)    { add_++; return EncodeIf(tag_, sandesh_op::ADD, b, l); }
@@ -237,8 +237,8 @@ public:
     virtual KSyncEntry *DBToKSyncEntry(const DBEntry *e) {
         return static_cast<KSyncEntry *>(new VlanKSyncEntry(static_cast<const Vlan *>(e)));
     }
-    static void Init(VlanTable *t) { assert(singleton_ == NULL); singleton_ = new VlanKSyncObject(t); }
-    static void Shutdown() { delete singleton_; singleton_ = NULL; last_ = NULL; }
+    static void Init(VlanTable *t) { assert(singleton_ == nullptr); singleton_ = new VlanKSyncObject(t); }
+    static void Shutdown() { delete singleton_; singleton_ = nullptr; last_ = nullptr; }
     static VlanKSyncObject *Get() { return singleton_; }
     static VlanKSyncEntry *last() { return last_; }
 private:
@@ -260,7 +260,7 @@ static bool WaitFor(int max_ms, Cond cond) {
 
 static void EnqueueVlan(VlanTable *t, uint16_t tag, DBRequest::DBOperation op) {
     DBRequest req; req.oper = op;
-    req.key.reset(new Vlan::VlanKey(tag)); req.data.reset(NULL);
+    req.key.reset(new Vlan::VlanKey(tag)); req.data.reset(nullptr);
     t->Enqueue(&req);
 }
 
@@ -291,7 +291,7 @@ public:
 TEST_F(TcpTest, RoundTrip) {
     EnqueueVlan(itbl_, 10, DBRequest::DB_ENTRY_ADD_CHANGE);
     ASSERT_TRUE(WaitFor(5000, [] {
-        return VlanKSyncObject::last() != NULL &&
+        return VlanKSyncObject::last() != nullptr &&
                VlanKSyncEntry::AddCount() >= 1;
     })) << "DB notification did not reach VlanKSyncObject";
     EXPECT_EQ(VlanKSyncEntry::AddCount(), 1);
@@ -317,8 +317,8 @@ TEST_F(TcpTest, Burst) {
         return VlanKSyncObject::Get()->Size() == 0; }));
 }
 
-static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return NULL; }
-static LocalVrouter *g_vrouter = NULL;
+static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return nullptr; }
+static LocalVrouter *g_vrouter = nullptr;
 
 
 #ifdef KSYNC_TEST_GCOV_DUMP
@@ -340,7 +340,7 @@ int main(int argc, char **argv) {
     g_vrouter->Start();
 
     pthread_t asio_thread;
-    assert(pthread_create(&asio_thread, NULL, &AsioRun, &evm) == 0);
+    assert(pthread_create(&asio_thread, nullptr, &AsioRun, &evm) == 0);
 
     boost::system::error_code ec;
     boost::asio::ip::address ip = boost::asio::ip::address::from_string("127.0.0.1", ec);
@@ -357,6 +357,6 @@ int main(int argc, char **argv) {
     FlushCoverage();
 
 
-    fflush(NULL);
+    fflush(nullptr);
     _exit(ret);
 }

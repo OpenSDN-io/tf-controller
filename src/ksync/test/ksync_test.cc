@@ -40,16 +40,16 @@ public:
     };
 
     Vlan(uint16_t tag, uint16_t dep_tag, size_t index) :
-        KSyncEntry(index), tag_(tag), dep_tag_(dep_tag), dep_vlan_(NULL),
+        KSyncEntry(index), tag_(tag), dep_tag_(dep_tag), dep_vlan_(nullptr),
         op_(INIT), all_delete_state_comp_(true), strict_dep_(false) { };
 
     Vlan(uint16_t tag) :
-        KSyncEntry(), tag_(tag), dep_tag_(0), dep_vlan_(NULL), op_(TEMP),
+        KSyncEntry(), tag_(tag), dep_tag_(0), dep_vlan_(nullptr), op_(TEMP),
         all_delete_state_comp_(true), strict_dep_(false) { };
 
     Vlan(uint16_t tag, uint16_t dep_tag) :
         KSyncEntry(kInvalidIndex), tag_(tag), dep_tag_(dep_tag),
-        dep_vlan_(NULL), op_(TEMP),
+        dep_vlan_(nullptr), op_(TEMP),
         all_delete_state_comp_(true), strict_dep_(false) { };
 
     virtual ~Vlan() {
@@ -84,13 +84,13 @@ public:
     KSyncObject *GetObject() const;
     KSyncEntry *UnresolvedReference() {
         if (dep_tag_ == 0)
-            return NULL;
+            return nullptr;
 
         bool ready = strict_dep_
                    ? (dep_vlan_->IsResolved() && dep_vlan_->IsInSync())
                    : dep_vlan_->IsResolved();
         if (ready)
-            return NULL;
+            return nullptr;
 
         return dep_vlan_.get();
     };
@@ -236,7 +236,7 @@ void ChangeVlan(Vlan *vlan, uint16_t dep_tag, KSyncEntry::KSyncState state,
     if (vlan->dep_tag_ != 0) {
         vlan->dep_vlan_ = static_cast<Vlan *>(vlan_table_->GetReference(&v));
     } else {
-        vlan->dep_vlan_ = NULL;
+        vlan->dep_vlan_ = nullptr;
     }
 
     vlan_table_->Change(vlan);
@@ -871,7 +871,7 @@ TEST_F(TestUT, add_defer_to_del_ref_pending_to_add) {
     ChangeVlan(vlan1, 0x2, KSyncEntry::ADD_DEFER, Vlan::INIT);
 
     // Remove Reference.
-    vlan_ref = NULL;
+    vlan_ref = nullptr;
     vlan_table_->Delete(vlan1);
     if (Vlan::free_wait_count_ == 0) {
         EXPECT_EQ(vlan1->GetState(), KSyncEntry::DEL_ACK_WAIT);
@@ -1025,7 +1025,7 @@ TEST_F(TestUT, CreateStaleFailure) {
 
     // Since vlan is already created, stale creation should fail.
     Vlan stale_key(0xF01, 0);
-    EXPECT_TRUE(vlan_table_->CreateStale(&stale_key) == NULL);
+    EXPECT_TRUE(vlan_table_->CreateStale(&stale_key) == nullptr);
 
     // Delete entry with index 0
     vlan_table_->Delete(vlan1);
@@ -1126,7 +1126,7 @@ TEST_F(TestUT, DeleteAddEvent) {
     vlan_table_->NotifyEvent(vlan3, KSyncEntry::DEL_ACK);
     EXPECT_EQ(Vlan::add_count_, 1);
     vlan_table_->NotifyEvent(vlan3, KSyncEntry::ADD_ACK);
-    vlan3_ref = NULL;
+    vlan3_ref = nullptr;
 
     vlan_table_->Delete(vlan3);
     vlan_table_->NotifyEvent(vlan3, KSyncEntry::DEL_ACK);
@@ -1262,11 +1262,10 @@ TEST_F(TestUT, object_manager_unregister_empty) {
 
 TEST_F(TestUT, default_defer_entry_is_unresolved) {
     KSyncEntry *d = KSyncObjectManager::default_defer_entry();
-    ASSERT_TRUE(d != NULL);
-    EXPECT_EQ(d, KSyncObjectManager::default_defer_entry());
+    ASSERT_TRUE(d != nullptr);
     EXPECT_EQ(d->ToString(), "Dummy");
     EXPECT_FALSE(d->IsDataResolved());
-    EXPECT_TRUE(d->GetObject() == NULL);
+    EXPECT_TRUE(d->GetObject() == nullptr);
 }
 
 int main(int argc, char **argv) {

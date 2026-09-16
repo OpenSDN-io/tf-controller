@@ -65,7 +65,7 @@ static inline std::string TestBuildVrResponseFrameN(uint32_t seqno, int code,
     std::string out;
     for (uint32_t i = 0; i < n; i++) {
         struct nl_client cl;
-        uint8_t *buf = NULL;
+        uint8_t *buf = nullptr;
         uint32_t buf_len = 0;
         nl_init_generic_client_req(&cl, KSyncSock::GetNetlinkFamilyId());
         if (nl_build_header(&cl, &buf, &buf_len) < 0) {

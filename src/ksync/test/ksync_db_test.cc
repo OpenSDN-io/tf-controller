@@ -137,7 +137,7 @@ public:
         return tag_ < entry.tag_;
     }
     virtual std::string ToString() const {return "VLAN";};;
-    virtual KSyncEntry *UnresolvedReference() {return NULL;};
+    virtual KSyncEntry *UnresolvedReference() {return nullptr;};
     virtual bool Sync(DBEntry *e) {
         Vlan *entry = static_cast<Vlan *>(e);
         if (name_ != entry->name()) {
@@ -220,7 +220,7 @@ public:
         if (vlan->GetTag() == 0) {
             return DBFilterDelete;
         }
-        if (ksync != NULL) {
+        if (ksync != nullptr) {
             const VlanKSyncEntry *kvlan =
                 static_cast<const VlanKSyncEntry *>(ksync);
             if (vlan->GetTag() != kvlan->GetTag()) {
@@ -231,13 +231,13 @@ public:
     }
 
     static void Init(VlanTable *table) {
-        assert(singleton_ == NULL);
+        assert(singleton_ == nullptr);
         singleton_ = new VlanKSyncObject(table);
     };
 
     static void Shutdown() {
         delete singleton_;
-        singleton_ = NULL;
+        singleton_ = nullptr;
     }
 
     static VlanKSyncObject *GetKSyncObject() { return singleton_; };
@@ -303,7 +303,7 @@ TEST_F(DBKSyncTest, Basic) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     task_util::WaitForIdle();
@@ -315,7 +315,7 @@ TEST_F(DBKSyncTest, Basic) {
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     task_util::WaitForIdle();
@@ -330,12 +330,12 @@ TEST_F(DBKSyncTest, AddDelCompress) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     task_util::WaitForIdle();
@@ -351,7 +351,7 @@ TEST_F(DBKSyncTest, DuplicateDelete) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     //Get a reference to vlan entry, to avoid deletion
@@ -363,17 +363,17 @@ TEST_F(DBKSyncTest, DuplicateDelete) {
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
-    ksync_vlan = NULL;
+    ksync_vlan = nullptr;
     task_util::WaitForIdle();
     EXPECT_EQ(adc_notification, 1);
     EXPECT_EQ(del_notification, 2);
@@ -386,7 +386,7 @@ TEST_F(DBKSyncTest, Del_Ack_Wait_to_Temp) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     //Get a reference to vlan entry, to avoid deletion
@@ -398,10 +398,10 @@ TEST_F(DBKSyncTest, Del_Ack_Wait_to_Temp) {
     ksync_vlan = VlanKSyncObject::GetKSyncObject()->Find(&v);
     VlanKSyncEntry *k_vlan = (VlanKSyncEntry *)ksync_vlan.get();
     k_vlan->set_no_ack_trigger(false);
-    ksync_vlan = NULL;
+    ksync_vlan = nullptr;
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
     ksync_vlan = VlanKSyncObject::GetKSyncObject()->Find(&v);
@@ -415,18 +415,18 @@ TEST_F(DBKSyncTest, Del_Ack_Wait_to_Temp) {
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
     EXPECT_EQ(ksync_vlan->GetState(), KSyncEntry::IN_SYNC);
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
-    ksync_vlan = NULL;
+    ksync_vlan = nullptr;
     task_util::WaitForIdle();
     EXPECT_EQ(adc_notification, 2);
     EXPECT_EQ(del_notification, 2);
@@ -439,7 +439,7 @@ TEST_F(DBKSyncTest, KSyncEntryRenewWithNewDBEntry) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     //Get a reference to vlan entry, to avoid deletion
@@ -450,7 +450,7 @@ TEST_F(DBKSyncTest, KSyncEntryRenewWithNewDBEntry) {
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -459,17 +459,17 @@ TEST_F(DBKSyncTest, KSyncEntryRenewWithNewDBEntry) {
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     // Ksync should move to in sync and new db entry.
     EXPECT_EQ(ksync_vlan->GetState(), KSyncEntry::IN_SYNC);
-    ksync_vlan = NULL;
+    ksync_vlan = nullptr;
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -484,7 +484,7 @@ TEST_F(DBKSyncTest, OneKSyncEntryForTwoOperDBEntry) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     task_util::WaitForIdle();
@@ -498,7 +498,7 @@ TEST_F(DBKSyncTest, OneKSyncEntryForTwoOperDBEntry) {
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -509,7 +509,7 @@ TEST_F(DBKSyncTest, OneKSyncEntryForTwoOperDBEntry) {
     // trigger a change on un associated entry
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -520,7 +520,7 @@ TEST_F(DBKSyncTest, OneKSyncEntryForTwoOperDBEntry) {
     // trigger delete on un associated entry
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -531,13 +531,13 @@ TEST_F(DBKSyncTest, OneKSyncEntryForTwoOperDBEntry) {
     // Add duplicate entry again and then trigger delete on associated entry.
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -547,7 +547,7 @@ TEST_F(DBKSyncTest, OneKSyncEntryForTwoOperDBEntry) {
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -562,7 +562,7 @@ TEST_F(DBKSyncTest, Vlan_object_delete_with_dup_entries) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     task_util::WaitForIdle();
@@ -576,7 +576,7 @@ TEST_F(DBKSyncTest, Vlan_object_delete_with_dup_entries) {
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -603,13 +603,13 @@ TEST_F(DBKSyncTest, Vlan_object_delete_with_dup_entries) {
     // delete both the db entries.
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -628,7 +628,7 @@ TEST_F(DBKSyncTest, create_stale_vlan_entry_to_non_stale) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     task_util::WaitForIdle();
@@ -644,7 +644,7 @@ TEST_F(DBKSyncTest, create_stale_vlan_entry_to_non_stale) {
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     task_util::WaitForIdle();
@@ -659,7 +659,7 @@ TEST_F(DBKSyncTest, DeleteAck_after_create_stale) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     // set entry to wait for ack trigger, to control KSync state
@@ -673,7 +673,7 @@ TEST_F(DBKSyncTest, DeleteAck_after_create_stale) {
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
     EXPECT_EQ(adc_notification, 1);
@@ -699,7 +699,7 @@ TEST_F(DBKSyncTest, DeleteAck_after_create_stale) {
 
     // verify DB entry clean up
     Vlan::VlanKey v_key("vlan10", 10);
-    EXPECT_TRUE(NULL == itbl->Find(&v_key));
+    EXPECT_TRUE(nullptr == itbl->Find(&v_key));
 
     // Triggers delete of stale entry
     TestTriggerStaleEntryCleanupCb(VlanKSyncObject::GetKSyncObject());
@@ -712,7 +712,7 @@ TEST_F(DBKSyncTest, DBFilterDelete) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     // set entry to wait for ack trigger, to control KSync state
@@ -722,22 +722,22 @@ TEST_F(DBKSyncTest, DBFilterDelete) {
     VlanKSyncEntry *ksync_vlan;
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v));
-    EXPECT_TRUE(ksync_vlan != NULL);
+    EXPECT_TRUE(ksync_vlan != nullptr);
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 0));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     // Above should trigger a delete filter
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v));
-    EXPECT_TRUE(ksync_vlan == NULL);
+    EXPECT_TRUE(ksync_vlan == nullptr);
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 0));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
     EXPECT_EQ(adc_notification, 2);
@@ -750,7 +750,7 @@ TEST_F(DBKSyncTest, DBFilterDelAdd) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     // set entry to wait for ack trigger, to control KSync state
@@ -760,11 +760,11 @@ TEST_F(DBKSyncTest, DBFilterDelAdd) {
     VlanKSyncEntry *ksync_vlan;
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v));
-    EXPECT_TRUE(ksync_vlan != NULL);
+    EXPECT_TRUE(ksync_vlan != nullptr);
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 11));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -772,15 +772,15 @@ TEST_F(DBKSyncTest, DBFilterDelAdd) {
     // for ksync entry with 10 and create of ksync entry with 11
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v));
-    EXPECT_TRUE(ksync_vlan == NULL);
+    EXPECT_TRUE(ksync_vlan == nullptr);
     VlanKSyncEntry v1(11);
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v1));
-    EXPECT_TRUE(ksync_vlan != NULL);
+    EXPECT_TRUE(ksync_vlan != nullptr);
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 11));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
     EXPECT_EQ(adc_notification, 2);
@@ -793,7 +793,7 @@ TEST_F(DBKSyncTest, DBFilterDelAddwithTwoOperDBEntry) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     // set entry to wait for ack trigger, to control KSync state
@@ -803,8 +803,8 @@ TEST_F(DBKSyncTest, DBFilterDelAddwithTwoOperDBEntry) {
     VlanKSyncEntry *ksync_vlan;
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v));
-    EXPECT_TRUE(ksync_vlan != NULL);
-    if (ksync_vlan != NULL) {
+    EXPECT_TRUE(ksync_vlan != nullptr);
+    if (ksync_vlan != nullptr) {
         // check ksync entry in sync and db entry vlan 10 being in use
         EXPECT_EQ(ksync_vlan->GetState(), KSyncEntry::IN_SYNC);
         EXPECT_TRUE(ksync_vlan->name().compare("vlan10") == 0);
@@ -812,13 +812,13 @@ TEST_F(DBKSyncTest, DBFilterDelAddwithTwoOperDBEntry) {
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 11));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -827,8 +827,8 @@ TEST_F(DBKSyncTest, DBFilterDelAddwithTwoOperDBEntry) {
     // ksync entry with 11
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v));
-    EXPECT_TRUE(ksync_vlan != NULL);
-    if (ksync_vlan != NULL) {
+    EXPECT_TRUE(ksync_vlan != nullptr);
+    if (ksync_vlan != nullptr) {
         // check ksync entry in sync and db entry vlan 10 being in use
         EXPECT_EQ(ksync_vlan->GetState(), KSyncEntry::IN_SYNC);
         EXPECT_TRUE(ksync_vlan->name().compare("new_vlan10") == 0);
@@ -837,17 +837,17 @@ TEST_F(DBKSyncTest, DBFilterDelAddwithTwoOperDBEntry) {
     VlanKSyncEntry v1(11);
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v1));
-    EXPECT_TRUE(ksync_vlan != NULL);
+    EXPECT_TRUE(ksync_vlan != nullptr);
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 11));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -862,12 +862,12 @@ TEST_F(DBKSyncTest, DBFilterDelAddDupToDup) {
     DBRequest req;
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan11", 11));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
 
     // set entry to wait for ack trigger, to control KSync state
@@ -878,8 +878,8 @@ TEST_F(DBKSyncTest, DBFilterDelAddDupToDup) {
     VlanKSyncEntry *ksync_vlan;
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v));
-    EXPECT_TRUE(ksync_vlan != NULL);
-    if (ksync_vlan != NULL) {
+    EXPECT_TRUE(ksync_vlan != nullptr);
+    if (ksync_vlan != nullptr) {
         // check ksync entry in sync and db entry vlan 10 being in use
         EXPECT_EQ(ksync_vlan->GetState(), KSyncEntry::IN_SYNC);
         EXPECT_TRUE(ksync_vlan->name().compare("vlan10") == 0);
@@ -887,8 +887,8 @@ TEST_F(DBKSyncTest, DBFilterDelAddDupToDup) {
 
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v1));
-    EXPECT_TRUE(ksync_vlan != NULL);
-    if (ksync_vlan != NULL) {
+    EXPECT_TRUE(ksync_vlan != nullptr);
+    if (ksync_vlan != nullptr) {
         // check ksync entry in sync and db entry vlan 11 being in use
         EXPECT_EQ(ksync_vlan->GetState(), KSyncEntry::IN_SYNC);
         EXPECT_TRUE(ksync_vlan->name().compare("vlan11") == 0);
@@ -896,13 +896,13 @@ TEST_F(DBKSyncTest, DBFilterDelAddDupToDup) {
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     req.oper = DBRequest::DB_ENTRY_ADD_CHANGE;
     req.key.reset(new Vlan::VlanKey("vlan10", 11));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
@@ -911,8 +911,8 @@ TEST_F(DBKSyncTest, DBFilterDelAddDupToDup) {
     // duplicate db entry of vlan11
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v));
-    EXPECT_TRUE(ksync_vlan != NULL);
-    if (ksync_vlan != NULL) {
+    EXPECT_TRUE(ksync_vlan != nullptr);
+    if (ksync_vlan != nullptr) {
         // check ksync entry in sync and db entry vlan 10 being in use
         EXPECT_EQ(ksync_vlan->GetState(), KSyncEntry::IN_SYNC);
         EXPECT_TRUE(ksync_vlan->name().compare("new_vlan10") == 0);
@@ -920,8 +920,8 @@ TEST_F(DBKSyncTest, DBFilterDelAddDupToDup) {
 
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v1));
-    EXPECT_TRUE(ksync_vlan != NULL);
-    if (ksync_vlan != NULL) {
+    EXPECT_TRUE(ksync_vlan != nullptr);
+    if (ksync_vlan != nullptr) {
         // check ksync entry in sync and db entry vlan 11 being in use
         EXPECT_EQ(ksync_vlan->GetState(), KSyncEntry::IN_SYNC);
         EXPECT_TRUE(ksync_vlan->name().compare("vlan11") == 0);
@@ -929,14 +929,14 @@ TEST_F(DBKSyncTest, DBFilterDelAddDupToDup) {
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan11", 11));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     ksync_vlan =
         static_cast<VlanKSyncEntry*>(VlanKSyncObject::GetKSyncObject()->Find(&v1));
-    EXPECT_TRUE(ksync_vlan != NULL);
-    if (ksync_vlan != NULL) {
+    EXPECT_TRUE(ksync_vlan != nullptr);
+    if (ksync_vlan != nullptr) {
         // check ksync entry in sync and db entry vlan 11 being in use
         EXPECT_EQ(ksync_vlan->GetState(), KSyncEntry::IN_SYNC);
         EXPECT_TRUE(ksync_vlan->name().compare("vlan10") == 0);
@@ -944,13 +944,13 @@ TEST_F(DBKSyncTest, DBFilterDelAddDupToDup) {
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("vlan10", 11));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 
     req.oper = DBRequest::DB_ENTRY_DELETE;
     req.key.reset(new Vlan::VlanKey("new_vlan10", 10));
-    req.data.reset(NULL);
+    req.data.reset(nullptr);
     itbl->Enqueue(&req);
     task_util::WaitForIdle();
 

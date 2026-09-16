@@ -70,7 +70,7 @@ public:
         return tag_ < static_cast<const TxKSyncEntry &>(rhs).tag_;
     }
     virtual string ToString() const { return "TxKSync"; }
-    virtual KSyncEntry *UnresolvedReference() { return NULL; }
+    virtual KSyncEntry *UnresolvedReference() { return nullptr; }
     virtual bool Sync() { return true; }
     virtual int MsgLen() { return KSYNC_DEFAULT_MSG_SIZE; }
     virtual int AddMsg(char *b, int l)    { return EncodeIf(tag_, sandesh_op::ADD, b, l); }
@@ -89,8 +89,8 @@ public:
         return static_cast<KSyncEntry *>(
             new TxKSyncEntry(static_cast<const TxKSyncEntry *>(e)));
     }
-    static void Init() { assert(singleton_ == NULL); singleton_ = new TxKSyncObject(); }
-    static void Shutdown() { delete singleton_; singleton_ = NULL; }
+    static void Init() { assert(singleton_ == nullptr); singleton_ = new TxKSyncObject(); }
+    static void Shutdown() { delete singleton_; singleton_ = nullptr; }
     static TxKSyncObject *Get() { return singleton_; }
 private:
     static TxKSyncObject *singleton_;
@@ -154,9 +154,9 @@ TEST_F(TxQueueTest, EventFdDrainsQueue) {
     EXPECT_EQ(q_->queue_len(), (size_t)0);
 }
 
-static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return NULL; }
+static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return nullptr; }
 
-static boost::asio::ip::udp::socket *g_drain = NULL;
+static boost::asio::ip::udp::socket *g_drain = nullptr;
 static int BindDrain(boost::asio::io_context &io) {
     g_drain = new boost::asio::ip::udp::socket(
         io, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 0));
@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
     KSyncObjectManager::Init();
 
     pthread_t asio_thread;
-    assert(pthread_create(&asio_thread, NULL, &AsioRun, &evm) == 0);
+    assert(pthread_create(&asio_thread, nullptr, &AsioRun, &evm) == 0);
 
     int ret = RUN_ALL_TESTS();
     FlushCoverage();
@@ -203,10 +203,10 @@ int main(int argc, char **argv) {
     KSyncObjectManager::Shutdown();
     for (int i = 0; i < KSyncSock::kRxWorkQueueCount; i++) {
         delete KSyncSock::GetAgentSandeshContext(i);
-        KSyncSock::SetAgentSandeshContext(NULL, i);
+        KSyncSock::SetAgentSandeshContext(nullptr, i);
     }
     evm.Shutdown();
-    assert(pthread_join(asio_thread, NULL) == 0);
+    assert(pthread_join(asio_thread, nullptr) == 0);
     delete g_drain;
     return ret;
 }

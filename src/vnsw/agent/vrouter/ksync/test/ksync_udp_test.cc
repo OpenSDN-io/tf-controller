@@ -108,16 +108,16 @@ public:
         port_ = ntohs(addr.sin_port);
         struct timeval tv = {0, 200 * 1000};
         setsockopt(fd_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-        return pthread_create(&thread_, NULL, &UdpVrouter::ThreadFn, this) == 0;
+        return pthread_create(&thread_, nullptr, &UdpVrouter::ThreadFn, this) == 0;
     }
     void Stop() { stop_ = true; }
-    void Join() { pthread_join(thread_, NULL); if (fd_ >= 0) close(fd_); }
+    void Join() { pthread_join(thread_, nullptr); if (fd_ >= 0) close(fd_); }
     int port() const { return port_; }
 
 private:
     static void *ThreadFn(void *arg) {
         static_cast<UdpVrouter *>(arg)->Serve();
-        return NULL;
+        return nullptr;
     }
 
     void Serve() {
@@ -173,7 +173,7 @@ public:
         return tag_ < static_cast<const UdpKSyncEntry &>(rhs).tag_;
     }
     virtual string ToString() const { return "UdpKSync"; }
-    virtual KSyncEntry *UnresolvedReference() { return NULL; }
+    virtual KSyncEntry *UnresolvedReference() { return nullptr; }
     virtual bool Sync() { return true; }
     virtual int MsgLen() { return KSYNC_DEFAULT_MSG_SIZE; }
     virtual int AddMsg(char *b, int l)    { return EncodeIf(tag_, sandesh_op::ADD, b, l); }
@@ -192,8 +192,8 @@ public:
         return static_cast<KSyncEntry *>(
             new UdpKSyncEntry(static_cast<const UdpKSyncEntry *>(e)));
     }
-    static void Init() { assert(singleton_ == NULL); singleton_ = new UdpKSyncObject(); }
-    static void Shutdown() { delete singleton_; singleton_ = NULL; }
+    static void Init() { assert(singleton_ == nullptr); singleton_ = new UdpKSyncObject(); }
+    static void Shutdown() { delete singleton_; singleton_ = nullptr; }
     static UdpKSyncObject *Get() { return singleton_; }
 private:
     static UdpKSyncObject *singleton_;
@@ -278,7 +278,7 @@ static void FlushCoverage() {}
 
 static void *AsioRun(void *arg) {
     static_cast<EventManager *>(arg)->Run();
-    return NULL;
+    return nullptr;
 }
 
 int main(int argc, char **argv) {
@@ -297,7 +297,7 @@ int main(int argc, char **argv) {
     KSyncObjectManager::Init();
 
     pthread_t asio_thread;
-    assert(pthread_create(&asio_thread, NULL, &AsioRun, &evm) == 0);
+    assert(pthread_create(&asio_thread, nullptr, &AsioRun, &evm) == 0);
 
     int ret = RUN_ALL_TESTS();
     FlushCoverage();
@@ -306,11 +306,11 @@ int main(int argc, char **argv) {
     KSyncObjectManager::Shutdown();
     for (int i = 0; i < KSyncSock::kRxWorkQueueCount; i++) {
         delete KSyncSock::GetAgentSandeshContext(i);
-        KSyncSock::SetAgentSandeshContext(NULL, i);
+        KSyncSock::SetAgentSandeshContext(nullptr, i);
     }
     vr.Stop();
     vr.Join();
     evm.Shutdown();
-    pthread_join(asio_thread, NULL);
+    pthread_join(asio_thread, nullptr);
     return ret;
 }
