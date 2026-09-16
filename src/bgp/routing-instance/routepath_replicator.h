@@ -8,6 +8,7 @@
 #include <boost/ptr_container/ptr_map.hpp>
 #include <sandesh/sandesh_trace.h>
 
+#include <atomic>
 #include <list>
 #include <map>
 #include <set>
@@ -65,6 +66,14 @@ public:
     const RtGroup *FindGroup(RtGroup *group) const;
     bool empty() const { return list_.empty(); }
 
+    // Generation of the table's export route target list, bumped on every
+    // change to it. Replication compares it against the value recorded in
+    // RtReplicated to tell whether the paths replicated earlier still carry
+    // the current targets. Written from the config tasks, read from
+    // db::DBTable.
+    uint64_t export_target_gen() const { return export_target_gen_.load(); }
+    void bump_export_target_gen() { ++export_target_gen_; }
+
     DBTableBase::ListenerId listener_id() const { return listener_id_; }
     void set_listener_id(DBTableBase::ListenerId listener_id) {
         assert(listener_id_ == DBTableBase::kInvalidId);
@@ -109,6 +118,7 @@ private:
     boost::scoped_ptr<DeleteActor> deleter_;
     LifetimeRef<TableState> table_delete_ref_;
     GroupList list_;
+    std::atomic<uint64_t> export_target_gen_;
     DBTable::DBTableWalkRef walk_ref_;
 
     DISALLOW_COPY_AND_ASSIGN(TableState);
@@ -177,9 +187,15 @@ public:
     ReplicatedRtPathList *GetMutableList() { return &replicate_list_; }
     std::vector<std::string> GetTableNameList(const BgpPath *path) const;
 
+    // TableState::export_target_gen of the primary table as of the last time
+    // the route was replicated.
+    uint64_t export_target_gen() const { return export_target_gen_; }
+    void set_export_target_gen(uint64_t gen) { export_target_gen_ = gen; }
+
 private:
     RoutePathReplicator *replicator_;
     ReplicatedRtPathList replicate_list_;
+    uint64_t export_target_gen_;
 };
 
 //
