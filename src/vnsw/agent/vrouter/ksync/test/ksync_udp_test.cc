@@ -199,7 +199,7 @@ private:
     static UdpKSyncObject *singleton_;
     DISALLOW_COPY_AND_ASSIGN(UdpKSyncObject);
 };
-UdpKSyncObject *UdpKSyncObject::singleton_;
+UdpKSyncObject *UdpKSyncObject::singleton_ = nullptr;
 KSyncObject *UdpKSyncEntry::GetObject() const { return UdpKSyncObject::Get(); }
 
 template <typename Cond>

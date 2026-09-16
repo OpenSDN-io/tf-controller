@@ -192,10 +192,10 @@ private:
     static int add_count_, change_count_, del_count_, last_gen_;
     DISALLOW_COPY_AND_ASSIGN(VlanKSyncEntry);
 };
-int VlanKSyncEntry::add_count_;
-int VlanKSyncEntry::change_count_;
-int VlanKSyncEntry::del_count_;
-int VlanKSyncEntry::last_gen_;
+int VlanKSyncEntry::add_count_ = 0;
+int VlanKSyncEntry::change_count_ = 0;
+int VlanKSyncEntry::del_count_ = 0;
+int VlanKSyncEntry::last_gen_ = 0;
 
 class VlanKSyncObject : public KSyncDBObject {
 public:
@@ -221,8 +221,8 @@ private:
     static VlanKSyncEntry *last_;
     DISALLOW_COPY_AND_ASSIGN(VlanKSyncObject);
 };
-VlanKSyncObject *VlanKSyncObject::singleton_;
-VlanKSyncEntry  *VlanKSyncObject::last_;
+VlanKSyncObject *VlanKSyncObject::singleton_ = nullptr;
+VlanKSyncEntry  *VlanKSyncObject::last_ = nullptr;
 KSyncDBObject *VlanKSyncEntry::GetObject() const { return VlanKSyncObject::Get(); }
 
 // ---------------------------------------------------------------------------
@@ -272,7 +272,7 @@ private:
     static bool no_send_;
     DISALLOW_COPY_AND_ASSIGN(RawKSyncEntry);
 };
-bool RawKSyncEntry::no_send_;
+bool RawKSyncEntry::no_send_ = false;
 
 class RawKSyncObject : public KSyncObject {
 public:
@@ -288,7 +288,7 @@ private:
     static RawKSyncObject *singleton_;
     DISALLOW_COPY_AND_ASSIGN(RawKSyncObject);
 };
-RawKSyncObject *RawKSyncObject::singleton_;
+RawKSyncObject *RawKSyncObject::singleton_ = nullptr;
 KSyncObject *RawKSyncEntry::GetObject() const { return RawKSyncObject::Get(); }
 
 // ---------------------------------------------------------------------------

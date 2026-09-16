@@ -96,7 +96,7 @@ private:
     static TxKSyncObject *singleton_;
     DISALLOW_COPY_AND_ASSIGN(TxKSyncObject);
 };
-TxKSyncObject *TxKSyncObject::singleton_;
+TxKSyncObject *TxKSyncObject::singleton_ = nullptr;
 KSyncObject *TxKSyncEntry::GetObject() const { return TxKSyncObject::Get(); }
 
 template <typename Cond>

@@ -168,8 +168,8 @@ private:
     static int add_, del_;
     DISALLOW_COPY_AND_ASSIGN(VlanKSyncEntry);
 };
-int VlanKSyncEntry::add_;
-int VlanKSyncEntry::del_;
+int VlanKSyncEntry::add_ = 0;
+int VlanKSyncEntry::del_ = 0;
 
 class VlanKSyncObject : public KSyncDBObject {
 public:
@@ -190,8 +190,8 @@ private:
     static VlanKSyncEntry *last_;
     DISALLOW_COPY_AND_ASSIGN(VlanKSyncObject);
 };
-VlanKSyncObject *VlanKSyncObject::singleton_;
-VlanKSyncEntry  *VlanKSyncObject::last_;
+VlanKSyncObject *VlanKSyncObject::singleton_ = nullptr;
+VlanKSyncEntry  *VlanKSyncObject::last_ = nullptr;
 KSyncDBObject *VlanKSyncEntry::GetObject() const { return VlanKSyncObject::Get(); }
 
 class UTSandeshContext : public AgentSandeshContext {
