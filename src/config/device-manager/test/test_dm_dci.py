@@ -349,8 +349,18 @@ class TestDCI(TestAnsibleCommonDM):
         return "value doesn't exist"
 
     def get_target(self, lr):
-        lr_refs = lr.get_virtual_network_refs()
-        vn_uuid = self.get_val(lr_refs[0], 'uuid')
+        internal_vn_refs = []
+        for vn_ref in lr.get_virtual_network_refs() or []:
+            attr = vn_ref.get('attr')
+            try:
+                lr_vn_type = attr.logical_router_virtual_network_type
+            except AttributeError:
+                continue
+            if lr_vn_type == 'InternalVirtualNetwork':
+                internal_vn_refs.append(vn_ref)
+        self.assertEqual(1, len(internal_vn_refs))
+
+        vn_uuid = self.get_val(internal_vn_refs[0], 'uuid')
         vn = self._vnc_lib.virtual_network_read(id=vn_uuid)
         vn_refs = vn.get_routing_instances()
         ri_uuid = self.get_val(vn_refs[0], 'uuid')

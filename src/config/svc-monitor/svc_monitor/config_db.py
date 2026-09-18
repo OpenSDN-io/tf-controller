@@ -1265,11 +1265,10 @@ class LogicalRouterSM(DBBaseSM):
         self.update_single_ref('virtual_network', obj)
         for vn_ref in obj.get('virtual_network_refs') or []:
             vn_ref_attr = vn_ref.get('attr')
-            if (vn_ref_attr is None or
-                vn_ref_attr.get('logical_router_virtual_network_type')
-                    is None or
-                vn_ref_attr.get('logical_router_virtual_network_type') !=
-                    'InternalVirtualNetwork'):
+            vn_type = (vn_ref_attr.get(
+                'logical_router_virtual_network_type')
+                if vn_ref_attr else None)
+            if vn_type in (None, 'ExternalGateway'):
                 self.virtual_network = vn_ref['uuid']
                 break
             else:

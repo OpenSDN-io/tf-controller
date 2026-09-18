@@ -499,6 +499,59 @@ class TestLogicalRouter(test_case.ApiServerTestCase):
         project.set_vxlan_routing(False)
         self._vnc_lib.project_update(project)
 
+    def test_vxlan_router_interface_connected_vn_ref(self):
+        domain = self._vnc_lib.domain_read(fq_name=['default-domain'])
+        router_project = Project(
+            'lr-router-project-%s' % self.id(), domain)
+        network_project = Project(
+            'lr-network-project-%s' % self.id(), domain)
+        self._vnc_lib.project_create(router_project)
+        self._vnc_lib.project_create(network_project)
+        router_project.set_vxlan_routing(True)
+        self._vnc_lib.project_update(router_project)
+
+        ipam = NetworkIpam(
+            'lr-network-ipam-%s' % self.id(), network_project,
+            IpamType('dhcp'))
+        self._vnc_lib.network_ipam_create(ipam)
+
+        network = VirtualNetwork(
+            'lr-shared-network-%s' % self.id(), network_project)
+        subnet = IpamSubnetType(subnet=SubnetType('12.1.1.0', 24))
+        network.add_network_ipam(ipam, VnSubnetsType([subnet]))
+        network.set_is_shared(True)
+        self._vnc_lib.virtual_network_create(network)
+        router_port = self.create_port(router_project, network)
+
+        router = LogicalRouter(
+            'lr-connected-network-%s' % self.id(), router_project)
+        router.set_logical_router_type('vxlan-routing')
+        router_uuid = self._vnc_lib.logical_router_create(router)
+        router = self._vnc_lib.logical_router_read(id=router_uuid)
+
+        router.add_virtual_machine_interface(router_port)
+        self._vnc_lib.logical_router_update(router)
+        router = self._vnc_lib.logical_router_read(id=router_uuid)
+
+        connected_refs = [
+            ref for ref in router.get_virtual_network_refs() or []
+            if ref.get('attr') is not None and
+            ref['attr'].logical_router_virtual_network_type ==
+            'ConnectedVirtualNetwork']
+        self.assertEqual(1, len(connected_refs))
+        self.assertEqual(network.uuid, connected_refs[0]['uuid'])
+
+        router.del_virtual_machine_interface(router_port)
+        self._vnc_lib.logical_router_update(router)
+        router = self._vnc_lib.logical_router_read(id=router_uuid)
+
+        connected_refs = [
+            ref for ref in router.get_virtual_network_refs() or []
+            if ref.get('attr') is not None and
+            ref['attr'].logical_router_virtual_network_type ==
+            'ConnectedVirtualNetwork']
+        self.assertEqual([], connected_refs)
+
     def test_vxlan_create_for_lr(self):
         project = self._vnc_lib.project_read(fq_name=['default-domain',
                                                       'default-project'])

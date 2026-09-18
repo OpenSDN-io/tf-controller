@@ -565,6 +565,63 @@ TEST_F(IFMapGraphWalkerTest, VrsubConfig) {
     c1.PrintNodes();
 }
 
+TEST_F(IFMapGraphWalkerTest, VmToLogicalRouterViaConnectedVn) {
+    ParseEventsJson(
+        "controller/src/ifmap/testdata/vm_lr_connected_vn_add.json");
+    FeedEventsJson();
+
+    IFMapClientMock
+        c1("default-global-system-config:a1s27.contrail.juniper.net");
+    server_->AddClient(&c1);
+    task_util::WaitForIdle();
+    server_->ProcessVmSubscribe(
+        "default-global-system-config:a1s27.contrail.juniper.net",
+        "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1", true, 1);
+    task_util::WaitForIdle();
+
+    TASK_UTIL_EXPECT_NE(0, c1.count());
+    TASK_UTIL_EXPECT_EQ(c1.NodeKeyCount("logical-router"), 1);
+    TASK_UTIL_EXPECT_TRUE(c1.LinkExists("logical-router",
+        "logical-router-virtual-network", "default-domain:demo:lr1",
+        "attr(default-domain:demo:lr1,default-domain:demo:vn1)"));
+    TASK_UTIL_EXPECT_TRUE(c1.LinkExists("logical-router-virtual-network",
+        "virtual-network","attr(default-domain:demo:lr1,default-domain:demo:vn1)",
+        "default-domain:demo:vn1"));
+
+    c1.PrintNodes();
+    c1.PrintLinks();
+}
+
+TEST_F(IFMapGraphWalkerTest, VmToLogicalRouterViaConnectedVnDiffProject) {
+    ParseEventsJson(
+        "controller/src/ifmap/testdata/vm_lr_connected_vn_diff_project_add.json");
+    FeedEventsJson();
+
+    IFMapClientMock
+        c1("default-global-system-config:a1s27.contrail.juniper.net");
+    server_->AddClient(&c1);
+    task_util::WaitForIdle();
+    c1.PrintNodes();
+    c1.PrintLinks();
+    server_->ProcessVmSubscribe(
+        "default-global-system-config:a1s27.contrail.juniper.net",
+        "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1", true, 1);
+    task_util::WaitForIdle();
+
+    TASK_UTIL_EXPECT_NE(0, c1.count());
+    TASK_UTIL_EXPECT_EQ(c1.NodeKeyCount("logical-router"), 1);
+    TASK_UTIL_EXPECT_TRUE(c1.LinkExists("logical-router",
+        "logical-router-virtual-network", "default-domain:non-admin:lr1",
+        "attr(default-domain:admin:vn1,default-domain:non-admin:lr1)"));
+    TASK_UTIL_EXPECT_TRUE(c1.LinkExists("logical-router-virtual-network",
+        "virtual-network",
+        "attr(default-domain:admin:vn1,default-domain:non-admin:lr1)",
+        "default-domain:admin:vn1"));
+
+    c1.PrintNodes();
+    c1.PrintLinks();
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     LoggingInit();

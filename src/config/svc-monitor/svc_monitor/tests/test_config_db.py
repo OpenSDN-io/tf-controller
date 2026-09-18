@@ -537,4 +537,38 @@ class ConfigDBTest(unittest.TestCase):
         config_db.ServiceTemplateSM.delete('st')
         config_db.ProjectSM.delete('project')
     # end test_add_delete_lr(self):
+
+    def test_lr_virtual_network_ref_roles(self):
+        lr_dict = {
+            'fq_name': ['default-domain', 'project', 'lr'],
+            'parent_uuid': 'project',
+            'virtual_network_refs': [{
+                'uuid': 'connected-vn',
+                'to': ['default-domain', 'project', 'connected-vn'],
+                'attr': {
+                    'logical_router_virtual_network_type':
+                        'ConnectedVirtualNetwork',
+                },
+            }],
+        }
+        router = config_db.LogicalRouterSM('lr', lr_dict)
+        self.assertIsNone(router.virtual_network)
+
+        lr_dict['virtual_network_refs'].append({
+            'uuid': 'external-vn',
+            'to': ['default-domain', 'project', 'external-vn'],
+            'attr': {
+                'logical_router_virtual_network_type': 'ExternalGateway',
+            },
+        })
+        router.update(lr_dict)
+        self.assertEqual('external-vn', router.virtual_network)
+
+        lr_dict['virtual_network_refs'] = [{
+            'uuid': 'legacy-external-vn',
+            'to': ['default-domain', 'project', 'legacy-external-vn'],
+            'attr': None,
+        }]
+        router.update(lr_dict)
+        self.assertEqual('legacy-external-vn', router.virtual_network)
 #end ConfigDBTest(unittest.TestCase):

@@ -442,7 +442,7 @@ void IFMapGraphWalker::AddNodesToWhitelist() {
             "virtual-network-multicast-policy",
             "vn-health-check",
             "host-based-service-virtual-network",
-            "project-virtual-network",
+            "logical-router-virtual-network",
         }},
         {"floating-ip", {
             "floating-ip-pool-floating-ip",

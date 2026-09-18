@@ -1,0 +1,82 @@
+[
+  {
+    "operation": "db_sync",
+    "OBJ_FQ_NAME_TABLE": {
+      "global_system_config": {
+        "default-global-system-config:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1": "null"
+      },
+      "virtual_router": {
+        "default-global-system-config:a1s27.contrail.juniper.net:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2": "null"
+      },
+      "domain": {
+        "default-domain:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3": "null"
+      },
+      "project": {
+        "default-domain:demo:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4": "null"
+      },
+      "virtual_network": {
+        "default-domain:demo:vn1:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5": "null"
+      },
+      "virtual_machine": {
+        "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1:bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1": "null"
+      },
+      "virtual_machine_interface": {
+        "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1:cccccccc-cccc-cccc-cccc-ccccccccccc1:cccccccc-cccc-cccc-cccc-ccccccccccc1": "null"
+      },
+      "logical_router": {
+        "default-domain:demo:lr1:dddddddd-dddd-dddd-dddd-ddddddddddd1": "null"
+      }
+    },
+    "db": {
+      "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1": {
+        "fq_name": "[\"default-global-system-config\"]",
+        "type": "\"global_system_config\"",
+        "prop:id_perms": "{\"permissions\":{\"owner\":\"cloud-admin\",\"owner_access\":\"7\",\"group\":\"cloud-admin-group\",\"group_access\":\"7\",\"other_access\":\"7\"},\"enable\":\"true\"}"
+      },
+      "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2": {
+        "fq_name": "[\"default-global-system-config\",\"a1s27.contrail.juniper.net\"]",
+        "type": "\"virtual_router\"",
+        "prop:id_perms": "{\"permissions\":{\"owner\":\"cloud-admin\",\"owner_access\":\"7\",\"group\":\"cloud-admin-group\",\"group_access\":\"7\",\"other_access\":\"7\"},\"enable\":\"true\"}",
+        "ref:virtual_machine:bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1": "{\"attr\":{}}",
+        "parent:global_system_config:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1": "null"
+      },
+      "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3": {
+        "fq_name": "[\"default-domain\"]",
+        "type": "\"domain\"",
+        "prop:id_perms": "{\"permissions\":{\"owner\":\"cloud-admin\",\"owner_access\":\"7\",\"group\":\"cloud-admin-group\",\"group_access\":\"7\",\"other_access\":\"7\"},\"enable\":\"true\"}"
+      },
+      "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4": {
+        "fq_name": "[\"default-domain\",\"demo\"]",
+        "type": "\"project\"",
+        "prop:id_perms": "{\"permissions\":{\"owner\":\"cloud-admin\",\"owner_access\":\"7\",\"group\":\"cloud-admin-group\",\"group_access\":\"7\",\"other_access\":\"7\"},\"enable\":\"true\"}",
+        "parent:domain:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3": "null"
+      },
+      "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5": {
+        "fq_name": "[\"default-domain\",\"demo\",\"vn1\"]",
+        "type": "\"virtual_network\"",
+        "prop:id_perms": "{\"permissions\":{\"owner\":\"cloud-admin\",\"owner_access\":\"7\",\"group\":\"cloud-admin-group\",\"group_access\":\"7\",\"other_access\":\"7\"},\"enable\":\"true\"}",
+        "parent:project:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4": "null"
+      },
+      "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1": {
+        "fq_name": "[\"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1\"]",
+        "type": "\"virtual_machine\"",
+        "prop:id_perms": "{\"permissions\":{\"owner\":\"cloud-admin\",\"owner_access\":\"7\",\"group\":\"cloud-admin-group\",\"group_access\":\"7\",\"other_access\":\"7\"},\"enable\":\"true\"}"
+      },
+      "cccccccc-cccc-cccc-cccc-ccccccccccc1": {
+        "fq_name": "[\"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1\",\"cccccccc-cccc-cccc-cccc-ccccccccccc1\"]",
+        "type": "\"virtual_machine_interface\"",
+        "prop:id_perms": "{\"permissions\":{\"owner\":\"cloud-admin\",\"owner_access\":\"7\",\"group\":\"cloud-admin-group\",\"group_access\":\"7\",\"other_access\":\"7\"},\"enable\":\"true\"}",
+        "ref:virtual_machine:bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1": "{\"attr\":{}}",
+        "ref:virtual_network:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5": "{\"attr\":{}}"
+      },
+      "dddddddd-dddd-dddd-dddd-ddddddddddd1": {
+        "fq_name": "[\"default-domain\",\"demo\",\"lr1\"]",
+        "type": "\"logical_router\"",
+        "prop:logical_router_type": "\"vxlan-routing\"",
+        "prop:id_perms": "{\"permissions\":{\"owner\":\"cloud-admin\",\"owner_access\":\"7\",\"group\":\"cloud-admin-group\",\"group_access\":\"7\",\"other_access\":\"7\"},\"enable\":\"true\"}",
+        "parent:project:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4": "null",
+        "ref:virtual_network:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa5": "{\"attr\":{\"logical_router_virtual_network_type\":\"ConnectedVirtualNetwork\"}}"
+      }
+    }
+  }
+]
