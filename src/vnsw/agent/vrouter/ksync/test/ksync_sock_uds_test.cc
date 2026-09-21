@@ -28,7 +28,7 @@
 #include "ksync/ksync_netlink.h"
 #include "ksync/ksync_sock.h"
 #include "ksync_test_util.h"
-
+#include "ksync_test_vrouter.h"
 #include "vr_types.h"
 #include "ksync_test_vrouter_response.h"
 
@@ -37,70 +37,6 @@ using boost::asio::local::stream_protocol;
 using namespace boost::placeholders;
 
 static const char *kSockPath = "/tmp/ksync_uds_test.sock";
-
-class UdsVrouter {
-public:
-    explicit UdsVrouter(boost::asio::io_context &io)
-        : io_(io), acceptor_(nullptr), socket_(nullptr), stop_(false) {}
-
-    void Bind() {
-        ::unlink(kSockPath);
-        acceptor_ = new stream_protocol::acceptor(
-            io_, stream_protocol::endpoint(kSockPath));
-    }
-    void Start() { assert(pthread_create(&tid_, nullptr, &Run, this) == 0); }
-    void Stop()  { stop_ = true; }
-    void Join()  { pthread_join(tid_, nullptr); }
-
-private:
-    bool ReadN(char *buf, size_t n) {
-        size_t got = 0; boost::system::error_code ec;
-        while (got < n && !stop_) {
-            got += socket_->read_some(boost::asio::buffer(buf + got, n - got), ec);
-            if (ec) return false;
-        }
-        return got == n;
-    }
-    void Serve() {
-        socket_ = new stream_protocol::socket(io_);
-        boost::system::error_code ec;
-        acceptor_->accept(*socket_, ec);
-        if (ec) return;
-
-        char hdr[sizeof(struct nlmsghdr)];
-        std::vector<char> msg;
-        while (!stop_) {
-            if (!ReadN(hdr, sizeof(hdr))) break;
-            uint32_t total = TestMsgLenOf(hdr);
-            uint32_t seqno = TestSeqnoOf(hdr);
-            if (total > sizeof(hdr)) {
-                msg.resize(total - sizeof(hdr));
-                if (!ReadN(msg.data(), msg.size())) break;
-            }
-            uint32_t nreq = msg.empty() ? 1 :
-                TestCountSandeshMsgs(msg.data(), msg.size());
-            if (nreq == 0) nreq = 1;
-            std::string resp = TestBuildVrResponseFrameN(seqno, 0, nreq);
-            boost::asio::write(*socket_, boost::asio::buffer(resp), ec);
-            if (ec) break;
-        }
-        Cleanup();
-    }
-    void Cleanup() {
-        boost::system::error_code e;
-        if (socket_)   { socket_->close(e);   delete socket_;   socket_ = nullptr; }
-        if (acceptor_) { acceptor_->close(e); delete acceptor_; acceptor_ = nullptr; }
-        ::unlink(kSockPath);
-    }
-    static void *Run(void *o) { static_cast<UdsVrouter *>(o)->Serve(); return nullptr; }
-
-    boost::asio::io_context &io_;
-    stream_protocol::acceptor *acceptor_;
-    stream_protocol::socket *socket_;
-    std::atomic<bool> stop_;
-    pthread_t tid_;
-};
-
 
 class UdsTest : public ::testing::Test {
 public:
@@ -151,7 +87,7 @@ TEST_F(UdsTest, Burst) {
 }
 
 static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return nullptr; }
-static UdsVrouter *g_vrouter = nullptr;
+static UdsTestVrouter *g_vrouter = nullptr;
 
 
 #ifdef KSYNC_TEST_GCOV_DUMP
@@ -168,7 +104,7 @@ int main(int argc, char **argv) {
     EventManager evm;
     boost::asio::io_context &io = *evm.io_service();
 
-    g_vrouter = new UdsVrouter(io);
+    g_vrouter = new UdsTestVrouter(io, kSockPath);
     g_vrouter->Bind();
     g_vrouter->Start();
 

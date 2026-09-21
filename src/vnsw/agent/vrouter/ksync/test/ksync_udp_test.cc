@@ -23,6 +23,7 @@
 #include "ksync/ksync_netlink.h"
 #include "ksync/ksync_sock.h"
 #include "ksync_test_util.h"
+#include "ksync_test_vrouter.h"
 
 #include "vr_types.h"
 #include "udp_util.h"
@@ -31,104 +32,6 @@
 
 using namespace std;
 using namespace boost::placeholders;
-
-class CountingContext : public UTSandeshContext {
-public:
-    CountingContext() : n_(0) {}
-    uint32_t n() const { return n_; }
-    virtual void IfMsgHandler(vr_interface_req *) { n_++; }
-private:
-    uint32_t n_;
-};
-
-static uint32_t CountUvrRequests(char *payload, size_t len) {
-    if (len == 0) return 0;
-    CountingContext ctx;
-    uint8_t *buf = reinterpret_cast<uint8_t *>(payload);
-    int buf_len = static_cast<int>(len);
-    while (buf_len > 0) {
-        int err = 0;
-        int decode_len = Sandesh::ReceiveBinaryMsgOne(buf, buf_len, &err, &ctx);
-        if (decode_len <= 0)
-            break;
-        buf += decode_len;
-        buf_len -= decode_len;
-    }
-    return ctx.n();
-}
-
-class UdpVrouter {
-public:
-    UdpVrouter() : fd_(-1), port_(0), stop_(false) {}
-
-    bool Start() {
-        fd_ = socket(AF_INET, SOCK_DGRAM, 0);
-        if (fd_ < 0) return false;
-        struct sockaddr_in addr;
-        memset(&addr, 0, sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-        addr.sin_port = 0;
-        if (bind(fd_, (struct sockaddr *)&addr, sizeof(addr)) < 0) return false;
-        socklen_t alen = sizeof(addr);
-        getsockname(fd_, (struct sockaddr *)&addr, &alen);
-        port_ = ntohs(addr.sin_port);
-        struct timeval tv = {0, 200 * 1000};
-        setsockopt(fd_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-        return pthread_create(&thread_, nullptr, &UdpVrouter::ThreadFn, this) == 0;
-    }
-    void Stop() { stop_ = true; }
-    void Join() { pthread_join(thread_, nullptr); if (fd_ >= 0) close(fd_); }
-    int port() const { return port_; }
-
-private:
-    static void *ThreadFn(void *arg) {
-        static_cast<UdpVrouter *>(arg)->Serve();
-        return nullptr;
-    }
-
-    void Serve() {
-        std::vector<char> buf(KSYNC_DEFAULT_MSG_SIZE * 4);
-        char resp[KSYNC_DEFAULT_MSG_SIZE];
-        while (!stop_) {
-            struct sockaddr_in peer;
-            socklen_t plen = sizeof(peer);
-            ssize_t n = recvfrom(fd_, buf.data(), buf.size(), 0,
-                                 (struct sockaddr *)&peer, &plen);
-            if (n < 0) continue;                       // timeout -> poll stop_
-            if (n < (ssize_t)sizeof(struct uvr_msg_hdr)) continue;
-
-            struct uvr_msg_hdr req;
-            memcpy(&req, buf.data(), sizeof(req));
-            char *payload = buf.data() + sizeof(req);
-            size_t payload_len = n - sizeof(req);
-            if (req.msg_len < payload_len) payload_len = req.msg_len;
-
-            uint32_t nreq = CountUvrRequests(payload, payload_len);
-            if (nreq == 0) nreq = 1;
-
-            for (uint32_t i = 0; i < nreq; i++) {
-                struct uvr_msg_hdr rhdr;
-                memset(&rhdr, 0, sizeof(rhdr));
-                rhdr.seq_no = req.seq_no;              // echo the bulk seqno
-                rhdr.flags = (i + 1 < nreq) ? UVR_MORE : 0;
-                int el = TestEncodeVrResponse(
-                    (uint8_t *)resp + sizeof(rhdr),
-                    (int)(sizeof(resp) - sizeof(rhdr)), 0 /* success */);
-                assert(el > 0);
-                rhdr.msg_len = el;
-                memcpy(resp, &rhdr, sizeof(rhdr));
-                sendto(fd_, resp, sizeof(rhdr) + el, 0,
-                       (struct sockaddr *)&peer, plen);
-            }
-        }
-    }
-
-    int fd_;
-    int port_;
-    pthread_t thread_;
-    std::atomic<bool> stop_;
-};
 
 class UdpKSyncObject;
 class UdpKSyncEntry : public KSyncNetlinkEntry {
@@ -244,7 +147,8 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     LoggingInit();
 
-    UdpVrouter vr;
+    UdpTestVrouter vr;
+    assert(vr.Bind());
     assert(vr.Start());
 
     EventManager evm;

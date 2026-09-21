@@ -21,11 +21,13 @@ test_bridge_entry_audit = AgentEnv.MakeTestCmd(env, 'test_bridge_entry_audit',
                                                ksync_test_suite)
 test_ksync_tcp = AgentEnv.MakeTestCmdSrc(env, 'ksync_tcp_test',
                                          ['ksync_tcp_test.cc',
-                                          'ksync_test_util.cc'],
+                                          'ksync_test_util.cc',
+                                          'ksync_test_vrouter.cc'],
                                          ksync_test_suite)
 test_ksync_sock_uds = AgentEnv.MakeTestCmdSrc(env, 'ksync_sock_uds_test',
                                               ['ksync_sock_uds_test.cc',
-                                               'ksync_test_util.cc'],
+                                               'ksync_test_util.cc',
+                                               'ksync_test_vrouter.cc'],
                                               ksync_test_suite)
 
 test_ksync_sock = AgentEnv.MakeTestCmdSrc(env, 'ksync_sock_test',
@@ -34,7 +36,8 @@ test_ksync_sock = AgentEnv.MakeTestCmdSrc(env, 'ksync_sock_test',
                                           ksync_test_suite)
 test_ksync_udp = AgentEnv.MakeTestCmdSrc(env, 'ksync_udp_test',
                                          ['ksync_udp_test.cc',
-                                          'ksync_test_util.cc'],
+                                          'ksync_test_util.cc',
+                                          'ksync_test_vrouter.cc'],
                                          ksync_test_suite)
 test_ksync_tx_queue = AgentEnv.MakeTestCmdSrc(env, 'ksync_tx_queue_test',
                                               ['ksync_tx_queue_test.cc',

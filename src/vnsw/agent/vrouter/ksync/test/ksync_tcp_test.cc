@@ -59,7 +59,7 @@
 #include "ksync/ksync_netlink.h"
 #include "ksync/ksync_sock.h"
 #include "ksync_test_util.h"
-
+#include "ksync_test_vrouter.h"
 #include "vr_types.h"
 #include "ksync_test_vrouter_response.h"
 
@@ -70,72 +70,6 @@ using boost::asio::ip::tcp;
 using namespace boost::placeholders;
 
 static uint32_t server_port;
-
-class LocalVrouter {
-public:
-    explicit LocalVrouter(io_context &io)
-        : io_(io), acceptor_(nullptr), socket_(nullptr), stop_(false) {}
-
-    void Bind() {
-        acceptor_ = new tcp::acceptor(io_, tcp::endpoint(tcp::v4(), 0));
-        boost::system::error_code e;
-        server_port = acceptor_->local_endpoint(e).port();
-        assert(!e);
-    }
-    void Start() { assert(pthread_create(&tid_, nullptr, &Run, this) == 0); }
-    void Stop()  { stop_ = true; }
-    void Join()  { pthread_join(tid_, nullptr); }
-
-private:
-    bool ReadN(char *buf, size_t n) {
-        size_t got = 0;
-        boost::system::error_code ec;
-        while (got < n && !stop_) {
-            got += socket_->read_some(buffer(buf + got, n - got), ec);
-            if (ec) return false;
-        }
-        return got == n;
-    }
-
-    void Serve() {
-        socket_ = new tcp::socket(io_);
-        boost::system::error_code ec;
-        acceptor_->accept(*socket_, ec);
-        if (ec) return;
-
-        char hdr[sizeof(struct nlmsghdr)];
-        std::vector<char> msg;
-        while (!stop_) {
-            if (!ReadN(hdr, sizeof(hdr))) break;
-            uint32_t total = TestMsgLenOf(hdr);
-            uint32_t seqno = TestSeqnoOf(hdr);
-            if (total > sizeof(hdr)) {
-                msg.resize(total - sizeof(hdr));
-                if (!ReadN(msg.data(), msg.size())) break;
-            }
-            uint32_t nreq = msg.empty() ? 1 :
-                TestCountSandeshMsgs(msg.data(), msg.size());
-            if (nreq == 0) nreq = 1;
-            std::string resp = TestBuildVrResponseFrameN(seqno, 0, nreq);
-            boost::asio::write(*socket_, buffer(resp), ec);
-            if (ec) break;
-        }
-        Cleanup();
-    }
-    void Cleanup() {
-        boost::system::error_code e;
-        if (socket_)   { socket_->close(e);   delete socket_;   socket_ = nullptr; }
-        if (acceptor_) { acceptor_->close(e); delete acceptor_; acceptor_ = nullptr; }
-    }
-    static void *Run(void *o) { static_cast<LocalVrouter *>(o)->Serve(); return nullptr; }
-
-    io_context &io_;
-    tcp::acceptor *acceptor_;
-    tcp::socket *socket_;
-    std::atomic<bool> stop_;
-    pthread_t tid_;
-};
-
 
 class TcpTest : public ::testing::Test {
 public:
@@ -191,7 +125,7 @@ TEST_F(TcpTest, Burst) {
 }
 
 static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return nullptr; }
-static LocalVrouter *g_vrouter = nullptr;
+static TcpTestVrouter *g_vrouter = nullptr;
 
 
 #ifdef KSYNC_TEST_GCOV_DUMP
@@ -208,8 +142,9 @@ int main(int argc, char **argv) {
     EventManager evm;
     io_context &io = *evm.io_service();
 
-    g_vrouter = new LocalVrouter(io);
+    g_vrouter = new TcpTestVrouter(io, tcp::endpoint(tcp::v4(), 0));
     g_vrouter->Bind();
+    server_port = g_vrouter->local_endpoint().port();
     g_vrouter->Start();
 
     pthread_t asio_thread;
