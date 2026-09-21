@@ -27,43 +27,13 @@
 #include "ksync/ksync_netlink.h"
 #include "ksync/ksync_sock.h"
 #include "ksync/ksync_sock_user.h"
+#include "ksync_test_util.h"
 
 #include "vr_types.h"
 
 using namespace std;
 using namespace boost::placeholders;
 
-// ---------------------------------------------------------------------------
-// Minimal AgentSandeshContext: records the vrouter result code on response.
-// ---------------------------------------------------------------------------
-class UTSandeshContext : public AgentSandeshContext {
-public:
-    UTSandeshContext() : AgentSandeshContext(), response_code_(0) {}
-    virtual ~UTSandeshContext() {}
-    virtual int VrResponseMsgHandler(vr_response *resp) {
-        response_code_ = resp->get_resp_code();
-        if (response_code_ < 0) { SetErrno(-response_code_); return -response_code_; }
-        SetErrno(0);
-        return 0;
-    }
-    virtual void IfMsgHandler(vr_interface_req *req) {}
-    virtual void NHMsgHandler(vr_nexthop_req *req) {}
-    virtual void RouteMsgHandler(vr_route_req *req) {}
-    virtual void MplsMsgHandler(vr_mpls_req *req) {}
-    virtual void MirrorMsgHandler(vr_mirror_req *req) {}
-    virtual void FlowMsgHandler(vr_flow_req *req) {}
-    virtual void VrfAssignMsgHandler(vr_vrf_assign_req *req) {}
-    virtual void VrfMsgHandler(vr_vrf_req *req) {}
-    virtual void VrfStatsMsgHandler(vr_vrf_stats_req *req) {}
-    virtual void DropStatsMsgHandler(vr_drop_stats_req *req) {}
-    virtual void VxLanMsgHandler(vr_vxlan_req *req) {}
-    virtual void VrouterOpsMsgHandler(vrouter_ops *req) {}
-    virtual void QosConfigMsgHandler(vr_qos_map_req *req) {}
-    virtual void ForwardingClassMsgHandler(vr_fc_map_req *req) {}
-    int response_code() const { return response_code_; }
-private:
-    int response_code_;
-};
 
 // Shorthand to read what the mock vrouter currently stores for an interface idx.
 static bool MockHasIf(int idx) {
@@ -72,163 +42,8 @@ static bool MockHasIf(int idx) {
 static int MockIfMtu(int idx) {
     return KSyncSockTypeMap::GetKSyncSockTypeMap()->if_map[idx].get_vifr_mtu();
 }
-
-// Encode a vr_interface_req. A monotonically increasing generation is stamped
-// into vifr_mtu so a test can prove that a *specific* (e.g. the change) message
-// reached the datapath, rather than relying on residual entry state.
-static int g_encode_gen = 1000;
-static int EncodeIf(uint16_t idx, sandesh_op::type op, char *buf, int len,
-                    int *stamped_gen) {
-    vr_interface_req encoder;
-    encoder.set_h_op(op);
-    encoder.set_vifr_idx(idx);
-    encoder.set_vifr_type(0);
-    int gen = ++g_encode_gen;
-    encoder.set_vifr_mtu(gen);
-    if (stamped_gen) *stamped_gen = gen;
-    int error = 0;
-    int elen = encoder.WriteBinary((uint8_t *)buf, len, &error);
-    assert(error == 0);
-    assert(elen <= len);
-    return elen;
-}
-
-// ---------------------------------------------------------------------------
-// Oper DB side
-// ---------------------------------------------------------------------------
-class VlanTable;
 static KSyncObjectManager *object_manager;
 
-class Vlan : public DBEntry {
-public:
-    struct VlanKey : public DBRequestKey {
-        VlanKey(uint16_t tag) : DBRequestKey(), tag_(tag) {}
-        virtual ~VlanKey() {}
-        uint16_t tag_;
-    };
-    Vlan(uint16_t tag) : DBEntry(), tag_(tag) {}
-    virtual ~Vlan() {}
-    bool IsLess(const DBEntry &rhs) const {
-        return tag_ < static_cast<const Vlan &>(rhs).tag_;
-    }
-    virtual string ToString() const { return "Vlan"; }
-    virtual void SetKey(const DBRequestKey *k) {
-        tag_ = static_cast<const VlanKey *>(k)->tag_;
-    }
-    virtual KeyPtr GetDBRequestKey() const { return KeyPtr(new VlanKey(tag_)); }
-    uint16_t GetTag() const { return tag_; }
-private:
-    uint16_t tag_;
-    friend class VlanTable;
-    DISALLOW_COPY_AND_ASSIGN(Vlan);
-};
-
-class VlanTable : public DBTable {
-public:
-    VlanTable(DB *db, const string &name) : DBTable(db, name) {}
-    virtual ~VlanTable() {}
-    virtual unique_ptr<DBEntry> AllocEntry(const DBRequestKey *k) const {
-        const Vlan::VlanKey *key = static_cast<const Vlan::VlanKey *>(k);
-        return unique_ptr<DBEntry>(new Vlan(key->tag_));
-    }
-    virtual DBEntry *Add(const DBRequest *req) {
-        return new Vlan(static_cast<Vlan::VlanKey *>(req->key.get())->tag_);
-    }
-    virtual bool OnChange(DBEntry *entry, const DBRequest *req) { return true; }
-    virtual bool Delete(DBEntry *entry, const DBRequest *req) { return true; }
-    static VlanTable *CreateTable(DB *db, const string &name) {
-        VlanTable *t = new VlanTable(db, name); t->Init(); return t;
-    }
-private:
-    DISALLOW_COPY_AND_ASSIGN(VlanTable);
-};
-
-// ---------------------------------------------------------------------------
-// KSync side -- DB-driven netlink entry (covers KSyncNetlinkDBEntry).
-// ---------------------------------------------------------------------------
-class VlanKSyncEntry : public KSyncNetlinkDBEntry {
-public:
-    explicit VlanKSyncEntry(const VlanKSyncEntry *e)
-        : KSyncNetlinkDBEntry(), tag_(e->tag_) {}
-    explicit VlanKSyncEntry(const Vlan *v)
-        : KSyncNetlinkDBEntry(), tag_(v->GetTag()) {}
-    virtual ~VlanKSyncEntry() {}
-    virtual bool IsLess(const KSyncEntry &rhs) const {
-        return tag_ < static_cast<const VlanKSyncEntry &>(rhs).tag_;
-    }
-    virtual string ToString() const { return "VlanKSync"; }
-    virtual KSyncEntry *UnresolvedReference() { return nullptr; }
-    virtual bool Sync(DBEntry *e) { return true; }
-    // vr_interface_req is a wide sandesh struct (100+ fields incl. lists): its
-    // binary encoding does not fit the base-class default MsgLen() of
-    // KSyncEntry::kDefaultMsgSize (512). With 512 the encoder runs out of buffer
-    // ("ensureCanWrite: Insufficient space ... Available 0") and AddMsg returns
-    // the full needed length > len => assert(msg_len <= len) in
-    // KSyncNetlink*Entry::Add() aborts. Mirror the agent, which overrides
-    // MsgLen() for interface messages to KSYNC_DEFAULT_MSG_SIZE (4096) --
-    // see interface_ksync.h (kDefaultInterfaceMsgSize).
-    virtual int MsgLen() { return KSYNC_DEFAULT_MSG_SIZE; }
-    virtual int AddMsg(char *buf, int len) {
-        add_count_++;
-        return EncodeIf(tag_, sandesh_op::ADD, buf, len, &last_gen_);
-    }
-    virtual int ChangeMsg(char *buf, int len) {
-        change_count_++;
-        return EncodeIf(tag_, sandesh_op::ADD, buf, len, &last_gen_);
-    }
-    virtual int DeleteMsg(char *buf, int len) {
-        del_count_++;
-        return EncodeIf(tag_, sandesh_op::DEL, buf, len, nullptr);
-    }
-    KSyncDBObject *GetObject() const;
-    uint16_t GetTag() const { return tag_; }
-    static void Reset() { add_count_ = change_count_ = del_count_ = 0; }
-    static int AddCount()    { return add_count_; }
-    static int ChangeCount() { return change_count_; }
-    static int DelCount()    { return del_count_; }
-    static int LastGen()     { return last_gen_; }   // gen of most recent encode
-private:
-    uint16_t tag_;
-    static int add_count_, change_count_, del_count_, last_gen_;
-    DISALLOW_COPY_AND_ASSIGN(VlanKSyncEntry);
-};
-int VlanKSyncEntry::add_count_ = 0;
-int VlanKSyncEntry::change_count_ = 0;
-int VlanKSyncEntry::del_count_ = 0;
-int VlanKSyncEntry::last_gen_ = 0;
-
-class VlanKSyncObject : public KSyncDBObject {
-public:
-    explicit VlanKSyncObject(DBTableBase *table)
-        : KSyncDBObject("Vlan KSync", table) {}
-    virtual KSyncEntry *Alloc(const KSyncEntry *entry, uint32_t index) {
-        VlanKSyncEntry *k =
-            new VlanKSyncEntry(static_cast<const VlanKSyncEntry *>(entry));
-        last_ = k;
-        return static_cast<KSyncEntry *>(k);
-    }
-    virtual KSyncEntry *DBToKSyncEntry(const DBEntry *e) {
-        return static_cast<KSyncEntry *>(
-            new VlanKSyncEntry(static_cast<const Vlan *>(e)));
-    }
-    static void Init(VlanTable *t) { assert(singleton_ == nullptr);
-                                     singleton_ = new VlanKSyncObject(t); }
-    static void Shutdown() { delete singleton_; singleton_ = nullptr; last_ = nullptr; }
-    static VlanKSyncObject *Get() { return singleton_; }
-    static VlanKSyncEntry *last() { return last_; }
-private:
-    static VlanKSyncObject *singleton_;
-    static VlanKSyncEntry *last_;
-    DISALLOW_COPY_AND_ASSIGN(VlanKSyncObject);
-};
-VlanKSyncObject *VlanKSyncObject::singleton_ = nullptr;
-VlanKSyncEntry  *VlanKSyncObject::last_ = nullptr;
-KSyncDBObject *VlanKSyncEntry::GetObject() const { return VlanKSyncObject::Get(); }
-
-// ---------------------------------------------------------------------------
-// KSync side -- non-DB netlink entry (covers KSyncNetlinkEntry + msg_len==0).
-// Driven manually via KSyncObject::Create/Change/Delete (no DBTable).
-// ---------------------------------------------------------------------------
 class RawKSyncObject;
 
 class RawKSyncEntry : public KSyncNetlinkEntry {
@@ -254,15 +69,15 @@ public:
     virtual int MsgLen() { return KSYNC_DEFAULT_MSG_SIZE; }
     virtual int AddMsg(char *buf, int len) {
         if (no_send_) return 0;     // exercise the "msg_len==0" no-send branch
-        return EncodeIf(tag_, sandesh_op::ADD, buf, len, nullptr);
+        return KSyncTestEncodeIf(tag_, sandesh_op::ADD, buf, len, nullptr);
     }
     virtual int ChangeMsg(char *buf, int len) {
         if (no_send_) return 0;
-        return EncodeIf(tag_, sandesh_op::ADD, buf, len, nullptr);
+        return KSyncTestEncodeIf(tag_, sandesh_op::ADD, buf, len, nullptr);
     }
     virtual int DeleteMsg(char *buf, int len) {
         if (no_send_) return 0;
-        return EncodeIf(tag_, sandesh_op::DEL, buf, len, nullptr);
+        return KSyncTestEncodeIf(tag_, sandesh_op::DEL, buf, len, nullptr);
     }
     KSyncObject *GetObject() const;
     uint16_t GetTag() const { return tag_; }
@@ -290,28 +105,6 @@ private:
 };
 RawKSyncObject *RawKSyncObject::singleton_ = nullptr;
 KSyncObject *RawKSyncEntry::GetObject() const { return RawKSyncObject::Get(); }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-template <typename Cond>
-static bool WaitFor(int max_ms, Cond cond) {
-    for (int i = 0; i < max_ms / 10; i++) {
-        task_util::WaitForIdle();
-        if (cond()) return true;
-        usleep(10 * 1000);
-    }
-    task_util::WaitForIdle();
-    return cond();
-}
-
-static void EnqueueVlan(VlanTable *t, uint16_t tag, DBRequest::DBOperation op) {
-    DBRequest req;
-    req.oper = op;
-    req.key.reset(new Vlan::VlanKey(tag));
-    req.data.reset(nullptr);
-    t->Enqueue(&req);
-}
 
 // ---------------------------------------------------------------------------
 // Fixture

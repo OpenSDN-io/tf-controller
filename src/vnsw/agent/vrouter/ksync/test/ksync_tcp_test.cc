@@ -58,6 +58,7 @@
 #include "ksync/ksync_object.h"
 #include "ksync/ksync_netlink.h"
 #include "ksync/ksync_sock.h"
+#include "ksync_test_util.h"
 
 #include "vr_types.h"
 #include "ksync_test_vrouter_response.h"
@@ -69,26 +70,6 @@ using boost::asio::ip::tcp;
 using namespace boost::placeholders;
 
 static uint32_t server_port;
-class UTSandeshContext : public AgentSandeshContext {
-public:
-    virtual int VrResponseMsgHandler(vr_response *resp) {
-        return (resp->get_resp_code() < 0) ? -resp->get_resp_code() : 0;
-    }
-    virtual void IfMsgHandler(vr_interface_req *) {}
-    virtual void NHMsgHandler(vr_nexthop_req *) {}
-    virtual void RouteMsgHandler(vr_route_req *) {}
-    virtual void MplsMsgHandler(vr_mpls_req *) {}
-    virtual void MirrorMsgHandler(vr_mirror_req *) {}
-    virtual void FlowMsgHandler(vr_flow_req *) {}
-    virtual void VrfAssignMsgHandler(vr_vrf_assign_req *) {}
-    virtual void VrfMsgHandler(vr_vrf_req *) {}
-    virtual void VrfStatsMsgHandler(vr_vrf_stats_req *) {}
-    virtual void DropStatsMsgHandler(vr_drop_stats_req *) {}
-    virtual void VxLanMsgHandler(vr_vxlan_req *) {}
-    virtual void VrouterOpsMsgHandler(vrouter_ops *) {}
-    virtual void QosConfigMsgHandler(vr_qos_map_req *) {}
-    virtual void ForwardingClassMsgHandler(vr_fc_map_req *) {}
-};
 
 class LocalVrouter {
 public:
@@ -155,114 +136,6 @@ private:
     pthread_t tid_;
 };
 
-class Vlan : public DBEntry {
-public:
-    struct VlanKey : public DBRequestKey {
-        VlanKey(uint16_t tag) : DBRequestKey(), tag_(tag) {}
-        uint16_t tag_;
-    };
-    Vlan(uint16_t tag) : DBEntry(), tag_(tag) {}
-    bool IsLess(const DBEntry &rhs) const { return tag_ < static_cast<const Vlan &>(rhs).tag_; }
-    virtual string ToString() const { return "Vlan"; }
-    virtual void SetKey(const DBRequestKey *k) { tag_ = static_cast<const VlanKey *>(k)->tag_; }
-    virtual KeyPtr GetDBRequestKey() const { return KeyPtr(new VlanKey(tag_)); }
-    uint16_t GetTag() const { return tag_; }
-private:
-    uint16_t tag_;
-    DISALLOW_COPY_AND_ASSIGN(Vlan);
-};
-
-class VlanTable : public DBTable {
-public:
-    VlanTable(DB *db, const string &name) : DBTable(db, name) {}
-    virtual unique_ptr<DBEntry> AllocEntry(const DBRequestKey *k) const {
-        return unique_ptr<DBEntry>(new Vlan(static_cast<const Vlan::VlanKey *>(k)->tag_));
-    }
-    virtual DBEntry *Add(const DBRequest *req) {
-        return new Vlan(static_cast<Vlan::VlanKey *>(req->key.get())->tag_);
-    }
-    virtual bool OnChange(DBEntry *e, const DBRequest *req) { return true; }
-    virtual bool Delete(DBEntry *e, const DBRequest *req) { return true; }
-    static VlanTable *CreateTable(DB *db, const string &name) {
-        VlanTable *t = new VlanTable(db, name); t->Init(); return t;
-    }
-private:
-    DISALLOW_COPY_AND_ASSIGN(VlanTable);
-};
-
-static int EncodeIf(uint16_t idx, sandesh_op::type op, char *buf, int len) {
-    vr_interface_req e;
-    e.set_h_op(op); e.set_vifr_idx(idx); e.set_vifr_type(0);
-    int error = 0;
-    int elen = e.WriteBinary((uint8_t *)buf, len, &error);
-    assert(error == 0);
-    assert(elen > 0 && elen <= len);
-    return elen;
-}
-
-class VlanKSyncObject;
-class VlanKSyncEntry : public KSyncNetlinkDBEntry {
-public:
-    explicit VlanKSyncEntry(const VlanKSyncEntry *e) : KSyncNetlinkDBEntry(), tag_(e->tag_) {}
-    explicit VlanKSyncEntry(const Vlan *v) : KSyncNetlinkDBEntry(), tag_(v->GetTag()) {}
-    virtual bool IsLess(const KSyncEntry &rhs) const {
-        return tag_ < static_cast<const VlanKSyncEntry &>(rhs).tag_;
-    }
-    virtual string ToString() const { return "VlanKSync"; }
-    virtual KSyncEntry *UnresolvedReference() { return nullptr; }
-    virtual bool Sync(DBEntry *e) { return true; }
-    virtual int MsgLen() { return KSYNC_DEFAULT_MSG_SIZE; }
-    virtual int AddMsg(char *b, int l)    { add_++; return EncodeIf(tag_, sandesh_op::ADD, b, l); }
-    virtual int ChangeMsg(char *b, int l) { return EncodeIf(tag_, sandesh_op::ADD, b, l); }
-    virtual int DeleteMsg(char *b, int l) { del_++; return EncodeIf(tag_, sandesh_op::DEL, b, l); }
-    KSyncDBObject *GetObject() const;
-    static void Reset() { add_ = del_ = 0; }
-    static int AddCount() { return add_; }
-    static int DelCount() { return del_; }
-private:
-    uint16_t tag_;
-    static int add_, del_;
-    DISALLOW_COPY_AND_ASSIGN(VlanKSyncEntry);
-};
-int VlanKSyncEntry::add_ = 0;
-int VlanKSyncEntry::del_ = 0;
-
-class VlanKSyncObject : public KSyncDBObject {
-public:
-    explicit VlanKSyncObject(DBTableBase *t) : KSyncDBObject("Vlan KSync", t) {}
-    virtual KSyncEntry *Alloc(const KSyncEntry *e, uint32_t index) {
-        VlanKSyncEntry *k = new VlanKSyncEntry(static_cast<const VlanKSyncEntry *>(e));
-        last_ = k; return static_cast<KSyncEntry *>(k);
-    }
-    virtual KSyncEntry *DBToKSyncEntry(const DBEntry *e) {
-        return static_cast<KSyncEntry *>(new VlanKSyncEntry(static_cast<const Vlan *>(e)));
-    }
-    static void Init(VlanTable *t) { assert(singleton_ == nullptr); singleton_ = new VlanKSyncObject(t); }
-    static void Shutdown() { delete singleton_; singleton_ = nullptr; last_ = nullptr; }
-    static VlanKSyncObject *Get() { return singleton_; }
-    static VlanKSyncEntry *last() { return last_; }
-private:
-    static VlanKSyncObject *singleton_;
-    static VlanKSyncEntry *last_;
-    DISALLOW_COPY_AND_ASSIGN(VlanKSyncObject);
-};
-VlanKSyncObject *VlanKSyncObject::singleton_ = nullptr;
-VlanKSyncEntry  *VlanKSyncObject::last_ = nullptr;
-KSyncDBObject *VlanKSyncEntry::GetObject() const { return VlanKSyncObject::Get(); }
-template <typename Cond>
-static bool WaitFor(int max_ms, Cond cond) {
-    for (int i = 0; i < max_ms; i += 10) {
-        if (cond()) return true;
-        usleep(10 * 1000);
-    }
-    return cond();
-}
-
-static void EnqueueVlan(VlanTable *t, uint16_t tag, DBRequest::DBOperation op) {
-    DBRequest req; req.oper = op;
-    req.key.reset(new Vlan::VlanKey(tag)); req.data.reset(nullptr);
-    t->Enqueue(&req);
-}
 
 class TcpTest : public ::testing::Test {
 public:

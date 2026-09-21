@@ -9,7 +9,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
 
@@ -23,6 +22,7 @@
 #include "ksync/ksync_object.h"
 #include "ksync/ksync_netlink.h"
 #include "ksync/ksync_sock.h"
+#include "ksync_test_util.h"
 
 #include "vr_types.h"
 #include "udp_util.h"
@@ -31,27 +31,6 @@
 
 using namespace std;
 using namespace boost::placeholders;
-
-class UTSandeshContext : public AgentSandeshContext {
-public:
-    virtual int VrResponseMsgHandler(vr_response *resp) {
-        return (resp->get_resp_code() < 0) ? -resp->get_resp_code() : 0;
-    }
-    virtual void IfMsgHandler(vr_interface_req *) {}
-    virtual void NHMsgHandler(vr_nexthop_req *) {}
-    virtual void RouteMsgHandler(vr_route_req *) {}
-    virtual void MplsMsgHandler(vr_mpls_req *) {}
-    virtual void MirrorMsgHandler(vr_mirror_req *) {}
-    virtual void FlowMsgHandler(vr_flow_req *) {}
-    virtual void VrfAssignMsgHandler(vr_vrf_assign_req *) {}
-    virtual void VrfMsgHandler(vr_vrf_req *) {}
-    virtual void VrfStatsMsgHandler(vr_vrf_stats_req *) {}
-    virtual void DropStatsMsgHandler(vr_drop_stats_req *) {}
-    virtual void VxLanMsgHandler(vr_vxlan_req *) {}
-    virtual void VrouterOpsMsgHandler(vrouter_ops *) {}
-    virtual void QosConfigMsgHandler(vr_qos_map_req *) {}
-    virtual void ForwardingClassMsgHandler(vr_fc_map_req *) {}
-};
 
 class CountingContext : public UTSandeshContext {
 public:
@@ -76,18 +55,6 @@ static uint32_t CountUvrRequests(char *payload, size_t len) {
         buf_len -= decode_len;
     }
     return ctx.n();
-}
-
-static int EncodeIf(uint16_t idx, sandesh_op::type op, char *buf, int len) {
-    vr_interface_req encoder;
-    encoder.set_h_op(op);
-    encoder.set_vifr_idx(idx);
-    encoder.set_vifr_type(0);
-    int error = 0;
-    int elen = encoder.WriteBinary((uint8_t *)buf, len, &error);
-    assert(error == 0);
-    assert(elen > 0 && elen <= len);
-    return elen;
 }
 
 class UdpVrouter {
@@ -176,9 +143,9 @@ public:
     virtual KSyncEntry *UnresolvedReference() { return nullptr; }
     virtual bool Sync() { return true; }
     virtual int MsgLen() { return KSYNC_DEFAULT_MSG_SIZE; }
-    virtual int AddMsg(char *b, int l)    { return EncodeIf(tag_, sandesh_op::ADD, b, l); }
-    virtual int ChangeMsg(char *b, int l) { return EncodeIf(tag_, sandesh_op::ADD, b, l); }
-    virtual int DeleteMsg(char *b, int l) { return EncodeIf(tag_, sandesh_op::DEL, b, l); }
+    virtual int AddMsg(char *b, int l)    { return KSyncTestEncodeIf(tag_, sandesh_op::ADD, b, l); }
+    virtual int ChangeMsg(char *b, int l) { return KSyncTestEncodeIf(tag_, sandesh_op::ADD, b, l); }
+    virtual int DeleteMsg(char *b, int l) { return KSyncTestEncodeIf(tag_, sandesh_op::DEL, b, l); }
     KSyncObject *GetObject() const;
 private:
     uint16_t tag_;
@@ -199,17 +166,9 @@ private:
     static UdpKSyncObject *singleton_;
     DISALLOW_COPY_AND_ASSIGN(UdpKSyncObject);
 };
-UdpKSyncObject *UdpKSyncObject::singleton_ = nullptr;
-KSyncObject *UdpKSyncEntry::GetObject() const { return UdpKSyncObject::Get(); }
 
-template <typename Cond>
-static bool WaitFor(int max_ms, Cond cond) {
-    for (int i = 0; i < max_ms; i += 10) {
-        if (cond()) return true;
-        usleep(10 * 1000);
-    }
-    return cond();
-}
+UdpKSyncObject *UdpKSyncObject::singleton_;
+KSyncObject *UdpKSyncEntry::GetObject() const { return UdpKSyncObject::Get(); }
 
 class UdpTest : public ::testing::Test {
 public:
