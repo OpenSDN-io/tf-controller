@@ -3,7 +3,6 @@
  */
 
 #include <atomic>
-#include <pthread.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -23,6 +22,7 @@
 #include "ksync/ksync_netlink.h"
 #include "ksync/ksync_sock.h"
 #include "ksync_test_util.h"
+#include "io/test/event_manager_test.h"
 #include "ksync_test_vrouter.h"
 
 #include "vr_types.h"
@@ -138,10 +138,6 @@ static void FlushCoverage() {
 static void FlushCoverage() {}
 #endif
 
-static void *AsioRun(void *arg) {
-    static_cast<EventManager *>(arg)->Run();
-    return nullptr;
-}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
@@ -159,8 +155,8 @@ int main(int argc, char **argv) {
 
     KSyncObjectManager::Init();
 
-    pthread_t asio_thread;
-    assert(pthread_create(&asio_thread, nullptr, &AsioRun, &evm) == 0);
+    ServerThread evm_thread(&evm);
+    evm_thread.Start();
 
     int ret = RUN_ALL_TESTS();
     FlushCoverage();
@@ -174,6 +170,6 @@ int main(int argc, char **argv) {
     vr.Stop();
     vr.Join();
     evm.Shutdown();
-    pthread_join(asio_thread, nullptr);
+    evm_thread.Join();
     return ret;
 }

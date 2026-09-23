@@ -5,9 +5,9 @@
 #ifndef vnsw_agent_ksync_test_vrouter_h
 #define vnsw_agent_ksync_test_vrouter_h
 
-#include <pthread.h>
 #include <atomic>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <boost/asio.hpp>
@@ -33,11 +33,8 @@ protected:
     bool stopping() const { return stop_; }
 
 private:
-    static void *ThreadMain(void *arg);
-
     std::atomic<bool> stop_;
-    bool started_;
-    pthread_t thread_;
+    std::thread thread_;
 };
 
 template <typename Protocol>

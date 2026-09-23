@@ -14,16 +14,15 @@
 
 #include "udp_util.h"
 
-TestVrouter::TestVrouter() : stop_(false), started_(false) {
+TestVrouter::TestVrouter() : stop_(false) {
 }
 
 TestVrouter::~TestVrouter() {
 }
 
 bool TestVrouter::Start() {
-    started_ = (pthread_create(&thread_, nullptr, &TestVrouter::ThreadMain,
-                               this) == 0);
-    return started_;
+    thread_ = std::thread([this] { Serve(); });
+    return true;
 }
 
 void TestVrouter::Stop() {
@@ -31,16 +30,10 @@ void TestVrouter::Stop() {
 }
 
 void TestVrouter::Join() {
-    if (started_) {
-        pthread_join(thread_, nullptr);
-        started_ = false;
+    if (thread_.joinable()) {
+        thread_.join();
     }
     Close();
-}
-
-void *TestVrouter::ThreadMain(void *arg) {
-    static_cast<TestVrouter *>(arg)->Serve();
-    return nullptr;
 }
 
 UdsTestVrouter::UdsTestVrouter(boost::asio::io_context &io,

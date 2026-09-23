@@ -3,7 +3,6 @@
  */
 
 #include <atomic>
-#include <pthread.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -28,6 +27,7 @@
 #include "ksync/ksync_netlink.h"
 #include "ksync/ksync_sock.h"
 #include "ksync_test_util.h"
+#include "io/test/event_manager_test.h"
 #include "ksync_test_vrouter.h"
 #include "vr_types.h"
 #include "ksync_test_vrouter_response.h"
@@ -86,7 +86,6 @@ TEST_F(UdsTest, Burst) {
         return VlanKSyncObject::Get()->Size() == 0; }));
 }
 
-static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return nullptr; }
 static UdsTestVrouter *g_vrouter = nullptr;
 
 
@@ -108,8 +107,8 @@ int main(int argc, char **argv) {
     g_vrouter->Bind();
     g_vrouter->Start();
 
-    pthread_t asio_thread;
-    assert(pthread_create(&asio_thread, nullptr, &AsioRun, &evm) == 0);
+    ServerThread evm_thread(&evm);
+    evm_thread.Start();
 
     KSyncSockUds::Init(io, "disabled", kSockPath);
     for (int i = 0; i < KSyncSock::kRxWorkQueueCount; i++)

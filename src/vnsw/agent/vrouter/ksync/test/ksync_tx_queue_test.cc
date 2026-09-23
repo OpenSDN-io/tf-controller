@@ -3,7 +3,6 @@
  */
 
 #include <atomic>
-#include <pthread.h>
 #include <unistd.h>
 
 #include <boost/asio.hpp>
@@ -22,6 +21,7 @@
 #include "ksync/ksync_sock.h"
 #include "ksync/ksync_sock_user.h"
 #include "ksync_test_util.h"
+#include "io/test/event_manager_test.h"
 
 #include "vr_types.h"
 
@@ -112,7 +112,6 @@ TEST_F(TxQueueTest, EventFdDrainsQueue) {
     EXPECT_EQ(q_->queue_len(), (size_t)0);
 }
 
-static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return nullptr; }
 
 static boost::asio::ip::udp::socket *g_drain = nullptr;
 static int BindDrain(boost::asio::io_context &io) {
@@ -151,8 +150,8 @@ int main(int argc, char **argv) {
 
     KSyncObjectManager::Init();
 
-    pthread_t asio_thread;
-    assert(pthread_create(&asio_thread, nullptr, &AsioRun, &evm) == 0);
+    ServerThread evm_thread(&evm);
+    evm_thread.Start();
 
     int ret = RUN_ALL_TESTS();
     FlushCoverage();
@@ -164,7 +163,7 @@ int main(int argc, char **argv) {
         KSyncSock::SetAgentSandeshContext(nullptr, i);
     }
     evm.Shutdown();
-    assert(pthread_join(asio_thread, nullptr) == 0);
+    evm_thread.Join();
     delete g_drain;
     return ret;
 }

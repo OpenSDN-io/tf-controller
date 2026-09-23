@@ -36,7 +36,6 @@
 
 #include <atomic>
 #include <iostream>
-#include <pthread.h>
 #include <unistd.h>
 
 #include <boost/asio.hpp>
@@ -59,6 +58,7 @@
 #include "ksync/ksync_netlink.h"
 #include "ksync/ksync_sock.h"
 #include "ksync_test_util.h"
+#include "io/test/event_manager_test.h"
 #include "ksync_test_vrouter.h"
 #include "vr_types.h"
 #include "ksync_test_vrouter_response.h"
@@ -124,7 +124,6 @@ TEST_F(TcpTest, Burst) {
         return VlanKSyncObject::Get()->Size() == 0; }));
 }
 
-static void *AsioRun(void *arg) { static_cast<EventManager *>(arg)->Run(); return nullptr; }
 static TcpTestVrouter *g_vrouter = nullptr;
 
 
@@ -147,8 +146,8 @@ int main(int argc, char **argv) {
     server_port = g_vrouter->local_endpoint().port();
     g_vrouter->Start();
 
-    pthread_t asio_thread;
-    assert(pthread_create(&asio_thread, nullptr, &AsioRun, &evm) == 0);
+    ServerThread evm_thread(&evm);
+    evm_thread.Start();
 
     boost::system::error_code ec;
     boost::asio::ip::address ip = boost::asio::ip::address::from_string("127.0.0.1", ec);
