@@ -118,7 +118,8 @@ private:
                                     BindUtil::Operation op);
     void UpdatePendingList(const std::string &view,
                                        const std::string &zone,
-                                       const DnsItems &items);
+                                       const DnsItems &items,
+                                       BindUtil::Operation op);
     void DeletePendingList(uint16_t xid);
     void ClearPendingList();
     void PendingListViewDelete(const VirtualDnsConfig *config);

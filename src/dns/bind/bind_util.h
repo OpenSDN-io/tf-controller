@@ -157,6 +157,7 @@ struct DnsItem {
     uint16_t data_offset; // offset from where rest of data exists
     std::string name;
     std::string source_name;
+    std::string vm_uuid;
     std::string data;
     DnsSOAData soa;
     DnsSRVData srv;
@@ -168,7 +169,8 @@ struct DnsItem {
 
     bool operator ==(const DnsItem &rhs) const {
         if (eclass == rhs.eclass && type == rhs.type &&
-            name == rhs.name && data == rhs.data && soa == rhs.soa && source_name == rhs.source_name)
+            name == rhs.name && data == rhs.data && soa == rhs.soa &&
+            source_name == rhs.source_name && vm_uuid == rhs.vm_uuid)
             return true;
         return false;
     }
@@ -184,7 +186,13 @@ struct DnsItem {
             (rhs.type == DNS_TYPE_ANY || type == rhs.type) &&
             (name == rhs.name) &&
             (rhs.data.size() == 0 || data == rhs.data) &&
-            (source_name == rhs.source_name))
+            (source_name == rhs.source_name) &&
+            // Same ownership rule as DnsManager::ProcessAgentUpdate(): the
+            // vm_uuid is compared only when both sides carry one. A stored
+            // item published without a vm_uuid must stay removable by a
+            // delete that carries one, else the record is stranded in named.
+            (rhs.vm_uuid.empty() || vm_uuid.empty() ||
+             vm_uuid == rhs.vm_uuid))
             return true;
         return false;
     }

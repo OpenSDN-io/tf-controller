@@ -1404,6 +1404,200 @@ TEST_F(DnsTest, DnsFloatingIp_VnDelWithoutFipDeAssoc) {
     client->WaitForIdle();
 }
 
+// Drive the OS oper-state of a vm-interface, the way the agent does when the
+// tap device of an instance appears or goes away. Powering an instance off
+// removes the tap device, which takes os_oper_state and ipv4_active() down.
+static void SetVmiOsOperState(int intf_id, bool state) {
+    VmInterface *vmi = static_cast<VmInterface *>(VmPortGet(intf_id));
+    ASSERT_TRUE(vmi != NULL);
+
+    vmi->set_test_oper_state(state);
+    DBRequest req(DBRequest::DB_ENTRY_ADD_CHANGE);
+    req.key.reset(new VmInterfaceKey(AgentKey::RESYNC, vmi->GetUuid(),
+                                     vmi->name()));
+    req.data.reset(new VmInterfaceOsOperStateData(state));
+    Agent::GetInstance()->interface_table()->Enqueue(&req);
+    client->WaitForIdle();
+}
+
+// Bring up vnet1 with an instance-ip and, optionally, the floating-ip
+// association. Same sequence the DnsFloatingIp tests above use inline.
+static void FloatingIpPortSetup(PortInfo *input, IpamInfo *ipam_info,
+                                bool assoc_fip) {
+    AddPort(input[0].name, input[0].intf_id);
+    AddLink("virtual-network", "vn1", "virtual-machine-interface", "vnet1");
+    AddLink("virtual-machine", "vm1", "virtual-machine-interface", "vnet1");
+    AddInstanceIp("instance0", input[0].vm_id, input[0].addr);
+    AddLink("virtual-machine-interface", input[0].name,
+            "instance-ip", "instance0");
+    client->WaitForIdle();
+
+    if (assoc_fip) {
+        AddLink("virtual-machine-interface", "vnet1", "floating-ip", "fip1");
+        client->WaitForIdle();
+    }
+
+    IntfCfgAdd(input, 0);
+    client->WaitForIdle();
+    AddIPAM("vn1", ipam_info, 1);
+    client->WaitForIdle();
+}
+
+static void FloatingIpPortCleanup(PortInfo *input) {
+    IntfCfgDel(input, 0);
+    client->WaitForIdle();
+    DelIPAM("vn1");
+    client->WaitForIdle();
+
+    DelLink("virtual-network", "vn1", "virtual-machine-interface", "vnet1");
+    DelLink("virtual-machine", "vm1", "virtual-machine-interface", "vnet1");
+    DelLink("virtual-machine-interface", "vnet1", "floating-ip", "fip1");
+    DelLink("instance-ip", "instance0", "virtual-machine-interface", "vnet1");
+    client->WaitForIdle();
+}
+
+// Powering an instance off must not withdraw its floating ip DNS record. The
+// interface stops forwarding and the floating ip route goes away, but the
+// record follows the floating ip configuration, which has not changed.
+TEST_F(DnsTest, DnsFloatingIp_OsStateDown) {
+    FloatingIPSetup();
+    struct PortInfo input[] = {
+        {"vnet1", 1, "1.1.1.1", "00:00:00:01:01:01", 1, 1},
+    };
+
+    IpamInfo ipam_info[] = {
+        {"1.1.1.0", 24, "1.1.1.10"},
+    };
+
+    FloatingIpPortSetup(input, ipam_info, true);
+
+    EXPECT_TRUE(VmPortActive(input, 0));
+    EXPECT_TRUE(VmPortFloatingIpCount(1, 1));
+    EXPECT_TRUE(RouteFind("default-project:vn2:vn2",
+                          Ip4Address::from_string("2.2.2.100"), 32));
+
+    DnsProto *dns_proto = Agent::GetInstance()->GetDnsProto();
+    EXPECT_TRUE(dns_proto->fip_list().size() == 1);
+
+    // Instance powered off - tap device gone
+    SetVmiOsOperState(input[0].intf_id, false);
+    EXPECT_FALSE(VmPortActive(input, 0));
+
+    // Forwarding state is gone ...
+    EXPECT_FALSE(RouteFind("default-project:vn2:vn2",
+                           Ip4Address::from_string("2.2.2.100"), 32));
+
+    // ... the DNS record is not
+    const DnsProto::DnsFipSet &fip_set = dns_proto->fip_list();
+    EXPECT_TRUE(fip_set.size() == 1);
+    DnsProto::DnsFipSet::const_iterator fip_it = fip_set.begin();
+    EXPECT_TRUE((*fip_it)->floating_ip_.to_string() == "2.2.2.100");
+
+    // Instance powered back on. Route is back and there is still exactly one
+    // record - the republish must not duplicate it.
+    SetVmiOsOperState(input[0].intf_id, true);
+    EXPECT_TRUE(VmPortActive(input, 0));
+    EXPECT_TRUE(RouteFind("default-project:vn2:vn2",
+                          Ip4Address::from_string("2.2.2.100"), 32));
+    EXPECT_TRUE(dns_proto->fip_list().size() == 1);
+
+    // Cleanup
+    LOG(DEBUG, "Doing cleanup");
+
+    FloatingIpPortCleanup(input);
+    EXPECT_TRUE(dns_proto->fip_list().size() == 0);
+
+    FloatingIPTearDown(true);
+}
+
+// A floating ip removed from a powered off instance must still have its record
+// withdrawn. FloatingIp::DeleteL3() does not run for an entry that is not
+// installed, so the withdraw comes from CleanupFloatingIpList().
+TEST_F(DnsTest, DnsFloatingIp_DeAssocWhileOsStateDown) {
+    FloatingIPSetup();
+    struct PortInfo input[] = {
+        {"vnet1", 1, "1.1.1.1", "00:00:00:01:01:01", 1, 1},
+    };
+
+    IpamInfo ipam_info[] = {
+        {"1.1.1.0", 24, "1.1.1.10"},
+    };
+
+    FloatingIpPortSetup(input, ipam_info, true);
+
+    DnsProto *dns_proto = Agent::GetInstance()->GetDnsProto();
+    EXPECT_TRUE(dns_proto->fip_list().size() == 1);
+
+    SetVmiOsOperState(input[0].intf_id, false);
+    EXPECT_FALSE(VmPortActive(input, 0));
+    EXPECT_TRUE(dns_proto->fip_list().size() == 1);
+
+    // De-associate the floating ip while the instance stays powered off
+    DelLink("virtual-machine-interface", "vnet1", "floating-ip", "fip1");
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmPortFloatingIpCount(1, 0));
+    EXPECT_TRUE(dns_proto->fip_list().size() == 0);
+
+    // Cleanup
+    LOG(DEBUG, "Doing cleanup");
+
+    SetVmiOsOperState(input[0].intf_id, true);
+    FloatingIpPortCleanup(input);
+    EXPECT_TRUE(dns_proto->fip_list().size() == 0);
+
+    FloatingIPTearDown(true);
+}
+
+// A floating ip associated to a powered off instance gets its record right
+// away; it does not wait for the instance to be started.
+TEST_F(DnsTest, DnsFloatingIp_AssocWhileOsStateDown) {
+    FloatingIPSetup();
+    struct PortInfo input[] = {
+        {"vnet1", 1, "1.1.1.1", "00:00:00:01:01:01", 1, 1},
+    };
+
+    IpamInfo ipam_info[] = {
+        {"1.1.1.0", 24, "1.1.1.10"},
+    };
+
+    FloatingIpPortSetup(input, ipam_info, false);
+
+    DnsProto *dns_proto = Agent::GetInstance()->GetDnsProto();
+    EXPECT_TRUE(dns_proto->fip_list().size() == 0);
+
+    SetVmiOsOperState(input[0].intf_id, false);
+    EXPECT_FALSE(VmPortActive(input, 0));
+
+    AddLink("virtual-machine-interface", "vnet1", "floating-ip", "fip1");
+    client->WaitForIdle();
+
+    EXPECT_TRUE(VmPortFloatingIpCount(1, 1));
+    // Not installed - the interface is inactive - but published
+    EXPECT_FALSE(RouteFind("default-project:vn2:vn2",
+                           Ip4Address::from_string("2.2.2.100"), 32));
+
+    const DnsProto::DnsFipSet &fip_set = dns_proto->fip_list();
+    EXPECT_TRUE(fip_set.size() == 1);
+    DnsProto::DnsFipSet::const_iterator fip_it = fip_set.begin();
+    EXPECT_TRUE((*fip_it)->floating_ip_.to_string() == "2.2.2.100");
+
+    // Starting the instance installs the route and keeps the single record
+    SetVmiOsOperState(input[0].intf_id, true);
+    EXPECT_TRUE(VmPortActive(input, 0));
+    EXPECT_TRUE(RouteFind("default-project:vn2:vn2",
+                          Ip4Address::from_string("2.2.2.100"), 32));
+    EXPECT_TRUE(dns_proto->fip_list().size() == 1);
+
+    // Cleanup
+    LOG(DEBUG, "Doing cleanup");
+
+    FloatingIpPortCleanup(input);
+    EXPECT_TRUE(dns_proto->fip_list().size() == 0);
+
+    FloatingIPTearDown(true);
+}
+
 TEST_F(DnsTest, IpmaDnsMethodNone) {
     struct PortInfo input[] = {
         {"vnet1", 1, "1.1.1.1", "00:00:00:01:01:01", 1, 1},

@@ -3,6 +3,7 @@
  */
 
 #include <sys/types.h>
+#include <boost/uuid/uuid_io.hpp>
 #include "base/address_util.h"
 #include "init/agent_init.h"
 #include "oper/interface_common.h"
@@ -166,15 +167,26 @@ void DnsProto::InterfaceNotify(DBEntryBase *entry) {
                            vdns_name, vdns_type);
         }
 
-        // floating ip activate & de-activate are updated via the callback to
-        // UpdateFloatingIp; If tenant name is also required in the fip name,
-        // it may not be available during activate if the vm interface doesnt
-        // have vn at that time. Invoke Update here to handle that case.
+        // Floating ip records follow the floating ip configuration, not the
+        // forwarding state of the interface; publish every configured entry,
+        // including the ones that are not installed because the interface is
+        // inactive (instance powered off). Withdrawal happens when the entry
+        // leaves the configuration, from CleanupFloatingIpList().
+        // If tenant name is also required in the fip name, it may not be
+        // available during activate if the vm interface doesnt have vn at
+        // that time. Invoke Update here to handle that case.
         if (vmitf->vn()) {
             const VmInterface::FloatingIpList &fip = vmitf->floating_ip_list();
             for (VmInterface::FloatingIpSet::iterator it = fip.list_.begin();
                  it != fip.list_.end(); ++it) {
-                if (it->Installed()) {
+                // FloatingIp::Copy() assigns vn_ only while it is NULL, so a
+                // reference to an already deleted VnEntry survives here.
+                // Republishing on such an entry would resurrect the record
+                // VnNotify() has just withdrawn, and nothing would withdraw it
+                // again - VnNotify() does not fire twice for the same VN and
+                // CleanupFloatingIpList() cannot resolve a deleted VN.
+                if (it->del_pending() == false && it->vn_.get() != NULL &&
+                    it->vn_->IsDeleted() == false) {
                     UpdateFloatingIp(vmitf, it->vn_.get(),
                             it->floating_ip_, false);
                 }
@@ -390,6 +402,11 @@ bool DnsProto::SendUpdateDnsEntry(const VmInterface *vmitf,
     data->virtual_dns = vdns_name;
     data->zone = vdns_type.domain_name;
 
+    std::string vm_uuid;
+    if (vmitf) {
+        vm_uuid = boost::uuids::to_string(vmitf->GetUuid());
+    }
+
     // Add a DNS record
     DnsItem item;
     if (!ip.is_unspecified()) {
@@ -397,6 +414,7 @@ bool DnsProto::SendUpdateDnsEntry(const VmInterface *vmitf,
         item.type = DNS_A_RECORD;
         item.ttl = is_delete ? 0 : vdns_type.default_ttl_seconds;
         item.name = name;
+        item.vm_uuid = vm_uuid;
         boost::system::error_code ec;
         item.data = ip.to_string(ec);
         data->items.push_back(item);
@@ -408,6 +426,7 @@ bool DnsProto::SendUpdateDnsEntry(const VmInterface *vmitf,
         ip6_item.type = DNS_AAAA_RECORD;
         ip6_item.ttl = is_delete ? 0 : vdns_type.default_ttl_seconds;
         ip6_item.name = name;
+        ip6_item.vm_uuid = vm_uuid;
         boost::system::error_code ec;
         ip6_item.data = ip6.to_string(ec);
         data->items.push_back(ip6_item);

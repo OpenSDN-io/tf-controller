@@ -122,6 +122,11 @@ DnsAgentXmpp::EncodeDnsItem(pugi::xml_node *node, DnsItem &item) {
         node_c = node->append_child("priority");
         node_c.text().set(item.priority);
     }
+
+    if (!item.vm_uuid.empty()) {
+        node_c = node->append_child("vm-uuid");
+        node_c.text().set(item.vm_uuid.c_str());
+    }
 }
 
 bool
@@ -187,6 +192,8 @@ DnsAgentXmpp::DecodeDnsItems(const pugi::xml_node dnsdata,
                 } else if (strcmp(entry.name(), "priority") == 0) {
                     std::stringstream prio(entry.child_value());
                     prio >> item.priority;
+                } else if (strcmp(entry.name(), "vm-uuid") == 0) {
+                    item.vm_uuid = entry.child_value();
                 } else {
                     DNS_XMPP_TRACE(DnsXmppTrace,
                                    "Dns XMPP response : unknown tag : " <<
