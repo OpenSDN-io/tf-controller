@@ -214,6 +214,10 @@ class VncKombuClientBase(object):
     def _subscribe(self, body, message):
         try:
             self._subscribe_cb(body)
+        except Exception as e:
+            # logged and dropped: an escaping error rebuilds the connection
+            msg = 'Error in rabbitmq subscribe callback: %s' % (str(e))
+            self._logger(msg, level=SandeshLevel.SYS_ERR)
         finally:
             message.ack()
 

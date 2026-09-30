@@ -29,6 +29,17 @@ class VncAmqpHandle(object):
         self.host_ip = host_ip
         self.register_handler = register_handler
         self._vnc_kombu = None
+        self._trace_file_error_logged = False
+        self._reset_notification_state()
+
+    def _reset_notification_state(self):
+        # Per-notification state: reset, never deleted.
+        self.oper_info = None
+        self.obj_type = None
+        self.obj_class = None
+        self.obj = None
+        self.dependency_tracker = None
+        self.msg_tracer = None
 
     def establish(self):
         q_name = '.'.join([self.q_name_prefix, socket.getfqdn(self.host_ip)])
@@ -45,25 +56,30 @@ class VncAmqpHandle(object):
                 register_handler=self.register_handler)
 
     def msgbus_store_err_msg(self, msg):
-        self.msg_tracer.error = msg
+        if self.msg_tracer is not None:
+            self.msg_tracer.error = msg
 
     def msgbus_trace_msg(self):
-        self.msg_tracer.trace_msg(name='MessageBusNotifyTraceBuf',
-                                  sandesh=self.sandesh)
+        if self.msg_tracer is not None:
+            self.msg_tracer.trace_msg(name='MessageBusNotifyTraceBuf',
+                                      sandesh=self.sandesh)
 
     def log_exception(self):
         string_buf = StringIO()
         cgitb_hook(file=string_buf, format="text")
-        self.logger.error(string_buf.getvalue())
-        self.msgbus_store_err_msg(string_buf.getvalue())
+        err_msg = string_buf.getvalue()
+        self.logger.error(err_msg)
+        self.msgbus_store_err_msg(err_msg)
         if not self._trace_file:
             return
         try:
             with open(self._trace_file, 'a') as err_file:
-                err_file.write(string_buf.getvalue())
+                err_file.write(err_msg)
         except IOError as e:
-            self.logger.warn(f"Failed to write to trace file: {str(e)}")
-
+            if not self._trace_file_error_logged:
+                self._trace_file_error_logged = True
+                self.logger.warning("Failed to write to trace file %s: %s" %
+                                    (self._trace_file, str(e)))
 
     def log_ignored_errors(self, obj_class):
         if not self._trace_file:
@@ -79,6 +95,7 @@ class VncAmqpHandle(object):
 
     def _vnc_subscribe_callback(self, oper_info):
         self._db_resync_done.wait()
+        self._reset_notification_state()
         try:
             self.oper_info = oper_info
             self.vnc_subscribe_actions()
@@ -99,15 +116,14 @@ class VncAmqpHandle(object):
         except Exception:
             self.log_exception()
         finally:
+            # Must not raise: an escaping error rebuilds the connection.
             try:
                 self.msgbus_trace_msg()
             except Exception:
-                self.logger.warn('Error in _vnc_subscribe_callback')
-            del self.oper_info
-            del self.obj_type
-            del self.obj_class
-            del self.obj
-            del self.dependency_tracker
+                self.logger.warning('Error in _vnc_subscribe_callback while '
+                                    'tracing notification %s' %
+                                    pformat(oper_info))
+            self._reset_notification_state()
 
     def create_msgbus_trace(self, request_id, oper, uuid):
         self.msg_tracer = MessageBusNotifyTrace(request_id=request_id,
