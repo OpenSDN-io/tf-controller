@@ -23,6 +23,8 @@ __all__ = "VncKombuClient"
 
 
 class VncKombuClientBase(object):
+    _drain_closing = False
+
     def _update_sandesh_status(self, status, msg=''):
         ConnectionState.update(conn_type=ConnType.DATABASE,
             name='RabbitMQ', status=status, message=msg,
@@ -76,7 +78,7 @@ class VncKombuClientBase(object):
         self._update_sandesh_status(ConnectionStatus.DOWN)
         self._conn_state = ConnectionStatus.DOWN
 
-        self._conn_drain.close()
+        self._close_drain_connection()
 
         self._conn_drain.ensure_connection()
         self._conn_drain.connect()
@@ -102,6 +104,18 @@ class VncKombuClientBase(object):
                                            queues=self._update_queue_obj,
                                            callbacks=[self._subscribe])
     # end _reconnect_drain
+
+    def _close_drain_connection(self, delete_queue=False):
+        # py-amqp still dispatches buffered deliveries while closing: leave
+        # them unacknowledged, the broker redelivers them on the next one.
+        self._drain_closing = True
+        try:
+            if delete_queue:
+                self._delete_queue()
+            self._conn_drain.close()
+        finally:
+            self._drain_closing = False
+    # end _close_drain_connection
 
     def _reconnect_publish(self):
         msg = "RabbitMQ publish connection down"
@@ -212,6 +226,8 @@ class VncKombuClientBase(object):
     # end _publisher
 
     def _subscribe(self, body, message):
+        if self._drain_closing:
+            return
         try:
             self._subscribe_cb(body)
         except Exception as e:
@@ -253,9 +269,7 @@ class VncKombuClientBase(object):
             self._connection_monitor_greenlet.kill()
             if self._connection_heartbeat_greenlet:
                 self._connection_heartbeat_greenlet.kill()
-            if self._consumer:
-                self._delete_queue()
-            self._conn_drain.close()
+            self._close_drain_connection(delete_queue=bool(self._consumer))
             self._conn_publish.close()
 
     def reset(self):
