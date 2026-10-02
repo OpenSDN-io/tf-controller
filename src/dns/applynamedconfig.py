@@ -58,6 +58,8 @@ def parse_contrail_dns_conf():
         'named_max_cache_size': '32M',
         'named_max_retransmissions': '12',
         'named_retransmission_interval': '1000',
+        'log_files_count': '5',
+        'log_file_size': '5m',
     }
 
     # remove preceeding spaces from contrail-dns.conf
@@ -115,7 +117,8 @@ def parse_contrail_dns_conf():
         file_named_base_conf.write('        stderr;\n')
     else:
         file_named_base_conf.write('        file "'+ named_defaults['named_log_file'] +
-                                   '" versions 5 size 5m;\n')
+                                   '" versions ' + named_defaults['log_files_count']+' size ' +
+                                    named_defaults['log_file_size'] + ';\n')
     file_named_base_conf.write('        severity debug;\n')
     file_named_base_conf.write('        print-time yes;\n')
     file_named_base_conf.write('        print-severity yes;\n')
