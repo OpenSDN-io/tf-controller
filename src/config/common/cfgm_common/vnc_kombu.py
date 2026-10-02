@@ -256,6 +256,17 @@ class VncKombuClientBase(object):
         else:
             self._connection_heartbeat_greenlet = None
 
+    def link_consumer_exit(self, callback):
+        # callback(greenlet) if the consumer greenlet ends outside shutdown()
+        greenlet = getattr(self, '_connection_monitor_greenlet', None)
+        if greenlet is None:
+            return
+
+        def _on_exit(glet):
+            if self._running:
+                callback(glet)
+        greenlet.link(_on_exit)
+
     def greenlets(self):
         ret = [self._publisher_greenlet, self._connection_monitor_greenlet]
         if self._connection_heartbeat_greenlet:

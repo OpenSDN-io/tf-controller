@@ -9,7 +9,9 @@ import shutil
 import tempfile
 import unittest
 
+import gevent
 import mock
+from requests.exceptions import ConnectionError
 
 from cfgm_common.vnc_amqp import VncAmqpHandle
 
@@ -162,3 +164,94 @@ class TestVncAmqp(unittest.TestCase):
         self.assertEqual(1, len([m for m in self.logger.messages('warning')
                                  if 'Error in _vnc_subscribe_callback' in m]))
         self._assert_state_reset(handle)
+
+
+class TestVncAmqpApiServerLoss(unittest.TestCase):
+    """The api-server cannot be reached while a notification is handled."""
+
+    def setUp(self):
+        super(TestVncAmqpApiServerLoss, self).setUp()
+        self.logger = _Logger()
+        self.handle = VncAmqpHandle(mock.MagicMock(), self.logger, _DB(), {},
+                                    'test', {}, '127.0.0.1')
+        self.handle._db_resync_done.set()
+        self.handle._vnc_kombu = mock.Mock()
+
+    def test_exits_without_closing_from_the_consumer(self):
+        self.handle.vnc_subscribe_actions = mock.Mock(
+            side_effect=ConnectionError('api-server down'))
+
+        with self.assertRaises(SystemExit) as ctx:
+            self.handle._vnc_subscribe_callback(_notification())
+
+        self.assertEqual(2, ctx.exception.code)
+        # close() would kill the consumer greenlet before SystemExit.
+        self.handle._vnc_kombu.shutdown.assert_not_called()
+        self.assertEqual(2, self.handle.vnc_subscribe_actions.call_count)
+        self.assertIn('Api-server connection lost. Exiting',
+                      self.logger.messages('error'))
+        self.assertIsNone(self.handle.oper_info)
+
+    def test_single_failure_is_retried(self):
+        self.handle.vnc_subscribe_actions = mock.Mock(
+            side_effect=[ConnectionError('api-server blip'), None])
+
+        self.handle._vnc_subscribe_callback(_notification())
+
+        self.assertEqual(2, self.handle.vnc_subscribe_actions.call_count)
+        self.assertEqual([], self.logger.messages('error'))
+
+    def test_system_exit_from_consumer_greenlet_reaches_main(self):
+        self.handle.vnc_subscribe_actions = mock.Mock(
+            side_effect=ConnectionError('api-server down'))
+        consumer = gevent.spawn(self.handle._vnc_subscribe_callback,
+                                _notification())
+
+        with self.assertRaises(SystemExit) as ctx:
+            gevent.joinall([consumer, gevent.spawn(gevent.sleep, 5)])
+        self.assertEqual(2, ctx.exception.code)
+
+
+class TestVncAmqpConsumerExit(unittest.TestCase):
+    """The consumer greenlet ends while the client is running."""
+
+    def setUp(self):
+        super(TestVncAmqpConsumerExit, self).setUp()
+        self.logger = _Logger()
+        self.handle = VncAmqpHandle(mock.MagicMock(), self.logger, _DB(), {},
+                                    'test', {}, '127.0.0.1')
+
+    @mock.patch('cfgm_common.vnc_amqp.gevent.get_hub')
+    def test_unexpected_exit_stops_the_process(self, get_hub):
+        get_hub.return_value.SYSTEM_ERROR = gevent.hub.Hub.SYSTEM_ERROR
+        consumer = gevent.spawn(gevent.sleep, 0)
+        consumer.join()
+
+        self.handle._consumer_exited(consumer)
+
+        throw = get_hub.return_value.parent.throw
+        self.assertEqual(1, throw.call_count)
+        exc = throw.call_args[0][0]
+        self.assertIsInstance(exc, SystemExit)
+        self.assertEqual(2, exc.code)
+        self.assertEqual(1, len(self.logger.messages('error')))
+
+    @mock.patch('cfgm_common.vnc_amqp.gevent.get_hub')
+    def test_system_errors_are_left_to_gevent(self, get_hub):
+        get_hub.return_value.SYSTEM_ERROR = gevent.hub.Hub.SYSTEM_ERROR
+        for exc in (SystemExit(2), KeyboardInterrupt()):
+            self.handle._consumer_exited(mock.Mock(exception=exc))
+
+        get_hub.return_value.parent.throw.assert_not_called()
+
+    @mock.patch('cfgm_common.vnc_amqp.VncKombuClient')
+    def test_establish_watches_the_consumer(self, kombu_client):
+        cfg = dict.fromkeys(('servers', 'port', 'user', 'password', 'vhost',
+                             'ha_mode', 'use_ssl', 'ssl_version',
+                             'ssl_keyfile', 'ssl_certfile', 'ssl_ca_certs'))
+        self.handle._rabbitmq_cfg = cfg
+
+        self.handle.establish()
+
+        kombu_client.return_value.link_consumer_exit.assert_called_once_with(
+            self.handle._consumer_exited)

@@ -6,6 +6,7 @@
 
 import unittest
 
+import gevent
 import mock
 
 from cfgm_common.vnc_kombu import VncKombuClient
@@ -98,3 +99,36 @@ class TestVncKombuCloseDrain(unittest.TestCase):
 
         self.assertRaises(IOError, self.client._close_drain_connection)
         self.assertFalse(self.client._drain_closing)
+
+
+class TestVncKombuConsumerExit(unittest.TestCase):
+
+    def _consumer(self):
+        return gevent.spawn(gevent.sleep, 0)
+
+    def test_callback_on_exit_while_running(self):
+        client = _client(_running=True,
+                         _connection_monitor_greenlet=self._consumer())
+        callback = mock.Mock()
+
+        client.link_consumer_exit(callback)
+        client._connection_monitor_greenlet.join()
+        gevent.sleep(0)  # links run from the hub
+
+        callback.assert_called_once_with(client._connection_monitor_greenlet)
+
+    def test_no_callback_after_shutdown(self):
+        client = _client(_running=True,
+                         _connection_monitor_greenlet=self._consumer())
+        callback = mock.Mock()
+
+        client.link_consumer_exit(callback)
+        client._running = False  # what shutdown() does first
+        client._connection_monitor_greenlet.join()
+        gevent.sleep(0)
+
+        callback.assert_not_called()
+
+    def test_client_without_consumer(self):
+        # e.g. a client whose __init__ was mocked out by a test
+        _client().link_consumer_exit(mock.Mock())

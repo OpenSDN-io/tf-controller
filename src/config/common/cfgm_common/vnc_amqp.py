@@ -54,6 +54,16 @@ class VncAmqpHandle(object):
                 kombu_ssl_certfile=self._rabbitmq_cfg['ssl_certfile'],
                 kombu_ssl_ca_certs=self._rabbitmq_cfg['ssl_ca_certs'],
                 register_handler=self.register_handler)
+        self._vnc_kombu.link_consumer_exit(self._consumer_exited)
+
+    def _consumer_exited(self, greenlet):
+        hub = gevent.get_hub()
+        if isinstance(greenlet.exception, hub.SYSTEM_ERROR):
+            return  # already re-raised in the main greenlet by gevent
+        self.logger.error("RabbitMQ consumer greenlet exited unexpectedly "
+                          "(%r). Exiting" % (greenlet.exception or
+                                             greenlet.value,))
+        hub.parent.throw(SystemExit(2))
 
     def msgbus_store_err_msg(self, msg):
         if self.msg_tracer is not None:
@@ -109,8 +119,9 @@ class VncAmqpHandle(object):
                 # ConnectionError on retry to let standby to become active.
                 self.log_exception()
                 self.logger.error("Api-server connection lost. Exiting")
-                self.close()
-                raise SystemExit
+                # No close() here: it would kill this (consumer) greenlet.
+                # gevent re-raises the SystemExit in the main greenlet.
+                raise SystemExit(2)
             except Exception:
                 self.log_exception()
         except Exception:
