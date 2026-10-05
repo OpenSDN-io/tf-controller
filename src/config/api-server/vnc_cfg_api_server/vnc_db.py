@@ -290,6 +290,7 @@ class VncServerKombuClient(VncKombuClient):
             rabbit_ip, rabbit_port, rabbit_user, rabbit_password, rabbit_vhost,
             rabbit_ha_mode, q_name, self._dbe_subscribe_callback,
             self.config_log, heartbeat_seconds=rabbit_health_check_interval,
+            consume_gate=db_client_mgr._db_resync_done,
             **kwargs)
     # end __init__
 

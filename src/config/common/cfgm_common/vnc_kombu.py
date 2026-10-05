@@ -24,6 +24,7 @@ __all__ = "VncKombuClient"
 
 class VncKombuClientBase(object):
     _drain_closing = False
+    _consume_gate = None
 
     def _update_sandesh_status(self, status, msg=''):
         ConnectionState.update(conn_type=ConnType.DATABASE,
@@ -41,7 +42,8 @@ class VncKombuClientBase(object):
 
     def __init__(self, rabbit_ip, rabbit_port, rabbit_user, rabbit_password,
                  rabbit_vhost, rabbit_ha_mode, q_name, subscribe_cb, logger,
-                 heartbeat_seconds=0, register_handler=True, **kwargs):
+                 heartbeat_seconds=0, register_handler=True, consume_gate=None,
+                 **kwargs):
         self._rabbit_ip = rabbit_ip
         self._rabbit_port = rabbit_port
         self._rabbit_user = rabbit_user
@@ -52,6 +54,7 @@ class VncKombuClientBase(object):
         self._publish_queue = Queue()
         self._running = False
         self._heartbeat_seconds = heartbeat_seconds
+        self._consume_gate = consume_gate
 
         self.obj_upd_exchange = kombu.Exchange('vnc_config.object-update', 'fanout',
                                                durable=False)
@@ -149,6 +152,11 @@ class VncKombuClientBase(object):
             self._logger(msg, level=SandeshLevel.SYS_ERR)
     #end _delete_queue
 
+    def _may_consume(self):
+        # Messages wait on the broker until the gate (resync done) is set.
+        gate = self._consume_gate
+        return gate is None or gate.is_set()
+
     def _connection_watch(self, connected):
         if not connected:
             self._reconnect_drain()
@@ -156,14 +164,19 @@ class VncKombuClientBase(object):
         self.prepare_to_consume()
         while self._running:
             try:
-                # TODO(sahid): This should be called one time only
-                # after initialization of the connection.
-                self._consumer.consume()
+                if self._may_consume():
+                    # TODO(sahid): This should be called one time only
+                    # after initialization of the connection.
+                    self._consumer.consume()
+                    timeout = 3
+                else:
+                    # only heartbeats until the gate is set
+                    timeout = 1
                 try:
                     # This could block scheduling of
                     # greenthreads. Using reasonable timeout ensure to
                     # avoid that situation.
-                    self._conn_drain.drain_events(timeout=3)
+                    self._conn_drain.drain_events(timeout=timeout)
                 except socket.timeout:
                     # Let's force scheduler to give some CPU cycles
                     # for other greenthreads to check connectivity.

@@ -129,7 +129,7 @@ class VncKubernetes(vnc_common.VncCommon):
             self.args.cluster_id + '-' + self.args.cluster_name + '-kube_manager',
             rabbitmq_cfg, self.args.host_ip)
         self.rabbit.establish()
-        self.rabbit._db_resync_done.set()
+        self.rabbit.resync_done()
 
         # sync api server db in local cache
         self._sync_km()

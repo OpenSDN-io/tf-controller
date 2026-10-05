@@ -245,6 +245,20 @@ class TestVncAmqpConsumerExit(unittest.TestCase):
         get_hub.return_value.parent.throw.assert_not_called()
 
     @mock.patch('cfgm_common.vnc_amqp.VncKombuClient')
+    def test_resync_done_opens_the_consume_gate(self, kombu_client):
+        self.handle._rabbitmq_cfg = dict.fromkeys((
+            'servers', 'port', 'user', 'password', 'vhost', 'ha_mode',
+            'use_ssl', 'ssl_version', 'ssl_keyfile', 'ssl_certfile',
+            'ssl_ca_certs'))
+        self.handle.establish()
+        gate = kombu_client.call_args[1]['consume_gate']
+        self.assertFalse(gate.is_set())
+
+        self.handle.resync_done()
+
+        self.assertTrue(gate.is_set())
+
+    @mock.patch('cfgm_common.vnc_amqp.VncKombuClient')
     def test_establish_watches_the_consumer(self, kombu_client):
         cfg = dict.fromkeys(('servers', 'port', 'user', 'password', 'vhost',
                              'ha_mode', 'use_ssl', 'ssl_version',
@@ -255,3 +269,6 @@ class TestVncAmqpConsumerExit(unittest.TestCase):
 
         kombu_client.return_value.link_consumer_exit.assert_called_once_with(
             self.handle._consumer_exited)
+        # Notifications are consumed once the resync is done.
+        self.assertIs(self.handle._db_resync_done,
+                      kombu_client.call_args[1]['consume_gate'])

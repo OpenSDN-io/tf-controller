@@ -198,7 +198,7 @@ class SvcMonitor(object):
         self.vrouter_scheduler.vrouters_running()
         self.launch_services()
 
-        self.rabbit._db_resync_done.set()
+        self.rabbit.resync_done()
 
     def _upgrade_instance_ip(self, vm):
         for vmi_id in vm.virtual_machine_interfaces:

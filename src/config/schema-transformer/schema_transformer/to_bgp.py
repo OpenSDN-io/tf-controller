@@ -259,7 +259,7 @@ class SchemaTransformer(object):
             self._vnc_amqp.establish()
             ServiceChain.init()
             self.reinit()
-            self._vnc_amqp._db_resync_done.set()
+            self._vnc_amqp.resync_done()
         except Exception:
             self._vnc_amqp._db_resync_done.set()
             # If any of the above tasks like CassandraDB read fails, cleanup

@@ -53,7 +53,8 @@ class VncAmqpHandle(object):
                 kombu_ssl_keyfile=self._rabbitmq_cfg['ssl_keyfile'],
                 kombu_ssl_certfile=self._rabbitmq_cfg['ssl_certfile'],
                 kombu_ssl_ca_certs=self._rabbitmq_cfg['ssl_ca_certs'],
-                register_handler=self.register_handler)
+                register_handler=self.register_handler,
+                consume_gate=self._db_resync_done)
         self._vnc_kombu.link_consumer_exit(self._consumer_exited)
 
     def _consumer_exited(self, greenlet):
@@ -103,7 +104,11 @@ class VncAmqpHandle(object):
         finally:
             obj_class.clear_ignored_errors()
 
+    def resync_done(self):
+        self._db_resync_done.set()
+
     def _vnc_subscribe_callback(self, oper_info):
+        # Does not block: consumption starts after the resync (consume_gate).
         self._db_resync_done.wait()
         self._reset_notification_state()
         try:

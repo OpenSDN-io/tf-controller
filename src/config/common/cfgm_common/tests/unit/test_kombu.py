@@ -4,9 +4,11 @@
 # Copyright (c) 2026 OpenSDN Authors. All rights reserved.
 #
 
+import socket
 import unittest
 
 import gevent
+import gevent.event
 import mock
 
 from cfgm_common.vnc_kombu import VncKombuClient
@@ -132,3 +134,57 @@ class TestVncKombuConsumerExit(unittest.TestCase):
     def test_client_without_consumer(self):
         # e.g. a client whose __init__ was mocked out by a test
         _client().link_consumer_exit(mock.Mock())
+
+
+class TestVncKombuConsumeGate(unittest.TestCase):
+    """Messages are consumed only once the consume gate is set."""
+
+    def _watch(self, gate, set_gate_after, stop_after):
+        consumer = mock.Mock()
+        client = _client(_running=True, _consume_gate=gate,
+                         _consumer=consumer)
+        timeouts = []
+
+        def drain_events(timeout):
+            timeouts.append(timeout)
+            if len(timeouts) == set_gate_after:
+                gate.set()
+            if len(timeouts) == stop_after:
+                client._running = False
+            raise socket.timeout()
+
+        client._conn_drain = mock.Mock(connection_errors=(IOError,),
+                                       channel_errors=(IOError,))
+        client._conn_drain.drain_events.side_effect = drain_events
+        client._connection_watch(connected=True)
+        return consumer, timeouts
+
+    def test_consumes_only_once_gate_is_set(self):
+        consumer, timeouts = self._watch(gevent.event.Event(),
+                                         set_gate_after=2, stop_after=4)
+
+        # read all along, with a short timeout until the gate is set
+        self.assertEqual([1, 1, 3, 3], timeouts)
+        self.assertEqual(2, consumer.consume.call_count)
+
+    def test_gate_not_set(self):
+        consumer, timeouts = self._watch(gevent.event.Event(),
+                                         set_gate_after=None, stop_after=3)
+
+        consumer.consume.assert_not_called()
+        self.assertEqual([1, 1, 1], timeouts)
+
+    def test_no_gate(self):
+        consumer = mock.Mock()
+        client = _client(_running=True, _consumer=consumer)
+        client._conn_drain = mock.Mock(connection_errors=(IOError,),
+                                       channel_errors=(IOError,))
+
+        def drain_events(timeout):
+            client._running = False
+            raise socket.timeout()
+        client._conn_drain.drain_events.side_effect = drain_events
+
+        client._connection_watch(connected=True)
+
+        consumer.consume.assert_called_once_with()

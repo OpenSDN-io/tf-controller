@@ -489,7 +489,7 @@ class DeviceManager(object):
             pr.set_config_state()
             pr.uve_send()
 
-        self._vnc_amqp._db_resync_done.set()
+        self._vnc_amqp.resync_done()
 
         gevent.joinall(self._vnc_amqp._vnc_kombu.greenlets())
     # end __init__
