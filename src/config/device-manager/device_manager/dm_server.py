@@ -29,6 +29,8 @@ monkey.patch_all() # noqa
 
 _amqp_client = None
 _zookeeper_client = None
+# Full or Partial mode process started by the election process
+_child_proc = None
 
 
 def initialize_amqp_client(logger, args):
@@ -107,6 +109,7 @@ def run_device_manager(dm_logger, args):
 
 
 def run_full_dm(pid):
+    global _child_proc
     # won master election, destroy any created process
     running_procs = [x for x in psutil.process_iter()]
     for proc in running_procs:
@@ -117,9 +120,23 @@ def run_full_dm(pid):
             proc.kill()
     script_to_run = sys.argv
     script_to_run.append('--dm_run_mode Full')
-    proc = subprocess.Popen(script_to_run, close_fds=True)
+    proc = _child_proc = subprocess.Popen(script_to_run, close_fds=True)
     gevent.joinall([gevent.spawn(dummy_gl, proc)])
 # end run_full_dm
+
+
+def _release_election_and_exit():
+    # Closing the session releases the election at once, not on its timeout.
+    # (The client's LOST listener may exit the process itself, with 2 too.)
+    global _zookeeper_client
+    zookeeper_client, _zookeeper_client = _zookeeper_client, None
+    if zookeeper_client is not None:
+        try:
+            zookeeper_client.stop()
+        except Exception:
+            pass
+    os._exit(2)
+# end _release_election_and_exit
 
 
 def dummy_gl(proc):
@@ -130,14 +147,15 @@ def dummy_gl(proc):
             pass
         elif proc.poll() == 0:
             # proc is terminated, kill self
-            os._exit(2)
+            _release_election_and_exit()
         else:
             # proc completed, this shouldnt happen
-            os._exit(2)
+            _release_election_and_exit()
 # end dummy_gl
 
 
 def run_partial_dm(pid):
+    global _child_proc
     # if we are not master, start only DeviceJobManager
     is_master = False
     running_procs = [x for x in psutil.process_iter()]
@@ -150,7 +168,7 @@ def run_partial_dm(pid):
         # start dm with Partial flag
         script_to_run = sys.argv
         script_to_run.append('--dm_run_mode Partial')
-        proc = subprocess.Popen(script_to_run, close_fds=True)
+        proc = _child_proc = subprocess.Popen(script_to_run, close_fds=True)
         for x in range(3):
             gevent.sleep(5)
             if proc.poll() is None:
@@ -177,6 +195,16 @@ def sigterm_handler():
 
     if _amqp_client is not None:
         _amqp_client.stop()
+
+    if _zookeeper_client is not None:
+        # Election process: stop the child, release the election and exit.
+        if _child_proc is not None and _child_proc.poll() is None:
+            _child_proc.terminate()
+            try:
+                _child_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                _child_proc.kill()
+        _release_election_and_exit()
 # end sigterm_handler
 
 
@@ -223,6 +251,7 @@ def run_job_ztp_manager(dm_logger, args):
 
 def main(args_str=None):
     global _amqp_client
+    global _zookeeper_client
 
     if not args_str:
         args_str = ' '.join(sys.argv[1:])
@@ -262,13 +291,14 @@ def main(args_str=None):
         run_job_ztp_manager(dm_logger, args)
     else:
         if args.zookeeper_ssl_enable:
-            _zookeeper_client = ZookeeperClient(client_pfx + "device-manager",
-                                                args.zk_server_ip,
-                                                args.host_ip,
-                                                args.zookeeper_ssl_enable,
-                                                args.zookeeper_ssl_keyfile,
-                                                args.zookeeper_ssl_certificate,
-                                                args.zookeeper_ssl_ca_cert)
+            _zookeeper_client = ZookeeperClient(
+                client_pfx + "device-manager",
+                args.zk_server_ip,
+                args.host_ip,
+                zk_ssl_enable=args.zookeeper_ssl_enable,
+                zk_ssl_keyfile=args.zookeeper_ssl_keyfile,
+                zk_ssl_certificate=args.zookeeper_ssl_certificate,
+                zk_ssl_ca_cert=args.zookeeper_ssl_ca_cert)
         else:
             _zookeeper_client = ZookeeperClient(client_pfx + "device-manager",
                                                 args.zk_server_ip,
