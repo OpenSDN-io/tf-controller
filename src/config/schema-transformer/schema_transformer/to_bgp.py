@@ -604,6 +604,7 @@ def parse_args(args_str):
         'rabbit_password': 'guest',
         'rabbit_vhost': None,
         'rabbit_ha_mode': False,
+        'rabbit_health_check_interval': 0,
         'cassandra_server_list': '127.0.0.1:9160',
         'api_server_ip': '127.0.0.1',
         'api_server_port': '8082',
@@ -767,6 +768,9 @@ def parse_args(args_str):
     parser.add_argument("--rabbit_ha_mode", action='store_true',
                         help="True if the rabbitmq cluster is "
                              "mirroring all queue")
+    parser.add_argument("--rabbit_health_check_interval",
+                        help="Interval in seconds of the AMQP heartbeats "
+                             "with rabbitmq, 0 disables them")
     parser.add_argument("--bgpaas_port_start", type=int,
                         help="Start port for bgp-as-a-service proxy")
     parser.add_argument("--bgpaas_port_end", type=int,

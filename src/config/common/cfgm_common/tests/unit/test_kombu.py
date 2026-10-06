@@ -9,6 +9,7 @@ import unittest
 
 import gevent
 import gevent.event
+import gevent.queue
 import mock
 
 from cfgm_common.vnc_kombu import VncKombuClient
@@ -188,3 +189,148 @@ class TestVncKombuConsumeGate(unittest.TestCase):
         client._connection_watch(connected=True)
 
         consumer.consume.assert_called_once_with()
+
+
+class TestVncKombuHeartbeat(unittest.TestCase):
+
+    def _conn(self, negotiated=None):
+        conn = mock.Mock()
+        conn._connection.heartbeat = negotiated
+        return conn
+
+    def test_interval_in_effect(self):
+        client = _client(_heartbeat_seconds=60)
+
+        self.assertEqual(6, client._heartbeat_interval(self._conn(6)))
+        self.assertEqual(60, client._heartbeat_interval(self._conn(120)))
+        self.assertEqual(60, client._heartbeat_interval(self._conn(0)))
+        self.assertEqual(60, client._heartbeat_interval(self._conn(None)))
+        self.assertEqual(60, client._heartbeat_interval(object()))
+
+    def test_heartbeat_greenlet_only_handles_drain(self):
+        drain = self._conn(6)
+        drain.heartbeat_check.side_effect = [IOError('missed'), None]
+        publish = mock.Mock()
+        client = _client(_heartbeat_seconds=60, _running=True,
+                         _conn_drain=drain, _conn_publish=publish)
+        sleeps = []
+
+        def sleep(seconds):
+            sleeps.append(seconds)
+            if len(sleeps) == 2:
+                client._running = False
+
+        with mock.patch('cfgm_common.vnc_kombu.gevent.sleep', sleep):
+            client._connection_heartbeat()
+
+        self.assertEqual(2, drain.heartbeat_check.call_count)
+        self.assertEqual([], publish.mock_calls)
+        self.assertEqual([3.0, 3.0], sleeps)
+        client._logger.assert_called_once_with(
+            'Error in rabbitmq heartbeat greenlet for drain: missed',
+            level=mock.ANY)
+
+    def test_publish_heartbeat_reads_then_checks(self):
+        publish = mock.Mock()
+        publish.drain_events.side_effect = [None, None, socket.timeout()]
+        client = _client(_conn_publish=publish)
+
+        self.assertTrue(client._publish_heartbeat())
+
+        self.assertEqual(3, publish.drain_events.call_count)
+        publish.heartbeat_check.assert_called_once_with()
+
+    def test_publish_heartbeat_reading_is_bounded(self):
+        publish = mock.Mock()  # drain_events() never times out
+        client = _client(_conn_publish=publish)
+
+        self.assertTrue(client._publish_heartbeat())
+
+        self.assertEqual(client._MAX_IDLE_PUBLISH_FRAMES,
+                         publish.drain_events.call_count)
+        publish.heartbeat_check.assert_called_once_with()
+
+    def test_publish_heartbeat_failure(self):
+        publish = mock.Mock()
+        publish.drain_events.side_effect = socket.timeout()
+        publish.heartbeat_check.side_effect = IOError('broker gone')
+        client = _client(_conn_publish=publish)
+
+        self.assertFalse(client._publish_heartbeat())
+
+
+class TestVncKombuPublisher(unittest.TestCase):
+
+    def _client(self, heartbeat_seconds=0):
+        client = _client(_running=True, _heartbeat_seconds=heartbeat_seconds,
+                         _publish_queue=gevent.queue.Queue())
+        client._conn_publish = mock.Mock(connection_errors=(IOError,),
+                                         channel_errors=(IOError,))
+        client._conn_publish._connection.heartbeat = heartbeat_seconds
+        client._conn_publish.drain_events.side_effect = socket.timeout()
+        client._producer = mock.Mock()
+        client._reconnect_publish = mock.Mock()
+        return client
+
+    def _run(self, client, seconds):
+        publisher = gevent.spawn(client._publisher)
+        gevent.sleep(seconds)
+        client._running = False
+        publisher.kill()
+
+    def test_start_does_not_open_the_publish_connection(self):
+        client = _client(_heartbeat_seconds=0)
+        client._reconnect_drain = mock.Mock()
+        client._reconnect_publish = mock.Mock()
+
+        with mock.patch('cfgm_common.vnc_kombu.vnc_greenlets.VncGreenlet'):
+            client._start('q')
+
+        client._reconnect_drain.assert_called_once_with(delete_old_q=True)
+        client._reconnect_publish.assert_not_called()
+
+    def test_connects_on_first_message(self):
+        client = self._client()
+
+        self._run(client, 0.05)
+        client._reconnect_publish.assert_not_called()
+
+        client._running = True
+        client.publish({'oper': 'CREATE'})
+        self._run(client, 0.05)
+        client._reconnect_publish.assert_called_once_with()
+        client._producer.publish.assert_called_once_with({'oper': 'CREATE'})
+
+    def test_idle_connection_is_serviced(self):
+        client = self._client(heartbeat_seconds=0.1)
+        client.publish({'oper': 'CREATE'})
+
+        self._run(client, 0.35)
+
+        client._reconnect_publish.assert_called_once_with()
+        self.assertGreaterEqual(
+            client._conn_publish.heartbeat_check.call_count, 2)
+
+    def test_dead_connection_is_reestablished_on_next_message(self):
+        client = self._client(heartbeat_seconds=0.1)
+        client._conn_publish.heartbeat_check.side_effect = IOError('gone')
+        client.publish({'oper': 'CREATE'})
+        self._run(client, 0.12)
+
+        client._running = True
+        client.publish({'oper': 'UPDATE'})
+        self._run(client, 0.12)
+
+        self.assertEqual(2, client._reconnect_publish.call_count)
+        self.assertEqual(2, client._producer.publish.call_count)
+
+    def test_failed_publish_is_retried(self):
+        client = self._client()
+        client._producer.publish.side_effect = [IOError('closed'), None]
+        client.publish({'oper': 'CREATE'})
+
+        self._run(client, 0.05)
+
+        self.assertEqual(2, client._reconnect_publish.call_count)
+        self.assertEqual([mock.call({'oper': 'CREATE'})] * 2,
+                         client._producer.publish.mock_calls)

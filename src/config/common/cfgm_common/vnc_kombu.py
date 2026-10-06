@@ -10,7 +10,7 @@ import gevent.monkey
 gevent.monkey.patch_all()
 import signal
 import socket
-from gevent.queue import Queue
+from gevent.queue import Empty, Queue
 
 from pysandesh.connection_info import ConnectionState
 from pysandesh.gen_py.process_info.ttypes import ConnectionStatus
@@ -25,6 +25,7 @@ __all__ = "VncKombuClient"
 class VncKombuClientBase(object):
     _drain_closing = False
     _consume_gate = None
+    _MAX_IDLE_PUBLISH_FRAMES = 100
 
     def _update_sandesh_status(self, status, msg=''):
         ConnectionState.update(conn_type=ConnType.DATABASE,
@@ -197,45 +198,85 @@ class VncKombuClientBase(object):
                 connected = False
     # end _connection_watch_forever
 
+    def _heartbeat_interval(self, conn):
+        # the negotiated interval if shorter than the configured one
+        interval = float(self._heartbeat_seconds)
+        negotiated = getattr(getattr(conn, '_connection', None), 'heartbeat',
+                             None)
+        if isinstance(negotiated, (int, float)) and 0 < negotiated < interval:
+            interval = float(negotiated)
+        return interval
+    # end _heartbeat_interval
+
     def _connection_heartbeat(self):
+        # Drain only: the publisher greenlet services the publish connection.
         while self._running:
-            conn = 'no_conn'
             try:
                 if self._conn_drain.connected:
-                    conn = 'drain'
                     self._conn_drain.heartbeat_check()
-                if self._conn_publish.connected:
-                    conn = 'publish'
-                    # for publish connection use low level amqp library function `send_heartbeat`
-                    # kombu function `heartbeat_check` depends on data sent and received
-                    # if client doesn't send periodically data it will throw exception `Too many heartbeats missed`
-                    self._conn_publish.connection.send_heartbeat()
             except Exception as e:
-                msg = 'Error in rabbitmq heartbeat greenlet for %s: %s' %(conn, str(e))
+                msg = 'Error in rabbitmq heartbeat greenlet for drain: %s' % (
+                    str(e))
                 self._logger(msg, level=SandeshLevel.SYS_ERR)
             finally:
-                gevent.sleep(self._heartbeat_seconds / 2)
+                gevent.sleep(self._heartbeat_interval(self._conn_drain) / 2)
     # end _connection_heartbeat
+
+    def _next_message(self):
+        # None on idle ticks when heartbeats are enabled
+        if not self._heartbeat_seconds:
+            return self._publish_queue.get()
+        try:
+            return self._publish_queue.get(
+                timeout=self._heartbeat_interval(self._conn_publish) / 2)
+        except Empty:
+            return None
+    # end _next_message
+
+    def _publish_heartbeat(self):
+        # Read what the broker sent on the idle connection, then check the
+        # heartbeats. Returns False if the connection must be re-established.
+        try:
+            for _ in range(self._MAX_IDLE_PUBLISH_FRAMES):
+                try:
+                    self._conn_publish.drain_events(timeout=0.1)
+                except socket.timeout:
+                    break
+            self._conn_publish.heartbeat_check()
+            return True
+        except Exception as e:
+            msg = 'RabbitMQ publish connection lost: %s' % (str(e))
+            self._logger(msg, level=SandeshLevel.SYS_NOTICE)
+            return False
+    # end _publish_heartbeat
 
     def _publisher(self):
         message = None
+        connected = False
         while self._running:
             try:
-                self._reconnect_publish()
-
-                while self._running:
-                    if not message:
-                        # earlier was sent fine, dequeue one more
-                        message = self._publish_queue.get()
-                    self._producer.publish(message)
-                    message = None
+                if message is None:
+                    # earlier was sent fine, dequeue one more
+                    message = self._next_message()
+                    if message is None:
+                        # idle: keep the publish connection, if any, alive
+                        if connected:
+                            connected = self._publish_heartbeat()
+                        continue
+                if not connected:
+                    # on demand: no idle connection if nothing is published
+                    self._reconnect_publish()
+                    connected = True
+                self._producer.publish(message)
+                message = None
             except self._conn_publish.connection_errors + self._conn_publish.channel_errors as e:
                 # No need to print these errors in log
-                # Don't reconnect, it will be done as part of the outer for loop above
-                pass
+                # Reconnect before sending the message again
+                connected = False
             except Exception as e:
                 log_str = "Error in rabbitmq publisher greenlet: %s" %(str(e))
                 self._logger(log_str, level=SandeshLevel.SYS_ERR)
+                connected = False
     # end _publisher
 
     def _subscribe(self, body, message):
@@ -254,7 +295,7 @@ class VncKombuClientBase(object):
     def _start(self, client_name):
         self._running = True
         self._reconnect_drain(delete_old_q=True)
-        self._reconnect_publish()
+        # the publish connection is opened by _publisher() on demand
 
         self._publisher_greenlet = vnc_greenlets.VncGreenlet(
                                                'Kombu ' + client_name,

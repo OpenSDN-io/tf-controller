@@ -272,3 +272,17 @@ class TestVncAmqpConsumerExit(unittest.TestCase):
         # Notifications are consumed once the resync is done.
         self.assertIs(self.handle._db_resync_done,
                       kombu_client.call_args[1]['consume_gate'])
+        # No heartbeat unless configured
+        self.assertEqual(0, kombu_client.call_args[1]['heartbeat_seconds'])
+
+    def test_heartbeat_from_configuration(self):
+        for value, expected in ((60, 60), ('60', 60), ('120.0', 120),
+                                (None, 0), ('', 0), (-5, 0)):
+            self.handle._rabbitmq_cfg = {'heartbeat_seconds': value}
+            self.assertEqual(expected, self.handle._get_heartbeat_seconds(),
+                             value)
+        self.assertEqual([], self.logger.messages('error'))
+
+        self.handle._rabbitmq_cfg = {'heartbeat_seconds': 'sixty'}
+        self.assertEqual(0, self.handle._get_heartbeat_seconds())
+        self.assertEqual(1, len(self.logger.messages('error')))

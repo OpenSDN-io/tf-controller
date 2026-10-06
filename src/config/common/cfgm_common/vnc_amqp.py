@@ -53,9 +53,20 @@ class VncAmqpHandle(object):
                 kombu_ssl_keyfile=self._rabbitmq_cfg['ssl_keyfile'],
                 kombu_ssl_certfile=self._rabbitmq_cfg['ssl_certfile'],
                 kombu_ssl_ca_certs=self._rabbitmq_cfg['ssl_ca_certs'],
+                heartbeat_seconds=self._get_heartbeat_seconds(),
                 register_handler=self.register_handler,
                 consume_gate=self._db_resync_done)
         self._vnc_kombu.link_consumer_exit(self._consumer_exited)
+
+    def _get_heartbeat_seconds(self):
+        # rabbit_health_check_interval, 0 disables heartbeats
+        value = self._rabbitmq_cfg.get('heartbeat_seconds') or 0
+        try:
+            return max(0, int(float(value)))
+        except (TypeError, ValueError):
+            self.logger.error("Invalid rabbit_health_check_interval %r, "
+                              "AMQP heartbeats disabled" % (value,))
+            return 0
 
     def _consumer_exited(self, greenlet):
         hub = gevent.get_hub()

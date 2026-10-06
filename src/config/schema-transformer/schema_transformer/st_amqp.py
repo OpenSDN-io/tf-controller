@@ -25,7 +25,9 @@ class STAmqpHandle(VncAmqpHandle):
             'ssl_version': args.kombu_ssl_version,
             'ssl_keyfile': args.kombu_ssl_keyfile,
             'ssl_certfile': args.kombu_ssl_certfile,
-            'ssl_ca_certs': args.kombu_ssl_ca_certs
+            'ssl_ca_certs': args.kombu_ssl_ca_certs,
+            'heartbeat_seconds': getattr(
+                args, 'rabbit_health_check_interval', 0),
         }
         if 'host_ip' in args:
             host_ip = args.host_ip

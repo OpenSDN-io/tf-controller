@@ -33,6 +33,17 @@ _zookeeper_client = None
 _child_proc = None
 
 
+def _heartbeat_seconds(logger, args):
+    value = args.rabbit_health_check_interval or 0
+    try:
+        return max(0.0, float(value))
+    except (TypeError, ValueError):
+        logger.error("Invalid rabbit_health_check_interval %r, AMQP "
+                     "heartbeats disabled" % (value,))
+        return 0.0
+# end _heartbeat_seconds
+
+
 def initialize_amqp_client(logger, args):
     amqp_client = None
     try:
@@ -52,7 +63,7 @@ def initialize_amqp_client(logger, args):
         )
         amqp_client = KombuAmqpClient(
             logger.log, rabbitmq_cfg,
-            heartbeat=0)
+            heartbeat=_heartbeat_seconds(logger, args))
         amqp_client.run()
     except Exception as e:
         logger.error("Error while initializing the AMQP"
