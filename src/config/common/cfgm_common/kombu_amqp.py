@@ -13,13 +13,14 @@ import ssl
 import traceback
 from gevent.event import Event
 from gevent.lock import Semaphore
-from gevent.queue import Queue
+from gevent.queue import Empty, Queue
 from kombu.utils import nested
 from pysandesh.gen_py.sandesh.ttypes import SandeshLevel
 
 
 class KombuAmqpClient(object):
     _SUPPORTED_SSL_PROTOCOLS = ("tlsv1_2", "tlsv1.2")
+    _MAX_IDLE_PUBLISH_FRAMES = 100
 
     def __init__(self, logger, config, heartbeat=0):
         self._logger = logger
@@ -222,7 +223,9 @@ class KombuAmqpClient(object):
                 producer = kombu.Producer(connection)
                 while self._running:
                     if payload is None:
-                        payload = self._publisher_queue.get()
+                        payload = self._next_payload(connection)
+                        if payload is None:
+                            continue
 
                     exchange = self.get_exchange(payload["exchange"])
                     with self._consumer_lock:
@@ -240,6 +243,29 @@ class KombuAmqpClient(object):
         msg = 'KombuAmqpClient: Exiting publisher greenlet'
         self._logger(msg, level=SandeshLevel.SYS_DEBUG)
     # end _start_publishing
+
+    def _next_payload(self, connection):
+        if not self._heartbeat:
+            return self._publisher_queue.get()
+        interval = self._heartbeat
+        negotiated = getattr(getattr(connection, '_connection', None),
+                             'heartbeat', None)
+        if isinstance(negotiated, (int, float)) and 0 < negotiated < interval:
+            interval = float(negotiated)
+        try:
+            return self._publisher_queue.get(timeout=interval / 2)
+        except Empty:
+            pass
+        # Idle: nothing else reads this connection or sends its heartbeats.
+        # A dead connection raises here and is re-established by the caller.
+        for _ in range(self._MAX_IDLE_PUBLISH_FRAMES):
+            try:
+                connection.drain_events(timeout=0.1)
+            except socket.timeout:
+                break
+        connection.heartbeat_check()
+        return None
+    # end _next_payload
 
     def _heartbeat_check(self):
         while self._running:
