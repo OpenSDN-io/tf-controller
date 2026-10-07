@@ -26,6 +26,7 @@ import signal
 import socket
 import sys
 import time
+import traceback
 
 from cfgm_common import vnc_cgitb
 from cfgm_common.exceptions import NoIdError, ResourceExhaustionError
@@ -261,6 +262,7 @@ class SchemaTransformer(object):
             self.reinit()
             self._vnc_amqp.resync_done()
         except Exception:
+            _log_fatal(self.logger, 'Schema transformer initialization failed')
             self._vnc_amqp._db_resync_done.set()
             # If any of the above tasks like CassandraDB read fails, cleanup
             # the RMQ constructs created earlier and then give up.
@@ -875,6 +877,19 @@ def run_schema_transformer(st_logger, args):
 # end run_schema_transformer
 
 
+def _log_fatal(logger, msg):
+    # The cleanup that follows stops the ZooKeeper client, whose LOST
+    # listener ends the process (os._exit) before any traceback is printed.
+    err = '%s: %s' % (msg, traceback.format_exc())
+    sys.stderr.write(err)
+    sys.stderr.flush()
+    try:
+        logger.error(err)
+    except Exception:
+        pass
+# end _log_fatal
+
+
 def main(args_str=None):
     global _zookeeper_client
     global transformer
@@ -929,6 +944,9 @@ def main(args_str=None):
         _zookeeper_client.master_election(zk_path_pfx + "/schema-transformer",
                                           os.getpid(), run_schema_transformer,
                                           st_logger, args)
+    except Exception:
+        _log_fatal(st_logger, 'Schema transformer failed')
+        raise
     finally:
         if transformer:
             transformer.destroy_instance()
