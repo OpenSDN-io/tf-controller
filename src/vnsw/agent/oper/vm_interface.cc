@@ -1977,11 +1977,30 @@ bool VmInterface::IsMaxMacIpLearnt() const {
 // FloatingIp routines
 /////////////////////////////////////////////////////////////////////////////
 void VmInterface::CleanupFloatingIpList() {
+    InterfaceTable *table = static_cast<InterfaceTable *>(get_table());
     FloatingIpSet::iterator it = floating_ip_list_.list_.begin();
     while (it != floating_ip_list_.list_.end()) {
         FloatingIpSet::iterator prev = it++;
         if (prev->del_pending_ == false)
             continue;
+
+        // The floating-ip is leaving the interface configuration, which is
+        // the only trigger that withdraws its DNS record. DeleteL3() does not
+        // withdraw, so that the record survives the instance being powered
+        // off, and an entry configured while the interface was inactive never
+        // reached DeleteL3() in the first place.
+        //
+        // vn_ has been reset by FloatingIp::Copy() by now, hence the lookup by
+        // uuid. It returns NULL once the VN is deleted, which is not a missed
+        // withdraw: DnsProto::VnNotify() withdraws and erases every record of
+        // a deleted VN, so there is nothing left to withdraw by then.
+        if (table->update_floatingip_cb().empty() == false) {
+            VnEntry *vn = table->FindVnRef(prev->vn_uuid_);
+            if (vn != NULL) {
+                table->update_floatingip_cb()(this, vn, prev->floating_ip_,
+                                              true);
+            }
+        }
 
         if (prev->floating_ip_.is_v4()) {
             floating_ip_list_.v4_count_--;
@@ -2194,12 +2213,16 @@ bool VmInterface::FloatingIp::DeleteL3(const Agent *agent,
 
     vmi->DeleteRoute(vrf_.get()->GetName(), floating_ip_, plen);
 
-    InterfaceTable *table = static_cast<InterfaceTable *>(vmi->get_table());
-    if (table->update_floatingip_cb().empty() == false) {
-        table->update_floatingip_cb()(vmi, vn_.get(), floating_ip_,
-            true);
-        //TODO:: callback for DNS handling
-    }
+    // The DNS record is not withdrawn here. This routine runs whenever the
+    // interface stops forwarding, which includes the instance being powered
+    // off - the tap device goes away and ipv4_active() turns false. The
+    // record tracks floating-ip configuration, not forwarding state, the same
+    // way the interface's own DNS record does, so it has to survive that.
+    //
+    // Withdrawing it is CleanupFloatingIpList(), which ApplyConfig() always
+    // reaches after the floating-ip list is updated, and which also covers
+    // the entries that were never installed because the interface was
+    // inactive while they were configured.
     return true;
 }
 

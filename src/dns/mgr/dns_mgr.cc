@@ -137,6 +137,7 @@ void DnsManager::ProcessAgentUpdate(BindUtil::Operation event,
                 config = new VirtualDnsRecordConfig(name, vdns_name, item);
             }
             config->rec_.source_name = item.source_name;
+            config->rec_.vm_uuid = item.vm_uuid;
             config->OnAdd();
             break;
 
@@ -145,12 +146,31 @@ void DnsManager::ProcessAgentUpdate(BindUtil::Operation event,
                 config->OnChange(item);
             break;
 
-        case BindUtil::DELETE_UPDATE:
-            if (config && (config->rec_.source_name == item.source_name)) {
-                config->OnDelete();
-                delete config;
+        case BindUtil::DELETE_UPDATE: {
+            if (config) {
+                // Ownership is the (vm_uuid, source_name) pair, not either
+                // half alone. vm_uuid alone is not enough: a live-migrated
+                // VM keeps its VMI UUID, so the cleanup DELETE from the
+                // source compute would wipe the record the destination
+                // compute has just published. source_name alone is not
+                // enough either: a recreated VM landing on the same compute
+                // reuses the JID (PRODX-61399). Agents that do not send
+                // vm_uuid fall back to source_name only, and so do
+                // records whose stored owner carries no vm_uuid: the
+                // config path (VirtualDnsRecordConfig::GetObject) has no
+                // schema field for it, so requiring a match there would
+                // strand the record in named forever.
+                bool same_owner =
+                    (config->rec_.source_name == item.source_name) &&
+                    (item.vm_uuid.empty() || config->rec_.vm_uuid.empty() ||
+                     config->rec_.vm_uuid == item.vm_uuid);
+                if (same_owner) {
+                    config->OnDelete();
+                    delete config;
+                }
             }
             break;
+        }
 
         default:
             assert(0);
@@ -533,7 +553,7 @@ bool DnsManager::AddPendingList(uint16_t xid, const std::string &view,
                                 const std::string &zone, const DnsItems &items,
                                 BindUtil::Operation op) {
     // delete earlier entries for the same items
-    UpdatePendingList(view, zone, items);
+    UpdatePendingList(view, zone, items, op);
 
     std::pair<PendingListMap::iterator,bool> status;
     status = pending_map_.insert(PendingListPair(xid, PendingList(xid, view,
@@ -548,16 +568,55 @@ bool DnsManager::AddPendingList(uint16_t xid, const std::string &view,
     }
 }
 
+// Compare items by record identity - type, name and data.
+//
+// ttl is deliberately not compared. It is not part of the identity, and it is
+// exactly what changes when a record is republished with a different TTL: the
+// vDNS default_ttl_seconds edited, or DnsProto::MoveVDnsEntry() moving the VM
+// to a vDNS that carries another one. Comparing it would leave the pending
+// DELETE in place and let both datagrams reach named.
+//
+// eclass is not compared because it carries no information here. Both sides
+// come from VirtualDnsRecordConfig::rec_ - SendRecordUpdate() builds the ADD
+// and the DELETE alike from config->GetRecord(), and ProcessAgentUpdate()
+// does not copy the agent's delete item into rec_ - so it is the class the
+// record was added with in both. (The agent does stamp DNS_CLASS_NONE and
+// ttl 0 on the delete it sends, but those values never reach this list.)
+//
+// View and zone are checked by the caller.
+static bool DnsItemsMatchByRecord(const DnsItems &a, const DnsItems &b) {
+    if (a.size() != b.size())
+        return false;
+    for (DnsItems::const_iterator ai = a.begin(), bi = b.begin();
+         ai != a.end(); ++ai, ++bi) {
+        if (ai->type != bi->type || ai->name != bi->name ||
+            ai->data != bi->data)
+            return false;
+    }
+    return true;
+}
+
 // if there is an update for an item which is already in pending list,
 // remove it from the pending list
 void DnsManager::UpdatePendingList(const std::string &view,
                                    const std::string &zone,
-                                   const DnsItems &items) {
+                                   const DnsItems &items,
+                                   BindUtil::Operation op) {
     for (PendingListMap::iterator it = pending_map_.begin();
          it != pending_map_.end(); ) {
-        if (it->second.view == view &&
-            it->second.zone == zone &&
-            it->second.items == items) {
+        bool exact = (it->second.view == view &&
+                      it->second.zone == zone &&
+                      it->second.items == items);
+        // When ADD arrives for a record whose DELETE is still pending, cancel
+        // the DELETE so only the ADD reaches named.  Without this, both UDP
+        // datagrams are sent and named processes them in non-deterministic
+        // order, leaving control-node backends in diverged state.
+        bool delete_superseded = (op == BindUtil::ADD_UPDATE &&
+                                  it->second.op == BindUtil::DELETE_UPDATE &&
+                                  it->second.view == view &&
+                                  it->second.zone == zone &&
+                                  DnsItemsMatchByRecord(it->second.items, items));
+        if (exact || delete_superseded) {
             ResetTransId(it->first);
             pending_map_.erase(it++);
         } else {

@@ -681,6 +681,7 @@ void VirtualDnsRecordConfig::VirtualDnsRecordTrace(VirtualDnsRecordTraceData &re
         rec.installed = "false";
     rec.flags = flags_;
     rec.rec_source_name = rec_.source_name;
+    rec.rec_vm_uuid = rec_.vm_uuid;
 }
 
 void VirtualDnsRecordConfig::Trace(const std::string &ev) {

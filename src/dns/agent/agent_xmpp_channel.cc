@@ -159,6 +159,7 @@ void DnsAgentXmppChannel::GetAgentDnsData(AgentDnsData &data) {
             record.source = "Agent";
             record.installed = "yes";
             record.rec_source_name = (*iter).source_name;
+            record.rec_vm_uuid = (*iter).vm_uuid;
             records.push_back(record);
         }
         item.set_records(records);
