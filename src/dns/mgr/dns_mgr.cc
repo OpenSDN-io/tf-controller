@@ -208,14 +208,19 @@ void DnsManager::DnsView(const DnsConfig *cfg, DnsConfig::DnsConfigEvent ev) {
         if (CheckName(config->GetName(), dns_domain)) {
             config->MarkNotified();
         }
+        bool reverse_changed = config->HasReverseResolutionChanged();
+        if (reverse_changed && !config->IsReverseResolutionEnabled()) {
+            NotifyReverseDnsRecords(config, ev, false);
+            PendingListReverseDelete(config);
+        }
+
         ncfg->ChangeView(config);
         if (dns_domain != config->GetOldDomainName()) {
             NotifyAllDnsRecords(config, ev);
-        } else if (config->HasReverseResolutionChanged()) {
-            bool reverse_resolution = config->IsReverseResolutionEnabled();
-            // if reverse resolution is enabled now, add the reverse records
-            // if reverse resolution is disabled now, mark them as not notified
-            NotifyReverseDnsRecords(config, ev, reverse_resolution);
+        } else if (reverse_changed &&
+                   config->IsReverseResolutionEnabled()) {
+            // The reverse zones now exist, so their records can be installed.
+            NotifyReverseDnsRecords(config, ev, true);
         }
     } else {
         ncfg->DelView(config);
@@ -246,7 +251,7 @@ void DnsManager::DnsPtrZone(const Subnet &subnet, const VirtualDnsConfig *vdns,
     if (ev == DnsConfig::CFG_DELETE) {
         ncfg->DelZone(subnet, vdns);
         PendingListZoneDelete(subnet, vdns);
-    } else {
+    } else if (vdns->IsReverseResolutionEnabled()) {
         ncfg->AddZone(subnet, vdns);
     }
     DNS_BIND_TRACE(DnsBindTrace, "Virtual DNS <" << vdns->GetName() << "> " <<
@@ -683,6 +688,31 @@ void DnsManager::PendingListZoneDelete(const Subnet &subnet,
     }
 }
 
+void DnsManager::PendingListReverseDelete(
+        const VirtualDnsConfig *config) {
+    const std::string view = config->GetViewName();
+    for (PendingListMap::iterator it = pending_map_.begin();
+         it != pending_map_.end();) {
+        if (it->second.view == view &&
+            BindUtil::IsReverseZone(it->second.zone)) {
+            ResetTransId(it->first);
+            pending_map_.erase(it++);
+        } else {
+            it++;
+        }
+    }
+
+    for (DeportedPendingListMap::iterator it = dp_pending_map_.begin();
+         it != dp_pending_map_.end();) {
+        if (it->second.view == view &&
+            BindUtil::IsReverseZone(it->second.zone)) {
+            dp_pending_map_.erase(it++);
+        } else {
+            it++;
+        }
+    }
+}
+
 void DnsManager::StartPendingTimer(int msec) {
     if (!pending_timer_->running()) {
         pending_timer_->Start(msec,
@@ -758,7 +788,9 @@ void DnsManager::NotifyReverseDnsRecords(const VirtualDnsConfig *config,
          config->virtual_dns_records_.begin();
          it != config->virtual_dns_records_.end(); ++it) {
         DnsItem item = (*it)->GetRecord();
-        if (item.type == DNS_PTR_RECORD) {
+        if (item.type == DNS_PTR_RECORD ||
+            (item.type == DNS_NS_RECORD &&
+             BindUtil::IsReverseZone(item.name))) {
             (*it)->ClearNotified();
             if ((*it)->IsValid() && notify) {
                 DnsRecord(*it, ev);

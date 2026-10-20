@@ -123,6 +123,7 @@ protected:
                    bool is_master, bool is_rr, const std::string &next_dns);
     void AddZoneFiles(ZoneList &zones, const VirtualDnsConfig *vdns);
     void RemoveZoneFile(const VirtualDnsConfig *vdns, std::string &zone);
+    void RemoveReverseZoneFiles(const VirtualDnsConfig *vdns);
     std::string GetZoneNSName(const std::string domain_name);
     std::string GetZoneMXName(const std::string domain_name);
     void CreateZoneFile(std::string &zone_name,

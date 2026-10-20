@@ -126,6 +126,7 @@ private:
     bool CheckZoneDelete(ZoneList &zones, PendingList &pend);
     void PendingListZoneDelete(const Subnet &subnet,
                                const VirtualDnsConfig *config);
+    void PendingListReverseDelete(const VirtualDnsConfig *config);
     /* Pending Record List transmitted to named */
     void StartPendingTimer(int);
     void CancelPendingTimer();

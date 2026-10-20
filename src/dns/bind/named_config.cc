@@ -65,10 +65,16 @@ void NamedConfig::Reset() {
 
 void NamedConfig::AddView(const VirtualDnsConfig *vdns) {
     UpdateNamedConf(vdns);
+    if (!vdns->IsReverseResolutionEnabled()) {
+        RemoveReverseZoneFiles(vdns);
+    }
 }
 
 void NamedConfig::ChangeView(const VirtualDnsConfig *vdns) {
     UpdateNamedConf(vdns);
+    if (!vdns->IsReverseResolutionEnabled()) {
+        RemoveReverseZoneFiles(vdns);
+    }
     std::string old_domain = vdns->GetOldDomainName();
     if (vdns->GetDomainName() != old_domain) {
         ZoneList zones;
@@ -79,6 +85,7 @@ void NamedConfig::ChangeView(const VirtualDnsConfig *vdns) {
 
 void NamedConfig::DelView(const VirtualDnsConfig *vdns) {
     UpdateNamedConf(vdns);
+    RemoveReverseZoneFiles(vdns);
 }
 
 void NamedConfig::AddAllViews() {
@@ -88,11 +95,16 @@ void NamedConfig::AddAllViews() {
 }
 
 void NamedConfig::AddZone(const Subnet &subnet, const VirtualDnsConfig *vdns) {
+    if (!vdns->IsReverseResolutionEnabled()) {
+        return;
+    }
+
     ZoneList zones;
     subnet.GetReverseZones(zones);
     // Ignore zone files which already exist
     for (unsigned int i = 0; i < zones.size();) {
-        std::ifstream file(zones[i].c_str());
+        std::ifstream file(GetZoneFilePath(vdns->GetViewName(),
+                                           zones[i]).c_str());
         if (file.is_open()) {
             if (file.good()) {
                 zones.erase(zones.begin() + i);
@@ -342,6 +354,12 @@ void NamedConfig::RemoveZoneFiles(const VirtualDnsConfig *vdns,
     }
 }
 
+void NamedConfig::RemoveReverseZoneFiles(const VirtualDnsConfig *vdns) {
+    ZoneList zones;
+    MakeReverseZoneList(vdns, zones);
+    RemoveZoneFiles(vdns, zones);
+}
+
 void NamedConfig::RemoveZoneFile(const VirtualDnsConfig *vdns, string &zone) {
     string zfile_name = GetZoneFilePath(vdns->GetViewName(), zone);
     remove(zfile_name.c_str());
@@ -429,8 +447,10 @@ void NamedConfig::MakeZoneList(const VirtualDnsConfig *vdns_config,
     // Forward Zone
     zones.push_back(dns_domain);
 
-    // Reverse zones
-    MakeReverseZoneList(vdns_config, zones);
+    // Reverse zones are part of a view only when reverse resolution is enabled.
+    if (vdns_config->IsReverseResolutionEnabled()) {
+        MakeReverseZoneList(vdns_config, zones);
+    }
 }
 
 void NamedConfig::MakeReverseZoneList(const VirtualDnsConfig *vdns_config,

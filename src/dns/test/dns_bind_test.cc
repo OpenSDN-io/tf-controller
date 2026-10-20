@@ -176,6 +176,26 @@ protected:
     return rec_trace_data;
     }
 
+    bool HasPendingReverseUpdates(const std::string &view) const {
+        for (DnsManager::PendingListMap::const_iterator it =
+                 dns_manager_.pending_map_.begin();
+             it != dns_manager_.pending_map_.end(); ++it) {
+            if (it->second.view == view &&
+                BindUtil::IsReverseZone(it->second.zone)) {
+                return true;
+            }
+        }
+        for (DnsManager::DeportedPendingListMap::const_iterator it =
+                 dns_manager_.dp_pending_map_.begin();
+             it != dns_manager_.dp_pending_map_.end(); ++it) {
+            if (it->second.view == view &&
+                BindUtil::IsReverseZone(it->second.zone)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     DB db_;
     DBGraph db_graph_;
     DnsManager dns_manager_;
@@ -285,6 +305,20 @@ TEST_F(DnsBindTest, Reordered) {
     task_util::WaitForIdle();
     NamedConfigTest *cfg = static_cast<NamedConfigTest *>(NamedConfig::GetNamedConfigObject());
 
+    const char ptr_record[] = "\
+<config>\
+    <virtual-DNS-record name='ptr-record' dns='new-DNS'>\
+        <record-name>1.2.3.4</record-name>\
+        <record-type>PTR</record-type>\
+        <record-class>IN</record-class>\
+        <record-data>host1</record-data>\
+        <record-ttl-seconds>25</record-ttl-seconds>\
+    </virtual-DNS-record>\
+</config>\
+";
+    EXPECT_TRUE(parser_.Parse(ptr_record));
+    task_util::WaitForIdle();
+
     string dns_domains[] = {
         "contrail.juniper.net",
         "test.example.com",
@@ -311,6 +345,7 @@ TEST_F(DnsBindTest, Reordered) {
         string s1 = cfg->GetZoneFilePath(dns_domains[i]);
         EXPECT_TRUE(FileExists(s1.c_str()));
     }
+    EXPECT_EQ("true", GetRecord("new-DNS", "ptr-record").installed);
 
     EXPECT_TRUE(FileExists("rndc.conf"));
     EXPECT_TRUE(FilesEqual("rndc.conf",
@@ -322,11 +357,16 @@ TEST_F(DnsBindTest, Reordered) {
     task_util::WaitForIdle();
     EXPECT_TRUE(FilesEqual(cfg->named_config_file().c_str(),
                 "controller/src/dns/testdata/named.conf.rr_ext_disabled"));
-    // Now we create all zones irrespective of reverse_resolution
-    for (int i = 0; i < 17; i++) {
+    for (int i = 0; i < 4; i++) {
         string s1 = cfg->GetZoneFilePath(dns_domains[i]);
         EXPECT_TRUE(FileExists(s1.c_str()));
     }
+    for (int i = 4; i < 17; i++) {
+        string s1 = cfg->GetZoneFilePath(dns_domains[i]);
+        EXPECT_FALSE(FileExists(s1.c_str()));
+    }
+    EXPECT_EQ("false", GetRecord("new-DNS", "ptr-record").installed);
+    EXPECT_FALSE(HasPendingReverseUpdates("new-DNS"));
 
     // change external-visible and reverse_resolution fields to true
     boost::replace_all(content, "false", "true");
@@ -338,6 +378,13 @@ TEST_F(DnsBindTest, Reordered) {
         string s1 = cfg->GetZoneFilePath(dns_domains[i]);
         EXPECT_TRUE(FileExists(s1.c_str()));
     }
+    EXPECT_EQ("true", GetRecord("new-DNS", "ptr-record").installed);
+
+    string ptr_delete(ptr_record);
+    boost::replace_all(ptr_delete, "<config>", "<delete>");
+    boost::replace_all(ptr_delete, "</config>", "</delete>");
+    EXPECT_TRUE(parser_.Parse(ptr_delete));
+    task_util::WaitForIdle();
 
     const char config_change[] = "\
 <config>\
@@ -600,7 +647,7 @@ TEST_F(DnsBindTest, ReorderedExternalReverseResolutionDisabled) {
     }
     for (int i = 4; i < 17; i++) {
         string s1 = cfg->GetZoneFilePath(dns_domains[i]);
-        EXPECT_TRUE(FileExists(s1.c_str()));
+        EXPECT_FALSE(FileExists(s1.c_str()));
     }
 
     EXPECT_TRUE(FileExists("rndc.conf"));
@@ -636,14 +683,14 @@ TEST_F(DnsBindTest, ReorderedExternalReverseResolutionDisabled) {
     }
     for (int i = 4; i < 17; i++) {
         string s1 = cfg->GetZoneFilePath(dns_domains[i]);
-        EXPECT_TRUE(FileExists(s1.c_str()));
+        EXPECT_FALSE(FileExists(s1.c_str()));
     }
 
     string zone = "3.2.25.in-addr.arpa";
     string s1 = cfg->GetZoneFilePath(zone);
-    EXPECT_TRUE(FileExists(s1.c_str()));
-    EXPECT_FALSE(FilesEqual(cfg->named_config_file().c_str(),
-                "controller/src/dns/testdata/named.conf.rr_ext_disabled.2"));
+    EXPECT_FALSE(FileExists(s1.c_str()));
+    EXPECT_TRUE(FilesEqual(cfg->named_config_file().c_str(),
+                "controller/src/dns/testdata/named.conf.rr_ext_disabled"));
 
     // Case 2: Add and Delete a subnet from an ipam
     const char config_change_1[] = "\
@@ -702,20 +749,20 @@ TEST_F(DnsBindTest, ReorderedExternalReverseResolutionDisabled) {
 
     EXPECT_TRUE(parser_.Parse(config_change_1));
     task_util::WaitForIdle();
-    EXPECT_FALSE(FilesEqual(cfg->named_config_file().c_str(),
+    EXPECT_TRUE(FilesEqual(cfg->named_config_file().c_str(),
                 "controller/src/dns/testdata/named.conf.rr_ext_disabled"));
 
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 4; i++) {
         string s1 = cfg->GetZoneFilePath(dns_domains[i]);
         EXPECT_TRUE(FileExists(s1.c_str()));
     }
-    for (int i = 12; i < 17; i++) {
+    for (int i = 4; i < 17; i++) {
         string s1 = cfg->GetZoneFilePath(dns_domains[i]);
         EXPECT_FALSE(FileExists(s1.c_str()));
     }
     for (int i = 0; i < 2; i++) {
         string s1 = cfg->GetZoneFilePath(new_dns_domains[i]);
-        EXPECT_TRUE(FileExists(s1.c_str()));
+        EXPECT_FALSE(FileExists(s1.c_str()));
     }
 
     const char config_change_2[] = "\
@@ -768,7 +815,7 @@ TEST_F(DnsBindTest, ReorderedExternalReverseResolutionDisabled) {
         string s1 = cfg->GetZoneFilePath(deleted_dns_subnets[i]);
         EXPECT_FALSE(FileExists(s1.c_str()));
     }
-    EXPECT_FALSE(FilesEqual(cfg->named_config_file().c_str(),
+    EXPECT_TRUE(FilesEqual(cfg->named_config_file().c_str(),
                 "controller/src/dns/testdata/named.conf.rr_ext_disabled"));
 
     const char config_change_3[] = "\
@@ -812,7 +859,7 @@ TEST_F(DnsBindTest, ReorderedExternalReverseResolutionDisabled) {
 
     EXPECT_TRUE(parser_.Parse(config_change_3));
     task_util::WaitForIdle();
-    EXPECT_FALSE(FilesEqual(cfg->named_config_file().c_str(),
+    EXPECT_TRUE(FilesEqual(cfg->named_config_file().c_str(),
                 "controller/src/dns/testdata/named.conf.rr_ext_disabled"));
     for (int i = 0; i < 7; i++) {
         string s1 = cfg->GetZoneFilePath(deleted_domains[i]);
@@ -820,7 +867,7 @@ TEST_F(DnsBindTest, ReorderedExternalReverseResolutionDisabled) {
     }
     for (int i = 0; i < 4; i++) {
         string s1 = cfg->GetZoneFilePath(remaining_domains[i]);
-        EXPECT_TRUE(FileExists(s1.c_str()));
+        EXPECT_FALSE(FileExists(s1.c_str()));
     }
 
     const char config_change_4[] = "\
