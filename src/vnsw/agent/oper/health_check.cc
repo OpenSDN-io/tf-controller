@@ -257,9 +257,27 @@ HealthCheckInstanceService::HealthCheckInstanceService(
     VmInterface *intf, VmInterface *other_intf, bool ignore_status_event,
     bool multi_hop) :
     HealthCheckInstanceBase(service, allocator, intf, ignore_status_event),
-    other_intf_(other_intf), multi_hop_(multi_hop) {
+    other_intf_(other_intf), multi_hop_(multi_hop), bfd_up_(false) {
     if (service->IsSegmentHealthCheckService() && other_intf) {
         other_intf->InsertHealthCheckInstance(this);
+    }
+}
+
+void HealthCheckInstanceService::BfdStateChange(bool up) {
+    if (up) {
+        bfd_up_ = true;
+        return;
+    }
+
+    if (!bfd_up_) {
+        // BFD reports its initial state as Down when the session is created.
+        // Do not tear down the BGP flow until this session has been Up.
+        return;
+    }
+
+    bfd_up_ = false;
+    if (!bfd_down_callback_.empty()) {
+        bfd_down_callback_();
     }
 }
 

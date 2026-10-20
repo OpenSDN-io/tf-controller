@@ -12,6 +12,9 @@
 #include "test/test_cmn_util.h"
 #include "test_pkt_util.h"
 #include "cmn/agent.h"
+#include <vector>
+#include <boost/bind.hpp>
+#include "services/bfd_proto.h"
 
 VmInterface *vnet[16];
 Interface *vhost;
@@ -914,6 +917,255 @@ TEST_F(BgpServiceTest, Test_14) {
     client->WaitForIdle();
 
 }
+
+// BGPaaS BFD session state handling.
+//
+// The status of the BFD session of a BGPaaS flow does not change the state of
+// the VMI. But when the session goes down (after having been up), the BGPaaS
+// flows are deleted. The next packet of the control node then finds no flow
+// and is answered with a TCP RST by the host, so the control node drops the
+// BGP peer without waiting for the BGP hold timer.
+static struct PortInfo bfd_input[] = {
+    {"vnet100", 100, "1.1.1.100", "00:00:01:01:01:10", 1, 100},
+};
+
+class BgpServiceBfdTest : public BgpServiceTest {
+public:
+    // Creates a BGPaaS VMI with a BFD health check and the BGPaaS flow.
+    // Returns the forward flow.
+    FlowEntry *CreateBfdBgpaasFlow() {
+        client->Reset();
+        AddBgpaasPortRange(50000, 50512);
+        client->WaitForIdle();
+        CreateVmportEnv(bfd_input, 1);
+        client->WaitForIdle();
+        EXPECT_TRUE(VmPortActive(bfd_input, 0));
+        AddBgpServiceConfig("1.1.1.100", 50005, 179, 100, "vnet100", "vrf1",
+                            "bgpaas-client", false, true);
+        client->WaitForIdle();
+        SetupPolicy();
+        return TriggerBgpaasFlow();
+    }
+
+    // Packet of the VM towards the BGP server, which creates the flow. Flow
+    // management then starts the BFD session (health check instance).
+    FlowEntry *TriggerBgpaasFlow() {
+        TxTcpPacket(VmInterfaceGet(100)->id(), "1.1.1.100", "1.1.1.1", 10000,
+                    179, false, 1, 2, 1);
+        client->WaitForIdle();
+        return BgpaasFlow();
+    }
+
+    FlowEntry *BgpaasFlow() {
+        return FlowGet(VmInterfaceGet(100)->flow_key_nh()->id(), "1.1.1.100",
+                       "1.1.1.1", 6, 10000, 179);
+    }
+
+    // BFD health check instances of the VMI which do not change the VMI
+    // state, i.e. the instances started for BGPaaS flows.
+    std::vector<HealthCheckInstanceBase *> BgpaasBfdInstances() {
+        std::vector<HealthCheckInstanceBase *> list;
+        const VmInterface::HealthCheckInstanceSet &set =
+            VmInterfaceGet(100)->hc_instance_set();
+        for (VmInterface::HealthCheckInstanceSet::const_iterator it =
+             set.begin(); it != set.end(); ++it) {
+            if ((*it)->IsStatusEventIgnored())
+                list.push_back(*it);
+        }
+        return list;
+    }
+
+    // Report status of the BFD session the same way the BFD library does:
+    // through BfdProto, where the Up/Down transition is detected.
+    void BfdStatus(const std::vector<HealthCheckInstanceBase *> &list,
+                   const char *status) {
+        for (size_t i = 0; i < list.size(); i++) {
+            std::string data(status);
+            agent_->GetBfdProto()->NotifyHealthCheckInstanceService(
+                VmInterfaceGet(100)->id(), list[i]->destination_ip(), data);
+        }
+        client->WaitForIdle();
+    }
+
+    // Replace the Down callback of the instances by a counter.
+    static void CountDown(int *counter) { (*counter)++; }
+    void CountBfdDown(const std::vector<HealthCheckInstanceBase *> &list,
+                      int *counter) {
+        for (size_t i = 0; i < list.size(); i++) {
+            static_cast<HealthCheckInstanceService *>(list[i])->
+                SetBfdDownCallback(boost::bind(&CountDown, counter));
+        }
+    }
+
+    void DeleteBfdBgpaasEnv() {
+        DeleteBgpServiceConfig("1.1.1.100", 50005, "vnet100", "vrf1", true);
+        DeleteVmportEnv(bfd_input, 1, true);
+        client->WaitForIdle();
+        DelBgpaasPortRange();
+        client->WaitForIdle();
+        EXPECT_TRUE(flow_proto_->FlowCount() == 0);
+        agent_->resource_manager()->Release(Resource::BGP_AS_SERVICE_INDEX, 0);
+        client->WaitForIdle();
+    }
+};
+
+// BFD session goes down after it was up: BGPaaS flows are deleted, the VMI is
+// not affected.
+TEST_F(BgpServiceBfdTest, BfdDownDeletesBgpaasFlows) {
+    FlowEntry *fe = CreateBfdBgpaasFlow();
+    ASSERT_TRUE(fe != NULL);
+    EXPECT_TRUE(fe->reverse_flow_entry() != NULL);
+    EXPECT_TRUE(fe->is_flags_set(FlowEntry::BgpRouterService));
+    EXPECT_EQ(2U, flow_proto_->FlowCount());
+
+    std::vector<HealthCheckInstanceBase *> list = BgpaasBfdInstances();
+    ASSERT_FALSE(list.empty());
+
+    // Session up: nothing changes
+    BfdStatus(list, "success");
+    EXPECT_TRUE(BgpaasFlow() != NULL);
+    EXPECT_EQ(2U, flow_proto_->FlowCount());
+    EXPECT_TRUE(VmInterfaceGet(100)->is_hc_active());
+
+    // Session down: flows are deleted (list is not used after this, the
+    // instances are deleted together with the flows)
+    BfdStatus(list, "failure");
+    WAIT_FOR(1000, 1000, (BgpaasFlow() == NULL));
+    WAIT_FOR(1000, 1000, (flow_proto_->FlowCount() == 0));
+
+    // BFD of BGPaaS does not take the VMI down
+    EXPECT_TRUE(VmInterfaceGet(100)->is_hc_active());
+    EXPECT_TRUE(VmPortActive(bfd_input, 0));
+
+    DeleteBfdBgpaasEnv();
+}
+
+// A new BFD session starts in Down state. Nothing is deleted until it has
+// been up: that would drop every new BGP session, as BFD takes some time to
+// come up, and would break peers which do not run BFD at all.
+TEST_F(BgpServiceBfdTest, BfdDownWithoutUpKeepsBgpaasFlows) {
+    FlowEntry *fe = CreateBfdBgpaasFlow();
+    ASSERT_TRUE(fe != NULL);
+    EXPECT_EQ(2U, flow_proto_->FlowCount());
+
+    std::vector<HealthCheckInstanceBase *> list = BgpaasBfdInstances();
+    ASSERT_FALSE(list.empty());
+
+    BfdStatus(list, "failure");
+    BfdStatus(list, "failure");
+    client->WaitForIdle();
+
+    EXPECT_TRUE(BgpaasFlow() != NULL);
+    EXPECT_EQ(2U, flow_proto_->FlowCount());
+    EXPECT_TRUE(VmInterfaceGet(100)->is_hc_active());
+    // instances are still there, with the same state
+    EXPECT_EQ(list.size(), BgpaasBfdInstances().size());
+
+    DeleteBfdBgpaasEnv();
+}
+
+// After BFD down and deletion of the flows the BGP session of the VM can be
+// established again: new flow, new BFD session, which is not torn down by its
+// initial Down state either.
+TEST_F(BgpServiceBfdTest, BgpaasFlowCreatedAgainAfterBfdDown) {
+    FlowEntry *fe = CreateBfdBgpaasFlow();
+    ASSERT_TRUE(fe != NULL);
+
+    std::vector<HealthCheckInstanceBase *> list = BgpaasBfdInstances();
+    ASSERT_FALSE(list.empty());
+    BfdStatus(list, "success");
+    BfdStatus(list, "failure");
+    WAIT_FOR(1000, 1000, (BgpaasFlow() == NULL));
+    WAIT_FOR(1000, 1000, (flow_proto_->FlowCount() == 0));
+
+    // VM connects again
+    fe = TriggerBgpaasFlow();
+    ASSERT_TRUE(fe != NULL);
+    EXPECT_TRUE(fe->reverse_flow_entry() != NULL);
+    EXPECT_TRUE(fe->is_flags_set(FlowEntry::BgpRouterService));
+    EXPECT_EQ(2U, flow_proto_->FlowCount());
+
+    std::vector<HealthCheckInstanceBase *> new_list = BgpaasBfdInstances();
+    ASSERT_FALSE(new_list.empty());
+    // Initial Down of the new session does not delete the flow
+    BfdStatus(new_list, "failure");
+    EXPECT_TRUE(BgpaasFlow() != NULL);
+    EXPECT_EQ(2U, flow_proto_->FlowCount());
+
+    // and it is handled again once the session has been up
+    BfdStatus(new_list, "success");
+    BfdStatus(new_list, "failure");
+    WAIT_FOR(1000, 1000, (BgpaasFlow() == NULL));
+    WAIT_FOR(1000, 1000, (flow_proto_->FlowCount() == 0));
+
+    DeleteBfdBgpaasEnv();
+}
+
+// BfdStateChange(): callback only on Up -> Down, never for the initial Down.
+TEST_F(BgpServiceBfdTest, BfdStateChangeGating) {
+    ASSERT_TRUE(CreateBfdBgpaasFlow() != NULL);
+    std::vector<HealthCheckInstanceBase *> list = BgpaasBfdInstances();
+    ASSERT_FALSE(list.empty());
+    int downs = 0;
+    CountBfdDown(list, &downs);
+
+    BfdStatus(list, "failure");            // initial Down
+    EXPECT_EQ(0, downs);
+    BfdStatus(list, "success");            // Up
+    EXPECT_EQ(0, downs);
+    BfdStatus(list, "success");            // repeated Up
+    EXPECT_EQ(0, downs);
+    BfdStatus(list, "failure");            // Up -> Down
+    EXPECT_EQ((int)list.size(), downs);
+    BfdStatus(list, "failure");            // repeated Down
+    EXPECT_EQ((int)list.size(), downs);
+    BfdStatus(list, "success");            // re-armed by Up
+    BfdStatus(list, "failure");
+    EXPECT_EQ(2 * (int)list.size(), downs);
+
+    DeleteBfdBgpaasEnv();
+}
+
+// Data which is neither success nor failure is not a state change.
+TEST_F(BgpServiceBfdTest, BfdUnrelatedDataIgnored) {
+    ASSERT_TRUE(CreateBfdBgpaasFlow() != NULL);
+    std::vector<HealthCheckInstanceBase *> list = BgpaasBfdInstances();
+    ASSERT_FALSE(list.empty());
+    int downs = 0;
+    CountBfdDown(list, &downs);
+
+    BfdStatus(list, "success");
+    BfdStatus(list, "unknown");
+    BfdStatus(list, "");
+    EXPECT_EQ(0, downs);
+    BfdStatus(list, "failure");
+    EXPECT_EQ((int)list.size(), downs);
+
+    DeleteBfdBgpaasEnv();
+}
+
+// Down without callback set, and for an unknown session: no crash, no effect.
+TEST_F(BgpServiceBfdTest, BfdDownWithoutCallbackOrSession) {
+    ASSERT_TRUE(CreateBfdBgpaasFlow() != NULL);
+    std::vector<HealthCheckInstanceBase *> list = BgpaasBfdInstances();
+    ASSERT_FALSE(list.empty());
+    for (size_t i = 0; i < list.size(); i++) {
+        static_cast<HealthCheckInstanceService *>(list[i])->
+            SetBfdDownCallback(HealthCheckInstanceService::BfdDownCallback());
+    }
+    BfdStatus(list, "success");
+    BfdStatus(list, "failure");
+    EXPECT_TRUE(BgpaasFlow() != NULL);
+
+    std::string data("failure");
+    agent_->GetBfdProto()->NotifyHealthCheckInstanceService(
+        VmInterfaceGet(100)->id(), IpAddress::from_string("9.9.9.9"), data);
+    client->WaitForIdle();
+    EXPECT_TRUE(BgpaasFlow() != NULL);
+
+    DeleteBfdBgpaasEnv();
+}
+
 
 int main(int argc, char *argv[]) {
     int ret = 0;

@@ -167,6 +167,13 @@ void BfdProto::NotifyHealthCheckInstanceService(uint32_t interface,
     if (it == sessions_.end()) {
         return;
     }
+
+    const bool up = data.find("success") != std::string::npos;
+    const bool down = data.find("failure") != std::string::npos;
+    if (up || down) {
+        it->second->BfdStateChange(up);
+    }
+
     it->second->OnRead(data);
 
     // log the BFD up/down event

@@ -3,6 +3,7 @@
  */
 
 #include <pkt/flow_mgmt/flow_mgmt_key.h>
+#include <pkt/flow_mgmt.h>
 #include <oper/health_check.h>
 
 FlowEvent::Event FlowMgmtKey::FreeDBEntryEvent() const {
@@ -55,6 +56,16 @@ void BgpAsAServiceFlowMgmtKey::StartHealthCheck(
         bgp_health_check_service_->StartHealthCheckService(
             const_cast<VmInterface *>(vm_interface),
             flow->key().dst_addr, flow->key().src_addr);
+
+    HealthCheckInstanceService *bfd_instance =
+        static_cast<HealthCheckInstanceService *>(
+            bgp_health_check_instance_);
+    FlowMgmtManager *flow_mgmt_manager =
+        agent->pkt()->flow_mgmt_manager(flow->flow_table()->table_index());
+    bfd_instance->SetBfdDownCallback(
+        boost::bind(&FlowMgmtManager::BgpAsAServiceNotify,
+                    flow_mgmt_manager, uuid_, source_port_));
+
     bgp_health_check_instance_->SetService(bgp_health_check_service_);
 }
 

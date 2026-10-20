@@ -230,6 +230,12 @@ public:
     virtual void ResyncTarget(const HealthCheckService *service) const;
     void EnqueueMacIpLearningHCStatus(const HealthCheckService *service) const;
 
+    typedef boost::function<void()> BfdDownCallback;
+    void SetBfdDownCallback(const BfdDownCallback &callback) {
+        bfd_down_callback_ = callback;
+    }
+    void BfdStateChange(bool up);
+
     bool is_multi_hop() const { return multi_hop_; }
 
 private:
@@ -242,6 +248,11 @@ private:
     // BFD health check can be single hop or multi hop, when started for a
     // BGP flow, make it multi hop
     bool multi_hop_;
+
+    // True only after BFD has reached Up at least once. This prevents the
+    // initial Down notification from deleting a newly-created BGP flow.
+    bool bfd_up_;
+    BfdDownCallback bfd_down_callback_;
 
     DISALLOW_COPY_AND_ASSIGN(HealthCheckInstanceService);
 };

@@ -96,6 +96,9 @@ void VxlanRoutingManager::AddBgpaasInterfaceComponentToList(
         }
         const AgentRoute *intf_rt =
             FindEvpnOrInetRoute(agent, vrf_name, nh_ip, prefix_len, nh_item);
+        if (intf_rt == nullptr) {
+            continue;
+        }
         const AgentPath *loc_path =
             intf_rt->FindIntfOrCompLocalVmPortPath();
         if (loc_path == nullptr) {
