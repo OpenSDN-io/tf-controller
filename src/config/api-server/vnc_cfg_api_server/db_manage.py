@@ -62,12 +62,16 @@ except ImportError:
     from vnc_cfg_ifmap import VncServerCassandraClient
 
 
-__version__ = "1.41"
+__version__ = "1.43"
 """
 NOTE: As that script is not self contained in a python package and as it
 supports multiple Contrail releases, it brings its own version that needs to be
 manually updated each time it is modified. We also maintain a change log list
 in that header:
+* 1.43:
+  - Fix false-positive/destructive RT<->RI back-ref mismatch caused by
+    comparing Zookeeper fq_name (str) against Cassandra fq_name (list)
+    in audit_route_targets_routing_instance_backrefs.
 * 1.42:
   - Add checker and healer for ipam_subnet_method.
 * 1.41:
@@ -217,6 +221,17 @@ def _parse_rt(rt):
         asn = int(asn)
     return asn, target
 
+def _fq_name_to_list(value):
+#Cassandra can return fq_name as JSON-string or list.
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            return
+        return parsed if isinstance(parsed, list) else None
+    return
 
 # All possible errors from audit
 class AuditError(Exception):
@@ -1372,8 +1387,16 @@ class DatabaseManager(object):
                     self._logger.warning(msg)
                     errors.append(RTbackrefError(msg))
                     continue
-                lr_fq_name = lr_cols['fq_name']
-                if zk_fq_name_str != lr_fq_name:
+                lr_fq_name = _fq_name_to_list(lr_cols['fq_name'])
+                if not lr_fq_name:
+                    msg = ("Cannot parse fq_name %s of the LR %s "
+                           "back-referenced for RT %s(%s)" %
+                           (lr_fq_name, lr_uuid, fq_name_str, uuid))
+                    self._logger.warning(msg)
+                    errors.append(RTbackrefError(msg))
+                    continue
+                zk_fq_name = zk_fq_name_str.split(':')
+                if zk_fq_name != lr_fq_name:
                     msg = ("LR %s(%s) back-referenced does not correspond to "
                            "the LR pointed by zookeeper %s for RT %s(%s)" %
                            (lr_fq_name, lr_uuid, zk_fq_name_str, fq_name_str,
@@ -1381,6 +1404,11 @@ class DatabaseManager(object):
                     self._logger.warning(msg)
                     errors.append(RTbackrefError(msg))
                     continue
+
+                lr_type = _fq_name_to_list(lr_cols['prop:logical_router_type'])
+                if lr_type == 'vxlan-routing':
+                    continue
+
                 # check RI back-refs correspond to LR VMIs
                 for col, _ in list(lr_cols.items()):
                     if col.startswith('ref:service_instance:'):
@@ -1755,12 +1783,6 @@ class DatabaseChecker(DatabaseManager):
         errors = []
 
         logger.debug("Reading all objects from obj_fq_name_table")
-        logger.warning("Be careful, that check can return false positive "
-                       "errors if stale FQ names and stale resources were not "
-                       "cleaned before. Run at least commands "
-                       "'clean_obj_missing_mandatory_fields', "
-                       "'clean_orphan_resources' and 'clean_stale_fq_names' "
-                       "before.")
         resource_map = {}
         stale_fq_names = set([])
         for obj_type, _ in self._cassandra_driver.get_range(
@@ -1796,6 +1818,13 @@ class DatabaseChecker(DatabaseManager):
                            ))
                     errors.append(FqNameDuplicateError(msg))
 
+        if errors:
+            logger.warning("Be careful, that check can return false positive "
+                           "errors if stale FQ names and stale resources were not "
+                           "cleaned before. Run at least commands "
+                           "'clean_obj_missing_mandatory_fields', "
+                           "'clean_orphan_resources' and 'clean_stale_fq_names' "
+                           "before.")
         return errors
 
     @checker
