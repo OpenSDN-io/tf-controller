@@ -74,7 +74,8 @@ TableState::TableState(RoutePathReplicator *replicator, BgpTable *table)
       table_(table),
       listener_id_(DBTableBase::kInvalidId),
       deleter_(new DeleteActor(this)),
-      table_delete_ref_(this, table->deleter()) {
+      table_delete_ref_(this, table->deleter()),
+      export_target_gen_(0) {
     assert(table->deleter() != NULL);
 }
 
@@ -131,7 +132,8 @@ uint32_t TableState::route_count() const {
 }
 
 RtReplicated::RtReplicated(RoutePathReplicator *replicator)
-    : replicator_(replicator) {
+    : replicator_(replicator),
+      export_target_gen_(0) {
 }
 
 void RtReplicated::AddRouteInfo(BgpTable *table, BgpRoute *rt,
@@ -316,7 +318,11 @@ void RoutePathReplicator::Join(BgpTable *table, const RouteTarget &rt,
         }
     } else {
         first = group->AddExportTable(family(), table);
-        AddTableState(table, group);
+        TableState *ts = AddTableState(table, group);
+        // Export targets changed, so the attributes of the paths replicated
+        // earlier are stale. Bump before the walk, so that RouteListener does
+        // not take the optimized path for them.
+        ts->bump_export_target_gen();
         if (!table->empty()) {
             RequestWalk(table);
         }
@@ -355,6 +361,8 @@ void RoutePathReplicator::Leave(BgpTable *table, const RouteTarget &rt,
     } else {
         group->RemoveExportTable(family(), table);
         RemoveTableState(table, group);
+        // The paths replicated earlier still carry the target being removed.
+        FindTableState(table)->bump_export_target_gen();
         if (!table->empty()) {
             RequestWalk(table);
         }
@@ -485,11 +493,19 @@ bool RoutePathReplicator::RouteListener(TableState *ts,
     //Threshold used for optimised replication
     uint64_t optimizationThresholdTime = 30ULL * 60 * 1000000;
     uint64_t start = UTCTimestampUsec();
+    //Read once: a change racing with this walk must not be recorded as
+    //applied. The walk it requests runs after this one and sees the mismatch.
+    uint64_t export_target_gen = ts->export_target_gen();
 
-    //Optimize only if last route change occurred 30 mins before.
+    //Optimize only if last route change occurred 30 mins before and the
+    //export targets of the primary table are unchanged since the route was
+    //last replicated - the optimized path skips every destination table that
+    //is in both the old and the new set, which for a route in a VRF always
+    //includes the VPN table, leaving it with the previous export targets.
     //We update the route_unchanged flag to true
     if ( (start - rt->last_update_at() > optimizationThresholdTime) &&
-          dbstate != NULL)
+          dbstate != NULL &&
+          dbstate->export_target_gen() == export_target_gen)
     {
         RPR_TRACE(RouteListener, "Route change occurred before threshold \
         time, optimising replication");
@@ -672,6 +688,9 @@ bool RoutePathReplicator::RouteListener(TableState *ts,
                            dest->name(), replicated_rt->ToString());
         }
     }
+
+    // Record what this replication was done with, for the next walk.
+    dbstate->set_export_target_gen(export_target_gen);
 
     // Update the DBState to reflect the new list of secondary paths. The
     // DBState will get cleared if the list is empty.

@@ -390,6 +390,15 @@ protected:
         return NULL;
     }
 
+    void VerifyVPNSecondaryRouteTargets(const string &instance_name,
+        BgpRoute *rt, const vector<string> &expected_targets) {
+        const RtReplicated *rts = InetRouteReplicationState(instance_name, rt);
+        ASSERT_TRUE(rts != NULL);
+        const BgpRoute *vpn_rt = GetVPNSecondary(rts);
+        ASSERT_TRUE(vpn_rt != NULL);
+        VerifyVPNPathRouteTargets(vpn_rt->BestPath(), expected_targets);
+    }
+
     string GetInstanceRD(const string &instance) {
         TASK_UTIL_EXPECT_NE(static_cast<RoutingInstance *>(NULL),
             bgp_server_->routing_instance_mgr()->GetRoutingInstance(instance));
@@ -2857,6 +2866,60 @@ TEST_F(ReplicationTest, AddDeleteNetworkOptimization) {
     VERIFY_EQ(0, RouteCount("blue"));
     VERIFY_EQ(0, RouteCount("red"));
     VERIFY_EQ(0, RouteCount("green"));
+}
+
+// The replication optimization skips any destination table that is in both
+// the old and the new set. For a route in a VRF the VPN table is always such
+// a table, because it is in the destination set of every export target of the
+// VRF. Verify that a change to the export targets of the VRF still reaches
+// the path replicated into the VPN table when the route itself has not
+// changed for longer than the optimization threshold - a target left behind
+// there leaks the route into whichever instance gets that target next, and a
+// target that never arrives leaves the new connection not working.
+TEST_F(ReplicationTest, ExportTargetChangeUpdatesRetainedSecondaryTable) {
+    vector<string> instance_names = list_of("blue")("red");
+    multimap<string, string> connections;
+    NetworkConfig(instance_names, connections);
+    task_util::WaitForIdle();
+
+    boost::system::error_code ec;
+    peers_.push_back(
+        new BgpPeerMock(Ip4Address::from_string("192.168.0.1", ec)));
+
+    // Add a route to the blue table and verify the replicated VPN path.
+    AddInetRoute(peers_[0], "blue", "10.0.1.1/32", 100);
+    task_util::WaitForIdle();
+
+    BgpRoute *rt = InetRouteLookup("blue", "10.0.1.1/32");
+    ASSERT_TRUE(rt != NULL);
+    VerifyVPNSecondaryRouteTargets("blue", rt,
+                                   GetInstanceExportRouteTargetList("blue"));
+
+    // Set the route change time to thirty one minutes ago, so that the walk
+    // caused by the route target change takes the optimized path.
+    rt->set_last_update_at(UTCTimestampUsec() - 1860000000);
+
+    // Add an export target; the VPN path must pick it up.
+    AddInstanceRouteTarget("blue", "target:64496:101");
+    TASK_UTIL_EXPECT_EQ(2, GetInstanceExportRouteTargetList("blue").size());
+    rt = InetRouteLookup("blue", "10.0.1.1/32");
+    ASSERT_TRUE(rt != NULL);
+    VerifyVPNSecondaryRouteTargets("blue", rt,
+                                   GetInstanceExportRouteTargetList("blue"));
+
+    rt->set_last_update_at(UTCTimestampUsec() - 1860000000);
+
+    // Remove the original export target; the VPN path must drop it.
+    RemoveInstanceRouteTarget("blue", "target:64496:1");
+    TASK_UTIL_EXPECT_EQ(1, GetInstanceExportRouteTargetList("blue").size());
+    rt = InetRouteLookup("blue", "10.0.1.1/32");
+    ASSERT_TRUE(rt != NULL);
+    VerifyVPNSecondaryRouteTargets("blue", rt,
+                                   GetInstanceExportRouteTargetList("blue"));
+
+    DeleteInetRoute(peers_[0], "blue", "10.0.1.1/32");
+    task_util::WaitForIdle();
+    VERIFY_EQ(0, RouteCount("blue"));
 }
 
 class TestEnvironment : public ::testing::Environment {
