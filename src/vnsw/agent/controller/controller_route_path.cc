@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014-2024 Juniper Networks, Inc. All rights reserved.
- * Copyright (c) 2024 Elena Zizganova
+ * Copyright Contributors to the OpenSDN project
  */
 
 #include <boost/uuid/uuid_io.hpp>

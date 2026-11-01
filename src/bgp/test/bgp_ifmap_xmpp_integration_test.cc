@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 
 // NO_HEAPCHECK=1 scons -uj32 --optimization=production src/bgp:bgp_ifmap_xmpp_integration_test && LOG_DISABLE=1 BGP_IFMAP_XMPP_INTEGRATION_TEST_PAUSE=1 BGP_IFMAP_XMPP_INTEGRATION_TEST_INTROSPECT=5910 BGP_IFMAP_XMPP_INTEGRATION_TEST_SELF_NAME=overcloud-contrailcontroller-1 BGP_IFMAP_XMPP_INTEGRATION_TEST_DATA_FILE=/cs-shared/db_dumps/orange.json build/production/bgp/test/bgp_ifmap_xmpp_integration_test

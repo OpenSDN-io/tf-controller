@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 #ifndef __IFMAP__IFMAP_FACTORY_H__
 #define __IFMAP__IFMAP_FACTORY_H__

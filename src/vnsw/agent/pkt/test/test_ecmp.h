@@ -2,6 +2,7 @@
 #define _VNSW_AGENT_PKT_TEST_TEST_ECMP_H__
 /*
  * Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #include "base/os.h"

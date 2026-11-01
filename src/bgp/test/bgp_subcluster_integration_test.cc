@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #include <boost/assign/list_of.hpp>

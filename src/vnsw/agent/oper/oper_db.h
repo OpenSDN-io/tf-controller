@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #ifndef SRC_VNSW_AGENT_OPER_OPER_DB_H_

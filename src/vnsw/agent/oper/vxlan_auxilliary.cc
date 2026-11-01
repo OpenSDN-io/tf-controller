@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
- * Copyright (c) 2022 - 2026 Matvey Kraposhin.
- * Copyright (c) 2024 - 2026 Elena Zizganova.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #include <oper/route_common.h>

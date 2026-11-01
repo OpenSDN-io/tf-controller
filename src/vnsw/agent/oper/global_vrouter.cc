@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 
 // global_vrouter.cc - operational data for global vrouter configuration

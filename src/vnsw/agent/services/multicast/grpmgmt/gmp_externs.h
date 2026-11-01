@@ -5,6 +5,7 @@
  * Dave Katz, July 2008
  *
  * Copyright (c) 2008, Juniper Networks, Inc.
+ * Copyright Contributors to the OpenSDN project
  * All rights reserved.
  *
  * This file defines general, common external definitions for both

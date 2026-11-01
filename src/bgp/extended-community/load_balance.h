@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #ifndef SRC_BGP_EXTENDED_COMMUNITY_LOAD_BALANCE_H_

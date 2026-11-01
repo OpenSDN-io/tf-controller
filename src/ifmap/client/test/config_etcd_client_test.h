@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 #ifndef ctrlplane_config_etcd_client_test_h
 #define ctrlplane_config_etcd_client_test_h

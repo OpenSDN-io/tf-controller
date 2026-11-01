@@ -1,5 +1,6 @@
 /*
  *  * Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
+ *  * Copyright Contributors to the OpenSDN project
  *   */
 #ifndef vnsw_agent_diag_diag_pkt_handler_hpp
 #define vnsw_agent_diag_diag_pkt_handler_hpp

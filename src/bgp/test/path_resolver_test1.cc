@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 #define __PATH_RESOLVER_TEST_WRAPPER_TEST_SUITE__
 #include "path_resolver_test.cc"

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #ifndef __AGENT_OPER_SECURITY_LOGGING_OBJECT_H

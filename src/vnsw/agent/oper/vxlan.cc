@@ -1,8 +1,7 @@
-
-//
-//  vxlan.cc
-//  vnsw/agent
-//
+/*
+ * Copyright (c) Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
+ */
 
 #include <cmn/agent_cmn.h>
 #include <base/task_annotations.h>

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Juniper Networks, Inc. All rights reserved.
+ * Copyright Contributors to the OpenSDN project
  */
 
 #ifndef SRC_BGP_EXTENDED_COMMUNITY_MULTICAST_FLAGS_H_
